@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     
                     <!-- Global Links -->
                     <div class="flex items-center gap-4 text-xs font-bold uppercase tracking-wider">
-                        <a href="/" class="hover:text-blue-400 transition"><i class="fa-solid fa-microchip text-indigo-400"></i> Tracer</a>
+                        <a href="/nemesis_tracer.html" class="hover:text-blue-400 transition"><i class="fa-solid fa-microchip text-indigo-400"></i> Tracer</a>
                         <a href="/nemesis_id.html" class="hover:text-fuchsia-400 transition"><i class="fa-solid fa-id-card text-fuchsia-400"></i> Nemesis ID</a>
                         <a href="/darknet_search.html" class="hover:text-purple-400 transition"><i class="fa-solid fa-user-secret text-purple-400"></i> Darknet Intel</a>
                         <a href="/darknet_live.html" class="hover:text-red-400 transition"><i class="fa-solid fa-chart-network text-red-400"></i> Live Graph</a>

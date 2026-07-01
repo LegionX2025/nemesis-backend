@@ -154,9 +154,76 @@ class TraceRequest(BaseModel):
     max_depth: int = 12
     max_hops: int = 1000
 
+class ResolveRequest(BaseModel):
+    entities: list[str]
+
+@app.post("/api/resolve_entity")
+async def api_resolve_entity(req: ResolveRequest):
+    from services.trace_engine import mongo_db
+    if mongo_db is None:
+        return {"status": "error", "message": "MongoDB not connected"}
+    
+    results = {}
+    try:
+        if not req.entities:
+            return {"results": {}}
+            
+        # Basic filtering to prevent huge queries
+        clean_entities = [e for e in req.entities if e and len(e) > 3]
+        if not clean_entities:
+            return {"results": {e: "Unidentified" for e in req.entities}}
+            
+        q_filter = {
+            "$or": [
+                {"url": {"$in": clean_entities}},
+                {"title": {"$in": clean_entities}},
+                {"hash-ID": {"$in": clean_entities}},
+                {"uie_entities.value": {"$in": clean_entities}}
+            ]
+        }
+        
+        cursor1 = mongo_db.darknet_data.find(q_filter)
+        cursor2 = mongo_db.darknet.find(q_filter)
+        
+        docs1 = await cursor1.to_list(length=200)
+        docs2 = await cursor2.to_list(length=200)
+        
+        found_entities = {}
+        for d in docs1 + docs2:
+            content_str = str(d)
+            for e in clean_entities:
+                if e in content_str:
+                    low_content = content_str.lower()
+                    if "market" in low_content or "onion" in low_content:
+                        found_entities[e] = "DarkNet Market"
+                    elif "ransom" in low_content or "leak" in low_content:
+                        found_entities[e] = "Ransomware Actor"
+                    elif "sanction" in low_content or "ofac" in low_content:
+                        found_entities[e] = "Sanctioned Entity"
+                    elif "mix" in low_content or "tornado" in low_content:
+                        found_entities[e] = "Mixing Pool"
+                    else:
+                        found_entities[e] = "High-Risk Peer"
+        
+        for e in req.entities:
+            results[e] = found_entities.get(e, "Unidentified")
+            
+        return {"results": results}
+    except Exception as e:
+        logger.error(f"Error in resolve_entity: {e}")
+        return {"status": "error", "message": str(e)}
+
 @app.get("/")
 async def dashboard(request: Request):
     return templates.TemplateResponse(request=request, name="index.html")
+
+@app.get("/nemesis_tracer.html")
+async def tracer_dashboard(request: Request):
+    return templates.TemplateResponse(request=request, name="nemesis_tracer.html")
+
+@app.get("/tracer")
+async def tracer_dashboard_alias(request: Request):
+    return templates.TemplateResponse(request=request, name="nemesis_tracer.html")
 
 @app.get("/favicon.ico")
 async def favicon():

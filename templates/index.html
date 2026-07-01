@@ -2031,35 +2031,50 @@
                 if (unmappedNodes.length === 0) {
                     let allNodes = nodes.get();
                     if (allNodes.length > 0) {
-                        for(let i=0; i<Math.min(3, allNodes.length); i++) unmappedNodes.push(allNodes[Math.floor(Math.random() * allNodes.length)]);
+                        unmappedNodes = allNodes;
                     } else {
                         alert("No entities found in the graph to resolve.");
                         return;
                     }
                 }
                 
-                alert(`Starting OSINT batch resolution for ${unmappedNodes.length} unidentified entities...`);
-                let delay = 0;
+                alert(`Starting OSINT batch resolution for ${unmappedNodes.length} entities via Lionsgate Intelligence...`);
                 
                 unmappedNodes.forEach(n => {
-                    setTimeout(() => {
-                        let originalColor = n.color ? (n.color.background || n.color) : '#ffffff';
-                        n.color = { background: '#fcd34d', border: '#d97706' }; // Highlight processing
-                        n.label = "Resolving...";
-                        nodes.update(n);
-                        
-                        setTimeout(() => {
-                            // Assign pseudo-random identity based on ID
-                            let resolvedTypes = ["DarkNet Market", "Mixing Pool", "Sanctioned Entity", "High-Risk Peer"];
-                            let randomType = resolvedTypes[Math.floor(Math.random() * resolvedTypes.length)];
-                            
-                            n.label = randomType + "\\n" + n.id.substring(0, 10) + "...";
+                    n.color = { background: '#fcd34d', border: '#d97706' };
+                    n.label = "Resolving...";
+                    nodes.update(n);
+                });
+                
+                const entityIds = unmappedNodes.map(n => n.id);
+                fetch('/api/resolve_entity', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ entities: entityIds })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    const results = data.results || {};
+                    unmappedNodes.forEach(n => {
+                        const resolvedType = results[n.id] || "Unidentified";
+                        if (resolvedType === "Unidentified") {
+                            n.label = n.id.substring(0, 10) + "...";
+                            n.color = { background: '#f8fafc', border: '#cbd5e1' };
+                        } else {
+                            n.label = resolvedType + "\\n" + n.id.substring(0, 10) + "...";
                             n.color = { background: '#fef2f2', border: '#ef4444' };
-                            nodes.update(n);
-                        }, 1000 + Math.random() * 2000);
-                        
-                    }, delay);
-                    delay += 300;
+                        }
+                        nodes.update(n);
+                    });
+                })
+                .catch(err => {
+                    console.error("OSINT Resolution failed:", err);
+                    alert("Failed to reach OSINT intelligence database.");
+                    unmappedNodes.forEach(n => {
+                        n.label = n.id.substring(0, 10) + "...";
+                        n.color = { background: '#ffffff', border: '#cbd5e1' };
+                        nodes.update(n);
+                    });
                 });
             };
 
