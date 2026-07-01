@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lionsgate Omni-Chain Forensics | Case LGN-US-2026-0172</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vis-network/standalone/umd/vis-network.min.js"></script>
+    <!-- Add vis-timeline for Timeline feature -->
+    <script src="https://cdn.jsdelivr.net/npm/vis-timeline@7.7.2/standalone/umd/vis-timeline-graph2d.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/vis-timeline@7.7.2/styles/vis-timeline-graph2d.min.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; margin: 0; overflow: hidden; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        #graph { height: calc(100vh - 120px); width: 100%; outline: none; background-color: #fff; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        
+        .google-doc { width: 100%; max-width: 900px; margin: 2rem auto; padding: 1in; background: #ffffff; color: #000000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #ddd; outline: none; line-height: 1.6; }
+        
+        /* Search Autocomplete */
+        #autocomplete-list { max-height: 200px; overflow-y: auto; }
+        .autocomplete-item:hover { background-color: #f1f5f9; cursor: pointer; }
+        
+        /* Replay Range Slider */
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
+            background: #3b82f6; cursor: pointer; margin-top: -6px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer; background: #cbd5e1; border-radius: 2px;
+        }
+        
+        /* Timeline Customization */
+        .vis-item { background-color: #eff6ff; border-color: #3b82f6; color: #1e3a8a; font-size: 10px; font-family: 'JetBrains Mono', monospace; border-radius: 3px; }
+        .vis-item.vis-selected { background-color: #fef08a; border-color: #eab308; }
+        .vis-time-axis .vis-text { color: #64748b; font-size: 10px; font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="flex flex-col h-screen">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 p-4 flex flex-col gap-4 shadow-sm z-10 shrink-0">
+        <div class="flex justify-between items-center w-full">
+            <div>
+                <h1 class="text-xl font-black uppercase tracking-wider text-slate-900">Lionsgate Nemesis Engine</h1>
+                <p class="text-xs text-blue-600 font-mono mt-1">PRODUCTION EVIDENTIARY TRACING GRAPH</p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="toggleOsintModal()" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded text-xs font-bold shadow transition flex items-center gap-2">
+                    <i class="fa-solid fa-file-import"></i> OSINT Data Ingest
+                </button>
+                <button onclick="toggleLogModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded text-xs font-bold shadow transition flex items-center gap-2">
+                    <i class="fa-solid fa-list"></i> Evidentiary Transaction Log
+                </button>
+                <button onclick="submitTrace()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-xs font-bold shadow transition flex items-center gap-2">
+                    <i class="fa-solid fa-bolt"></i> Run Parallel Trace
+                </button>
+                <button onclick="triggerGeneratePDF()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-xs font-bold shadow transition flex items-center gap-2">
+                    <i class="fa-solid fa-file-pdf"></i> Generate Forensic Report
+                </button>
+            </div>
+        </div>
+        <div class="flex gap-4 items-start w-full bg-slate-50 p-3 border border-slate-200 rounded">
+            <div class="flex-grow">
+                <label class="block text-xs font-bold text-slate-700 mb-1">Target Seed/Suspect Addresses (One per line)</label>
+                <textarea id="customSeeds" class="w-full text-xs border border-slate-300 rounded p-2 focus:ring-blue-500 font-mono h-16" placeholder="0x...\nbc1...\nT..."></textarea>
+            </div>
+            <div class="w-48">
+                <label class="block text-xs font-bold text-slate-700 mb-1">Total Loss Amount (USD)</label>
+                <input type="number" id="customLoss" class="w-full text-xs border border-slate-300 rounded p-2 focus:ring-blue-500 font-mono" placeholder="80000" value="80000">
+            </div>
+            <div class="w-48">
+                <label class="block text-xs font-bold text-slate-700 mb-1">Victim Initials / Case ID</label>
+                <input type="text" id="customVictim" class="w-full text-xs border border-slate-300 rounded p-2 focus:ring-blue-500 font-mono" placeholder="[REDACTED]" value="[REDACTED]">
+            </div>
+        </div>
+    </header>
+
+    <nav id="graphTabs" class="bg-slate-50 border-b border-slate-200 px-4 py-2 flex gap-2 shrink-0 overflow-visible items-center relative z-20">
+        <button id="tab-btn-all" onclick="switchGraphTab('all')" class="px-3 py-1.5 bg-blue-600 text-white font-bold rounded shadow-sm text-xs whitespace-nowrap transition">
+            <i class="fa-solid fa-globe"></i> Unified Graph
+        </button>
+        <div class="h-6 w-px bg-slate-300 mx-1"></div>
+        
+        <div class="relative flex items-center gap-2">
+            <div class="relative">
+                <input type="text" id="nodeSearch" placeholder="Search wallet/entity..." class="text-xs border border-slate-300 rounded pl-7 pr-2 py-1.5 w-56 focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono" oninput="showAutocomplete()" onkeyup="if(event.key==='Enter') executeSearch()">
+                <i class="fa-solid fa-search absolute left-2 top-2 text-slate-400 text-xs"></i>
+                <div id="autocomplete-list" class="absolute top-full left-0 w-full bg-white border border-slate-200 shadow-lg rounded mt-1 hidden z-50 text-xs font-mono"></div>
+            </div>
+            <button onclick="executeSearch()" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded shadow-sm transition">Search</button>
+        </div>
+        
+        <div class="h-6 w-px bg-slate-300 mx-1"></div>
+        <div class="flex items-center gap-1 bg-white border border-slate-300 rounded px-2 py-1 shadow-sm">
+            <i class="fa-solid fa-diagram-project text-slate-400 text-[10px]"></i>
+            <select id="layoutSelect" onchange="changeLayout()" class="text-xs text-slate-700 bg-transparent focus:outline-none font-bold cursor-pointer">
+               <option value="physics">Organic (Physics)</option>
+               <option value="hubsize">Hub-and-Spoke (Organic)</option>
+               <option value="directed">Directed Organic</option>
+               <option value="hierarchical_lr">Sequential (Left-Right)</option>
+               <option value="hierarchical_rl">Sequential (Right-Left)</option>
+               <option value="hierarchical_ud">Sequential (Top-Bottom)</option>
+               <option value="hierarchical_du">Sequential (Bottom-Top)</option>
+            </select>
+        </div>
+        
+        <div class="h-6 w-px bg-slate-300 mx-1"></div>
+        <div class="flex items-center gap-1 bg-white border border-slate-300 rounded px-2 py-1 shadow-sm">
+            <i class="fa-solid fa-filter text-slate-400 text-[10px]"></i>
+            <select id="pathFilterSelect" onchange="applyPathFilter()" class="text-xs text-slate-700 bg-transparent focus:outline-none font-bold cursor-pointer">
+               <option value="ALL">ALL PATHS (No Filter)</option>
+               <option value="SUSPECT_TO_CEX">Filter: SUSPECT ➡️ CEX</option>
+               <option value="SUSPECT_TO_MIXER">Filter: SUSPECT ➡️ MIXERS</option>
+               <option value="SUSPECT_TO_BRIDGE">Filter: SUSPECT ➡️ BRIDGE</option>
+               <option value="VICTIM_TO_CEX">Filter: VICTIM ➡️ SUSPECT ➡️ CEX</option>
+               <option value="VICTIM_TO_MIXER">Filter: VICTIM ➡️ SUSPECT ➡️ MIXER</option>
+            </select>
+        </div>
+        
+        <div class="flex-grow"></div>
+        <button onclick="toggleTimeline()" class="px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 text-xs font-bold rounded shadow-sm transition whitespace-nowrap flex items-center gap-1">
+            <i class="fa-solid fa-clock-rotate-left"></i> Timeline View
+        </button>
+        <button onclick="toggleCourtReplay()" class="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 text-xs font-bold rounded shadow-sm transition whitespace-nowrap flex items-center gap-1">
+            <i class="fa-solid fa-play-circle"></i> Court Replay
+        </button>
+    </nav>
+
+    <!-- Main Workspace -->
+    <div class="relative flex-grow bg-white flex flex-col overflow-hidden">
+        
+        <!-- Floating Tools (Left) -->
+        <div class="absolute top-4 left-4 z-10 flex flex-col gap-2">
+            <div class="bg-white/90 backdrop-blur border border-slate-200 p-3 rounded-lg shadow-md pointer-events-none mb-2">
+                <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-200 pb-1">Node Legend</h3>
+                <div class="flex flex-col gap-1.5 text-[10px]">
+                    <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full border border-slate-300 flex items-center justify-center bg-white"></div> <span class="text-slate-700">Routing / Normal</span></div>
+                    <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full border-2 border-red-500 flex items-center justify-center bg-red-50"></div> <span class="text-slate-700">Seed Source</span></div>
+                    <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full border-2 border-purple-500 flex items-center justify-center bg-purple-50"></div> <span class="text-slate-700">Recombination / Mixer</span></div>
+                    <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full border-2 border-emerald-500 flex items-center justify-center bg-emerald-50"></div> <span class="text-slate-700">Exchange (CEX)</span></div>
+                    <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full border-2 border-orange-500 flex items-center justify-center bg-orange-50"></div> <span class="text-slate-700">Terminal Holding</span></div>
+                </div>
+            </div>
+            
+            <div class="bg-white/90 backdrop-blur border border-slate-200 rounded-lg shadow-md flex flex-col pointer-events-auto">
+                <button onclick="network.fit({animation: true})" class="p-2 text-slate-600 hover:text-blue-600 hover:bg-slate-50 border-b border-slate-200 transition text-xs" title="Fit Graph">
+                    <i class="fa-solid fa-expand"></i>
+                </button>
+                <button onclick="togglePhysics()" id="btn-physics" class="p-2 text-blue-600 hover:bg-slate-50 border-b border-slate-200 transition text-xs" title="Toggle Physics (Freeze)">
+                    <i class="fa-solid fa-snowflake"></i>
+                </button>
+                <button onclick="exportGraphImage()" class="p-2 text-slate-600 hover:text-emerald-600 hover:bg-slate-50 transition text-xs" title="Export Image">
+                    <i class="fa-solid fa-camera"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- KPI Trace Progress Widget (Top Right) -->
+        <div id="kpi-widget" class="absolute top-4 right-4 z-10 bg-white/95 backdrop-blur border border-blue-200 p-3 rounded-lg shadow-md flex flex-col gap-1 pointer-events-none hidden transition-all duration-300">
+            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1"><i class="fa-solid fa-chart-line text-blue-500"></i> Multi-Chain Trace Progress</span>
+            <div class="flex items-end gap-2 mt-1">
+                <span class="text-xl font-black text-blue-600" id="kpi-traced">$0</span>
+                <span class="text-xs font-bold text-slate-400 mb-1">/ <span id="kpi-target">$0</span> Target</span>
+            </div>
+            <div class="w-full bg-slate-100 h-1.5 rounded-full mt-1 border border-slate-200 overflow-hidden">
+                <div id="kpi-progress-bar" class="bg-gradient-to-r from-blue-400 to-blue-600 h-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+            <span class="text-[9px] text-slate-400 mt-0.5 font-mono" id="kpi-percent">0.00% Located</span>
+        </div>
+        
+        <!-- Live Terminals (Right) -->
+        <div class="absolute bottom-4 right-4 z-10 bg-white/95 backdrop-blur border border-red-200 p-3 rounded-lg shadow-xl w-80 pointer-events-auto max-h-[40vh] overflow-y-auto hidden flex-col gap-2 transition-all duration-300" id="live-terminals-container">
+            <div class="flex items-center justify-between sticky top-0 bg-white/95 pb-2 border-b border-red-100 z-10">
+                <h3 class="text-xs font-black text-red-600 uppercase tracking-wider flex items-center gap-2">
+                    <span class="relative flex h-2 w-2">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                    </span>
+                    Live CEX Terminals
+                </h3>
+            </div>
+            <div id="live-terminals-list" class="flex flex-col gap-2"></div>
+        </div>
+
+        <!-- Terminal Console Streaming (Left Bottom) -->
+        <div id="console-container" class="absolute bottom-4 left-4 z-10 bg-slate-900/90 backdrop-blur border border-slate-700 p-3 rounded-lg shadow-xl w-[450px] pointer-events-auto max-h-[30vh] overflow-hidden hidden flex-col gap-1 transition-all duration-300">
+            <div class="flex items-center justify-between sticky top-0 bg-transparent pb-1 border-b border-slate-700 z-10">
+                <h3 class="text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-terminal"></i> Backend Engine Stream
+                </h3>
+            </div>
+            <div id="console-output" class="font-mono text-[10px] text-slate-300 flex-grow overflow-y-auto pt-1 leading-tight whitespace-pre-wrap"></div>
+        </div>
+
+        <!-- Court Replay Media Controller -->
+        <div id="replay-controller" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20 bg-slate-900 text-white rounded-full px-6 py-3 shadow-2xl flex items-center gap-4 hidden border border-slate-700 pointer-events-auto">
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-2 flex items-center gap-2">
+                <i class="fa-solid fa-record-vinyl animate-spin text-red-500" id="replay-spin-icon" style="animation-duration: 3s; animation-play-state: paused;"></i> REPLAY
+            </div>
+            <button onclick="replayState.reset()" class="text-slate-300 hover:text-white transition"><i class="fa-solid fa-backward-step"></i></button>
+            <button onclick="replayState.stepBack()" class="text-slate-300 hover:text-white transition"><i class="fa-solid fa-chevron-left"></i></button>
+            <button onclick="replayState.togglePlay()" id="btn-play-pause" class="text-white hover:text-emerald-400 transition text-lg"><i class="fa-solid fa-play"></i></button>
+            <button onclick="replayState.stepForward()" class="text-slate-300 hover:text-white transition"><i class="fa-solid fa-chevron-right"></i></button>
+            
+            <div class="flex items-center gap-2 ml-4 w-48">
+                <span id="replay-progress-text" class="text-[9px] font-mono text-slate-400">0/0</span>
+                <input type="range" id="replay-slider" min="0" max="100" value="0" class="w-full" oninput="replayState.seek(this.value)">
+            </div>
+            
+            <select id="replay-speed" class="ml-4 bg-slate-800 text-[10px] text-slate-300 border border-slate-600 rounded px-1 py-0.5 outline-none" onchange="replayState.changeSpeed()">
+                <option value="1500">0.5x</option>
+                <option value="600" selected>1.0x</option>
+                <option value="200">2.0x</option>
+                <option value="50">Fast Forward</option>
+            </select>
+        </div>
+
+        <div id="graph" class="flex-grow w-full h-full"></div>
+        
+        <!-- Timeline Drawer -->
+        <div id="timeline-drawer" class="w-full bg-white border-t border-slate-300 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] transition-all duration-300 ease-in-out h-0 overflow-hidden flex flex-col shrink-0">
+            <div class="bg-slate-100 px-3 py-1 flex justify-between items-center border-b border-slate-200">
+                <span class="text-[10px] font-bold text-slate-600 uppercase tracking-wider"><i class="fa-solid fa-clock"></i> Chronological Transaction Event Timeline</span>
+                <button onclick="toggleTimeline()" class="text-slate-500 hover:text-red-500"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div id="timeline" class="flex-grow w-full bg-slate-50"></div>
+        </div>
+    </div>
+
+    <!-- OSINT Ingest Modal -->
+    <div id="osintModal" class="fixed inset-y-0 right-0 w-[600px] max-w-full bg-white shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out z-50 flex flex-col border-l border-slate-200">
+        <div class="bg-amber-600 text-white px-4 py-3 flex justify-between items-center shadow-md">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-brain"></i>
+                <span class="text-sm font-bold uppercase tracking-wider">AI OSINT & Mission Ingest</span>
+            </div>
+            <button onclick="toggleOsintModal()" class="text-white hover:text-slate-200 transition" title="Close"><i class="fa-solid fa-times text-lg"></i></button>
+        </div>
+        <div class="p-6 flex flex-col gap-6 overflow-y-auto">
+            
+            <div class="bg-amber-50 border border-amber-200 p-4 rounded text-xs text-amber-800">
+                <strong><i class="fa-solid fa-circle-info"></i> Automated LLM Extraction</strong><br>
+                Upload raw logs, case files, or enter text. The Nemesis AI will automatically extract suspect addresses, loss amounts, domains, and structure the Evidentiary Report.
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">1. Upload Raw Evidence / Log Files</label>
+                <input type="file" id="osintFile" class="block w-full text-xs text-slate-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded file:border-0
+                    file:text-xs file:font-bold
+                    file:bg-amber-100 file:text-amber-700
+                    hover:file:bg-amber-200 cursor-pointer" multiple accept=".txt,.csv,.json,.pdf,.log">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">2. Mission Objective & Context (Prompt)</label>
+                <textarea id="osintObjective" class="w-full text-xs border border-slate-300 rounded p-3 focus:ring-amber-500 font-mono h-32" placeholder="Example: The victim was scammed on May 12th via a fake Coinbase support call. Extract all suspect wallets and formulate a subpoena for the final destination exchanges..."></textarea>
+            </div>
+
+            <button onclick="processOsint()" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-3 rounded font-bold shadow-md transition uppercase tracking-wider text-xs">
+                <i class="fa-solid fa-microchip"></i> Execute AI Extraction
+            </button>
+
+            <div class="mt-4 border-t border-slate-200 pt-4">
+                <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Engine Status: </span>
+                <span id="osintStatus" class="text-xs font-mono text-slate-500">Awaiting input...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table / Log Modal (Omitted for brevity, unchanged) -->
+    <div id="logModal" class="fixed inset-y-0 right-0 w-[1400px] max-w-full bg-white shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out z-50 flex flex-col border-l border-slate-200">
+        <div class="bg-slate-800 text-white px-4 py-3 flex justify-between items-center shadow-md">
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-bold uppercase tracking-wider">Evidentiary Transaction Log</span>
+                <button onclick="exportLiveLogCSV()" class="bg-slate-700 hover:bg-slate-600 text-white border border-slate-500 px-2 py-0.5 rounded text-[10px] font-bold transition shadow-sm">Export CSV</button>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="status" class="text-[10px] text-emerald-400 font-mono font-bold">Awaiting Trace Execution...</span>
+                <button onclick="toggleLogModal()" class="text-slate-300 hover:text-white transition" title="Minimize"><i class="fa-solid fa-times text-lg"></i></button>
+            </div>
+        </div>
+        <div id="tx-log-container" class="flex-grow overflow-auto p-0 bg-slate-50">
+            <table class="w-full text-left text-xs text-slate-700 border-collapse">
+                <thead class="bg-slate-200 sticky top-0 border-b border-slate-300 font-bold text-slate-700 z-10 shadow-sm">
+                    <tr>
+                        <th class="p-2 pl-4 whitespace-nowrap">Date/Time (UTC)</th><th class="p-2 whitespace-nowrap">TX Hash</th><th class="p-2 whitespace-nowrap">From Wallet</th>
+                        <th class="p-2 whitespace-nowrap">To Wallet</th><th class="p-2 whitespace-nowrap">Receiver Entity</th><th class="p-2 text-right pr-4 whitespace-nowrap">Amount</th>
+                        <th class="p-2 whitespace-nowrap">Transaction Type</th><th class="p-2 whitespace-nowrap">Behavioral Cluster</th><th class="p-2 text-center whitespace-nowrap">Confidence</th>
+                    </tr>
+                </thead>
+                <tbody id="tx-log-body" class="divide-y divide-slate-200 font-mono text-[11px] bg-white"></tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- REPORT WORKSPACE OVERLAY (Omitted for brevity, unchanged) -->
+    <div id="view-report" class="hidden absolute top-[70px] left-0 w-full h-[calc(100vh-70px)] bg-slate-100 z-50 overflow-y-auto p-4 md:p-8 text-slate-900">
+        <!-- Exact same report html structure from previous -->
+        <div class="max-w-[900px] mx-auto flex justify-between items-center mb-4 no-print bg-white p-3 rounded-lg shadow-sm border border-slate-200">
+            <p class="text-sm text-slate-500 font-bold ml-2">Evidentiary Document Format</p>
+            <div class="flex gap-2">
+                <button onclick="closeReport()" class="bg-slate-200 text-slate-700 px-4 py-1.5 rounded font-bold shadow-sm">Close Report</button>
+                <button onclick="triggerGeneratePDF()" class="bg-blue-600 text-white px-4 py-1.5 rounded font-bold shadow-md">Download PDF</button>
+            </div>
+        </div>
+        <div id="print-doc" class="google-doc doc-container break-words text-sm relative">
+            <div class="text-center border-b-2 border-slate-900 pb-4 mb-6">
+                <h1 class="text-2xl font-black uppercase text-slate-900 tracking-tight mt-2">BLOCKCHAIN FORENSIC ANALYSIS REPORT</h1>
+            </div>
+            <table class="w-full text-left border-collapse mb-8 text-xs">
+                <tbody class="divide-y divide-slate-300">
+                    <tr><th class="py-2 text-slate-600">Subject/Complainant</th><td class="py-2 font-bold text-red-600" id="docVictimInitials"></td></tr>
+                    <tr><th class="py-2 text-slate-600">Date of Report</th><td class="py-2 font-bold" id="doc-date"></td></tr>
+                </tbody>
+            </table>
+            <!-- Condensed report sections for file size constraint -->
+            <div class="bg-blue-50 border-l-4 border-blue-600 p-4 mb-6">
+                <h3 class="font-bold text-blue-900 mb-2">AI Narrative & Core Findings</h3>
+                <p class="mb-2"><strong>Who are the suspect(s)?</strong> <span id="narrative-suspects" class="text-red-700 font-bold break-all"></span></p>
+                <p class="mb-2"><strong>What is the total loss amount assets?</strong> <span id="narrative-total-loss" class="font-mono font-bold"></span></p>
+                <p><strong>Where did the assets land?</strong> <span id="narrative-landed" class="font-bold text-emerald-700"></span></p>
+            </div>
+            <p class="mb-6 text-sm">Based on the traced funds, <strong id="narrative-prob" class="text-emerald-700"></strong> of the consolidated assets have landed at known centralized exchanges (CEXs).</p>
+            <h2 class="text-lg font-bold border-b border-slate-400 pb-1 mb-3 uppercase text-blue-900">Blockchain Snapshot Transaction Graph</h2>
+            <div class="border border-slate-300 p-2 bg-slate-50 mb-8 flex justify-center"><img id="report-graph-img" src="" style="max-width: 100%; height: auto;"></div>
+            
+            <h2 class="text-lg font-bold border-b border-slate-400 pb-1 mt-6 mb-3 uppercase text-blue-900">Chronological Event Timeline</h2>
+            <div id="report-timeline-container" class="border-l-2 border-slate-300 ml-2 pl-4 py-2 flex flex-col gap-4 mb-8">
+                <!-- Timeline items will be dynamically injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("doc-date").innerText = new Date().toLocaleDateString();
+        window.exportedDataRows = [];
+        window.currentActiveSeedTab = 'all';
+        window.terminalMap = {};
+        
+        function toggleLogModal() { document.getElementById('logModal').classList.toggle('translate-x-full'); }
+        function showTab(tab) { document.getElementById('view-report').classList[tab==='report'?'remove':'add']('hidden'); }
+        function closeReport() { document.getElementById('view-report').classList.add('hidden'); }
+        
+        let ws = null;
+        function getSafeIconUrl(entityName, isMixer, isTarget, isSuspect, returnFallback=false) {
+            const nm = entityName.toLowerCase();
+            let domain = null;
+            if(nm.includes("binance")) domain = "binance.com";
+            else if(nm.includes("kraken")) domain = "kraken.com";
+            else if(nm.includes("okx")) domain = "okx.com";
+            else if(nm.includes("kucoin")) domain = "kucoin.com";
+            else if(nm.includes("huobi") || nm.includes("htx")) domain = "htx.com";
+            else if(nm.includes("coinbase")) domain = "coinbase.com";
+            else if(nm.includes("mexc")) domain = "mexc.com";
+            else if(nm.includes("bybit")) domain = "bybit.com";
+            else if(nm.includes("bitfinex")) domain = "bitfinex.com";
+            else if(nm.includes("gemini")) domain = "gemini.com";
+            else if(nm.includes("crypto.com")) domain = "crypto.com";
+            else if(nm.includes("stargate")) domain = "stargate.finance";
+            else if(nm.includes("multichain")) domain = "multichain.org";
+            else if(nm.includes("tornado")) domain = "tornadocash.com";
+            else if(nm.includes("tron")) domain = "tron.network";
+            else if(nm.includes("polygon")) domain = "polygon.technology";
+            else if(nm.includes("tether")) domain = "tether.to";
+            else if(nm.includes("circle") || nm.includes("usdc")) domain = "circle.com";
+            else if(!isMixer && !isTarget && !isSuspect && nm !== "unknown wallet") domain = entityName.replace(/\s+/g, '') + ".com";
+            
+            if (domain) return "https://www.google.com/s2/favicons?domain=" + domain + "&sz=128";
+            
+            if (isMixer) return "https://api.dicebear.com/9.x/shapes/svg?seed=" + entityName + "&backgroundColor=d8b4fe";
+            if (isTarget) return "https://api.dicebear.com/9.x/identicon/svg?seed=" + entityName + "&backgroundColor=fca5a5";
+            if (nm === "unknown wallet") {
+                if (returnFallback) return "https://api.dicebear.com/9.x/identicon/svg?seed=" + entityName + "&backgroundColor=f8fafc";
+                return null;
+            }
+            if (isSuspect) return "https://api.dicebear.com/9.x/identicon/svg?seed=" + entityName + "&backgroundColor=fca5a5";
+            
+            if (returnFallback) return "https://api.dicebear.com/9.x/initials/svg?seed=" + entityName + "&backgroundColor=e2e8f0";
+            return null;
+        }
+
+        /* -----------------------------------------------------
+           GRAPH ENGINE & LAYOUTS
+        ------------------------------------------------------ */
+        let nodes = new vis.DataSet();
+        let edges = new vis.DataSet();
+        let allEdgesMap = new Map();
+        let allNodesMap = new Map();
+        let ws = null;
+        let isPhysicsEnabled = true;
+
+        const tokenImages = {
+            USDT: new Image(), USDC: new Image(), BTC: new Image(), ETH: new Image(), TRX: new Image(), SOL: new Image(), BNB: new Image()
+        };
+        tokenImages.USDT.src = "https://cryptologos.cc/logos/tether-usdt-logo.svg?v=025";
+        tokenImages.USDC.src = "https://cryptologos.cc/logos/usd-coin-usdc-logo.svg?v=025";
+        tokenImages.BTC.src = "https://cryptologos.cc/logos/bitcoin-btc-logo.svg?v=025";
+        tokenImages.ETH.src = "https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=025";
+        tokenImages.TRX.src = "https://cryptologos.cc/logos/tron-trx-logo.svg?v=025";
+        tokenImages.SOL.src = "https://cryptologos.cc/logos/solana-sol-logo.svg?v=025";
+        tokenImages.BNB.src = "https://cryptologos.cc/logos/bnb-bnb-logo.svg?v=025";
+
+        const timelineGroups = new vis.DataSet([
+            { id: 1, content: 'Transaction Logs', style: 'background-color: #3b82f6; color: white; border: none;' }
+        ]);
+
+        let options = {
+            layout: { randomSeed: 42 },
+            physics: {
+                enabled: true,
+                barnesHut: { gravitationalConstant: -30000, centralGravity: 0.2, springLength: 250, springConstant: 0.04, damping: 0.09 },
+                stabilization: { iterations: 150, updateInterval: 25 }
+            },
+            interaction: { hover: true, tooltipDelay: 50 },
+            nodes: { 
+                shape: 'circularImage', size: 22,
+                font: { size: 12, face: 'Inter', color: '#1e293b', background: 'rgba(255,255,255,0.8)' }, 
+                margin: 10, borderWidth: 2, 
+                shadow: { color: 'rgba(0,0,0,0.1)', size: 8, x: 3, y: 3 },
+                imageFallback: "https://api.dicebear.com/9.x/initials/svg?seed=fallback&backgroundColor=e2e8f0",
+                brokenImage: "https://api.dicebear.com/9.x/initials/svg?seed=broken&backgroundColor=fef2f2"
+            },
+            edges: { 
+                arrows: 'to', 
+                font: { align: 'top', size: 10, color: '#334155', background: 'rgba(255,255,255,0.9)', strokeWidth: 0 }, 
+                smooth: { type: 'dynamic' },
+                color: { color: '#94a3b8', highlight: '#3b82f6', hover: '#3b82f6' }
+            }
+        };
+        let network = new vis.Network(document.getElementById("graph"), {nodes, edges}, options);
+
+        function togglePhysics() {
+            isPhysicsEnabled = !isPhysicsEnabled;
+            network.setOptions({ physics: { enabled: isPhysicsEnabled } });
+            let btn = document.getElementById("btn-physics");
+            if(isPhysicsEnabled) {
+                btn.classList.add("text-blue-600"); btn.classList.remove("text-red-500");
+            } else {
+                btn.classList.add("text-red-500"); btn.classList.remove("text-blue-600");
+            }
+        }
+        
+        function exportGraphImage() {
+            let canvas = document.querySelector("#graph canvas");
+            let link = document.createElement('a');
+            link.download = 'lionsgate_trace_graph.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function changeLayout() {
+            let val = document.getElementById("layoutSelect").value;
+            let newOpts = { layout: { hierarchical: false }, physics: { enabled: false } };
+            
+            if (val === "physics") {
+                newOpts.physics = { enabled: true, solver: 'forceAtlas2Based', forceAtlas2Based: { gravitationalConstant: -30000, springLength: 250 } };
+            } else if (val === "hubsize") {
+                newOpts.physics = { enabled: true, solver: 'repulsion', repulsion: { nodeDistance: 300, centralGravity: 0.1, springLength: 250 } };
+            } else if (val === "directed") {
+                newOpts.physics = { enabled: true, solver: 'hierarchicalRepulsion', hierarchicalRepulsion: { nodeDistance: 250 } };
+            } else if (val === "hierarchical_lr") {
+                newOpts.layout.hierarchical = { enabled: true, direction: 'LR', sortMethod: 'directed', levelSeparation: 300, nodeSpacing: 150 };
+            } else if (val === "hierarchical_rl") {
+                newOpts.layout.hierarchical = { enabled: true, direction: 'RL', sortMethod: 'directed', levelSeparation: 300, nodeSpacing: 150 };
+            } else if (val === "hierarchical_ud") {
+                newOpts.layout.hierarchical = { enabled: true, direction: 'UD', sortMethod: 'directed', levelSeparation: 250, nodeSpacing: 150 };
+            } else if (val === "hierarchical_du") {
+                newOpts.layout.hierarchical = { enabled: true, direction: 'DU', sortMethod: 'directed', levelSeparation: 250, nodeSpacing: 150 };
+            }
+            
+            isPhysicsEnabled = newOpts.physics.enabled;
+            document.getElementById("btn-physics").innerHTML = isPhysicsEnabled ? '<i class="fa-solid fa-snowflake"></i>' : '<i class="fa-solid fa-fire"></i>';
+            network.setOptions(newOpts);
+            setTimeout(() => network.fit({animation: true}), 500);
+        }
+
+        /* -----------------------------------------------------
+           ADVANCED SEARCH & AUTOCOMPLETE
+        ------------------------------------------------------ */
+        function showAutocomplete() {
+            let query = document.getElementById("nodeSearch").value.toLowerCase();
+            let list = document.getElementById("autocomplete-list");
+            list.innerHTML = "";
+            if(!query || query.length < 2) { list.classList.add("hidden"); return; }
+            
+            let matches = [];
+            allNodesMap.forEach(n => {
+                if (n.id.toLowerCase().includes(query) || (n.label && n.label.toLowerCase().includes(query))) {
+                    matches.push({ type: 'node', id: n.id, text: n.label ? n.label.replace(/\n/g, ' - ') : n.id, img: n.image || 'https://api.dicebear.com/9.x/initials/svg?seed=x' });
+                }
+            });
+            allEdgesMap.forEach(e => {
+                if ((e.tx_hash && e.tx_hash.toLowerCase().includes(query)) || (e.amount && e.amount.toString().includes(query))) {
+                    let assetStr = (e.label || "").includes("USDT") ? "USDT" : "Asset";
+                    matches.push({ type: 'edge', id: e.id, text: `TX: ${(e.tx_hash||"").substring(0,16)}... (${e.amount} ${assetStr})`, img: 'https://api.dicebear.com/9.x/initials/svg?seed=TX&backgroundColor=e0e7ff&textColor=3730a3' });
+                }
+            });
+            
+            if(matches.length > 0) {
+                matches.slice(0, 10).forEach(m => {
+                    let div = document.createElement("div");
+                    div.className = "autocomplete-item p-2 border-b border-slate-100 flex items-center gap-2 cursor-pointer hover:bg-slate-50";
+                    div.innerHTML = `<img src="${m.img}" class="w-4 h-4 rounded-full border border-slate-200"> <span class="truncate">${m.text}</span>`;
+                    div.onclick = function() {
+                        document.getElementById("nodeSearch").value = m.id;
+                        document.getElementById("nodeSearch").dataset.searchType = m.type;
+                        list.classList.add("hidden");
+                        executeSearch();
+                    };
+                    list.appendChild(div);
+                });
+                list.classList.remove("hidden");
+            } else {
+                list.classList.add("hidden");
+            }
+        }
+        
+        // Hide autocomplete when clicking outside
+        document.addEventListener('click', function(e) {
+            if(!document.getElementById("nodeSearch").contains(e.target)) {
+                document.getElementById("autocomplete-list").classList.add("hidden");
+            }
+        });
+
+        function executeSearch() {
+            let query = document.getElementById("nodeSearch").value.toLowerCase();
+            let searchType = document.getElementById("nodeSearch").dataset.searchType || 'any';
+            document.getElementById("autocomplete-list").classList.add("hidden");
+            
+            let updates = [];
+            let edgeUpdates = [];
+            let foundTargetNode = null;
+            let foundTargetEdge = null;
+            
+            if(!query) {
+                allNodesMap.forEach(n => {
+                    if(n.originalColor) n.color = n.originalColor;
+                    n.borderWidth = n.originalBorderWidth || 2;
+                    updates.push(n);
+                });
+                allEdgesMap.forEach(e => {
+                    e.width = 1; e.color = {color: '#94a3b8'};
+                    edgeUpdates.push(e);
+                });
+                nodes.update(updates);
+                edges.update(edgeUpdates);
+                return;
+            }
+            
+            let targetNeighbors = new Set();
+            
+            if (searchType === 'edge' || allEdgesMap.has(query)) {
+                let e = allEdgesMap.get(query);
+                if (e) {
+                    foundTargetEdge = e;
+                    targetNeighbors.add(e.from);
+                    targetNeighbors.add(e.to);
+                }
+            } else {
+                allEdgesMap.forEach(e => {
+                    if ((e.tx_hash && e.tx_hash.toLowerCase().includes(query)) || (e.amount && e.amount.toString().includes(query))) {
+                        foundTargetEdge = e;
+                        targetNeighbors.add(e.from);
+                        targetNeighbors.add(e.to);
+                    }
+                });
+            }
+
+            allNodesMap.forEach(n => {
+                if(!n.originalColor) { n.originalColor = JSON.parse(JSON.stringify(n.color)); n.originalBorderWidth = n.borderWidth; }
+                let match = n.id.toLowerCase() === query || (n.label && n.label.toLowerCase().includes(query));
+                if(match) {
+                    foundTargetNode = n;
+                    allEdgesMap.forEach(e => {
+                        if (e.from === n.id) targetNeighbors.add(e.to);
+                        if (e.to === n.id) targetNeighbors.add(e.from);
+                    });
+                }
+            });
+            
+            allNodesMap.forEach(n => {
+                if (n.id === (foundTargetNode ? foundTargetNode.id : null)) {
+                    n.color = {background: '#fef08a', border: '#eab308'}; n.borderWidth = 5;
+                } else if (targetNeighbors.has(n.id)) {
+                    n.color = {background: '#e0f2fe', border: '#38bdf8'}; n.borderWidth = 3;
+                } else {
+                    n.color = {background: '#f8fafc', border: '#e2e8f0'}; n.borderWidth = 1;
+                }
+                updates.push(n);
+            });
+            
+            allEdgesMap.forEach(e => {
+                if (e.id === (foundTargetEdge ? foundTargetEdge.id : null) || (foundTargetNode && (e.from === foundTargetNode.id || e.to === foundTargetNode.id))) {
+                    e.width = 4; e.color = {color: '#3b82f6'};
+                } else {
+                    e.width = 1; e.color = {color: '#e2e8f0'};
+                }
+                edgeUpdates.push(e);
+            });
+            
+            nodes.update(updates);
+            edges.update(edgeUpdates);
+            
+            if(foundTargetNode) {
+                network.focus(foundTargetNode.id, {scale: 1.2, animation: true});
+            } else if (foundTargetEdge) {
+                network.fit({nodes: [foundTargetEdge.from, foundTargetEdge.to], animation: true, padding: 50});
+            }
+        }
+
+        /* -----------------------------------------------------
+           PARTICLE PULSES & FILTERING
+        ------------------------------------------------------ */
+        let pulseOffset = 0;
+        let animatedEdges = new Set();
+        setInterval(() => { pulseOffset += 1; if(animatedEdges.size > 0 || isPhysicsEnabled) network.redraw(); }, 50);
+
+        network.on("afterDrawing", function (ctx) {
+            let edgePositions = network.getPositions(nodes.getIds());
+            
+            edges.get().forEach(e => {
+                if(e.hidden) return;
+                let fromPos = edgePositions[e.from]; let toPos = edgePositions[e.to];
+                if(!fromPos || !toPos) return;
+                
+                let dx = toPos.x - fromPos.x; let dy = toPos.y - fromPos.y;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                if(dist < 15) return;
+                
+                // Draw token image in the middle of the edge
+                if (e.tokenImg && e.tokenImg.complete && e.tokenImg.naturalHeight !== 0) {
+                    let midX = (fromPos.x + toPos.x) / 2;
+                    let midY = (fromPos.y + toPos.y) / 2;
+                    
+                    ctx.save();
+                    ctx.translate(midX, midY);
+                    
+                    // Draw a small white circle background for the token
+                    ctx.beginPath();
+                    ctx.arc(0, -12, 10, 0, 2 * Math.PI, false);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fill();
+                    
+                    // Draw the token SVG
+                    ctx.drawImage(e.tokenImg, -8, -20, 16, 16);
+                    ctx.restore();
+                }
+
+                if(!animatedEdges.has(e.id)) return;
+                let particleOffset = (pulseOffset * 2.5) % dist;
+                let px = fromPos.x + (dx/dist) * particleOffset;
+                let py = fromPos.y + (dy/dist) * particleOffset;
+                
+                ctx.beginPath(); ctx.arc(px, py, 4, 0, 2 * Math.PI, false);
+                ctx.fillStyle = '#ef4444'; ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 10;
+                ctx.fill(); ctx.shadowBlur = 0;
+            });
+            
+            let scale = 1 + 0.1 * Math.sin(pulseOffset / 5);
+            nodes.get().forEach(n => {
+                if(n.hidden || !animatedEdges.has("node-" + n.id)) return;
+                let pos = edgePositions[n.id];
+                if(pos) {
+                    ctx.beginPath(); ctx.arc(pos.x, pos.y, 25 * scale, 0, 2 * Math.PI, false);
+                    ctx.strokeStyle = 'rgba(239, 68, 68, 0.7)'; ctx.lineWidth = 3; ctx.stroke();
+                }
+            });
+        });
+
+        window.applyPathFilter = function() {
+            let filter = document.getElementById("pathFilterSelect").value;
+            animatedEdges.clear();
+            
+            if (filter === "ALL") {
+                let nodeUps = [], edgeUps = [];
+                allNodesMap.forEach(n => { n.hidden = false; nodeUps.push(n); });
+                allEdgesMap.forEach(e => { 
+                    e.hidden = false; e.color = {color: '#94a3b8'}; e.width = 1; 
+                    edgeUps.push(e); 
+                });
+                nodes.update(nodeUps); edges.update(edgeUps);
+                network.fit({animation: true});
+                return;
+            }
+            
+            let targetFilterList = [];
+            if(filter.includes("CEX")) targetFilterList = ["BINANCE", "KRAKEN", "OKX", "EXCHANGE", "CEX", "COINBASE", "MEXC", "KUCOIN"];
+            if(filter.includes("MIXER")) targetFilterList = ["MIXER", "TORNADO", "RAILGUN"];
+            if(filter.includes("BRIDGE")) targetFilterList = ["BRIDGE", "STARGATE", "MULTICHAIN", "WORMHOLE"];
+            
+            // Rebuild adjacency
+            let revAdj = {}; let edgeMapByFromTo = {};
+            allEdgesMap.forEach(e => {
+                if(!revAdj[e.to]) revAdj[e.to] = []; revAdj[e.to].push(e.from);
+                let key = e.from + "->" + e.to;
+                if(!edgeMapByFromTo[key]) edgeMapByFromTo[key] = [];
+                edgeMapByFromTo[key].push(e);
+            });
+            
+            let targetNodes = new Set();
+            allNodesMap.forEach(n => {
+                let lbl = (n.label||"").toUpperCase();
+                if(targetFilterList.some(kw => lbl.includes(kw))) targetNodes.add(n.id);
+            });
+            
+            let queue = Array.from(targetNodes);
+            let visitedNodes = new Set(queue);
+            
+            while(queue.length > 0) {
+                let curr = queue.shift();
+                let parents = revAdj[curr] || [];
+                parents.forEach(p => {
+                    let key = p + "->" + curr;
+                    if(edgeMapByFromTo[key]) edgeMapByFromTo[key].forEach(e => {
+                        animatedEdges.add(e.id);
+                        animatedEdges.add("node-" + e.to);
+                        animatedEdges.add("node-" + e.from);
+                    });
+                    if(!visitedNodes.has(p)) { visitedNodes.add(p); queue.push(p); }
+                });
+            }
+            
+            let edgeUpdates = [];
+            allEdgesMap.forEach(e => {
+                if(animatedEdges.has(e.id)) {
+                    e.color = {color: '#ef4444', highlight: '#dc2626'}; e.width = 3;
+                } else {
+                    e.color = {color: '#cbd5e1', opacity: 0.15}; e.width = 1;
+                }
+                edgeUpdates.push(e);
+            });
+            edges.update(edgeUpdates);
+        }
+
+        /* -----------------------------------------------------
+           VIS-TIMELINE INTEGRATION
+        ------------------------------------------------------ */
+        let timelineObj = null;
+        let timelineItems = new vis.DataSet();
+        
+        function toggleTimeline() {
+            let drawer = document.getElementById("timeline-drawer");
+            if (drawer.classList.contains("h-0")) {
+                drawer.classList.remove("h-0"); drawer.classList.add("h-48");
+                initTimeline();
+            } else {
+                drawer.classList.add("h-0"); drawer.classList.remove("h-48");
+            }
+        }
+        
+        function initTimeline() {
+            if (timelineObj) { timelineObj.redraw(); return; }
+            let container = document.getElementById("timeline");
+            let options = {
+                height: '100%',
+                maxHeight: '100%',
+                start: new Date(new Date().getTime() - 1000 * 60 * 60 * 24), // 24h ago
+                end: new Date(),
+                zoomMin: 1000 * 60, // 1 min
+                format: { minorLabels: { minute: 'h:mma', hour: 'ha' } },
+                tooltip: { followMouse: true }
+            };
+            timelineObj = new vis.Timeline(container, timelineItems, options);
+            
+            timelineObj.on('select', function(props) {
+                if(props.items && props.items.length > 0) {
+                    let edgeId = props.items[0];
+                    let e = edges.get(edgeId);
+                    if(e) {
+                        network.selectEdges([edgeId]);
+                        network.focus(e.to, {scale: 1.5, animation: true});
+                    }
+                }
+            });
+        }
+        
+        function syncTimeline(dataRow, edgeId) {
+            try {
+                let d = new Date(dataRow.timestamp);
+                if(isNaN(d.getTime())) d = new Date();
+                
+                let content = `<div class="truncate w-32" title="${dataRow.tx}"><i class="fa-solid fa-arrow-right-arrow-left text-blue-500 mr-1"></i> ${dataRow.amount.toFixed(2)} ${dataRow.ticker}</div>`;
+                timelineItems.add({
+                    id: edgeId,
+                    content: content,
+                    start: d,
+                    title: `Amount: ${dataRow.amount} ${dataRow.ticker}\nEntity: ${dataRow.receiver_entity}`
+                });
+                if(timelineObj) timelineObj.fit({animation: true});
+            } catch(e) {}
+        }
+
+        /* -----------------------------------------------------
+           COURT REPLAY CONTROLLER
+        ------------------------------------------------------ */
+        function toggleCourtReplay() {
+            let ctrl = document.getElementById("replay-controller");
+            ctrl.classList.toggle("hidden");
+            if(!ctrl.classList.contains("hidden")) {
+                replayState.init();
+            } else {
+                replayState.stop();
+                applyPathFilter(); // restore graph view
+            }
+        }
+        
+        const replayState = {
+            sortedData: [],
+            currentIndex: 0,
+            interval: null,
+            speed: 600,
+            isPlaying: false,
+            
+            init() {
+                this.sortedData = [...window.exportedDataRows].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                this.currentIndex = 0;
+                document.getElementById("replay-slider").max = this.sortedData.length - 1;
+                this.updateUI();
+                nodes.clear(); edges.clear(); animatedEdges.clear();
+            },
+            
+            togglePlay() {
+                if(this.isPlaying) this.pause();
+                else this.play();
+            },
+            
+            play() {
+                if(this.currentIndex >= this.sortedData.length - 1) this.currentIndex = 0;
+                this.isPlaying = true;
+                document.getElementById("btn-play-pause").innerHTML = '<i class="fa-solid fa-pause"></i>';
+                document.getElementById("replay-spin-icon").style.animationPlayState = 'running';
+                
+                this.interval = setInterval(() => {
+                    this.stepForward();
+                    if(this.currentIndex >= this.sortedData.length - 1) this.pause();
+                }, this.speed);
+            },
+            
+            pause() {
+                this.isPlaying = false;
+                clearInterval(this.interval);
+                document.getElementById("btn-play-pause").innerHTML = '<i class="fa-solid fa-play"></i>';
+                document.getElementById("replay-spin-icon").style.animationPlayState = 'paused';
+            },
+            
+            stepForward() {
+                if(this.currentIndex >= this.sortedData.length) return;
+                let d = this.sortedData[this.currentIndex];
+                if(d) this.renderReplayStep(d);
+                this.currentIndex++;
+                this.updateUI();
+            },
+            
+            stepBack() {
+                if(this.currentIndex <= 0) return;
+                this.currentIndex--;
+                let d = this.sortedData[this.currentIndex];
+                if(d) {
+                    let edgeId = d.from + "-" + d.to + "-" + d.tx;
+                    edges.remove(edgeId);
+                }
+                this.updateUI();
+            },
+            
+            seek(val) {
+                let target = parseInt(val);
+                if(target > this.currentIndex) {
+                    while(this.currentIndex < target) this.stepForward();
+                } else if (target < this.currentIndex) {
+                    while(this.currentIndex > target) this.stepBack();
+                }
+            },
+            
+            reset() {
+                this.pause();
+                this.currentIndex = 0;
+                nodes.clear(); edges.clear();
+                this.updateUI();
+            },
+            
+            changeSpeed() {
+                this.speed = parseInt(document.getElementById("replay-speed").value);
+                if(this.isPlaying) { this.pause(); this.play(); }
+            },
+            
+            updateUI() {
+                let max = this.sortedData.length;
+                let cur = Math.min(this.currentIndex, max);
+                document.getElementById("replay-progress-text").innerText = `${cur}/${max}`;
+                document.getElementById("replay-slider").value = cur;
+            },
+            
+            renderReplayStep(d) {
+                if(!nodes.get(d.from) && allNodesMap.has(d.from)) nodes.add(allNodesMap.get(d.from));
+                if(!nodes.get(d.to) && allNodesMap.has(d.to)) nodes.add(allNodesMap.get(d.to));
+                let edgeId = d.from + "-" + d.to + "-" + d.tx;
+                if(!edges.get(edgeId) && allEdgesMap.has(edgeId)) edges.add(allEdgesMap.get(edgeId));
+                
+                // Highlight current action
+                animatedEdges.clear();
+                animatedEdges.add(edgeId); animatedEdges.add("node-"+d.to);
+                
+                if(this.currentIndex % 3 === 0) network.fit({animation: true});
+            }
+        };
+
+        /* -----------------------------------------------------
+           MAIN WEBSOCKET LOGIC
+        ------------------------------------------------------ */
+        function submitTrace() {
+            let seeds = document.getElementById("customSeeds").value;
+            let loss = document.getElementById("customLoss").value;
+            if(!seeds) return alert("Please enter at least one seed address!");
+            
+            document.getElementById("status").innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Tracing Real-Time...`;
+            
+            // Clear console window
+            let conOutput = document.getElementById("console-output");
+            if(conOutput) {
+                conOutput.innerHTML = `<span class="text-emerald-500">🚀 [MULTI-CHAIN TRACE INITIALIZED - PARALLEL FETCHING]</span><br>`;
+                document.getElementById("console-container").classList.remove("hidden");
+            }
+
+            fetch("/api/start_trace", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ seeds: seeds, target_amount: loss, custom_victim: document.getElementById("customVictim").value || "[REDACTED]" })
+            }).then(() => connectWS());
+        }
+
+        function connectWS() {
+            if(ws) ws.close();
+            ws = new WebSocket("ws://" + window.location.host + "/ws");
+            
+            ws.onmessage = function(event) {
+                let d = JSON.parse(event.data);
+                
+                if (d.type === "CONSOLE") {
+                    let out = document.getElementById("console-output");
+                    if (out) {
+                        out.insertAdjacentHTML("beforeend", `<span>${d.data}</span><br>`);
+                        out.scrollTop = out.scrollHeight;
+                    }
+                    return;
+                }
+
+                if(d.type === "INIT") {
+                    document.getElementById("status").innerHTML = `<i class="fa-solid fa-spinner fa-spin text-blue-500"></i> Parsing Blockchain Ledgers...`;
+                    nodes.clear(); edges.clear(); allNodesMap.clear(); allEdgesMap.clear(); 
+                    window.exportedDataRows = []; window.terminalMap = {}; timelineItems.clear();
+                    document.getElementById("tx-log-body").innerHTML = "";
+                    document.getElementById("live-terminals-list").innerHTML = "";
+                    
+                    window.totalTracedUSD = 0;
+                    document.getElementById("kpi-widget").classList.remove("hidden");
+                    let targetLoss = parseFloat(document.getElementById("customLoss").value) || 0;
+                    document.getElementById("kpi-target").innerText = "$" + targetLoss.toLocaleString(undefined, {minimumFractionDigits:0, maximumFractionDigits:0});
+                    document.getElementById("kpi-traced").innerText = "$0";
+                    document.getElementById("kpi-progress-bar").style.width = "0%";
+                    document.getElementById("kpi-percent").innerText = "0.00% Located";
+                    return;
+                }
+                
+                if(d.type === "COMPLETE") {
+                    document.getElementById("status").innerHTML = `<span class="text-emerald-600 font-bold"><i class="fa-solid fa-check-circle"></i> TRACE COMPLETE</span>`;
+                    
+                    // Generate Chronological Timeline for Report
+                    let sortedRows = [...window.exportedDataRows].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                    let tlContainer = document.getElementById("report-timeline-container");
+                    tlContainer.innerHTML = "";
+                    sortedRows.forEach((row, idx) => {
+                        let actionStr = row.is_terminal ? "Deposited to CEX" : (row.edge_type==="MIXER" ? "Sent to Mixer" : "Transferred");
+                        let colorClass = row.is_terminal ? "text-emerald-600" : (row.edge_type==="MIXER" ? "text-purple-600" : "text-blue-600");
+                        tlContainer.insertAdjacentHTML("beforeend", `
+                            <div class="relative">
+                                <div class="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-slate-400 border-2 border-white shadow"></div>
+                                <div class="text-[10px] font-bold text-slate-500 font-mono">${row.timestamp}</div>
+                                <div class="text-xs font-bold text-slate-800">
+                                    <span class="${colorClass}">${actionStr}</span>: ${row.amount.toFixed(4)} ${row.ticker}
+                                </div>
+                                <div class="text-[10px] text-slate-600 font-mono mt-0.5 break-all">From: ${row.from}<br>To: ${row.to} (${row.receiver_entity})<br>TX: ${row.tx}</div>
+                            </div>
+                        `);
+                    });
+                    
+                    showTab('report');
+                    setTimeout(() => triggerGeneratePDF(), 1500);
+                    return;
+                }
+
+                if (d.type === "LEDGER") {
+                    let rawSeeds = document.getElementById("customSeeds").value.toLowerCase();
+                    if (!allNodesMap.has(d.from)) {
+                        let isSeed = rawSeeds.includes(d.from.toLowerCase());
+                        let n = { id: d.from, label: `${d.from}\n${d.sender_entity}\n[${d.chain}]`, image: getSafeIconUrl(d.sender_entity, false, isSeed, d.sender_entity.includes("SUSPECT"), true), shape: 'circularImage', color: {background: isSeed ? '#fef2f2' : '#ffffff', border: isSeed ? '#ef4444' : '#cbd5e1'}, borderWidth: isSeed ? 3 : 2 };
+                        allNodesMap.set(d.from, n); nodes.add(n);
+                    }
+                    if (!allNodesMap.has(d.to)) {
+                        let isSeed = rawSeeds.includes(d.to.toLowerCase());
+                        let bg = '#ffffff'; let border = '#cbd5e1';
+                        if (d.is_terminal) { bg = '#ecfdf5'; border = '#10b981'; } 
+                        else if (d.is_consolidation) { bg = '#fdf4ff'; border = '#d946ef'; }
+                        if (isSeed) { bg = '#fef2f2'; border = '#ef4444'; }
+                        
+                        let n = { id: d.to, label: `${d.to}\n${d.receiver_entity}\n[${d.chain}]`, image: getSafeIconUrl(d.receiver_entity, d.edge_type === "MIXER", isSeed, d.receiver_entity.includes("SUSPECT"), true), shape: 'circularImage', color: {background: bg, border: border}, borderWidth: d.is_terminal ? 4 : (isSeed ? 3 : 2), is_terminal: d.is_terminal, is_consolidation: d.is_consolidation };
+                        allNodesMap.set(d.to, n); nodes.add(n);
+                    }
+                    
+                    let edgeId = d.from + "-" + d.to + "-" + d.tx;
+                    if (!allEdgesMap.has(edgeId)) {
+                        let tick = (d.ticker || "").toUpperCase();
+                        let tokenImgObj = null;
+                        let tokenImgHtml = "";
+                        
+                        if(tick.includes("USDT")) { tokenImgObj = tokenImages.USDT; tokenImgHtml = `<img src="${tokenImages.USDT.src}" class="w-4 h-4 inline-block align-middle">`; }
+                        else if(tick.includes("USDC")) { tokenImgObj = tokenImages.USDC; tokenImgHtml = `<img src="${tokenImages.USDC.src}" class="w-4 h-4 inline-block align-middle">`; }
+                        else if(tick.includes("BTC")) { tokenImgObj = tokenImages.BTC; tokenImgHtml = `<img src="${tokenImages.BTC.src}" class="w-4 h-4 inline-block align-middle">`; }
+                        else if(tick.includes("ETH")) { tokenImgObj = tokenImages.ETH; tokenImgHtml = `<img src="${tokenImages.ETH.src}" class="w-4 h-4 inline-block align-middle">`; }
+                        else if(tick.includes("TRX")) { tokenImgObj = tokenImages.TRX; tokenImgHtml = `<img src="${tokenImages.TRX.src}" class="w-4 h-4 inline-block align-middle">`; }
+                        else if(tick.includes("SOL")) { tokenImgObj = tokenImages.SOL; tokenImgHtml = `<img src="${tokenImages.SOL.src}" class="w-4 h-4 inline-block align-middle">`; }
+                        else if(tick.includes("BNB")) { tokenImgObj = tokenImages.BNB; tokenImgHtml = `<img src="${tokenImages.BNB.src}" class="w-4 h-4 inline-block align-middle">`; }
+                        else { tokenImgHtml = "💱"; }
+
+                        let edgeLabel = `   ${d.amount.toFixed(4)} ${d.ticker}`;
+                        let edgeTitle = `<div class="p-1 font-mono text-xs"><b>Tx:</b> ${d.tx}<br><b>Date:</b> ${d.timestamp}<br><b>Asset:</b> ${d.amount.toFixed(4)} ${d.ticker}<br><b>Chain:</b> ${d.chain}</div>`;
+                        let e = { id: edgeId, from: d.from, to: d.to, label: edgeLabel, title: edgeTitle, tx_hash: d.tx, timestamp: d.timestamp, tokenImg: tokenImgObj };
+                        
+                        allEdgesMap.set(edgeId, e); edges.add(e);
+                        window.exportedDataRows.push(d);
+                        syncTimeline(d, edgeId);
+                        
+                        let exUrl = "";
+                        let chain = (d.chain || "").toUpperCase();
+                        if(chain === "BITCOIN") exUrl = "https://mempool.space/tx/" + d.tx;
+                        else if(chain === "TRON") exUrl = "https://tronscan.org/#/transaction/" + d.tx;
+                        else if(chain === "SOLANA") exUrl = "https://solscan.io/tx/" + d.tx;
+                        else if(chain === "POLYGON") exUrl = "https://polygonscan.com/tx/" + d.tx;
+                        else if(chain === "BSC") exUrl = "https://bscscan.com/tx/" + d.tx;
+                        else exUrl = "https://etherscan.io/tx/" + d.tx;
+
+                        let exFromUrl = exUrl.replace("/tx/" + d.tx, "/address/" + d.from);
+                        let exToUrl = exUrl.replace("/tx/" + d.tx, "/address/" + d.to);
+
+                        let tr = `<tr>
+                            <td class="p-2">${d.timestamp}</td>
+                            <td class="p-2 text-blue-600 font-mono"><a href="${exUrl}" target="_blank" class="hover:underline" title="View Transaction on Explorer">${d.tx.substring(0,12)}...</a></td>
+                            <td class="p-2 text-blue-600 font-mono"><a href="${exFromUrl}" target="_blank" class="hover:underline" title="View Sender Wallet on Explorer">${d.from}</a></td>
+                            <td class="p-2 text-blue-600 font-mono"><a href="${exToUrl}" target="_blank" class="hover:underline" title="View Receiver Wallet on Explorer">${d.to}</a></td>
+                            <td class="p-2">${d.receiver_entity}</td>
+                            <td class="p-2 text-right whitespace-nowrap">${tokenImgHtml} ${d.amount.toFixed(4)}</td>
+                            <td class="p-2 text-xs font-bold text-slate-600">${d.edge_type || d.intent_action || "TRANSFER"}</td>
+                            <td class="p-2 text-xs text-purple-700 font-mono">${d.cluster || "UNCLUSTERED"}</td>
+                            <td class="p-2 text-center text-xs font-bold text-emerald-600">${d.confidence ? d.confidence + "%" : "N/A"}</td>
+                        </tr>`;
+                        document.getElementById("tx-log-body").insertAdjacentHTML('beforeend', tr);
+                        
+                        if(d.is_terminal) {
+                            let list = document.getElementById("live-terminals-list");
+                            let c = document.getElementById("term-card-"+d.to);
+                            if(!c) {
+                                document.getElementById("live-terminals-container").classList.remove("hidden");
+                                list.insertAdjacentHTML('beforeend', `<div id="term-card-${d.to}" class="bg-emerald-50 border border-emerald-200 p-2 rounded text-[10px]"><strong>${d.receiver_entity}</strong><br><span class="text-emerald-700">${tokenImgHtml} ${d.amount.toFixed(4)} ${d.ticker}</span></div>`);
+                            }
+                        }
+                        
+                        // Update Multi-Chain KPI Progress (Estimated USD)
+                        let tick = d.ticker.toUpperCase();
+                        let rate = 1; // Default stablecoin
+                        if(tick.includes("BTC")) rate = 60000;
+                        else if(tick.includes("ETH")) rate = 3000;
+                        else if(tick.includes("SOL")) rate = 150;
+                        else if(tick.includes("BNB")) rate = 600;
+                        else if(tick.includes("TRX")) rate = 0.12;
+                        
+                        // Only add to total if it's a consolidation or terminal node to avoid double-counting the same hop
+                        if (d.is_terminal || d.is_consolidation || d.edge_type === "MIXER") {
+                            window.totalTracedUSD += (d.amount * rate);
+                        }
+                        
+                        let targetLoss = parseFloat(document.getElementById("customLoss").value) || 1;
+                        let pct = Math.min((window.totalTracedUSD / targetLoss) * 100, 100);
+                        document.getElementById("kpi-traced").innerText = "$" + window.totalTracedUSD.toLocaleString(undefined, {minimumFractionDigits:0, maximumFractionDigits:0});
+                        document.getElementById("kpi-progress-bar").style.width = pct + "%";
+                        document.getElementById("kpi-percent").innerText = pct.toFixed(2) + "% Located";
+                    }
+                }
+            };
+        }
+        function toggleOsintModal() {
+            const modal = document.getElementById('osintModal');
+            if (modal.classList.contains('translate-x-full')) {
+                modal.classList.remove('translate-x-full');
+            } else {
+                modal.classList.add('translate-x-full');
+            }
+        }
+
+        async function processOsint() {
+            const fileInput = document.getElementById('osintFile');
+            const objective = document.getElementById('osintObjective').value;
+            
+            if (!fileInput.files.length && !objective) {
+                alert("Please upload a file or enter an objective.");
+                return;
+            }
+            
+            const formData = new FormData();
+            if (fileInput.files.length) {
+                formData.append("file", fileInput.files[0]);
+            }
+            formData.append("objective", objective);
+
+            document.getElementById('osintStatus').innerText = "Analyzing with Nemesis AI Engine...";
+            
+            try {
+                const response = await fetch('/api/ingest_osint', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                if (data.error) {
+                    alert("Error: " + data.error);
+                    document.getElementById('osintStatus').innerText = "AI Analysis Failed.";
+                    return;
+                }
+
+                document.getElementById('osintStatus').innerText = "Success! Seeds Applied. Ready for Tracing.";
+                
+                if (data.seeds && data.seeds.length) {
+                    document.getElementById('customSeeds').value = data.seeds.join('\n');
+                }
+                if (data.loss_amount) {
+                    document.getElementById('customLoss').value = data.loss_amount;
+                }
+
+                // Global OSINT storage for the Subpoena PDF Report
+                window.globalOsintContext = data;
+                
+            } catch (err) {
+                console.error(err);
+                document.getElementById('osintStatus').innerText = "Connection Error to AI Backend.";
+            }
+        }
+        
+        async function triggerGeneratePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'pt', 'a4');
+            const pageWidth = doc.internal.pageSize.getWidth();
+            let y = 40;
+
+            const victimId = document.getElementById("customVictim").value || "[REDACTED]";
+            const lossAmt = document.getElementById("customLoss").value || "Unknown";
+
+            // Headers
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.setTextColor(220, 38, 38); // Red
+            doc.text("LIONSGATE NEMESIS RECON ENGINE", pageWidth/2, y, { align: "center" });
+            y += 20;
+            
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            doc.text("EVIDENTIARY TRAIL AFFIDAVIT - SUBPOENA SUPPORT DOCUMENT", pageWidth/2, y, { align: "center" });
+            y += 30;
+
+            // Details
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(10);
+            doc.text(`DATE GENERATED: ${new Date().toUTCString()}`, 40, y); y += 15;
+            doc.text(`CASE / VICTIM REF: ${victimId}`, 40, y); y += 15;
+            doc.text(`TOTAL LOSS USD: $${lossAmt}`, 40, y); y += 30;
+
+            // OSINT AI Extracted Context
+            if (window.globalOsintContext) {
+                doc.setFont("helvetica", "bold");
+                doc.text("1. MISSION OBJECTIVE & OSINT INTELLIGENCE", 40, y); y += 15;
+                doc.setFont("helvetica", "normal");
+                
+                const splitObjective = doc.splitTextToSize(`Objective / Incident Summary: ${window.globalOsintContext.incident_summary || "None provided"}`, pageWidth - 80);
+                doc.text(splitObjective, 40, y);
+                y += (splitObjective.length * 12) + 10;
+                
+                if (window.globalOsintContext.entity_domains && window.globalOsintContext.entity_domains.length > 0) {
+                    doc.text(`Associated Suspect Domains: ${window.globalOsintContext.entity_domains.join(', ')}`, 40, y);
+                    y += 15;
+                }
+                if (window.globalOsintContext.usernames && window.globalOsintContext.usernames.length > 0) {
+                    doc.text(`Associated Suspect Usernames/Handles: ${window.globalOsintContext.usernames.join(', ')}`, 40, y);
+                    y += 15;
+                }
+                y += 20;
+            } else {
+                doc.setFont("helvetica", "italic");
+                doc.text("No AI OSINT Analysis Provided.", 40, y); y += 30;
+            }
+
+            // Cryptographic Terminals
+            doc.setFont("helvetica", "bold");
+            doc.text("2. CRYPTOGRAPHIC CHAIN OF CUSTODY & TERMINAL NODES", 40, y); y += 15;
+            doc.setFont("helvetica", "normal");
+            
+            let terminals = [];
+            window.exportedDataRows.forEach(row => {
+                if (row.is_terminal && row.receiver_entity && !row.receiver_entity.includes("Unknown")) {
+                    terminals.push(`${row.receiver_entity} - Address: ${row.to} - Chain: ${row.chain}`);
+                }
+            });
+            // Deduplicate
+            terminals = [...new Set(terminals)];
+            
+            if (terminals.length > 0) {
+                doc.text("The traced assets successfully deposited into the following identified custody providers:", 40, y); y+=15;
+                terminals.forEach(term => {
+                    if (y > 750) { doc.addPage(); y = 40; }
+                    doc.text(`- ${term}`, 50, y); y+=15;
+                });
+            } else {
+                doc.text("No highly confident terminal deposit nodes (Exchanges/Custodians) were identified in this trace depth.", 40, y); y+=15;
+            }
+            y += 20;
+
+            // Legal Action Clauses
+            doc.setFont("helvetica", "bold");
+            doc.text("3. ACTIONABLE SUBPOENA & PRESERVATION CLAUSES", 40, y); y += 15;
+            doc.setFont("helvetica", "normal");
+            const legalText = `To Law Enforcement / General Counsel:\nThe transaction hashes and deposit addresses listed in section 2 represent the verified cryptographic terminus of the stolen funds. Immediate Action Required:\n\n1. Issue a Preservation Order to the identified exchanges for the listed deposit addresses to freeze the assets.\n2. Subpoena KYC/AML records, login IP logs, and withdrawal accounts associated with these deposit addresses.\n3. Note: The blockchain ledger is immutable; the cryptographic paths established by the Nemesis Engine are mathematically verified.`;
+            const splitLegal = doc.splitTextToSize(legalText, pageWidth - 80);
+            doc.text(splitLegal, 40, y);
+            y += (splitLegal.length * 12) + 30;
+
+            // Add the graph snapshot
+            try {
+                const canvas = await html2canvas(document.getElementById('graph'));
+                const imgData = canvas.toDataURL('image/jpeg', 0.9);
+                if (y > 500) { doc.addPage(); y = 40; }
+                doc.setFont("helvetica", "bold");
+                doc.text("4. VISUAL EVIDENTIARY TRACE GRAPH", 40, y); y += 15;
+                doc.addImage(imgData, 'JPEG', 40, y, 500, 300);
+            } catch (e) {
+                console.log("Could not render graph to PDF", e);
+            }
+
+            doc.save(`LIONSGATE_EVIDENTIARY_TRAIL_${victimId}_${new Date().getTime()}.pdf`);
+            alert("Evidentiary Subpoena Report Generated Successfully!");
+        }
+    </script>
+</body>
+</html>

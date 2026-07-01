@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nemesis | Admin Authentication</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #050505;
+            background-image: radial-gradient(circle at 50% 50%, rgba(20, 20, 25, 1) 0%, rgba(5, 5, 5, 1) 100%);
+            color: #e0e0e0;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Animated Grid Background */
+        .grid-bg {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-size: 50px 50px;
+            background-image: 
+                linear-gradient(to right, rgba(0, 255, 136, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 255, 136, 0.05) 1px, transparent 1px);
+            z-index: 0;
+            animation: pan 20s linear infinite;
+        }
+        @keyframes pan {
+            from { transform: translateY(0); }
+            to { transform: translateY(50px); }
+        }
+
+        .glass-panel {
+            background: rgba(10, 10, 15, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            box-shadow: 0 0 40px rgba(0, 255, 136, 0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .cyber-input {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            transition: all 0.3s ease;
+        }
+        .cyber-input:focus {
+            border-color: #00ff88;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+            outline: none;
+        }
+
+        .cyber-btn {
+            background: linear-gradient(90deg, #00ff88 0%, #00b8ff 100%);
+            color: #000;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .cyber-btn:hover {
+            box-shadow: 0 0 25px rgba(0, 255, 136, 0.5);
+            transform: translateY(-2px);
+        }
+        .cyber-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: linear-gradient(rgba(255,255,255,0.2), transparent, transparent);
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
+        }
+        @keyframes shine {
+            0% { left: -50%; }
+            100% { left: 150%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+    
+    <div class="glass-panel p-10 rounded-2xl w-full max-w-md">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00ff88] to-[#00b8ff] tracking-widest mb-2">NEMESIS</h1>
+            <p class="text-sm text-gray-400 tracking-widest uppercase">Admin Authorization</p>
+        </div>
+
+        <form id="loginForm" class="space-y-6">
+            <div>
+                <label class="block text-xs text-gray-400 uppercase tracking-wider mb-2">Identifier</label>
+                <input type="text" id="username" class="cyber-input w-full px-4 py-3 rounded-lg" placeholder="Enter Admin ID" required>
+            </div>
+            <div>
+                <label class="block text-xs text-gray-400 uppercase tracking-wider mb-2">Passcode</label>
+                <input type="password" id="password" class="cyber-input w-full px-4 py-3 rounded-lg" placeholder="••••••••••••" required>
+            </div>
+            
+            <div id="error-msg" class="hidden text-red-500 text-sm text-center"></div>
+
+            <button type="submit" class="cyber-btn w-full py-4 rounded-lg mt-4">
+                Initialize Uplink
+            </button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            const err = document.getElementById('error-msg');
+            
+            try {
+                // Determine API URL based on environment
+                const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const apiUrl = isLocal ? 'http://127.0.0.1:3001/api/login' : 'https://nemesis-api.legionxgaming2021.workers.dev/api/login';
+
+                const formData = new URLSearchParams();
+                formData.append('username', u);
+                formData.append('password', p);
+
+                const res = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData
+                });
+
+                const data = await res.json();
+                
+                if (res.ok) {
+                    localStorage.setItem('nemesis_admin_token', data.access_token);
+                    err.classList.add('hidden');
+                    window.location.href = 'admin.html';
+                } else {
+                    err.textContent = data.detail || 'Access Denied.';
+                    err.classList.remove('hidden');
+                }
+            } catch (error) {
+                err.textContent = 'Connection to mainframe failed.';
+                err.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

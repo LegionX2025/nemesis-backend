@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+motor
+aiohttp
+pydantic
+certifi
+pandas
+scikit-learn
+networkx
+requests
+pytest
+playwright

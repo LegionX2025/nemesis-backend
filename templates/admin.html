@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lionsgate Omni-Chain Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; margin: 0; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .glass-panel { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(15,23,42,0.1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden bg-[#050505] text-[#e0e0e0] font-sans selection:bg-[#00ff88] selection:text-black">
+    <!-- Background Grid -->
+    <div class="absolute inset-0 pointer-events-none" style="background-image: linear-gradient(to right, rgba(0,255,136,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,255,136,0.03) 1px, transparent 1px); background-size: 40px 40px;"></div>
+
+    <!-- Sidebar -->
+    <aside class="w-72 bg-[rgba(10,10,15,0.8)] backdrop-blur-xl border-r border-[#00ff88]/20 flex flex-col z-20 shadow-[4px_0_24px_rgba(0,255,136,0.05)]">
+        <div class="p-6 flex flex-col gap-2 border-b border-[#00ff88]/20">
+            <h1 class="font-black text-2xl text-transparent bg-clip-text bg-gradient-to-r from-[#00ff88] to-[#00b8ff] tracking-widest mt-2">NEMESIS</h1>
+            <p class="text-[10px] text-[#00b8ff] font-bold uppercase tracking-widest">Command Center</p>
+        </div>
+        <nav class="flex-1 p-4 space-y-2 font-bold text-xs tracking-widest uppercase">
+            <a href="#" onclick="switchTab('logs')" id="tab-logs" class="flex items-center gap-3 px-4 py-3 bg-[#00ff88]/10 text-[#00ff88] border border-[#00ff88]/50 rounded-lg transition">
+                [LIVE] Console Logs
+            </a>
+            <a href="#" onclick="switchTab('cases')" id="tab-cases" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-[#00ff88] hover:bg-[#00ff88]/5 rounded-lg transition border border-transparent">
+                Case Management
+            </a>
+            <a href="#" onclick="switchTab('database')" id="tab-database" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-[#00ff88] hover:bg-[#00ff88]/5 rounded-lg transition border border-transparent">
+                Database Stats
+            </a>
+            <a href="#" onclick="switchTab('config')" id="tab-config" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-[#00ff88] hover:bg-[#00ff88]/5 rounded-lg transition border border-transparent">
+                API Configuration
+            </a>
+            <a href="#" onclick="switchTab('engine')" id="tab-engine" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-[#00ff88] hover:bg-[#00ff88]/5 rounded-lg transition border border-transparent">
+                Engine Controls
+            </a>
+        </nav>
+        <div class="p-4 border-t border-[#00ff88]/20">
+            <button onclick="logout()" class="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded border border-red-500/30 text-xs font-bold transition uppercase tracking-wider">
+                Terminate Uplink
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col relative overflow-y-auto z-10">
+        <header class="bg-[rgba(10,10,15,0.9)] backdrop-blur-md border-b border-[#00ff88]/20 px-8 py-6 flex justify-between items-center sticky top-0">
+            <h2 class="text-xl font-bold text-white tracking-widest uppercase" id="header-title">Live Console Logs</h2>
+            <div class="flex items-center gap-4">
+                <span class="flex items-center gap-2 text-[10px] font-bold text-[#00ff88] bg-[#00ff88]/10 px-3 py-1 rounded border border-[#00ff88]/30 tracking-widest uppercase">
+                    <span class="w-2 h-2 rounded-full bg-[#00ff88] animate-pulse shadow-[0_0_8px_#00ff88]"></span> Uplink Active
+                </span>
+            </div>
+        </header>
+
+        <div class="p-8">
+            <!-- Logs View -->
+            <div id="view-logs" class="block h-[70vh]">
+                <div class="bg-black border border-[#00ff88]/30 rounded-lg h-full overflow-hidden flex flex-col shadow-[0_0_30px_rgba(0,255,136,0.05)]">
+                    <div class="bg-[#00ff88]/10 px-4 py-2 border-b border-[#00ff88]/30 text-[10px] text-[#00ff88] uppercase tracking-widest font-bold">
+                        Tail: logs/nemesis.log
+                    </div>
+                    <div id="log-console" class="flex-1 p-4 overflow-y-auto font-mono text-xs text-gray-300 leading-relaxed break-all">
+                        <span class="text-[#00ff88]">Initializing Log Stream...</span><br>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cases View -->
+            <div id="view-cases" class="hidden space-y-6">
+                <div class="bg-[rgba(20,20,25,0.8)] border border-[#00ff88]/20 p-6 rounded-xl">
+                    <h3 class="text-[#00ff88] text-sm uppercase tracking-widest font-bold mb-4 border-b border-[#00ff88]/20 pb-2">Active Cases</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="text-xs text-gray-500 uppercase tracking-wider border-b border-[#00ff88]/10">
+                                <tr>
+                                    <th class="pb-3">Case ID</th>
+                                    <th class="pb-3">Name</th>
+                                    <th class="pb-3">Status</th>
+                                    <th class="pb-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cases-table" class="divide-y divide-[#00ff88]/10">
+                                <tr><td colspan="4" class="py-4 text-center text-gray-500 italic">No cases found</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Database View -->
+            <div id="view-database" class="hidden space-y-6">
+                <div class="grid grid-cols-3 gap-6">
+                    <div class="bg-[rgba(20,20,25,0.8)] border border-[#00b8ff]/20 p-6 rounded-xl text-center">
+                        <h4 class="text-gray-500 text-[10px] uppercase tracking-widest mb-2">Stored Traces</h4>
+                        <div id="stat-traces" class="text-4xl font-black text-[#00b8ff]">0</div>
+                    </div>
+                    <div class="bg-[rgba(20,20,25,0.8)] border border-[#00ff88]/20 p-6 rounded-xl text-center">
+                        <h4 class="text-gray-500 text-[10px] uppercase tracking-widest mb-2">Wallet Labels</h4>
+                        <div id="stat-wallets" class="text-4xl font-black text-[#00ff88]">0</div>
+                    </div>
+                    <div class="bg-[rgba(20,20,25,0.8)] border border-purple-500/20 p-6 rounded-xl text-center">
+                        <h4 class="text-gray-500 text-[10px] uppercase tracking-widest mb-2">Case Files</h4>
+                        <div id="stat-cases" class="text-4xl font-black text-purple-400">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Config View -->
+            <div id="view-config" class="hidden space-y-6">
+                <div class="bg-[rgba(20,20,25,0.8)] border border-[#00ff88]/20 p-6 rounded-xl">
+                    <h3 class="text-[#00ff88] text-sm uppercase tracking-widest font-bold mb-4 border-b border-[#00ff88]/20 pb-2">API Configuration</h3>
+                    <div id="config-form" class="space-y-4">
+                        <p class="text-gray-500 text-xs italic">Loading configuration...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Engine View -->
+            <div id="view-engine" class="hidden space-y-6">
+                <div class="bg-[rgba(20,20,25,0.8)] border border-[#00ff88]/20 p-6 rounded-xl">
+                    <h3 class="text-[#00ff88] text-sm uppercase tracking-widest font-bold mb-4 border-b border-[#00ff88]/20 pb-2">Engine Thresholds</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Max Trace Depth</label>
+                            <input type="number" id="engine-depth" class="w-full bg-black border border-[#00ff88]/30 rounded p-2 text-white text-sm" value="3">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Max Hops</label>
+                            <input type="number" id="engine-hops" class="w-full bg-black border border-[#00ff88]/30 rounded p-2 text-white text-sm" value="50">
+                        </div>
+                        <button onclick="saveEngineConfig()" class="mt-4 px-4 py-2 bg-[#00ff88]/10 text-[#00ff88] border border-[#00ff88]/50 rounded text-xs font-bold uppercase tracking-widest hover:bg-[#00ff88]/20 transition">Apply Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Auth Check
+        const token = localStorage.getItem('nemesis_admin_token');
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const baseUrl = isLocal ? 'http://127.0.0.1:3001' : '';
+        const wsUrl = isLocal ? 'ws://127.0.0.1:3001' : (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host;
+
+        const authHeaders = {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+
+        function logout() {
+            localStorage.removeItem('nemesis_admin_token');
+            window.location.href = 'login.html';
+        }
+
+        // Tab Switching
+        function switchTab(tabId) {
+            const tabs = ['logs', 'cases', 'database', 'config', 'engine'];
+            const titles = {
+                'logs': 'Live Console Logs',
+                'cases': 'Case Management',
+                'database': 'Database Statistics',
+                'config': 'API Configuration',
+                'engine': 'Engine Controls'
+            };
+
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                const view = document.getElementById(`view-${t}`);
+                
+                if (t === tabId) {
+                    btn.className = "flex items-center gap-3 px-4 py-3 bg-[#00ff88]/10 text-[#00ff88] border border-[#00ff88]/50 rounded-lg transition";
+                    view.classList.remove('hidden');
+                    view.classList.add('block');
+                } else {
+                    btn.className = "flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-[#00ff88] hover:bg-[#00ff88]/5 rounded-lg transition border border-transparent";
+                    view.classList.add('hidden');
+                    view.classList.remove('block');
+                }
+            });
+            document.getElementById('header-title').innerText = titles[tabId];
+
+            if (tabId === 'cases') fetchCases();
+            if (tabId === 'database') fetchDbStats();
+            if (tabId === 'config') fetchConfig();
+        }
+
+        // Module: Logs
+        function initLogsWS() {
+            const ws = new WebSocket(`${wsUrl}/ws/admin/logs?token=${token}`);
+            const consoleDiv = document.getElementById('log-console');
+            ws.onmessage = (e) => {
+                const span = document.createElement('div');
+                span.textContent = e.data;
+                // Basic color coding
+                if (e.data.includes('ERROR')) span.className = 'text-red-500';
+                else if (e.data.includes('WARNING')) span.className = 'text-yellow-500';
+                else if (e.data.includes('INFO')) span.className = 'text-[#00b8ff]';
+                
+                consoleDiv.appendChild(span);
+                consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            };
+            ws.onclose = () => {
+                setTimeout(initLogsWS, 5000); // Reconnect
+            };
+        }
+
+        // Module: Cases
+        async function fetchCases() {
+            try {
+                const res = await fetch(`${baseUrl}/api/admin/cases`, { headers: authHeaders });
+                if (res.status === 401) logout();
+                const data = await res.json();
+                
+                const tbody = document.getElementById('cases-table');
+                if (!data.cases || data.cases.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-gray-500 italic">No cases found</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = data.cases.map(c => `
+                    <tr>
+                        <td class="py-3 font-mono text-[#00b8ff]">${c.case_id}</td>
+                        <td class="py-3">${c.name}</td>
+                        <td class="py-3"><span class="bg-[#00ff88]/10 text-[#00ff88] px-2 py-1 rounded text-[10px] border border-[#00ff88]/30">${c.status}</span></td>
+                        <td class="py-3 text-right"><button class="text-xs text-gray-400 hover:text-white">View</button></td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // Module: Database
+        async function fetchDbStats() {
+            try {
+                const res = await fetch(`${baseUrl}/api/admin/db_stats`, { headers: authHeaders });
+                const data = await res.json();
+                document.getElementById('stat-traces').innerText = data.traces || 0;
+                document.getElementById('stat-wallets').innerText = data.wallets || 0;
+                document.getElementById('stat-cases').innerText = data.cases || 0;
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // Module: Config
+        async function fetchConfig() {
+            try {
+                const res = await fetch(`${baseUrl}/api/admin/config`, { headers: authHeaders });
+                const data = await res.json();
+                document.getElementById('config-form').innerHTML = `
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Gemini API Key</label>
+                        <input type="text" disabled value="${data.gemini_key}" class="w-full bg-black border border-gray-800 rounded p-2 text-gray-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Etherscan API Key</label>
+                        <input type="text" disabled value="${data.etherscan_key}" class="w-full bg-black border border-gray-800 rounded p-2 text-gray-500 text-sm">
+                    </div>
+                `;
+                document.getElementById('engine-depth').value = data.max_depth || 3;
+                document.getElementById('engine-hops').value = data.max_hops || 50;
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function saveEngineConfig() {
+            const depth = parseInt(document.getElementById('engine-depth').value);
+            const hops = parseInt(document.getElementById('engine-hops').value);
+            
+            try {
+                const res = await fetch(`${baseUrl}/api/admin/config`, {
+                    method: 'POST',
+                    headers: authHeaders,
+                    body: JSON.stringify({ gemini_key: "", etherscan_key: "", polygonscan_key: "", max_depth: depth, max_hops: hops })
+                });
+                if (res.ok) alert("Engine config updated.");
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        // Initialize
+        initLogsWS();
+    </script>
+</body>
+</html>
