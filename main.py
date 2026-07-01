@@ -11,7 +11,7 @@ import logging
 import datetime
 from collections import defaultdict
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket, Request, BackgroundTasks, Response, Depends, HTTPException, status
+from fastapi import FastAPI, WebSocket, Request, BackgroundTasks, Response, Depends, HTTPException, status, UploadFile, File, Form
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -21,6 +21,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 import uuid
+import io
+import PyPDF2
+from docx import Document
+from google import genai
+from google.genai import types
 
 # Setup logging for console and file (for Admin WS tailing)
 log_dir = "logs"
@@ -211,6 +216,79 @@ async def api_resolve_entity(req: ResolveRequest):
         return {"results": results}
     except Exception as e:
         logger.error(f"Error in resolve_entity: {e}")
+        return {"status": "error", "message": str(e)}
+
+@app.post("/api/analyze_case_files")
+async def api_analyze_case_files(files: list[UploadFile] = File(...)):
+    try:
+        combined_text = ""
+        for file in files:
+            content = await file.read()
+            filename = file.filename.lower()
+            if filename.endswith(".txt") or filename.endswith(".csv") or filename.endswith(".json") or filename.endswith(".log"):
+                combined_text += f"\n--- {file.filename} ---\n" + content.decode("utf-8", errors="ignore")
+            elif filename.endswith(".pdf"):
+                combined_text += f"\n--- {file.filename} ---\n"
+                try:
+                    pdf_reader = PyPDF2.PdfReader(io.BytesIO(content))
+                    for page in pdf_reader.pages:
+                        combined_text += page.extract_text() + "\n"
+                except Exception as e:
+                    logger.error(f"Error reading PDF {filename}: {e}")
+            elif filename.endswith(".docx"):
+                combined_text += f"\n--- {file.filename} ---\n"
+                try:
+                    doc = Document(io.BytesIO(content))
+                    for para in doc.paragraphs:
+                        combined_text += para.text + "\n"
+                except Exception as e:
+                    logger.error(f"Error reading DOCX {filename}: {e}")
+        
+        # Call Gemini via SDK
+        api_key = os.getenv("GEMINI_API_KEYS")
+        if not api_key:
+            raise Exception("GEMINI_API_KEYS not configured on backend.")
+        
+        # Handle multiple keys if comma separated
+        api_key = api_key.split(",")[0].strip()
+        client = genai.Client(api_key=api_key)
+        
+        system_instruction = '''You are an elite cyber-forensic intelligence extractor. Extract entities from the text into a strict JSON object.
+Fields:
+- incidents: list of strings (e.g. "Ransomware Attack", "Phishing")
+- suspect_wallets: list of strings (crypto addresses)
+- tx_hashes: list of strings
+- domains: list of strings
+- usernames: list of strings
+- total_loss_assets: string (number only, e.g. "15000")
+- currency: string (e.g. "USDT", "BTC")
+- network_chain: string ("BTC", "ETH", "BSC", "TRX", "SOL", "AUTO")
+- summary: A 2-3 sentence professional intelligence brief summarizing the findings.
+Ensure output is pure JSON. Do not use markdown blocks like ```json.
+'''
+        
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=combined_text[:100000], # Limit to avoid context bloat
+            config=types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                temperature=0.1,
+                response_mime_type="application/json"
+            )
+        )
+        
+        result_json = response.text
+        try:
+            intel = json.loads(result_json)
+        except:
+            # Fallback regex strip
+            stripped = re.sub(r'```json\n|```', '', result_json).strip()
+            intel = json.loads(stripped)
+            
+        return {"status": "success", "intelligence": intel}
+        
+    except Exception as e:
+        logger.error(f"Error in analyze_case_files: {e}")
         return {"status": "error", "message": str(e)}
 
 @app.get("/")

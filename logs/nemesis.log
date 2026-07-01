@@ -3201,3 +3201,89 @@ Exception: Page.close: Connection closed while reading from the driver
 2026-07-01 19:42:50,102 - OmniChainEngine - WARNING - MongoDB not available: us-east-1-shard-00-01.ufsuw.mongodb.net:27017: timed out (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),us-east-1-shard-00-00.ufsuw.mongodb.net:27017: timed out (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),us-east-1-shard-00-02.ufsuw.mongodb.net:27017: timed out (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms), Timeout: 15.0s, Topology Description: <TopologyDescription id: 6a44fd1a59db48013b530bfb, topology_type: ReplicaSetNoPrimary, servers: [<ServerDescription ('us-east-1-shard-00-00.ufsuw.mongodb.net', 27017) server_type: Unknown, rtt: None, error=NetworkTimeout('us-east-1-shard-00-00.ufsuw.mongodb.net:27017: timed out (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('us-east-1-shard-00-01.ufsuw.mongodb.net', 27017) server_type: Unknown, rtt: None, error=NetworkTimeout('us-east-1-shard-00-01.ufsuw.mongodb.net:27017: timed out (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('us-east-1-shard-00-02.ufsuw.mongodb.net', 27017) server_type: Unknown, rtt: None, error=NetworkTimeout('us-east-1-shard-00-02.ufsuw.mongodb.net:27017: timed out (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>]>. Running in memory-only mode.
 2026-07-01 19:42:51,769 - OmniChainEngine.Scraper - INFO - Playwright Auto-Scraper initialized.
 2026-07-01 19:42:51,793 - OmniChainEngine - ERROR -     [FAIL] Failed to initialize Darknet crawler: No module named 'pypdf'
+2026-07-02 00:53:09,269 - OmniChainEngine - INFO - ==================================================
+2026-07-02 00:53:09,270 - OmniChainEngine - INFO -    INITIATING LIONSGATE NEMESIS BOOT SEQUENCE     
+2026-07-02 00:53:09,270 - OmniChainEngine - INFO - ==================================================
+2026-07-02 00:53:09,270 - OmniChainEngine - INFO - >>> [1/5] Verifying Dependencies...
+2026-07-02 00:53:11,920 - OmniChainEngine - INFO -     [OK] google-genai and core dependencies verified.
+2026-07-02 00:53:11,921 - OmniChainEngine - INFO - >>> [2/5] Checking Intelligence Providers & API Keys...
+2026-07-02 00:53:11,921 - OmniChainEngine - INFO -     [OK] Etherscan Provider Active.
+2026-07-02 00:53:11,921 - OmniChainEngine - WARNING -     [WARN] OKLink API Key missing or default.
+2026-07-02 00:53:11,922 - OmniChainEngine - INFO -     [OK] Tatum Provider Active.
+2026-07-02 00:53:11,922 - OmniChainEngine - INFO -     [OK] Gemini (AI) Provider Active.
+2026-07-02 00:53:11,922 - OmniChainEngine - INFO - >>> [3/5] Loading Supported Networks...
+2026-07-02 00:53:11,922 - OmniChainEngine - INFO -     [OK] EVM Chains: ETHEREUM, BSC, POLYGON, BASE, ARBITRUM, OPTIMISM
+2026-07-02 00:53:11,922 - OmniChainEngine - INFO -     [OK] Non-EVM Chains: BITCOIN, SOLANA, TRON, RIPPLE, STELLAR
+2026-07-02 00:53:11,922 - OmniChainEngine - INFO - >>> [4/5] Verifying Tracing Engine & Executions...
+2026-07-02 00:53:11,923 - OmniChainEngine - INFO -     [OK] Tracing Engine Ready. Parallel Executions (Max 4 Workers).
+2026-07-02 00:53:11,923 - OmniChainEngine - INFO - >>> [5/6] Fetching Data Modules...
+2026-07-02 00:53:11,923 - OmniChainEngine - INFO -     [OK] Scraping fallback active. Asyncio data fetching pools ready.
+2026-07-02 00:53:11,923 - OmniChainEngine - INFO - >>> [6/6] Triggering System Auto-Backup...
+2026-07-02 00:53:11,931 - OmniChainEngine - INFO -     [OK] Auto-backup routine dispatched to background.
+2026-07-02 00:53:11,932 - OmniChainEngine - INFO - ==================================================
+2026-07-02 00:53:11,932 - OmniChainEngine - INFO -    NEMESIS ENGINE READY FOR OMNICHAIN OPERATIONS  
+2026-07-02 00:53:11,932 - OmniChainEngine - INFO - ==================================================
+2026-07-02 00:53:17,106 - OmniChainEngine - INFO -     [OK] Playwright chromium installed successfully.
+2026-07-02 00:53:34,007 - OmniChainEngine - WARNING - Could not create MongoDB indexes: No replica set members found yet, Timeout: 15.0s, Topology Description: <TopologyDescription id: 6a4545fd8ec0fc70fc3ffc27, topology_type: ReplicaSetNoPrimary, servers: [<ServerDescription ('us-east-1-shard-00-00.ufsuw.mongodb.net', 27017) server_type: Unknown, rtt: None>, <ServerDescription ('us-east-1-shard-00-01.ufsuw.mongodb.net', 27017) server_type: Unknown, rtt: None>, <ServerDescription ('us-east-1-shard-00-02.ufsuw.mongodb.net', 27017) server_type: Unknown, rtt: None>]>
+2026-07-02 00:53:49,554 - OmniChainEngine - WARNING - MongoDB not available: us-east-1-shard-00-02.ufsuw.mongodb.net:27017: timed out (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),us-east-1-shard-00-01.ufsuw.mongodb.net:27017: timed out (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),us-east-1-shard-00-00.ufsuw.mongodb.net:27017: timed out (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms), Timeout: 15.0s, Topology Description: <TopologyDescription id: 6a4545fd8ec0fc70fc3ffc27, topology_type: ReplicaSetNoPrimary, servers: [<ServerDescription ('us-east-1-shard-00-00.ufsuw.mongodb.net', 27017) server_type: Unknown, rtt: None, error=NetworkTimeout('us-east-1-shard-00-00.ufsuw.mongodb.net:27017: timed out (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('us-east-1-shard-00-01.ufsuw.mongodb.net', 27017) server_type: Unknown, rtt: None, error=NetworkTimeout('us-east-1-shard-00-01.ufsuw.mongodb.net:27017: timed out (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('us-east-1-shard-00-02.ufsuw.mongodb.net', 27017) server_type: Unknown, rtt: None, error=NetworkTimeout('us-east-1-shard-00-02.ufsuw.mongodb.net:27017: timed out (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>]>. Running in memory-only mode.
+2026-07-02 00:53:52,276 - OmniChainEngine.Scraper - INFO - Playwright Auto-Scraper initialized.
+2026-07-02 00:53:53,010 - OmniChainEngine - ERROR -     [FAIL] Failed to initialize Darknet crawler: No module named 'docx'
+2026-07-02 00:55:10,730 - OmniChainEngine - INFO - 🚀 [MULTI-CHAIN TRACE b04e61a6 INITIALIZED]
+2026-07-02 00:55:10,731 - OmniChainEngine - INFO - 🔍 Queue size: 36 | Seeds: {'0x030c0c65dbb914e423992f35b4fe956f5e90b045': 'MULTI-EVM', '0x7b9123262ad3b1f3be48046b7d1e8f3cd50b33d9': 'MULTI-EVM', '0x97f1b05adb4fccca8a1a34e4801079547351419d': 'MULTI-EVM', '0x36043c1860998b53dfef070947f54a7b4567e9ac': 'MULTI-EVM', '0x819c8ae7ea9fd880426fad62639d355d6afc6921': 'MULTI-EVM', '0xc28b3fefd967e573834f87400a65395e1c63ba99': 'MULTI-EVM'}
+2026-07-02 00:55:14,387 - OmniChainEngine - INFO - [BSC] Fetched 0 txs for 0x819c8ae7ea9fd880426fad62639d355d6afc6921
+2026-07-02 00:55:14,767 - OmniChainEngine - INFO - [BSC] Fetched 0 txs for 0x36043c1860998b53dfef070947f54a7b4567e9ac
+2026-07-02 00:55:14,856 - OmniChainEngine - INFO - [BSC] Fetched 100 txs for 0x030c0c65dbb914e423992f35b4fe956f5e90b045
+2026-07-02 00:55:15,060 - OmniChainEngine - INFO - [BSC] Fetched 0 txs for 0xc28b3fefd967e573834f87400a65395e1c63ba99
+2026-07-02 00:55:16,006 - OmniChainEngine - INFO - [BASE] Fetched 0 txs for 0x36043c1860998b53dfef070947f54a7b4567e9ac
+2026-07-02 00:55:16,024 - OmniChainEngine - INFO - [BASE] Fetched 0 txs for 0x97f1b05adb4fccca8a1a34e4801079547351419d
+2026-07-02 00:55:16,025 - OmniChainEngine - INFO - [BASE] Fetched 0 txs for 0x030c0c65dbb914e423992f35b4fe956f5e90b045
+2026-07-02 00:55:16,393 - OmniChainEngine - INFO - [ARBITRUM] Fetched 0 txs for 0xc28b3fefd967e573834f87400a65395e1c63ba99
+2026-07-02 00:55:16,395 - OmniChainEngine - INFO - [ARBITRUM] Fetched 0 txs for 0x7b9123262ad3b1f3be48046b7d1e8f3cd50b33d9
+2026-07-02 00:55:16,509 - OmniChainEngine - INFO - [ARBITRUM] Fetched 0 txs for 0x819c8ae7ea9fd880426fad62639d355d6afc6921
+2026-07-02 00:55:16,600 - OmniChainEngine - INFO - [BASE] Fetched 0 txs for 0x819c8ae7ea9fd880426fad62639d355d6afc6921
+2026-07-02 00:55:16,610 - OmniChainEngine - INFO - [BASE] Fetched 0 txs for 0xc28b3fefd967e573834f87400a65395e1c63ba99
+2026-07-02 00:55:16,704 - OmniChainEngine - INFO - [BASE] Fetched 0 txs for 0x7b9123262ad3b1f3be48046b7d1e8f3cd50b33d9
+2026-07-02 00:55:16,706 - OmniChainEngine - INFO - [ARBITRUM] Fetched 0 txs for 0x36043c1860998b53dfef070947f54a7b4567e9ac
+2026-07-02 00:55:16,809 - OmniChainEngine - INFO - [ARBITRUM] Fetched 0 txs for 0x97f1b05adb4fccca8a1a34e4801079547351419d
+2026-07-02 00:55:16,907 - OmniChainEngine - INFO - [POLYGON] Fetched 0 txs for 0x7b9123262ad3b1f3be48046b7d1e8f3cd50b33d9
+2026-07-02 00:55:16,907 - OmniChainEngine - INFO - [POLYGON] Fetched 0 txs for 0x819c8ae7ea9fd880426fad62639d355d6afc6921
+2026-07-02 00:55:17,006 - OmniChainEngine - INFO - [POLYGON] Fetched 0 txs for 0x97f1b05adb4fccca8a1a34e4801079547351419d
+2026-07-02 00:55:17,418 - OmniChainEngine - INFO - [POLYGON] Fetched 0 txs for 0x030c0c65dbb914e423992f35b4fe956f5e90b045
+2026-07-02 00:55:17,422 - OmniChainEngine - INFO - [ETHEREUM] Fetched 0 txs for 0x819c8ae7ea9fd880426fad62639d355d6afc6921
+2026-07-02 00:55:17,633 - OmniChainEngine - INFO - [POLYGON] Fetched 0 txs for 0xc28b3fefd967e573834f87400a65395e1c63ba99
+2026-07-02 00:55:18,048 - OmniChainEngine - INFO - [BSC] Fetched 0 txs for 0x9dbf36045323ff169fc37e58d53255a59a6cf274
+2026-07-02 00:55:18,131 - OmniChainEngine - INFO - [OPTIMISM] Fetched 0 txs for 0x97f1b05adb4fccca8a1a34e4801079547351419d
+2026-07-02 00:55:18,134 - OmniChainEngine - INFO - [OPTIMISM] Fetched 0 txs for 0x030c0c65dbb914e423992f35b4fe956f5e90b045
+2026-07-02 00:55:18,237 - OmniChainEngine - INFO - [OPTIMISM] Fetched 0 txs for 0xc28b3fefd967e573834f87400a65395e1c63ba99
+2026-07-02 00:55:18,247 - OmniChainEngine - INFO - [BSC] Fetched 0 txs for 0x95f23cf04fc469c2c1ec8234b65e0340216cf274
+2026-07-02 00:55:18,440 - OmniChainEngine - INFO - [OPTIMISM] Fetched 0 txs for 0x819c8ae7ea9fd880426fad62639d355d6afc6921
+2026-07-02 00:55:18,666 - OmniChainEngine - INFO - [ETHEREUM] Fetched 0 txs for 0x36043c1860998b53dfef070947f54a7b4567e9ac
+2026-07-02 00:55:18,847 - OmniChainEngine - INFO - [OPTIMISM] Fetched 0 txs for 0x36043c1860998b53dfef070947f54a7b4567e9ac
+2026-07-02 00:55:18,950 - OmniChainEngine - INFO - [POLYGON] Fetched 0 txs for 0x36043c1860998b53dfef070947f54a7b4567e9ac
+2026-07-02 00:55:18,951 - OmniChainEngine - INFO - [OPTIMISM] Fetched 0 txs for 0x7b9123262ad3b1f3be48046b7d1e8f3cd50b33d9
+2026-07-02 00:55:18,965 - OmniChainEngine - INFO - [BSC] Fetched 0 txs for 0x9dbfbf3890ff372f44d3a544b0bbd7e22bb5f274
+2026-07-02 00:55:22,431 - OmniChainEngine - INFO - [ETHEREUM] Fetched 0 txs for 0x030c0c65dbb914e423992f35b4fe956f5e90b045
+2026-07-02 00:55:23,807 - OmniChainEngine - INFO - [BSC] Fetched 8 txs for 0x9dbf867bdb1d082816b2b877c7bcb6f17dccf274
+2026-07-02 00:55:24,205 - OmniChainEngine - INFO - [BSC] Fetched 16 txs for 0x7b9123262ad3b1f3be48046b7d1e8f3cd50b33d9
+2026-07-02 00:55:24,276 - OmniChainEngine - INFO - [BSC] Fetched 43 txs for 0x97f1b05adb4fccca8a1a34e4801079547351419d
+2026-07-02 00:55:24,740 - OmniChainEngine - INFO - [ARBITRUM] Fetched 0 txs for 0x030c0c65dbb914e423992f35b4fe956f5e90b045
+2026-07-02 00:55:25,634 - OmniChainEngine - INFO - [ETHEREUM] Fetched 0 txs for 0xc28b3fefd967e573834f87400a65395e1c63ba99
+2026-07-02 00:55:26,351 - OmniChainEngine - INFO - [ETHEREUM] Fetched 0 txs for 0x7b9123262ad3b1f3be48046b7d1e8f3cd50b33d9
+2026-07-02 00:55:30,653 - OmniChainEngine - INFO - [ETHEREUM] Fetched 0 txs for 0x97f1b05adb4fccca8a1a34e4801079547351419d
+2026-07-02 00:56:07,419 - OmniChainEngine.Scraper - ERROR - Failed to broadcast label update: No module named 'PyPDF2'
+2026-07-02 00:56:11,178 - OmniChainEngine.Scraper - ERROR - Failed to broadcast label update: No module named 'PyPDF2'
+2026-07-02 00:56:11,505 - OmniChainEngine.Scraper - ERROR - Failed to broadcast label update: No module named 'PyPDF2'
+2026-07-02 00:56:11,607 - OmniChainEngine.Scraper - ERROR - Failed to broadcast label update: No module named 'PyPDF2'
+2026-07-02 00:56:11,949 - OmniChainEngine.Scraper - ERROR - Failed to broadcast label update: No module named 'PyPDF2'
+2026-07-02 00:56:12,463 - OmniChainEngine.Scraper - ERROR - Failed to broadcast label update: No module named 'PyPDF2'
+2026-07-02 00:56:12,907 - OmniChainEngine.Scraper - ERROR - Failed to broadcast label update: No module named 'PyPDF2'
+2026-07-02 00:56:13,268 - OmniChainEngine.Scraper - ERROR - Failed to broadcast label update: No module named 'PyPDF2'
+2026-07-02 00:56:13,358 - OmniChainEngine.Scraper - ERROR - Failed to broadcast label update: No module named 'PyPDF2'
+2026-07-02 00:56:13,416 - OmniChainEngine.Scraper - ERROR - Failed to broadcast label update: No module named 'PyPDF2'
+2026-07-02 00:56:13,479 - OmniChainEngine.Scraper - ERROR - Failed to broadcast label update: No module named 'PyPDF2'
+2026-07-02 00:56:14,191 - OmniChainEngine.Scraper - ERROR - Failed to broadcast label update: No module named 'PyPDF2'
+2026-07-02 00:56:14,269 - OmniChainEngine.Scraper - ERROR - Failed to broadcast label update: No module named 'PyPDF2'
+2026-07-02 00:56:14,325 - OmniChainEngine.Scraper - ERROR - Failed to broadcast label update: No module named 'PyPDF2'
+2026-07-02 00:56:14,403 - OmniChainEngine.Scraper - ERROR - Failed to broadcast label update: No module named 'PyPDF2'
+2026-07-02 00:56:14,476 - OmniChainEngine.Scraper - ERROR - Failed to broadcast label update: No module named 'PyPDF2'
+2026-07-02 00:56:14,551 - OmniChainEngine.Scraper - ERROR - Failed to broadcast label update: No module named 'PyPDF2'
