@@ -11,7 +11,7 @@ import logging
 import datetime
 from collections import defaultdict
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket, Request, BackgroundTasks, Response, Depends, HTTPException, status
+from fastapi import FastAPI, WebSocket, Request, BackgroundTasks, Response, Depends, HTTPException, status, UploadFile, File, Form
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -21,6 +21,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 import uuid
+import io
+import PyPDF2
+from docx import Document
+from google import genai
+from google.genai import types
 
 # Setup logging for console and file (for Admin WS tailing)
 log_dir = "logs"
@@ -118,12 +123,8 @@ async def lifespan(app: FastAPI):
             if darknet_path not in sys.path:
                 sys.path.append(darknet_path)
             from darknetv2 import start_headless_crawler
-            use_tor = os.getenv("VITE_TOR_AUTO_START", "true").lower() == "true"
-            if use_tor:
-                start_headless_crawler()
-                logger.info("    [OK] Darknet headless crawler initialized.")
-            else:
-                logger.info("    [SKIP] Darknet crawler disabled via VITE_TOR_AUTO_START=false.")
+            start_headless_crawler()
+            logger.info("    [OK] Darknet headless crawler initialized.")
         except Exception as e:
             logger.error(f"    [FAIL] Failed to initialize Darknet crawler: {e}")
         
@@ -158,9 +159,149 @@ class TraceRequest(BaseModel):
     max_depth: int = 12
     max_hops: int = 1000
 
+class ResolveRequest(BaseModel):
+    entities: list[str]
+
+@app.post("/api/resolve_entity")
+async def api_resolve_entity(req: ResolveRequest):
+    from services.trace_engine import mongo_db
+    if mongo_db is None:
+        return {"status": "error", "message": "MongoDB not connected"}
+    
+    results = {}
+    try:
+        if not req.entities:
+            return {"results": {}}
+            
+        # Basic filtering to prevent huge queries
+        clean_entities = [e for e in req.entities if e and len(e) > 3]
+        if not clean_entities:
+            return {"results": {e: "Unidentified" for e in req.entities}}
+            
+        q_filter = {
+            "$or": [
+                {"url": {"$in": clean_entities}},
+                {"title": {"$in": clean_entities}},
+                {"hash-ID": {"$in": clean_entities}},
+                {"uie_entities.value": {"$in": clean_entities}}
+            ]
+        }
+        
+        cursor1 = mongo_db.darknet_data.find(q_filter)
+        cursor2 = mongo_db.darknet.find(q_filter)
+        
+        docs1 = await cursor1.to_list(length=200)
+        docs2 = await cursor2.to_list(length=200)
+        
+        found_entities = {}
+        for d in docs1 + docs2:
+            content_str = str(d)
+            for e in clean_entities:
+                if e in content_str:
+                    low_content = content_str.lower()
+                    if "market" in low_content or "onion" in low_content:
+                        found_entities[e] = "DarkNet Market"
+                    elif "ransom" in low_content or "leak" in low_content:
+                        found_entities[e] = "Ransomware Actor"
+                    elif "sanction" in low_content or "ofac" in low_content:
+                        found_entities[e] = "Sanctioned Entity"
+                    elif "mix" in low_content or "tornado" in low_content:
+                        found_entities[e] = "Mixing Pool"
+                    else:
+                        found_entities[e] = "High-Risk Peer"
+        
+        for e in req.entities:
+            results[e] = found_entities.get(e, "Unidentified")
+            
+        return {"results": results}
+    except Exception as e:
+        logger.error(f"Error in resolve_entity: {e}")
+        return {"status": "error", "message": str(e)}
+
+@app.post("/api/analyze_case_files")
+async def api_analyze_case_files(files: list[UploadFile] = File(...)):
+    try:
+        combined_text = ""
+        for file in files:
+            content = await file.read()
+            filename = file.filename.lower()
+            if filename.endswith(".txt") or filename.endswith(".csv") or filename.endswith(".json") or filename.endswith(".log"):
+                combined_text += f"\n--- {file.filename} ---\n" + content.decode("utf-8", errors="ignore")
+            elif filename.endswith(".pdf"):
+                combined_text += f"\n--- {file.filename} ---\n"
+                try:
+                    pdf_reader = PyPDF2.PdfReader(io.BytesIO(content))
+                    for page in pdf_reader.pages:
+                        combined_text += page.extract_text() + "\n"
+                except Exception as e:
+                    logger.error(f"Error reading PDF {filename}: {e}")
+            elif filename.endswith(".docx"):
+                combined_text += f"\n--- {file.filename} ---\n"
+                try:
+                    doc = Document(io.BytesIO(content))
+                    for para in doc.paragraphs:
+                        combined_text += para.text + "\n"
+                except Exception as e:
+                    logger.error(f"Error reading DOCX {filename}: {e}")
+        
+        # Call Gemini via SDK
+        api_key = os.getenv("GEMINI_API_KEYS")
+        if not api_key:
+            raise Exception("GEMINI_API_KEYS not configured on backend.")
+        
+        # Handle multiple keys if comma separated
+        api_key = api_key.split(",")[0].strip()
+        client = genai.Client(api_key=api_key)
+        
+        system_instruction = '''You are an elite cyber-forensic intelligence extractor. Extract entities from the text into a strict JSON object.
+Fields:
+- incidents: list of strings (e.g. "Ransomware Attack", "Phishing")
+- suspect_wallets: list of strings (crypto addresses)
+- tx_hashes: list of strings
+- domains: list of strings
+- usernames: list of strings
+- total_loss_assets: string (number only, e.g. "15000")
+- currency: string (e.g. "USDT", "BTC")
+- network_chain: string ("BTC", "ETH", "BSC", "TRX", "SOL", "AUTO")
+- summary: A 2-3 sentence professional intelligence brief summarizing the findings.
+Ensure output is pure JSON. Do not use markdown blocks like ```json.
+'''
+        
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=combined_text[:100000], # Limit to avoid context bloat
+            config=types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                temperature=0.1,
+                response_mime_type="application/json"
+            )
+        )
+        
+        result_json = response.text
+        try:
+            intel = json.loads(result_json)
+        except:
+            # Fallback regex strip
+            stripped = re.sub(r'```json\n|```', '', result_json).strip()
+            intel = json.loads(stripped)
+            
+        return {"status": "success", "intelligence": intel}
+        
+    except Exception as e:
+        logger.error(f"Error in analyze_case_files: {e}")
+        return {"status": "error", "message": str(e)}
+
 @app.get("/")
 async def dashboard(request: Request):
     return templates.TemplateResponse(request=request, name="index.html")
+
+@app.get("/nemesis_tracer.html")
+async def tracer_dashboard(request: Request):
+    return templates.TemplateResponse(request=request, name="nemesis_tracer.html")
+
+@app.get("/tracer")
+async def tracer_dashboard_alias(request: Request):
+    return templates.TemplateResponse(request=request, name="nemesis_tracer.html")
 
 @app.get("/favicon.ico")
 async def favicon():
@@ -194,6 +335,82 @@ async def nemesis_id_dashboard(request: Request):
 async def darknet_search_dashboard(request: Request):
     return templates.TemplateResponse(request=request, name="darknet_search.html")
 
+@app.get("/api_docs")
+async def api_docs_page(request: Request):
+    return templates.TemplateResponse(request=request, name="api_docs.html")
+
+@app.get("/api/ontology")
+async def api_ontology():
+    from services.trace_engine import mongo_db
+    if mongo_db is None:
+        return {"scenarios": [], "matrix": {}, "error": "MongoDB not connected"}
+    
+    try:
+        docs = await mongo_db.nemesis_ontology.find({}, {"_id": 0}).to_list(100)
+        
+        scenarios = [d for d in docs if "scenario_id" in d]
+        universal = [d for d in docs if d.get("type") == "UNIVERSAL_MATRIX"]
+        matrix = universal[0].get("data", {}) if universal else {}
+        
+        if not matrix:
+            matrix = {
+                "Bitcoin": { "Lock": "Script Hash (P2SH)", "Mint": "N/A", "Burn": "OP_RETURN", "Transfer": "UTXO SPEND", "Bridge": "WBTC Custody / Threshold Sig", "Exchange": "CEX Hot/Cold Deposit" },
+                "Ethereum": { "Lock": "Smart Contract Vault", "Mint": "ERC20/ERC721 Mint", "Burn": "Address 0x0 / Burn Func", "Transfer": "ETH Native / ERC20 Transfer", "Bridge": "Cross-Chain Escrow", "Exchange": "CEX Omnibus Account" },
+                "Tron": { "Lock": "TRC20 Lock", "Mint": "TRC20 Issue", "Burn": "TRC20 Burn", "Transfer": "TRX Native / TRC20 Transfer", "Bridge": "JustLend / BTTC Bridge", "Exchange": "CEX Deposit Address" },
+                "Polygon": { "Lock": "PoS Bridge Lock", "Mint": "Wrapped Matic Mint", "Burn": "PoS Bridge Burn", "Transfer": "MATIC / ERC20", "Bridge": "PoS / Plasma Bridge", "Exchange": "CEX Multi-chain" },
+                "BSC": { "Lock": "BEP20 Vault", "Mint": "BEP20 Mint", "Burn": "BEP20 Burn", "Transfer": "BNB / BEP20", "Bridge": "Binance Bridge", "Exchange": "Binance Hot Wallet" },
+                "Solana": { "Lock": "Program PDA Lock", "Mint": "SPL Token Mint", "Burn": "SPL Burn", "Transfer": "SOL Native / SPL", "Bridge": "Wormhole Portal", "Exchange": "CEX Deposit" }
+            }
+            
+        if not scenarios:
+            scenarios = [
+                {
+                    "scenario_id": "Tornado_Cash_Mixing",
+                    "chain": "Ethereum",
+                    "destination_chain": "Ethereum",
+                    "category": "Mixing / Obfuscation",
+                    "flow": "Suspect Wallet -> Tornado Cash Deposit -> Tornado Cash Relayer -> Clean Wallet",
+                    "state_transitions": ["NATIVE_DEPOSIT", "ZK_PROOF_GEN", "ANONYMOUS_WITHDRAWAL"],
+                    "fingerprints": ["TC_DEPOSIT_EVENT", "TC_WITHDRAWAL_EVENT", "EXACT_INCREMENTS"],
+                    "identity_signals": ["Timing Correlation", "Gas Price Heuristics", "Amount Matching"],
+                    "detection_logic": [
+                        {"stage": "Deposit", "detection": "Function: deposit() on known TC contract"},
+                        {"stage": "Withdrawal", "detection": "Function: withdraw() with zero-knowledge proof"},
+                        {"stage": "Correlation", "detection": "Heuristic matching of deposit and withdrawal within same block/timeframe"}
+                    ],
+                    "confidence_scoring": {
+                        "Deposit Event": 100,
+                        "Withdrawal Event": 100,
+                        "Link Correlation": 85
+                    }
+                },
+                {
+                    "scenario_id": "Cross_Chain_Bridge_Hop",
+                    "chain": "Bitcoin",
+                    "destination_chain": "Ethereum",
+                    "category": "Asset Re-denomination",
+                    "flow": "BTC Suspect -> Custodial Vault -> WBTC Mint -> Ethereum Suspect",
+                    "state_transitions": ["UTXO_LOCK", "CROSS_CHAIN_MSG", "ERC20_MINT"],
+                    "fingerprints": ["BTC_DEPOSIT", "MINT_EVENT", "BURN_EVENT"],
+                    "identity_signals": ["Merchant/Custody KYC", "Equivalent Value Output", "Timestamp Proximity"],
+                    "detection_logic": [
+                        {"stage": "Deposit", "detection": "BTC transfer to known custodian"},
+                        {"stage": "Mint", "detection": "WBTC Mint event on Ethereum"},
+                        {"stage": "Correlation", "detection": "Value match across chains with standard delay"}
+                    ],
+                    "confidence_scoring": {
+                        "BTC Deposit": 100,
+                        "WBTC Mint": 100,
+                        "Cross-chain Link": 92
+                    }
+                }
+            ]
+            
+        return {"scenarios": scenarios, "matrix": matrix}
+    except Exception as e:
+        logger.error(f"Failed to fetch ontology: {e}")
+        return {"scenarios": [], "matrix": {}, "error": str(e)}
+
 @app.get("/api/darknet/search")
 async def api_darknet_search(q: str = ""):
     from services.trace_engine import mongo_db
@@ -205,7 +422,7 @@ async def api_darknet_search(q: str = ""):
     try:
         # Search the darknet_data collection
         search_pattern = re.compile(re.escape(q), re.IGNORECASE)
-        darknet_filter = {
+        q_filter = {
             "$or": [
                 {"web_info.content": search_pattern},
                 {"web_info.title": search_pattern},
@@ -216,41 +433,25 @@ async def api_darknet_search(q: str = ""):
             ]
         }
         
-        darknet_cursor = mongo_db.darknet_data.find(darknet_filter).sort("crawled_at", -1).limit(50)
-        darknet_docs = await darknet_cursor.to_list(length=50)
-
-        # Search the entity collection
-        entity_filter = {
-            "$or": [
-                {"name": search_pattern},
-                {"description": search_pattern},
-                {"value": search_pattern},
-                {"id": search_pattern}
-            ]
-        }
-        entity_cursor = mongo_db.entity.find(entity_filter).limit(25)
-        entity_docs = await entity_cursor.to_list(length=25)
-
-        # Search the vasp collection
-        vasp_filter = {
-            "$or": [
-                {"name": search_pattern},
-                {"domain": search_pattern},
-                {"country": search_pattern},
-                {"address": search_pattern}
-            ]
-        }
-        vasp_cursor = mongo_db.vasp.find(vasp_filter).limit(25)
-        vasp_docs = await vasp_cursor.to_list(length=25)
+        # Query both collections concurrently
+        cursor1 = mongo_db.darknet_data.find(q_filter).sort("crawled_at", -1).limit(50)
+        cursor2 = mongo_db.darknet.find(q_filter).sort("crawled_at", -1).limit(50)
+        
+        docs1 = await cursor1.to_list(length=50)
+        docs2 = await cursor2.to_list(length=50)
+        
+        # Combine, sort by date descending, and limit to 50
+        all_docs = docs1 + docs2
+        all_docs.sort(key=lambda x: str(x.get("crawled_at", "")), reverse=True)
+        docs = all_docs[:50]
         
         output = []
-        for doc in darknet_docs:
+        for doc in docs:
             # Format to match the original darknet API
             if 'web_info' not in doc:
                 doc['web_info'] = {'url': doc.get('url', ''), 'title': doc.get('title', 'Untitled'), 'content': str(doc)}
             
             output.append({
-                "collection": "darknet",
                 "hash-ID": doc.get("hash-ID", ""),
                 "crawled_at": doc.get("crawled_at", ""),
                 "web_info": {
@@ -261,25 +462,6 @@ async def api_darknet_search(q: str = ""):
                 },
                 "uie_entities": doc.get("uie_entities", []),
                 "keywords_detected": doc.get("keywords_detected", [])
-            })
-
-        for doc in entity_docs:
-            output.append({
-                "collection": "entity",
-                "id": str(doc.get("_id", doc.get("id", ""))),
-                "name": doc.get("name", doc.get("value", "Unknown Entity")),
-                "description": doc.get("description", ""),
-                "data": {k: v for k, v in doc.items() if k not in ["_id", "name", "description", "value"]}
-            })
-
-        for doc in vasp_docs:
-            output.append({
-                "collection": "vasp",
-                "id": str(doc.get("_id", "")),
-                "name": doc.get("name", "Unknown VASP"),
-                "domain": doc.get("domain", ""),
-                "country": doc.get("country", ""),
-                "data": {k: v for k, v in doc.items() if k not in ["_id", "name", "domain", "country"]}
             })
             
         return {"results": output}
@@ -295,6 +477,29 @@ async def get_health():
         "mongo_connected": get_mongo_status(),
         "active_traces": traces
     }
+
+@app.post("/admin/deploy")
+async def trigger_auto_deploy():
+    import subprocess
+    import os
+    try:
+        # Check if we are running on Render vs Locally
+        # If we are on Render, deploying locally isn't supported since git push needs auth
+        if os.environ.get("RENDER"):
+            return {"status": "error", "message": "Cannot deploy from inside the cloud container. Run this locally."}
+            
+        process = subprocess.Popen(
+            ["python", "auto_deploy.py"], 
+            stdout=subprocess.PIPE, 
+            stderr=subprocess.STDOUT, 
+            text=True
+        )
+        
+        # We could stream, but for simplicity we'll just wait for it to finish or return the start
+        # Actually, let's just return a success that it started to not block the UI
+        return {"status": "success", "message": "Deployment sequence initiated in the background."}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 @app.get("/admin/traces")
 async def get_traces():
@@ -334,59 +539,6 @@ async def api_start_trace(req: TraceRequest, request: Request):
     except Exception as e:
         logger.error(f"Failed to setup trace: {e}")
         return {"error": str(e)}
-
-@app.websocket("/ws/darknet/stream")
-async def darknet_ws_stream(websocket: WebSocket):
-    await websocket.accept()
-    from queue import Queue
-    try:
-        from darknet.darknetv2 import sse_clients, locks
-    except ImportError:
-        await websocket.send_json({"type": "error", "message": "Darknet module not loaded"})
-        await websocket.close()
-        return
-
-    q = Queue()
-    with locks["sse"]:
-        sse_clients.append(q)
-    
-    try:
-        while True:
-            # Poll the queue (using asyncio to avoid blocking the event loop)
-            # q.get() is blocking, so we run it in an executor or poll with queue.Empty
-            import queue
-            try:
-                data = await asyncio.to_thread(q.get, timeout=1.0)
-                # data is typically "event: <type>\ndata: {...}\n\n"
-                if data.startswith("event: "):
-                    parts = data.split("\ndata: ")
-                    if len(parts) == 2:
-                        event_type = parts[0].replace("event: ", "").strip()
-                        json_str = parts[1].strip()
-                        import json
-                        try:
-                            parsed = json.loads(json_str)
-                            await websocket.send_json({"event": event_type, "data": parsed})
-                        except:
-                            await websocket.send_json({"event": event_type, "data": json_str})
-                    else:
-                        await websocket.send_text(data)
-                else:
-                    await websocket.send_text(data)
-            except queue.Empty:
-                await asyncio.sleep(0.1)
-                continue
-    except Exception as e:
-        logger.error(f"Darknet WS error: {e}")
-    finally:
-        with locks["sse"]:
-            if q in sse_clients:
-                sse_clients.remove(q)
-        try:
-            await websocket.close()
-        except:
-            pass
-
 
 @app.websocket("/ws/{trace_id}")
 async def ws(websocket: WebSocket, trace_id: str):
@@ -558,6 +710,52 @@ HOW DID THE ASSETS LANDED FROM ETH to BITCOIN or vice versa if applicable? Summa
         "decoded_abi": decoded_abi,
         "contract_source_code": gemini_summary
     }
+
+@app.websocket("/ws/darknet/stream")
+async def darknet_ws_stream(websocket: WebSocket):
+    await websocket.accept()
+    from queue import Queue
+    import queue
+    try:
+        from darknet.darknetv2 import sse_clients, locks
+    except ImportError:
+        await websocket.send_json({"type": "error", "message": "Darknet module not loaded"})
+        await websocket.close()
+        return
+
+    q = Queue()
+    with locks["sse"]:
+        sse_clients.append(q)
+    
+    try:
+        while True:
+            try:
+                data = await asyncio.to_thread(q.get, timeout=1.0)
+                if data.startswith("event: "):
+                    parts = data.split("\ndata: ")
+                    if len(parts) == 2:
+                        event_type = parts[0].replace("event: ", "").strip()
+                        json_str = parts[1].strip()
+                        import json
+                        try:
+                            parsed = json.loads(json_str)
+                            await websocket.send_json({"event": event_type, "data": parsed})
+                        except:
+                            await websocket.send_json({"event": event_type, "data": json_str})
+            except queue.Empty:
+                await asyncio.sleep(0.1)
+                
+            try:
+                msg = await asyncio.wait_for(websocket.receive_text(), timeout=0.01)
+            except asyncio.TimeoutError:
+                pass
+    except Exception as e:
+        logger.error(f"Darknet WS error: {e}")
+    finally:
+        with locks["sse"]:
+            if q in sse_clients:
+                sse_clients.remove(q)
+        await websocket.close()
 
 # ==========================================
 # ADMIN DASHBOARD & AUTHENTICATION ENDPOINTS

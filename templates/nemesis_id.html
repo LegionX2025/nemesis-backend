@@ -149,6 +149,7 @@
                         <a href="/nemesis_id.html" target="_blank"><i class="fa-solid fa-id-card text-fuchsia-500"></i> Nemesis ID</a>
                         <a href="/intelligence" target="_blank"><i class="fa-solid fa-brain icon-intel"></i> Intelligence</a>
                         <a href="/audit" target="_blank"><i class="fa-solid fa-shield-halved icon-audit"></i> Enterprise Audit</a>
+                        <a href="/api_docs" target="_blank"><i class="fa-solid fa-book icon-intel"></i> API Docs</a>
                         <a onclick="openContentPage('tracing_engine')"><i class="fa-solid fa-microchip icon-trace"></i> Tracing Engine</a>
                     </div>
                 </nav>
@@ -159,19 +160,68 @@
                     <h2 class="text-xl font-bold text-slate-400 tracking-widest uppercase mb-6">By Lionsgate Intelligence Network</h2>
                     <p class="landing-subtitle">Illuminating the dark web. Intercept, analyze, and visualize global cross-chain fund flows instantly. Uncover obfuscated threat actor syndicates with military-grade behavioral attribution.</p>
                     
-                    <div class="landing-input-group">
-                        <div>
-                            <label>Target Wallet Address</label>
-                            <input type="text" id="landing-seed-input" placeholder="Enter 0x... address" class="w-full bg-white border border-slate-200/20 rounded p-3 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:bg-white/90 transition shadow-sm" style="background: rgba(255,255,255,0.7);">
+                    <div class="landing-input-group !max-w-3xl">
+                        <!-- File Upload Zone -->
+                        <div id="file-upload-zone" class="border-2 border-dashed border-blue-400/50 rounded-xl p-8 text-center hover:bg-blue-50/50 transition cursor-pointer flex flex-col items-center justify-center gap-3 relative" ondrop="handleFileDrop(event)" ondragover="event.preventDefault(); this.classList.add('bg-blue-50/50', 'border-blue-500')" ondragleave="this.classList.remove('bg-blue-50/50', 'border-blue-500')" onclick="document.getElementById('file-input').click()">
+                            <input type="file" id="file-input" class="hidden" multiple accept=".pdf,.txt,.csv,.docx,.log" onchange="handleFileSelect(event)">
+                            <div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-2 shadow-sm">
+                                <i class="fa-solid fa-cloud-arrow-up text-2xl"></i>
+                            </div>
+                            <h3 class="font-bold text-slate-700 text-lg">Import Case Files</h3>
+                            <p class="text-xs text-slate-500">Drag & Drop or click to upload PDF, TXT, CSV, DOCX logs</p>
+                            <div id="upload-status" class="absolute inset-0 bg-white/90 backdrop-blur-sm rounded-xl flex items-center justify-center font-bold text-blue-600 hidden flex-col gap-2">
+                                <i class="fa-solid fa-circle-notch fa-spin text-3xl"></i>
+                                <span>LLM Analyzing Intel...</span>
+                            </div>
                         </div>
-                        <button class="landing-btn-primary" onclick="initiateLandingTrace()">GENERATE NEMESIS ID &rarr;</button>
+
+                        <!-- LLM Summary Panel (Hidden by default) -->
+                        <div id="llm-summary-panel" class="hidden bg-slate-50 border border-slate-200 rounded-xl p-6 shadow-inner text-left text-sm text-slate-700">
+                            <h4 class="font-bold text-slate-900 border-b border-slate-200 pb-2 mb-3 flex items-center gap-2">
+                                <i class="fa-solid fa-robot text-blue-600"></i> Intelligence Summary
+                            </h4>
+                            <p id="llm-summary-text" class="mb-4 leading-relaxed font-serif text-slate-600"></p>
+                            <div class="grid grid-cols-2 gap-4 bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                                <div><span class="text-xs font-bold text-slate-400 uppercase">Loss Amount</span><br><span id="llm-loss-amount" class="font-mono text-red-500 font-bold"></span></div>
+                                <div><span class="text-xs font-bold text-slate-400 uppercase">Incidents Found</span><br><span id="llm-incidents" class="font-bold text-slate-700"></span></div>
+                                <div class="col-span-2"><span class="text-xs font-bold text-slate-400 uppercase">Suspect Addresses</span><br><div id="llm-suspects" class="font-mono text-xs max-h-20 overflow-y-auto break-all bg-slate-50 p-2 rounded border border-slate-200 mt-1"></div></div>
+                            </div>
+                        </div>
+
+                        <!-- Manual Overrides (Populated by LLM) -->
+                        <div class="mt-4 pt-4 border-t border-slate-200/50">
+                            <label>Target Seed Wallets / Suspects</label>
+                            <textarea id="landing-seed-input" rows="2" placeholder="Auto-populated or Enter 0x... addresses">
+                        </div>
+                        <div class="flex gap-4 w-full">
+                            <div class="flex-1">
+                                <label>Total Loss Amount to Trace</label>
+                                <input type="number" id="landing-target-amount" placeholder="e.g. 80000" class="w-full bg-white border border-slate-200/20 rounded p-3 text-slate-700 font-mono focus:outline-none focus:border-blue-400 transition" style="background: rgba(255,255,255,0.7);">
+                            </div>
+                            <div class="flex-1">
+                                <label>Network Chain</label>
+                                <select id="landing-chain-select" class="w-full bg-white border border-slate-200/20 rounded p-3 text-slate-700 font-mono focus:outline-none focus:border-blue-400 transition" style="background: rgba(255,255,255,0.7);">
+                                    <option value="AUTO">Auto-Detect</option>
+                                    <option value="ETH">Ethereum</option>
+                                    <option value="BSC">BSC</option>
+                                    <option value="BTC">Bitcoin</option>
+                                    <option value="TRX">Tron</option>
+                                    <option value="SOL">Solana</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="hidden">
+                            <input type="date" id="landing-start-date">
+                            <input type="date" id="landing-end-date">
+                        </div>
+                        <button class="landing-btn-primary mt-4" onclick="initiateLandingTrace()"><i class="fa-solid fa-radar text-blue-400 mr-2"></i> GENERATE NEMESIS ID &rarr;</button>
                         
-                        <div class="h-px bg-slate-200 w-full my-2"></div>
+                        <div class="h-px bg-slate-200 w-full my-4"></div>
                         
                         <div>
-                            <label>Nemesis ID Retrieval</label>
+                            <label>Trace ID / Nemesis ID Retrieval</label>
                             <div class="flex gap-2 mt-2">
-                                <input type="text" id="landing-search-trace" placeholder="e.g. NID-XXXX" class="flex-grow w-full bg-white border border-slate-200/20 text-slate-700 font-mono focus:outline-none focus:border-blue-400 p-3 rounded-lg" style="background: rgba(255,255,255,0.7);">
+                                <input type="text" id="landing-search-trace" placeholder="e.g. NID-XXXX or Trace ID" class="flex-grow w-full bg-white border border-slate-200/20 text-slate-700 font-mono focus:outline-none focus:border-blue-400 p-3 rounded-lg" style="background: rgba(255,255,255,0.7);">
                                 <button class="landing-btn-primary !mt-0 px-6" onclick="fetchHistoricalTrace()">RETRIEVE</button>
                             </div>
                         </div>
@@ -190,7 +240,7 @@
                         <a href="#" onclick="openContentPage('capabilities')" class="hover:text-blue-600 transition">Capabilities</a>
                         <a href="#" onclick="openContentPage('workflow')" class="hover:text-blue-600 transition">Workflow</a>
                         <a href="#" onclick="openContentPage('architecture')" class="hover:text-blue-600 transition">Architecture</a>
-                        <a href="#" onclick="openContentPage('api_docs')" class="hover:text-blue-600 transition text-indigo-600 font-black">API Docs</a>
+                        <a href="/api_docs" target="_blank" class="hover:text-blue-600 transition text-indigo-600 font-black">API Docs</a>
                     </div>
                 </footer>
             </div>
@@ -2474,27 +2524,88 @@ NEMESIS_ROOT/
             }
 
             var options = {
-                layout: { hierarchical: { enabled: true, direction: 'LR', sortMethod: 'directed' }, randomSeed: 42 },
+                layout: { 
+                    hierarchical: { 
+                        enabled: true, 
+                        direction: 'LR', 
+                        sortMethod: 'directed',
+                        levelSeparation: 350,
+                        nodeSpacing: 180
+                    },
+                    randomSeed: 42 
+                },
                 physics: {
                     enabled: false,
-                    barnesHut: { gravitationalConstant: -20000, centralGravity: 0.3, springLength: 150, springConstant: 0.04, damping: 0.09 },
-                    stabilization: { iterations: 150, updateInterval: 25 }
+                    hierarchicalRepulsion: {
+                        centralGravity: 0.0,
+                        springLength: 200,
+                        springConstant: 0.01,
+                        nodeDistance: 200,
+                        damping: 0.09
+                    }
                 },
-                interaction: { hover: true, tooltipDelay: 50 },
+                interaction: { hover: true, tooltipDelay: 50, navigationButtons: true },
                 nodes: { 
-                    shape: 'circularImage', size: 22,
-                    font: { size: 12, face: 'Inter', color: '#1e293b', background: 'rgba(255,255,255,0.8)' }, 
-                    margin: 10, borderWidth: 2, 
-                    shadow: { color: 'rgba(0,0,0,0.1)', size: 8, x: 3, y: 3 } 
+                    shape: 'image', 
+                    size: 80, // Size scales the image
+                    font: { size: 12, face: 'Inter', color: '#1e293b', background: 'rgba(255,255,255,0.8)', vadjust: -100 }, 
+                    margin: 0, borderWidth: 0, 
+                    shadow: { enabled: true, color: 'rgba(0,0,0,0.15)', size: 12, x: 5, y: 5 } 
                 },
                 edges: { 
                     arrows: 'to', 
-                    font: { align: 'top', size: 10, color: '#334155', background: 'rgba(255,255,255,0.9)', strokeWidth: 0 }, 
-                    smooth: { enabled: false },
-                    color: { color: '#94a3b8', highlight: '#3b82f6', hover: '#3b82f6' }
+                    font: { align: 'top', size: 11, color: '#334155', background: 'rgba(255,255,255,0.9)', strokeWidth: 0 }, 
+                    smooth: { type: 'cubicBezier', forceDirection: 'horizontal', roundness: 0.4 },
+                    color: { color: '#94a3b8', highlight: '#3b82f6', hover: '#3b82f6' },
+                    width: 2
                 }
             };
             var network = new vis.Network(document.getElementById("graph"), {nodes, edges}, options);
+
+            // Pulsing Edge Animation (Particle Flow)
+            network.on("afterDrawing", function (ctx) {
+                let time = Date.now() / 1000;
+                let edgeItems = edges.get();
+                let positions = network.getPositions();
+                
+                edgeItems.forEach(edge => {
+                    if (edge.hidden) return;
+                    let fromPos = positions[edge.from];
+                    let toPos = positions[edge.to];
+                    if (fromPos && toPos) {
+                        let speed = 0.4; // Units per second
+                        let t = (time * speed + (edge.id.charCodeAt(0) % 10) * 0.1) % 1;
+                        
+                        // For cubic bezier, we would technically need bezier interpolation, 
+                        // but linear interpolation is fast and looks decent for particles if curves aren't extreme
+                        // Actually, since we use LR hierarchical with cubicBezier, the curve is quite prominent.
+                        // Let's implement a simple bezier approximation or just use linear since vis.js abstracts the bezier.
+                        // Linear is often 'good enough' for a simple pulse along the path.
+                        
+                        let x = fromPos.x + (toPos.x - fromPos.x) * t;
+                        let y = fromPos.y + (toPos.y - fromPos.y) * t;
+                        
+                        let baseColor = edge.color?.highlight || '#3b82f6';
+                        
+                        // Particle core
+                        ctx.beginPath();
+                        ctx.arc(x, y, 4, 0, 2 * Math.PI, false);
+                        ctx.fillStyle = baseColor;
+                        ctx.fill();
+                        
+                        // Glow effect
+                        ctx.beginPath();
+                        ctx.arc(x, y, 9, 0, 2 * Math.PI, false);
+                        ctx.fillStyle = baseColor + '66'; // add 40% alpha glow
+                        ctx.fill();
+                    }
+                });
+                
+                // Keep animation loop running smoothly if not paused
+                if (!window.isTracePaused) {
+                    requestAnimationFrame(() => network.redraw());
+                }
+            });
 
             // Inject Transaction Details Panel HTML
             const txPanelHtml = `
@@ -2952,6 +3063,7 @@ NEMESIS_ROOT/
             };
 
             var GLOBAL_TRACE_ID = "";
+
             async function fetchHistoricalTrace() {
                 const searchVal = document.getElementById("landing-search-trace") ? document.getElementById("landing-search-trace").value : null;
                 if(!searchVal) return alert("Please enter a Nemesis ID or Trace ID.");
@@ -3559,37 +3671,61 @@ NEMESIS_ROOT/
             function getSafeIconUrl(entityLabel, isMixer, isVictim, isSuspect, isCluster, chain) {
                 let upper = (entityLabel || "").toUpperCase();
                 
-                let bgColor = "#1e293b"; // slate-800
-                let textColor = "#ffffff";
+                let bgColor = "#ffffff";
+                let textColor = "#1e293b";
                 let text = "W"; // default wallet
-                let borderColor = "#334155";
+                let borderColor = "#cbd5e1";
+                let headerColor = "#f1f5f9";
                 
-                if (isVictim || upper.includes("VICTIM")) { bgColor = "#059669"; text = "V"; borderColor = "#34d399"; }
-                else if (isSuspect || upper.includes("SUSPECT")) { bgColor = "#dc2626"; text = "S"; borderColor = "#f87171"; }
-                else if (isCluster || upper.includes("SYS-ACTOR") || upper.includes("THREAT ACTOR")) { bgColor = "#9333ea"; text = "C"; borderColor = "#c084fc"; }
-                else if (upper.includes("BINANCE")) { bgColor = "#ca8a04"; text = "B"; borderColor = "#facc15"; }
-                else if (upper.includes("OKX") || upper.includes("OKLINK")) { bgColor = "#000000"; text = "O"; borderColor = "#ffffff"; }
-                else if (upper.includes("KRAKEN")) { bgColor = "#4f46e5"; text = "K"; borderColor = "#818cf8"; }
-                else if (upper.includes("COINBASE")) { bgColor = "#2563eb"; text = "C"; borderColor = "#60a5fa"; }
-                else if (upper.includes("HUOBI") || upper.includes("HTX")) { bgColor = "#0284c7"; text = "H"; borderColor = "#38bdf8"; }
-                else if (upper.includes("KUCOIN")) { bgColor = "#16a34a"; text = "K"; borderColor = "#4ade80"; }
-                else if (isMixer || upper.includes("MIXER") || upper.includes("TORNADO") || upper.includes("RAILGUN")) { bgColor = "#111827"; text = "M"; borderColor = "#ef4444"; }
-                else if (chain) {
+                if (isVictim || upper.includes("VICTIM")) { bgColor = "#f0fdf4"; text = "V"; borderColor = "#10b981"; textColor = "#064e3b"; headerColor = "#d1fae5"; }
+                else if (isSuspect || upper.includes("SUSPECT")) { bgColor = "#fef2f2"; text = "S"; borderColor = "#ef4444"; textColor = "#7f1d1d"; headerColor = "#fee2e2"; }
+                else if (isCluster || upper.includes("SYS-ACTOR") || upper.includes("THREAT ACTOR")) { bgColor = "#faf5ff"; text = "C"; borderColor = "#c084fc"; textColor = "#581c87"; headerColor = "#f3e8ff"; }
+                else if (upper.includes("BINANCE")) { bgColor = "#fefce8"; text = "B"; borderColor = "#facc15"; textColor = "#713f12"; headerColor = "#fef08a"; }
+                else if (upper.includes("OKX") || upper.includes("OKLINK")) { bgColor = "#ffffff"; text = "O"; borderColor = "#000000"; textColor = "#000000"; headerColor = "#f1f5f9"; }
+                else if (upper.includes("KRAKEN")) { bgColor = "#eef2ff"; text = "K"; borderColor = "#818cf8"; textColor = "#312e81"; headerColor = "#e0e7ff"; }
+                else if (upper.includes("COINBASE")) { bgColor = "#eff6ff"; text = "C"; borderColor = "#60a5fa"; textColor = "#1e3a8a"; headerColor = "#dbeafe"; }
+                else if (upper.includes("HUOBI") || upper.includes("HTX")) { bgColor = "#f0f9ff"; text = "H"; borderColor = "#38bdf8"; textColor = "#0c4a6e"; headerColor = "#e0f2fe"; }
+                else if (upper.includes("KUCOIN")) { bgColor = "#f0fdf4"; text = "K"; borderColor = "#4ade80"; textColor = "#14532d"; headerColor = "#dcfce7"; }
+                else if (isMixer || upper.includes("MIXER") || upper.includes("TORNADO") || upper.includes("RAILGUN")) { bgColor = "#1e293b"; text = "M"; borderColor = "#ef4444"; textColor = "#fca5a5"; headerColor = "#334155"; }
+                
+                let chainLogo = "🌐";
+                if (chain) {
                     let c = chain.toUpperCase();
-                    if (c.includes("BITCOIN") || c.includes("BTC")) { bgColor = "#ea580c"; text = "₿"; borderColor = "#fb923c"; }
-                    else if (c.includes("ETHEREUM") || c.includes("ETH")) { bgColor = "#4f46e5"; text = "Ξ"; borderColor = "#818cf8"; }
-                    else if (c.includes("TRON") || c.includes("TRX")) { bgColor = "#dc2626"; text = "T"; borderColor = "#f87171"; }
-                    else if (c.includes("POLYGON") || c.includes("MATIC")) { bgColor = "#7e22ce"; text = "P"; borderColor = "#c084fc"; }
-                    else if (c.includes("BSC") || c.includes("BINANCE")) { bgColor = "#ca8a04"; text = "B"; borderColor = "#facc15"; }
-                    else if (c.includes("BASE")) { bgColor = "#2563eb"; text = "B"; borderColor = "#60a5fa"; }
-                    else if (c.includes("ARBITRUM") || c.includes("ARB")) { bgColor = "#0284c7"; text = "A"; borderColor = "#38bdf8"; }
-                    else if (c.includes("OPTIMISM") || c.includes("OPT")) { bgColor = "#ea0000"; text = "O"; borderColor = "#ff4d4d"; }
-                    else if (c.includes("AVALANCHE") || c.includes("AVAX")) { bgColor = "#dc2626"; text = "A"; borderColor = "#f87171"; }
-                    else if (c.includes("SOLANA") || c.includes("SOL")) { bgColor = "#14b8a6"; text = "S"; borderColor = "#5eead4"; }
-                    else if (c.includes("XRP")) { bgColor = "#000000"; text = "X"; borderColor = "#ffffff"; }
+                    if (c.includes("BITCOIN") || c.includes("BTC")) { chainLogo = "₿"; }
+                    else if (c.includes("ETHEREUM") || c.includes("ETH")) { chainLogo = "Ξ"; }
+                    else if (c.includes("TRON") || c.includes("TRX")) { chainLogo = "T"; }
+                    else if (c.includes("POLYGON") || c.includes("MATIC")) { chainLogo = "P"; }
+                    else if (c.includes("BSC") || c.includes("BINANCE")) { chainLogo = "B"; }
+                    else if (c.includes("BASE")) { chainLogo = "🔵"; }
+                    else if (c.includes("ARBITRUM") || c.includes("ARB")) { chainLogo = "🟦"; }
+                    else if (c.includes("OPTIMISM") || c.includes("OPT")) { chainLogo = "🔴"; }
+                    else if (c.includes("SOLANA") || c.includes("SOL")) { chainLogo = "🟣"; }
                 }
-                
-                const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="${bgColor}" stroke="${borderColor}" stroke-width="4"/><text x="50" y="50" font-family="Inter, sans-serif" font-size="44" font-weight="900" fill="${textColor}" text-anchor="middle" dominant-baseline="central">${text}</text></svg>`;
+
+                let displayLabel = entityLabel.length > 20 ? entityLabel.substring(0,20) + "..." : entityLabel;
+                if(!displayLabel || displayLabel.toLowerCase() === "unknown wallet") displayLabel = "Wallet Node";
+
+                // Generate a beautiful flipcard-style SVG
+                const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="220" height="110" viewBox="0 0 220 110">
+                    <rect x="5" y="5" width="210" height="100" rx="12" fill="${bgColor}" stroke="${borderColor}" stroke-width="3" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.1))" />
+                    <rect x="5" y="5" width="210" height="30" rx="12" fill="${headerColor}" opacity="0.8" />
+                    <!-- Header Divider -->
+                    <line x1="5" y1="35" x2="215" y2="35" stroke="${borderColor}" stroke-width="1" />
+                    
+                    <text x="15" y="24" font-family="Inter, sans-serif" font-size="13" font-weight="900" fill="${textColor}">${displayLabel}</text>
+                    <text x="195" y="24" font-family="Inter, sans-serif" font-size="14" font-weight="bold" fill="${textColor}" text-anchor="end">${chainLogo}</text>
+                    
+                    <!-- Main Body -->
+                    <circle cx="35" cy="68" r="18" fill="${headerColor}" stroke="${borderColor}" stroke-width="2" />
+                    <text x="35" y="74" font-family="Inter, sans-serif" font-size="20" font-weight="900" fill="${textColor}" text-anchor="middle">${text}</text>
+                    
+                    <!-- Metadata Fields -->
+                    <text x="65" y="58" font-family="Inter, sans-serif" font-size="9" font-weight="bold" fill="${textColor}" opacity="0.6">STATUS</text>
+                    <text x="65" y="72" font-family="Inter, sans-serif" font-size="12" font-weight="900" fill="${textColor}">${isSuspect ? 'SUSPECT' : (isVictim ? 'VICTIM' : (isMixer ? 'MIXER/OBFUSCATOR' : 'ACTIVE'))}</text>
+                    
+                    <text x="65" y="88" font-family="Inter, sans-serif" font-size="9" font-weight="bold" fill="${textColor}" opacity="0.6">NETWORK</text>
+                    <text x="110" y="88" font-family="Inter, sans-serif" font-size="10" font-weight="bold" fill="${textColor}">${chain ? chain.substring(0,10) : 'Unknown'}</text>
+                </svg>`;
                 return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
             }
 
@@ -4461,6 +4597,84 @@ NEMESIS_ROOT/
                     });
                 }
             });
+            // --- File Upload & LLM Handlers ---
+            window.handleFileDrop = function(e) {
+                e.preventDefault();
+                document.getElementById('file-upload-zone').classList.remove('bg-blue-50/50', 'border-blue-500');
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    processFiles(e.dataTransfer.files);
+                }
+            };
+            
+            window.handleFileSelect = function(e) {
+                if (e.target.files && e.target.files.length > 0) {
+                    processFiles(e.target.files);
+                }
+            };
+            
+            async function processFiles(files) {
+                const statusDiv = document.getElementById('upload-status');
+                statusDiv.classList.remove('hidden');
+                statusDiv.classList.add('flex');
+                
+                const formData = new FormData();
+                for(let i=0; i < files.length; i++) {
+                    formData.append("files", files[i]);
+                }
+                
+                try {
+                    // Make sure URL points to the backend
+                    let backendUrl = "https://nemesis-backend-rwp4.onrender.com";
+                    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+                        backendUrl = window.location.protocol + "//" + window.location.host;
+                    }
+                    
+                    const response = await fetch(`${backendUrl}/api/analyze_case_files`, {
+                        method: "POST",
+                        body: formData
+                    });
+                    
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    
+                    const data = await response.json();
+                    
+                    if (data.status === "success") {
+                        // Populate Inputs
+                        const intel = data.intelligence;
+                        if(intel.suspect_wallets && intel.suspect_wallets.length > 0) {
+                            document.getElementById('landing-seed-input').value = intel.suspect_wallets.join("\n");
+                        }
+                        if(intel.total_loss_assets) {
+                            document.getElementById('landing-target-amount').value = intel.total_loss_assets;
+                        }
+                        if(intel.network_chain) {
+                            const select = document.getElementById('landing-chain-select');
+                            for(let i=0; i<select.options.length; i++) {
+                                if(select.options[i].value === intel.network_chain) {
+                                    select.selectedIndex = i;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // Show Summary Panel
+                        document.getElementById('llm-summary-panel').classList.remove('hidden');
+                        document.getElementById('llm-summary-text').innerText = intel.summary || "No summary generated.";
+                        document.getElementById('llm-loss-amount').innerText = (intel.total_loss_assets || "0") + " " + (intel.currency || "USD");
+                        document.getElementById('llm-incidents').innerText = (intel.incidents || []).join(", ") || "None";
+                        document.getElementById('llm-suspects').innerText = (intel.suspect_wallets || []).join(", ") || "None";
+                    } else {
+                        alert("Error analyzing files: " + data.message);
+                    }
+                } catch (err) {
+                    console.error("LLM Extraction Error:", err);
+                    alert("Failed to connect to Intelligence API. Ensure backend is running.");
+                } finally {
+                    statusDiv.classList.add('hidden');
+                    statusDiv.classList.remove('flex');
+                    document.getElementById('file-input').value = ""; // reset
+                }
+            }
         </script>
         
         <!-- Global Footer -->

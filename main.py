@@ -1,6 +1,17 @@
 import os
 import sys
 import subprocess
+
+def auto_install_dependencies():
+    print("\n[SYSTEM] Auto-installing dependencies from requirements.txt...")
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt", "--no-cache-dir"])
+        print("[SYSTEM] Dependencies verified and installed.\n")
+    except Exception as e:
+        print(f"[SYSTEM] Warning: Failed to auto-install dependencies: {e}\n")
+
+auto_install_dependencies()
+
 os.environ["LOKY_MAX_CPU_COUNT"] = "4"
 os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "0"
 import re

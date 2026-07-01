@@ -18,7 +18,7 @@ scikit-learn
 python-multipart
 rich
 stem
-pypdf
+PyPDF2
 python-docx
 python-pptx
 openpyxl
@@ -28,4 +28,5 @@ google-auth-httplib2
 google-auth-oauthlib
 gspread
 oauth2client
-PySocks
+flask
+flask-cors

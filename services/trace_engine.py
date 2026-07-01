@@ -22,6 +22,15 @@ import numpy as np
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
 
+from adapters.evm import EVMAdapter
+from adapters.solana import SolanaAdapter
+from adapters.utxo import UTXOAdapter
+from adapters.tron_xrp_stellar import TronXrpStellarAdapter
+
+from intel.abi_decoder import ABIDecoder
+from intel.bridge_resolver import BridgeResolver
+from intel.cex_clustering import CEXClusterer
+
 logger = logging.getLogger("OmniChainEngine")
 
 # Fix SSL and Windows Asyncio issues
@@ -551,7 +560,14 @@ class TraceEngine:
         self.trace_id = trace_id
         self.visited = set()
         self.ledger = []
-        self.cex = CEX()
+        self.cex = CEXClusterer(mongo_db) if mongo_db else CEX()
+        self.bridge_resolver = BridgeResolver(mongo_db)
+        self.abi_decoder = ABIDecoder()
+        self.evm_adapter = EVMAdapter()
+        self.solana_adapter = SolanaAdapter()
+        self.utxo_adapter = UTXOAdapter()
+        self.txs_adapter = TronXrpStellarAdapter()
+        
         self.clustering = ClusteringEngine()
         self.seeds = []
         self.seed_chains = {}
@@ -1238,11 +1254,11 @@ class TraceEngine:
             
             # 2. Bridge Symmetry Resolution
             if intent_data.get("edge_type") in ["LOCK", "BURN", "MINT", "RELEASE", "BRIDGE_HOP"] and depth < self.max_depth - 1:
-                linked = await find_bridge_symmetry(txid)
-                if linked:
-                    tgt_chain = linked.get("target_chain", "ETHEREUM")
-                    tgt_address = linked.get("to_address", to)
-                    self.queue.put_nowait((tgt_address, depth + 1, amt, "BRIDGE_PIVOT", tgt_chain, origin_seed))
+                linked_target = await self.bridge_resolver.find_bridge_symmetry({"tx_hash": txid, "edge_type": intent_data.get("edge_type")})
+                if linked_target:
+                    # Mock target chain extraction if available, else default
+                    tgt_chain = "ETHEREUM"
+                    self.queue.put_nowait((linked_target, depth + 1, amt, "BRIDGE_PIVOT", tgt_chain, origin_seed))
                 else:
                     # Heuristic Fallback: Inject to other chains to search for mints
                     if mongo_db is not None:
@@ -1260,7 +1276,7 @@ class TraceEngine:
 
             # 4. Exchange Internal Ledger Routing
             if entity_class == "EXCHANGE_CUSTODIAL":
-                withdrawals = await find_cex_withdrawals(to)
+                withdrawals = await self.cex.detect_internal_ledger_hop({"to": to})
                 for w_addr in withdrawals:
                     if w_addr and w_addr != to:
                         self.queue.put_nowait((w_addr, depth + 1, amt, "INTERNAL_LEDGER_LINK", chain, origin_seed))

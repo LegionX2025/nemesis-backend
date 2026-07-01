@@ -30,3 +30,4 @@ gspread
 oauth2client
 flask
 flask-cors
+web3

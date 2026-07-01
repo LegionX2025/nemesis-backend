@@ -77,7 +77,7 @@ def main():
         print(f"    -> Copied auto_backup.py to {render_backend_dir}/auto_backup.py")
         
     # Sync directories needed by main.py
-    for d in ["services", "intel", "darknet"]:
+    for d in ["services", "intel", "darknet", "adapters"]:
         if os.path.exists(d):
             dst = os.path.join(render_backend_dir, d)
             if os.path.exists(dst):
