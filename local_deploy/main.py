@@ -118,8 +118,12 @@ async def lifespan(app: FastAPI):
             if darknet_path not in sys.path:
                 sys.path.append(darknet_path)
             from darknetv2 import start_headless_crawler
-            start_headless_crawler()
-            logger.info("    [OK] Darknet headless crawler initialized.")
+            use_tor = os.getenv("VITE_TOR_AUTO_START", "true").lower() == "true"
+            if use_tor:
+                start_headless_crawler()
+                logger.info("    [OK] Darknet headless crawler initialized.")
+            else:
+                logger.info("    [SKIP] Darknet crawler disabled via VITE_TOR_AUTO_START=false.")
         except Exception as e:
             logger.error(f"    [FAIL] Failed to initialize Darknet crawler: {e}")
         
@@ -286,6 +290,59 @@ async def api_start_trace(req: TraceRequest, request: Request):
     except Exception as e:
         logger.error(f"Failed to setup trace: {e}")
         return {"error": str(e)}
+
+@app.websocket("/ws/darknet/stream")
+async def darknet_ws_stream(websocket: WebSocket):
+    await websocket.accept()
+    from queue import Queue
+    try:
+        from darknet.darknetv2 import sse_clients, locks
+    except ImportError:
+        await websocket.send_json({"type": "error", "message": "Darknet module not loaded"})
+        await websocket.close()
+        return
+
+    q = Queue()
+    with locks["sse"]:
+        sse_clients.append(q)
+    
+    try:
+        while True:
+            # Poll the queue (using asyncio to avoid blocking the event loop)
+            # q.get() is blocking, so we run it in an executor or poll with queue.Empty
+            import queue
+            try:
+                data = await asyncio.to_thread(q.get, timeout=1.0)
+                # data is typically "event: <type>\ndata: {...}\n\n"
+                if data.startswith("event: "):
+                    parts = data.split("\ndata: ")
+                    if len(parts) == 2:
+                        event_type = parts[0].replace("event: ", "").strip()
+                        json_str = parts[1].strip()
+                        import json
+                        try:
+                            parsed = json.loads(json_str)
+                            await websocket.send_json({"event": event_type, "data": parsed})
+                        except:
+                            await websocket.send_json({"event": event_type, "data": json_str})
+                    else:
+                        await websocket.send_text(data)
+                else:
+                    await websocket.send_text(data)
+            except queue.Empty:
+                await asyncio.sleep(0.1)
+                continue
+    except Exception as e:
+        logger.error(f"Darknet WS error: {e}")
+    finally:
+        with locks["sse"]:
+            if q in sse_clients:
+                sse_clients.remove(q)
+        try:
+            await websocket.close()
+        except:
+            pass
+
 
 @app.websocket("/ws/{trace_id}")
 async def ws(websocket: WebSocket, trace_id: str):
