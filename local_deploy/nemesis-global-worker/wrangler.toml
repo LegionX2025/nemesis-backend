@@ -73,10 +73,6 @@ max_retries = 3
 # ============================================================================
 # DURABLE OBJECTS & WORKFLOWS
 # ============================================================================
-[[workflows]]
-name = "nemesis-workflow"
-binding = "TRACE_WORKFLOW"
-class_name = "TraceWorkflow"
 
 [[durable_objects.bindings]]
 name = "TRACE_COORDINATOR"
@@ -99,3 +95,18 @@ new_sqlite_classes = ["TraceCoordinator", "RealtimeManager", "AdminConsole"]
 # ============================================================================
 [vars]
 PYTHON_BACKEND_URL = "https://nemesis-tunnel.trycloudflare.com" # TODO: Update this in Cloudflare dashboard
+GEMINI_API_KEYS = "AIzaSy..._YOUR_KEY_HERE"
+ETHERSCAN_API_KEY = "YOUR_ETHERSCAN_API_KEY_HERE"
+BSCSCAN_API_KEY = "YOUR_BSCSCAN_API_KEY_HERE"
+POLYGONSCAN_API_KEY = "YOUR_POLYGONSCAN_API_KEY_HERE"
+BASESCAN_API_KEY = "YOUR_BASESCAN_API_KEY_HERE"
+ARBITRUMSCAN_API_KEY = "YOUR_ARBITRUMSCAN_API_KEY_HERE"
+OPTIMISMSCAN_API_KEY = "YOUR_OPTIMISMSCAN_API_KEY_HERE"
+SOLSCAN_API_KEY = "YOUR_SOLSCAN_API_KEY_HERE"
+TRONSCAN_API_KEY = "YOUR_TRONSCAN_API_KEY_HERE"
+HELIUS_API_KEY = "YOUR_HELIUS_API_KEY_HERE"
+ANKR_API_KEY = "YOUR_ANKR_API_KEY_HERE"
+INFURA_API_KEY = "YOUR_INFURA_API_KEY_HERE"
+SHODAN_API_KEY = "YOUR_SHODAN_API_KEY_HERE"
+VIRUSTOTAL_API_KEY = "YOUR_VIRUSTOTAL_API_KEY_HERE"
+MONGO_URI = "mongodb://localhost:27017/"

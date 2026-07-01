@@ -77,8 +77,15 @@ def main():
                 bindings["kv"][kv_name] = found_id
                 print(f"✅ Created KV {kv_name}! ID: {found_id}")
             else:
-                print(f"⚠️ Could not create {kv_name}, falling back to placeholder.")
-                bindings["kv"][kv_name] = f"YOUR_ID_FOR_{kv_name}"
+                print(f"⚠️ Could not create {kv_name}, falling back to hardcoded ID.")
+                fallback_ids = {
+                    "NEMESIS_CACHE": "f4099ea1458e4e62ba838734f172846f",
+                    "ENTITY_CACHE": "817961173773498d9e4715b3479fc66d",
+                    "SESSION_CACHE": "7fbab659456242db8c27082fcdb0d4b1",
+                    "TOKEN_CACHE": "2c35b6ff21d14830b3ae93ee4e6006c2",
+                    "OSINT_CACHE": "5558ace53efa4a0aa37dc035b17c256a"
+                }
+                bindings["kv"][kv_name] = fallback_ids.get(kv_name, f"YOUR_ID_FOR_{kv_name}")
             
     print("\n--- Provisioning D1 Database ---")
     d1_list = run_cmd(["npx", "wrangler", "d1", "list", "--json"], check=False)
@@ -357,10 +364,6 @@ max_retries = 3
 # ============================================================================
 # DURABLE OBJECTS & WORKFLOWS
 # ============================================================================
-[[workflows]]
-name = "nemesis-workflow"
-binding = "TRACE_WORKFLOW"
-class_name = "TraceWorkflow"
 
 [[durable_objects.bindings]]
 name = "TRACE_COORDINATOR"
