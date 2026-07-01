@@ -3174,3 +3174,30 @@ Traceback (most recent call last):
   File "C:\Users\LEGIONX\downloads\cases\venv\Lib\site-packages\playwright\_impl\_connection.py", line 559, in wrap_api_call
     raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
 Exception: Page.close: Connection closed while reading from the driver
+2026-07-01 19:42:13,044 - OmniChainEngine - INFO - ==================================================
+2026-07-01 19:42:13,045 - OmniChainEngine - INFO -    INITIATING LIONSGATE NEMESIS BOOT SEQUENCE     
+2026-07-01 19:42:13,045 - OmniChainEngine - INFO - ==================================================
+2026-07-01 19:42:13,045 - OmniChainEngine - INFO - >>> [1/5] Verifying Dependencies...
+2026-07-01 19:42:16,921 - OmniChainEngine - INFO -     [OK] google-genai and core dependencies verified.
+2026-07-01 19:42:16,921 - OmniChainEngine - INFO - >>> [2/5] Checking Intelligence Providers & API Keys...
+2026-07-01 19:42:16,921 - OmniChainEngine - INFO -     [OK] Etherscan Provider Active.
+2026-07-01 19:42:16,921 - OmniChainEngine - INFO -     [OK] OKLink Provider Active.
+2026-07-01 19:42:16,922 - OmniChainEngine - INFO -     [OK] Tatum Provider Active.
+2026-07-01 19:42:16,922 - OmniChainEngine - INFO -     [OK] Gemini (AI) Provider Active.
+2026-07-01 19:42:16,922 - OmniChainEngine - INFO - >>> [3/5] Loading Supported Networks...
+2026-07-01 19:42:16,922 - OmniChainEngine - INFO -     [OK] EVM Chains: ETHEREUM, BSC, POLYGON, BASE, ARBITRUM, OPTIMISM
+2026-07-01 19:42:16,922 - OmniChainEngine - INFO -     [OK] Non-EVM Chains: BITCOIN, SOLANA, TRON, RIPPLE, STELLAR
+2026-07-01 19:42:16,923 - OmniChainEngine - INFO - >>> [4/5] Verifying Tracing Engine & Executions...
+2026-07-01 19:42:16,923 - OmniChainEngine - INFO -     [OK] Tracing Engine Ready. Parallel Executions (Max 4 Workers).
+2026-07-01 19:42:16,923 - OmniChainEngine - INFO - >>> [5/6] Fetching Data Modules...
+2026-07-01 19:42:16,923 - OmniChainEngine - INFO -     [OK] Scraping fallback active. Asyncio data fetching pools ready.
+2026-07-01 19:42:16,923 - OmniChainEngine - INFO - >>> [6/6] Triggering System Auto-Backup...
+2026-07-01 19:42:17,034 - OmniChainEngine - INFO -     [OK] Auto-backup routine dispatched to background.
+2026-07-01 19:42:17,035 - OmniChainEngine - INFO - ==================================================
+2026-07-01 19:42:17,035 - OmniChainEngine - INFO -    NEMESIS ENGINE READY FOR OMNICHAIN OPERATIONS  
+2026-07-01 19:42:17,035 - OmniChainEngine - INFO - ==================================================
+2026-07-01 19:42:18,676 - OmniChainEngine - INFO -     [OK] Playwright chromium installed successfully.
+2026-07-01 19:42:34,624 - OmniChainEngine - WARNING - Could not create MongoDB indexes: No replica set members found yet, Timeout: 15.0s, Topology Description: <TopologyDescription id: 6a44fd1a59db48013b530bfb, topology_type: ReplicaSetNoPrimary, servers: [<ServerDescription ('us-east-1-shard-00-00.ufsuw.mongodb.net', 27017) server_type: Unknown, rtt: None>, <ServerDescription ('us-east-1-shard-00-01.ufsuw.mongodb.net', 27017) server_type: Unknown, rtt: None>, <ServerDescription ('us-east-1-shard-00-02.ufsuw.mongodb.net', 27017) server_type: Unknown, rtt: None>]>
+2026-07-01 19:42:50,102 - OmniChainEngine - WARNING - MongoDB not available: us-east-1-shard-00-01.ufsuw.mongodb.net:27017: timed out (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),us-east-1-shard-00-00.ufsuw.mongodb.net:27017: timed out (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),us-east-1-shard-00-02.ufsuw.mongodb.net:27017: timed out (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms), Timeout: 15.0s, Topology Description: <TopologyDescription id: 6a44fd1a59db48013b530bfb, topology_type: ReplicaSetNoPrimary, servers: [<ServerDescription ('us-east-1-shard-00-00.ufsuw.mongodb.net', 27017) server_type: Unknown, rtt: None, error=NetworkTimeout('us-east-1-shard-00-00.ufsuw.mongodb.net:27017: timed out (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('us-east-1-shard-00-01.ufsuw.mongodb.net', 27017) server_type: Unknown, rtt: None, error=NetworkTimeout('us-east-1-shard-00-01.ufsuw.mongodb.net:27017: timed out (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('us-east-1-shard-00-02.ufsuw.mongodb.net', 27017) server_type: Unknown, rtt: None, error=NetworkTimeout('us-east-1-shard-00-02.ufsuw.mongodb.net:27017: timed out (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>]>. Running in memory-only mode.
+2026-07-01 19:42:51,769 - OmniChainEngine.Scraper - INFO - Playwright Auto-Scraper initialized.
+2026-07-01 19:42:51,793 - OmniChainEngine - ERROR -     [FAIL] Failed to initialize Darknet crawler: No module named 'pypdf'

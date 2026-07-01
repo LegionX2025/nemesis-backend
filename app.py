@@ -1146,7 +1146,7 @@ def intelligence_page():
 @app.route("/api/ontology", methods=["GET"])
 def api_ontology():
     from pymongo import MongoClient
-    mongo_uri = os.getenv("DATABASE_MONGO_URL", "mongodb://localhost:27017")
+    mongo_uri = "mongodb+srv://MKpBkrUw:Z63zGHQaiYG6rhrb@us-east-1.ufsuw.mongodb.net/blockchain"
     try:
         client = MongoClient(mongo_uri, serverSelectionTimeoutMS=2000)
         db = client["nemesis"]

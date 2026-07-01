@@ -123,7 +123,7 @@
             try {
                 // Determine API URL based on environment
                 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                const apiUrl = isLocal ? 'http://127.0.0.1:3001/api/login' : 'https://nemesis-api.legionxgaming2021.workers.dev/api/login';
+                const apiUrl = isLocal ? 'http://127.0.0.1:3001/api/login' : 'https://nemesis-backend-rwp4.onrender.com/api/login';
 
                 const formData = new URLSearchParams();
                 formData.append('username', u);

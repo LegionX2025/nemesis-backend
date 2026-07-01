@@ -44,7 +44,7 @@ FILE_WRITE_LOCK = threading.Lock()
 IO_POOL = ThreadPoolExecutor(max_workers=20)
 
 CONFIG = {
-    "MONGO_URI": os.getenv("DATABASE_MONGO_URL", "mongodb+srv://MKpBkrUw:Z63zGHQaiYG6rhrb@us-east-1.ufsuw.mongodb.net/blockchain"),
+    "MONGO_URI": "mongodb+srv://MKpBkrUw:Z63zGHQaiYG6rhrb@us-east-1.ufsuw.mongodb.net/blockchain",
     "ETHERSCAN_API_KEY": os.getenv("ETHERSCAN_API_KEY", "AYQRQWFDJRK8WAX2ICJ8U4JUSYXZT5J7II"),
     "BSCSCAN_API_KEY": os.getenv("BSCSCAN_API_KEY", "5HVRJGR3D1FGAG1VQXEIPN5HE7WU399CDY"),
     "POLYGONSCAN_API_KEY": os.getenv("POLYGONSCAN_API_KEY", "5HVRJGR3D1FGAG1VQXEIPN5HE7WU399CDY"),

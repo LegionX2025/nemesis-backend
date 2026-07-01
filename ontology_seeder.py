@@ -10,7 +10,7 @@ logger = logging.getLogger("OntologySeeder")
 
 load_dotenv()
 
-MONGO_URI = os.getenv("DATABASE_MONGO_URL", "mongodb://localhost:27017")
+MONGO_URI = "mongodb+srv://MKpBkrUw:Z63zGHQaiYG6rhrb@us-east-1.ufsuw.mongodb.net/blockchain"
 DB_NAME = "nemesis"
 COLLECTION_NAME = "nemesis_ontology"
 

@@ -2900,8 +2900,8 @@ def run_crawler_system():
 
     if AUTONOMOUS_MODE:
         log("Autonomous mode active reading from .env", style="green")
-        db_type = os.getenv("VITE_CRAWLER_DB_TYPE", "mongodb")
-        conn_info = os.getenv("VITE_DATABASE_MONGO_URL", "") if db_type == "mongodb" else os.getenv("VITE_POSTGRES_URI", "crawler_data.db")
+        db_type = "mongodb"
+        conn_info = "mongodb+srv://MKpBkrUw:Z63zGHQaiYG6rhrb@us-east-1.ufsuw.mongodb.net/blockchain"
     else:
         db_type, conn_info = "sqlite", "crawler_data.db"
 

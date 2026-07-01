@@ -34,7 +34,7 @@ def main():
     print("============================================================")
     
     # 1. GIT DEPLOY (RENDER)
-    print("\n>>> [1/2] Syncing to Global Repository (Render Backend)")
+    print("\n>>> [1/3] Syncing to Global Repository (Render Backend)")
     run_cmd("git add .")
     
     # Commit might fail if there are no changes, so we don't exit on error
@@ -46,7 +46,7 @@ def main():
     print("    -> GitHub sync complete. Render backend is building!")
 
     # 2. CLOUDFLARE DEPLOY (EDGE PROXY)
-    print("\n>>> [2/2] Deploying Edge Architecture (Cloudflare Worker)")
+    print("\n>>> [2/3] Deploying Edge Architecture (Cloudflare Worker)")
     worker_dir = os.path.join(os.getcwd(), "local_deploy", "nemesis-global-worker")
     if not os.path.exists(worker_dir):
         print(f"[ERROR] Worker directory not found: {worker_dir}")
@@ -54,6 +54,16 @@ def main():
         
     run_cmd("npx wrangler deploy src/index.ts", cwd=worker_dir)
     print("    -> Cloudflare Edge proxy successfully deployed!")
+
+    # 3. CLOUDFLARE DEPLOY (FRONTEND)
+    print("\n>>> [3/3] Deploying Main Frontend (Cloudflare Pages)")
+    frontend_dir = os.path.join(os.getcwd(), "cloudflare_frontend")
+    if not os.path.exists(frontend_dir):
+        print(f"[ERROR] Frontend directory not found: {frontend_dir}")
+        sys.exit(1)
+        
+    run_cmd("npx wrangler pages deploy . --project-name nemesis-id-frontend", cwd=frontend_dir)
+    print("    -> Cloudflare Pages frontend successfully deployed!")
     
     print("\n============================================================")
     print(" ✅ ALL SYSTEMS OPERATIONAL: DEPLOYMENT SUCCESSFUL")
