@@ -747,45 +747,55 @@ class TraceEngine:
         else:
             base_url = "https://api.etherscan.io/api"
             
-        url_native = f"{base_url}?module=account&action=txlist&address={addr}&startblock=0&endblock=99999999&page=1&offset=200&sort=desc&apikey={api_key}"
-        url_token = f"{base_url}?module=account&action=tokentxns&address={addr}&startblock=0&endblock=99999999&page=1&offset=200&sort=desc&apikey={api_key}"
-        url_internal = f"{base_url}?module=account&action=txlistinternal&address={addr}&startblock=0&endblock=99999999&page=1&offset=200&sort=desc&apikey={api_key}"
-        url_nft = f"{base_url}?module=account&action=tokennfttx&address={addr}&startblock=0&endblock=99999999&page=1&offset=200&sort=desc&apikey={api_key}"
-        url_1155 = f"{base_url}?module=account&action=token1155tx&address={addr}&startblock=0&endblock=99999999&page=1&offset=200&sort=desc&apikey={api_key}"
+        endpoints = [
+            ("native", "txlist"),
+            ("token", "tokentxns"),
+            ("internal", "txlistinternal"),
+            ("nft", "tokennfttx"),
+            ("1155", "token1155tx")
+        ]
         
-        for url in [url_native, url_token, url_internal, url_nft, url_1155]:
-            for attempt in range(3):
+        async def fetch_page(b_url, action, page, max_retries=3):
+            url = f"{b_url}?module=account&action={action}&address={addr}&startblock=0&endblock=99999999&page={page}&offset=1000&sort=desc&apikey={api_key}"
+            for attempt in range(max_retries):
                 try:
                     async with EVM_API_SEMAPHORE:
-                        async with session.get(url, headers=headers, timeout=10) as r:
+                        async with session.get(url, headers=headers, timeout=12) as r:
                             if r.status == 200:
                                 raw_text = await r.text()
                                 try:
                                     data = json.loads(raw_text)
                                 except:
-                                    break
-                                    
+                                    return []
                                 if data.get("status") == "1":
-                                    all_txs.extend(data.get("result", []))
-                                    break
-                                elif data.get("message") == "NOTOK":
-                                    msg_lower = str(data.get("result", "")).lower()
-                                    if "rate limit" in msg_lower or "limit" in msg_lower:
-                                        await asyncio.sleep(2.0 + attempt) 
-                                        continue
-                                    elif "invalid api key" in msg_lower:
-                                        url = url.replace(f"&apikey={api_key}", "")
-                                        continue
-                                    else:
-                                        break
-                                elif data.get("message") == "No transactions found":
-                                    break
+                                    return data.get("result", [])
+                                elif data.get("message") == "NOTOK" and "rate limit" in str(data.get("result", "")).lower():
+                                    await asyncio.sleep(2.0 + attempt * 2)
+                                    continue
                                 else:
-                                    break
-                        await asyncio.sleep(0.3)
+                                    return []
                 except Exception as e:
-                    # Timeout or connection error, fallback silently
-                    break
+                    await asyncio.sleep(1.0)
+            return []
+
+        async def fetch_endpoint_all_pages(action):
+            ep_results = []
+            page = 1
+            while page <= 20: # 20k tx limit per category (1000 * 20)
+                res = await fetch_page(base_url, action, page)
+                if not res or len(res) == 0: break
+                ep_results.extend(res)
+                if len(res) < 1000: break # reached the end
+                page += 1
+                await asyncio.sleep(0.3)
+            return ep_results
+
+        tasks = [fetch_endpoint_all_pages(act) for _, act in endpoints]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        for res in results:
+            if isinstance(res, list):
+                all_txs.extend(res)
         
         # 1.5 Ankr Advanced API Fallback
         if not all_txs:
