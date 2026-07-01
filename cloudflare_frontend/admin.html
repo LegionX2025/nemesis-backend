@@ -136,6 +136,17 @@
                         <button onclick="saveEngineConfig()" class="mt-4 px-4 py-2 bg-[#00ff88]/10 text-[#00ff88] border border-[#00ff88]/50 rounded text-xs font-bold uppercase tracking-widest hover:bg-[#00ff88]/20 transition">Apply Changes</button>
                     </div>
                 </div>
+                
+                <div class="bg-[rgba(20,20,25,0.8)] border border-[#00b8ff]/20 p-6 rounded-xl mt-6">
+                    <h3 class="text-[#00b8ff] text-sm uppercase tracking-widest font-bold mb-4 border-b border-[#00b8ff]/20 pb-2">Omni-Deployment Matrix</h3>
+                    <div class="space-y-4">
+                        <p class="text-xs text-gray-400">Initiate a global sync. This will push code to GitHub, build on Render, and deploy the Cloudflare Proxy.</p>
+                        <button id="btn-deploy" onclick="triggerAutoDeploy()" class="w-full py-3 bg-[#00b8ff]/10 text-[#00b8ff] border border-[#00b8ff]/50 rounded text-xs font-bold uppercase tracking-widest hover:bg-[#00b8ff]/20 transition shadow-[0_0_15px_rgba(0,184,255,0.2)] hover:shadow-[0_0_25px_rgba(0,184,255,0.4)]">
+                            🚀 INITIATE OMNI-DEPLOY
+                        </button>
+                        <div id="deploy-status" class="text-xs font-mono text-gray-400 mt-2 hidden p-3 bg-black border border-[#00b8ff]/20 rounded overflow-y-auto"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -148,8 +159,8 @@
         }
 
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        const baseUrl = isLocal ? 'http://127.0.0.1:3001' : 'https://nemesis-backend-rwp4.onrender.com';
-        const wsUrl = isLocal ? 'ws://127.0.0.1:3001' : 'wss://nemesis-backend-rwp4.onrender.com';
+        const baseUrl = isLocal ? 'http://127.0.0.1:3001' : '';
+        const wsUrl = isLocal ? 'ws://127.0.0.1:3001' : (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host;
 
         const authHeaders = {
             'Authorization': `Bearer ${token}`,
@@ -159,6 +170,37 @@
         function logout() {
             localStorage.removeItem('nemesis_admin_token');
             window.location.href = 'login.html';
+        }
+
+        async function triggerAutoDeploy() {
+            if(!confirm("Initiate Global Omni-Deployment Sequence?")) return;
+            const btn = document.getElementById('btn-deploy');
+            const statusBox = document.getElementById('deploy-status');
+            
+            btn.innerHTML = '<span class="animate-pulse">⏳ DEPLOYMENT IN PROGRESS...</span>';
+            btn.disabled = true;
+            statusBox.classList.remove('hidden');
+            statusBox.innerHTML = "[SYSTEM] Connecting to local deployment engine...<br>";
+            
+            try {
+                const response = await fetch(`${baseUrl}/admin/deploy`, {
+                    method: 'POST',
+                    headers: authHeaders
+                });
+                const data = await response.json();
+                if(data.status === 'success') {
+                    statusBox.innerHTML += `<span class="text-[#00ff88]">[SUCCESS] ${data.message}</span><br>`;
+                } else {
+                    statusBox.innerHTML += `<span class="text-red-500">[ERROR] ${data.message}</span><br>`;
+                }
+            } catch (err) {
+                statusBox.innerHTML += `<span class="text-red-500">[CRITICAL] ${err.message}</span><br>`;
+            }
+            
+            setTimeout(() => {
+                btn.innerHTML = '🚀 INITIATE OMNI-DEPLOY';
+                btn.disabled = false;
+            }, 5000);
         }
 
         // Tab Switching

@@ -45,4 +45,10 @@ if os.path.exists(new_index_src):
     shutil.copy2(new_index_src, os.path.join(dest_dir, "index.html"))
     print("Copied new_index.html to index.html as the new landing page.")
 
-print("Sync complete!")
+print("Sync complete! Now running URL patcher...")
+try:
+    from patch_urls import patch_urls
+    patch_urls()
+except Exception as e:
+    print(f"Error running URL patcher: {e}")
+    print("Please run 'python patch_urls.py' manually.")

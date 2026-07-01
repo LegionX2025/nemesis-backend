@@ -633,6 +633,52 @@ HOW DID THE ASSETS LANDED FROM ETH to BITCOIN or vice versa if applicable? Summa
         "contract_source_code": gemini_summary
     }
 
+@app.websocket("/ws/darknet/stream")
+async def darknet_ws_stream(websocket: WebSocket):
+    await websocket.accept()
+    from queue import Queue
+    import queue
+    try:
+        from darknet.darknetv2 import sse_clients, locks
+    except ImportError:
+        await websocket.send_json({"type": "error", "message": "Darknet module not loaded"})
+        await websocket.close()
+        return
+
+    q = Queue()
+    with locks["sse"]:
+        sse_clients.append(q)
+    
+    try:
+        while True:
+            try:
+                data = await asyncio.to_thread(q.get, timeout=1.0)
+                if data.startswith("event: "):
+                    parts = data.split("\ndata: ")
+                    if len(parts) == 2:
+                        event_type = parts[0].replace("event: ", "").strip()
+                        json_str = parts[1].strip()
+                        import json
+                        try:
+                            parsed = json.loads(json_str)
+                            await websocket.send_json({"event": event_type, "data": parsed})
+                        except:
+                            await websocket.send_json({"event": event_type, "data": json_str})
+            except queue.Empty:
+                await asyncio.sleep(0.1)
+                
+            try:
+                msg = await asyncio.wait_for(websocket.receive_text(), timeout=0.01)
+            except asyncio.TimeoutError:
+                pass
+    except Exception as e:
+        logger.error(f"Darknet WS error: {e}")
+    finally:
+        with locks["sse"]:
+            if q in sse_clients:
+                sse_clients.remove(q)
+        await websocket.close()
+
 # ==========================================
 # ADMIN DASHBOARD & AUTHENTICATION ENDPOINTS
 # ==========================================

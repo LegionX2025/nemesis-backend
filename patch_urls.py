@@ -9,13 +9,19 @@ def patch_urls():
     new_ws = "wss://nemesis-backend-rwp4.onrender.com"
     
     html_files = glob.glob(os.path.join(target_dir, "*.html"))
-    for file_path in html_files:
+    # Also patch js files in static/ if any
+    js_files = glob.glob(os.path.join(target_dir, "static", "*.js"))
+    for file_path in html_files + js_files:
         with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
             
         original_content = content
         content = content.replace(old_url, new_url)
         content = content.replace(old_ws, new_ws)
+        
+        # Patch relative API calls introduced in templates
+        content = content.replace("fetch('/api/", f"fetch('{new_url}/api/")
+        content = content.replace('fetch("/api/', f'fetch("{new_url}/api/')
         
         if content != original_content:
             with open(file_path, "w", encoding="utf-8") as f:

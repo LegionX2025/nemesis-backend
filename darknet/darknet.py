@@ -149,7 +149,11 @@ TOR_CHECK_URL = "http://check.torproject.org"
 TOR_PROXY = {"http": f"socks5h://127.0.0.1:{TOR_PORT}", "https": f"socks5h://127.0.0.1:{TOR_PORT}"}
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-MAX_WORKERS = int(os.getenv("VITE_CRAWLER_MAX_THREADS", 10))
+_thread_env = os.getenv("VITE_CRAWLER_MAX_THREADS", "10")
+try:
+    MAX_WORKERS = int(_thread_env)
+except ValueError:
+    MAX_WORKERS = 10
 SAVE_STATE_INTERVAL = 30
 STATE_FILE = "state.json"
 EXPORT_JSONL = "export.jsonl"
