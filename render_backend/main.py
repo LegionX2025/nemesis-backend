@@ -205,7 +205,7 @@ async def api_darknet_search(q: str = ""):
     try:
         # Search the darknet_data collection
         search_pattern = re.compile(re.escape(q), re.IGNORECASE)
-        q_filter = {
+        darknet_filter = {
             "$or": [
                 {"web_info.content": search_pattern},
                 {"web_info.title": search_pattern},
@@ -216,16 +216,41 @@ async def api_darknet_search(q: str = ""):
             ]
         }
         
-        cursor = mongo_db.darknet_data.find(q_filter).sort("crawled_at", -1).limit(50)
-        docs = await cursor.to_list(length=50)
+        darknet_cursor = mongo_db.darknet_data.find(darknet_filter).sort("crawled_at", -1).limit(50)
+        darknet_docs = await darknet_cursor.to_list(length=50)
+
+        # Search the entity collection
+        entity_filter = {
+            "$or": [
+                {"name": search_pattern},
+                {"description": search_pattern},
+                {"value": search_pattern},
+                {"id": search_pattern}
+            ]
+        }
+        entity_cursor = mongo_db.entity.find(entity_filter).limit(25)
+        entity_docs = await entity_cursor.to_list(length=25)
+
+        # Search the vasp collection
+        vasp_filter = {
+            "$or": [
+                {"name": search_pattern},
+                {"domain": search_pattern},
+                {"country": search_pattern},
+                {"address": search_pattern}
+            ]
+        }
+        vasp_cursor = mongo_db.vasp.find(vasp_filter).limit(25)
+        vasp_docs = await vasp_cursor.to_list(length=25)
         
         output = []
-        for doc in docs:
+        for doc in darknet_docs:
             # Format to match the original darknet API
             if 'web_info' not in doc:
                 doc['web_info'] = {'url': doc.get('url', ''), 'title': doc.get('title', 'Untitled'), 'content': str(doc)}
             
             output.append({
+                "collection": "darknet",
                 "hash-ID": doc.get("hash-ID", ""),
                 "crawled_at": doc.get("crawled_at", ""),
                 "web_info": {
@@ -236,6 +261,25 @@ async def api_darknet_search(q: str = ""):
                 },
                 "uie_entities": doc.get("uie_entities", []),
                 "keywords_detected": doc.get("keywords_detected", [])
+            })
+
+        for doc in entity_docs:
+            output.append({
+                "collection": "entity",
+                "id": str(doc.get("_id", doc.get("id", ""))),
+                "name": doc.get("name", doc.get("value", "Unknown Entity")),
+                "description": doc.get("description", ""),
+                "data": {k: v for k, v in doc.items() if k not in ["_id", "name", "description", "value"]}
+            })
+
+        for doc in vasp_docs:
+            output.append({
+                "collection": "vasp",
+                "id": str(doc.get("_id", "")),
+                "name": doc.get("name", "Unknown VASP"),
+                "domain": doc.get("domain", ""),
+                "country": doc.get("country", ""),
+                "data": {k: v for k, v in doc.items() if k not in ["_id", "name", "domain", "country"]}
             })
             
         return {"results": output}

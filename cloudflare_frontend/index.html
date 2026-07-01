@@ -1,9 +1,9 @@
-
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>Lionsgate Omni-Chain Forensics | Case LGN-US-2026-0172</title>
+        <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23050b14'/%3E%3Cpath d='M30,20 L30,80 L70,80 L70,20 Z' fill='none' stroke='%2300ffcc' stroke-width='5'/%3E%3Cpath d='M30,20 L70,80' stroke='%2300ffcc' stroke-width='5'/%3E%3C/svg%3E">
+        <title>NEMESIS by LIONSGATE NETWORK</title>
         <script>
             const originalWarn = console.warn;
             console.warn = function(...args) {
@@ -171,103 +171,57 @@
                         <a href="#" onclick="openContentPage('capabilities')" class="hover:text-blue-600 transition">Capabilities</a>
                         <a href="#" onclick="openContentPage('workflow')" class="hover:text-blue-600 transition">Workflow</a>
                         <a href="#" onclick="openContentPage('architecture')" class="hover:text-blue-600 transition">Architecture</a>
-                        <a href="#" onclick="openContentPage('api_docs')" class="hover:text-blue-600 transition text-indigo-600 font-black">API Docs</a>
+                        <a href="#" onclick="openContentPage('capabilities')" class="hover:text-amber-600 transition">Capabilities</a>
+                        <a href="#" onclick="openContentPage('workflow')" class="hover:text-cyan-600 transition">Workflow</a>
+                        <a href="#" onclick="openContentPage('architecture')" class="hover:text-rose-600 transition">Architecture</a>
+                        <a href="#" onclick="openContentPage('api_docs')" class="hover:text-indigo-600 transition font-black">API Docs</a>
                     </div>
                 </footer>
             </div>
         </div>
         
-        <!-- CONTENT MODAL -->
-        <div id="content-modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[9999] items-center justify-center font-sans">
-            <div class="bg-white rounded-xl shadow-2xl w-[800px] border border-slate-200 overflow-hidden flex flex-col max-h-[85vh]">
-                <div class="bg-indigo-600 text-white px-6 py-4 flex justify-between items-center shadow-sm">
-                    <h2 class="text-lg font-bold flex items-center gap-2" id="content-modal-title">
-                        Title
-                    </h2>
-                    <button onclick="closeContentPage()" class="text-indigo-200 hover:text-white transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+        <!-- GLOBAL MENU INJECTED HERE -->
+        <script src="/static/menu.js"></script>
+        <script src="/static/theme.js"></script>
+        
+        <!-- Page Specific Controls -->
+        <div class="bg-slate-900 text-white border-b border-slate-800 px-6 py-2 flex justify-between items-center z-10 relative shadow">
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 shadow-inner">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Loss Traced:</span>
+                    <span id="total-traced-widget" class="text-sm text-emerald-400 font-mono font-black drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]">0.00</span>
                 </div>
-                <div class="p-6 overflow-y-auto text-slate-700 text-sm" id="content-modal-body">
+
+                <div id="trace-id-display" class="hidden items-center bg-blue-900/30 border border-blue-800/50 text-blue-300 font-bold px-3 py-1.5 rounded-lg text-[10px] tracking-widest h-[34px]">
+                    NID: <span id="trace-id-val" class="ml-1 font-mono text-xs text-blue-100"></span>
                 </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <label class="flex items-center gap-2 cursor-pointer mr-2">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider" id="auto-cluster-label">Auto-Cluster</span>
+                    <div class="relative">
+                        <input type="checkbox" id="auto-cluster-toggle" class="sr-only peer" checked onchange="toggleAutoCluster()">
+                        <div class="w-8 h-4 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-600"></div>
+                    </div>
+                </label>
+                <button onclick="toggleLogModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-md text-[11px] font-bold shadow transition flex items-center gap-2">
+                    <i class="fa-solid fa-list"></i> Evidentiary Log
+                </button>
+                <select id="currency-display-selector" onchange="setCurrencyMode(this.value)" class="bg-slate-800 border border-slate-700 text-slate-300 px-2 py-1.5 rounded-md text-[11px] font-bold shadow transition outline-none cursor-pointer mr-1">
+                    <option value="USD">💵 USD Eqv.</option>
+                    <option value="TOKEN">🪙 Token</option>
+                    <option value="NATIVE">🌐 Native</option>
+                </select>
+                <select id="layout-mode" onchange="changeMassiveLayout()" class="hidden">
+                    <option value="standard">Standard</option>
+                </select>
             </div>
         </div>
-
-        <!-- Global Navigation Bar -->
-        <header class="bg-slate-900 text-white border-b border-slate-800 flex flex-col z-20 shrink-0 shadow-md">
-            <div class="px-6 py-3 flex justify-between items-center w-full">
-                <div class="flex items-center gap-4">
-                    <img src="/static/logo_nemesis.jpeg" alt="Nemesis Logo" class="h-9 w-9 rounded border border-slate-700 shadow-sm">
-                    <div>
-                        <h1 class="text-lg font-black uppercase tracking-widest text-slate-100 leading-tight">Lionsgate Nemesis</h1>
-                        <p class="text-[10px] text-blue-400 font-mono font-bold uppercase tracking-widest leading-none mt-1">Omni-Chain Trace Stream</p>
-                    </div>
-                    
-                    <div class="h-8 w-px bg-slate-700 mx-4"></div>
-                    
-                    <!-- Status Indicators -->
-                    <div class="flex items-center gap-4">
-                        <div class="flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 shadow-inner">
-                            <span class="relative flex h-2 w-2">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                            </span>
-                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Loss Traced:</span>
-                            <span id="total-traced-widget" class="text-sm text-emerald-400 font-mono font-black drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]">0.00</span>
-                        </div>
-
-                        <div id="trace-id-display" class="hidden items-center bg-blue-900/30 border border-blue-800/50 text-blue-300 font-bold px-3 py-1.5 rounded-lg text-[10px] tracking-widest h-[34px]">
-                            NID: <span id="trace-id-val" class="ml-1 font-mono text-xs text-blue-100"></span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Global Actions -->
-                <div class="flex items-center gap-3">
-                    <label class="flex items-center gap-2 cursor-pointer mr-2">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider" id="auto-cluster-label">Auto-Cluster</span>
-                        <div class="relative">
-                            <input type="checkbox" id="auto-cluster-toggle" class="sr-only peer" checked onchange="toggleAutoCluster()">
-                            <div class="w-8 h-4 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-600"></div>
-                        </div>
-                    </label>
-                    
-                    <a href="/audit" target="_blank" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-md text-[11px] font-bold shadow transition flex items-center gap-2 no-underline">
-                        <i class="fa-solid fa-shield-halved"></i> Master Audit
-                    </a>
-                    <a href="/intelligence" target="_blank" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-md text-[11px] font-bold shadow transition flex items-center gap-2 no-underline">
-                        <i class="fa-solid fa-brain"></i> Intelligence Base
-                    </a>
-                    <button onclick="toggleLogModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-md text-[11px] font-bold shadow transition flex items-center gap-2">
-                        <i class="fa-solid fa-list"></i> Evidentiary Log
-                    </button>
-                    <select id="currency-display-selector" onchange="setCurrencyMode(this.value)" class="bg-slate-800 border border-slate-700 text-slate-300 px-2 py-1.5 rounded-md text-[11px] font-bold shadow transition outline-none cursor-pointer mr-1">
-                        <option value="USD">💵 USD Eqv.</option>
-                        <option value="TOKEN">🪙 Token</option>
-                        <option value="NATIVE">🌐 Native</option>
-                    </select>
-                    <select id="theme-selector" onchange="applyTheme(this.value)" class="bg-slate-800 border border-slate-700 text-slate-300 px-2 py-1.5 rounded-md text-[11px] font-bold shadow transition outline-none cursor-pointer">
-                        <option value="enterprise_light">Enterprise Light</option>
-                        <option value="cyberpunk_dark">Cyberpunk Dark</option>
-                        <option value="glassmorphism_ocean">Glass Ocean</option>
-                        <option value="minimalist_monochrome">Monochrome</option>
-                        <option value="tactical_military">Tactical HUD</option>
-                    </select>
-                    <select id="layout-mode" onchange="changeMassiveLayout()" class="hidden">
-                        <option value="standard">Standard</option>
-                    </select>
-                </div>
-            </div>
-            <!-- Global Menu Links Row -->
-            <div class="bg-slate-950/50 border-t border-slate-800/50 px-6 py-2 w-full flex justify-center gap-8 text-[10px] font-bold tracking-widest uppercase text-slate-400">
-                <a href="/nemesis_id.html" target="_blank" class="hover:text-fuchsia-400 cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-id-card text-fuchsia-500"></i> Nemesis ID</a>
-                <a href="/darknet_search.html" target="_blank" class="hover:text-purple-400 cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-user-secret text-purple-500"></i> Darknet Search</a>
-                <a onclick="openContentPage('about')" class="hover:text-blue-400 cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-circle-info text-blue-500"></i> About</a>
-                <a onclick="openContentPage('capabilities')" class="hover:text-amber-400 cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-bolt text-amber-500"></i> Capability</a>
-                <a onclick="openContentPage('content')" class="hover:text-red-400 cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-book-open text-red-500"></i> Content / Details</a>
-                <a onclick="openContentPage('workflow')" class="hover:text-cyan-400 cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-diagram-project text-cyan-500"></i> Workflow</a>
-                <a onclick="openContentPage('architecture')" class="hover:text-rose-400 cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-sitemap text-rose-500"></i> Architecture</a>
-                <a onclick="openContentPage('tracing_engine')" class="hover:text-lime-400 cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-microchip text-lime-500"></i> Tracing Engine</a>
-            </div>
-        </header>
 
         <!-- Trace Control Panel (Sub-header) -->
         <div class="bg-white border-b border-slate-200 p-4 shadow-sm z-10 shrink-0 flex flex-col gap-3">
@@ -2064,26 +2018,6 @@
                     delay += 300;
                 });
             };
-
-            // Initialize Web3GL Background
-            if (window.VANTA && window.VANTA.NET) {
-                VANTA.NET({
-                    el: "#tsparticles",
-                    mouseControls: true,
-                    touchControls: true,
-                    gyroControls: false,
-                    minHeight: 200.00,
-                    minWidth: 200.00,
-                    scale: 1.00,
-                    scaleMobile: 1.00,
-                    color: 0x2563eb,
-                    backgroundColor: 0xf8fafc,
-                    points: 12.00,
-                    maxDistance: 22.00,
-                    spacing: 18.00,
-                    showDots: true
-                });
-            }
 
             // Content Pages Logic
             const contentData = {

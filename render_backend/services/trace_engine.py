@@ -591,8 +591,11 @@ class TraceEngine:
 
     async def fetch_txs(self, session, addr, chain):
         global EVM_API_SEMAPHORE
+        global BTC_API_SEMAPHORE
         if EVM_API_SEMAPHORE is None:
             EVM_API_SEMAPHORE = asyncio.Semaphore(5)
+        if 'BTC_API_SEMAPHORE' not in globals() or BTC_API_SEMAPHORE is None:
+            BTC_API_SEMAPHORE = asyncio.Semaphore(3)
             
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
@@ -603,18 +606,21 @@ class TraceEngine:
         if chain == "BITCOIN":
             for attempt in range(4):
                 try:
-                    async with session.get(f"https://mempool.space/api/address/{addr}/txs", headers=headers, timeout=12) as r:
-                        if r.status == 200: return {"type": "btc", "data": await r.json(), "actual_chain": "BITCOIN"}
+                    async with BTC_API_SEMAPHORE:
+                        async with session.get(f"https://mempool.space/api/address/{addr}/txs", headers=headers, timeout=12) as r:
+                            if r.status == 200: return {"type": "btc", "data": await r.json(), "actual_chain": "BITCOIN"}
                 except: pass
                 
                 try:
-                    async with session.get(f"https://blockstream.info/api/address/{addr}/txs", headers=headers, timeout=12) as r2:
-                        if r2.status == 200: return {"type": "btc", "data": await r2.json(), "actual_chain": "BITCOIN"}
+                    async with BTC_API_SEMAPHORE:
+                        async with session.get(f"https://blockstream.info/api/address/{addr}/txs", headers=headers, timeout=12) as r2:
+                            if r2.status == 200: return {"type": "btc", "data": await r2.json(), "actual_chain": "BITCOIN"}
                 except: pass
                 try:
-                    async with session.get(f"https://blockchain.info/rawaddr/{addr}", headers=headers, timeout=12) as r3:
-                        if r3.status == 200:
-                            bdata = await r3.json()
+                    async with BTC_API_SEMAPHORE:
+                        async with session.get(f"https://blockchain.info/rawaddr/{addr}", headers=headers, timeout=12) as r3:
+                            if r3.status == 200:
+                                bdata = await r3.json()
                             if "txs" in bdata:
                                 mempool_txs = []
                                 for tx in bdata["txs"]:
@@ -947,8 +953,8 @@ class TraceEngine:
             if self.end_date and timestamp[:10] > self.end_date: continue
 
             addr_lower = addr.lower()
-            is_sender = any(i.get("prevout", {}).get("scriptpubkey_address", "").lower() == addr_lower for i in tx.get("vin", []))
-            is_receiver = any(o.get("scriptpubkey_address", "").lower() == addr_lower for o in tx.get("vout", []))
+            is_sender = any(str(i.get("prevout", {}).get("scriptpubkey_address", "") or "").lower() == addr_lower for i in tx.get("vin", []))
+            is_receiver = any(str(o.get("scriptpubkey_address", "") or "").lower() == addr_lower for o in tx.get("vout", []))
             
             logger.info(f"Tx {txid}: is_sender={is_sender}, is_receiver={is_receiver}, addr_lower={addr_lower}, seeds={self.seeds}")
             
@@ -1550,7 +1556,7 @@ class TraceEngine:
     async def run(self):
         global EVM_API_SEMAPHORE
         if EVM_API_SEMAPHORE is None:
-            EVM_API_SEMAPHORE = asyncio.Semaphore(CONCURRENCY_LIMIT)
+            EVM_API_SEMAPHORE = asyncio.Semaphore(3)
         try:
             import ssl
             ssl_ctx = ssl.create_default_context(cafile=certifi.where())
