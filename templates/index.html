@@ -10,6 +10,33 @@
                 if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) return;
                 originalWarn.apply(console, args);
             };
+
+            // Define initiateLandingTrace early to prevent ReferenceError if clicked before heavy scripts load
+            window.initiateLandingTrace = function() {
+                let seed = document.getElementById("landing-seed-input").value;
+                let amt = document.getElementById("landing-target-amount").value;
+                let startDate = document.getElementById("landing-start-date").value;
+                let endDate = document.getElementById("landing-end-date").value;
+
+                if (!seed.trim()) return alert("Please enter at least one seed wallet.");
+                
+                document.getElementById("seed-input").value = seed;
+                document.getElementById("target-amount").value = amt;
+                document.getElementById("start-date").value = startDate;
+                document.getElementById("end-date").value = endDate;
+                
+                let landing = document.getElementById("landing-page");
+                if(landing) {
+                    landing.style.opacity = "0";
+                    setTimeout(() => { landing.style.display = "none"; }, 1200);
+                }
+                
+                if (typeof submitTrace === 'function') {
+                    submitTrace();
+                } else {
+                    alert("System is still loading intelligence modules. Please wait a moment.");
+                }
+            };
         </script>
         <script src="https://cdn.tailwindcss.com"></script>
         <script src="https://cdn.jsdelivr.net/npm/vis-network/standalone/umd/vis-network.min.js"></script>
@@ -1914,25 +1941,7 @@
             var edges = new vis.DataSet();
             var allEdgesMap = new Map();
             var allNodesMap = new Map();
-            window.initiateLandingTrace = function() {
-                let seed = document.getElementById("landing-seed-input").value;
-                let amt = document.getElementById("landing-target-amount").value;
-                let startDate = document.getElementById("landing-start-date").value;
-                let endDate = document.getElementById("landing-end-date").value;
-
-                if (!seed.trim()) return alert("Please enter at least one seed wallet.");
-                
-                document.getElementById("seed-input").value = seed;
-                document.getElementById("target-amount").value = amt;
-                document.getElementById("start-date").value = startDate;
-                document.getElementById("end-date").value = endDate;
-                
-                let landing = document.getElementById("landing-page");
-                landing.style.opacity = "0";
-                setTimeout(() => { landing.style.display = "none"; }, 1200);
-                
-                submitTrace();
-            }
+            // initiateLandingTrace definition moved to head to prevent ReferenceError
             
             async function fetchHistoricalTrace() {
                 let traceId = document.getElementById("landing-search-trace").value.trim();

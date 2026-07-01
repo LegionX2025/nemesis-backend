@@ -20,22 +20,6 @@ export class RealtimeManager extends DurableObject {
   }
 
   async fetch(request: Request) {
-    const url = new URL(request.url);
-    
-    // Handle internal broadcasts from the Queue Consumer (TraceEngine)
-    if (request.method === 'POST' && url.pathname === '/internal/broadcast') {
-        try {
-            const data = await request.json();
-            const message = JSON.stringify(data);
-            for (const [ws] of this.sessions) {
-                ws.send(message);
-            }
-            return new Response("Broadcast successful", { status: 200 });
-        } catch (e) {
-            return new Response("Broadcast failed", { status: 500 });
-        }
-    }
-
     const upgradeHeader = request.headers.get('Upgrade');
     if (!upgradeHeader || upgradeHeader !== 'websocket') {
       return new Response('Expected Upgrade: websocket', { status: 426 });
@@ -50,7 +34,11 @@ export class RealtimeManager extends DurableObject {
       try {
         const data = JSON.parse(event.data as string);
         if (data.type === 'ping') {
-            server.send(JSON.stringify({ type: 'pong', timestamp: Date.now() }));
+          server.send(JSON.stringify({ type: 'pong', timestamp: Date.now() }));
+        }
+        // Broadcast to all clients in this DO (trace_id specific)
+        for (const [ws] of this.sessions) {
+           if (ws !== server) ws.send(event.data);
         }
       } catch (e) {
         console.error("WS error:", e);

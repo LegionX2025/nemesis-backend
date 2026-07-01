@@ -19,6 +19,16 @@ def patch_urls():
         content = content.replace(old_url, new_url)
         content = content.replace(old_ws, new_ws)
         
+        # Patch dynamic WebSocket calls
+        content = content.replace(
+            'protocol + window.location.host + "/ws/"',
+            f'"{new_ws}/ws/"'
+        )
+        content = content.replace(
+            "protocol + window.location.host + '/ws/'",
+            f"'{new_ws}/ws/'"
+        )
+        
         # Patch relative API calls introduced in templates
         content = content.replace("fetch('/api/", f"fetch('{new_url}/api/")
         content = content.replace('fetch("/api/', f'fetch("{new_url}/api/')

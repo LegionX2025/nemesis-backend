@@ -26,10 +26,9 @@ app.use('*', cors({
   allowMethods: ['POST', 'GET', 'OPTIONS']
 }))
 
-// Forward endpoints to FastAPI backend (Render)
+// Forward endpoints to FastAPI backend
 const proxyToBackend = async (c: any, path: string) => {
-  // Use Render URL as the default production backend
-  const backendUrl = c.env.PYTHON_BACKEND_URL || 'https://nemesis-backend-ymr5.onrender.com'
+  const backendUrl = c.env.PYTHON_BACKEND_URL || 'http://localhost:3001'
   // Avoid double slashes
   const cleanPath = path.startsWith('/') ? path : '/' + path;
   const targetUrl = new URL(cleanPath, backendUrl).toString();
@@ -41,12 +40,8 @@ const proxyToBackend = async (c: any, path: string) => {
   return fetch(proxyReq);
 }
 
-// Forward EVERYTHING to Render backend (including the / HTML pages)
-app.all('/*', (c) => {
-  // Skip WebSocket routes so they are handled by Durable Objects
-  if (c.req.path.startsWith('/ws/')) return;
-  return proxyToBackend(c, c.req.path);
-})
+app.all('/api/*', (c) => proxyToBackend(c, c.req.path))
+app.all('/admin/*', (c) => proxyToBackend(c, c.req.path))
 
 // WebSocket endpoints (Proxying to Durable Objects)
 app.get('/ws/:trace_id', (c) => {

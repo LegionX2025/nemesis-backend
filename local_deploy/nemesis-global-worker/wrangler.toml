@@ -7,19 +7,19 @@ compatibility_date = "2024-02-08"
 # ============================================================================
 [[kv_namespaces]]
 binding = "NEMESIS_CACHE"
-id = "f4099ea1458e4e62ba838734f172846f"
+id = "YOUR_ID_FOR_NEMESIS_CACHE"
 [[kv_namespaces]]
 binding = "ENTITY_CACHE"
-id = "817961173773498d9e4715b3479fc66d"
+id = "YOUR_ID_FOR_ENTITY_CACHE"
 [[kv_namespaces]]
 binding = "SESSION_CACHE"
-id = "7fbab659456242db8c27082fcdb0d4b1"
+id = "YOUR_ID_FOR_SESSION_CACHE"
 [[kv_namespaces]]
 binding = "TOKEN_CACHE"
-id = "2c35b6ff21d14830b3ae93ee4e6006c2"
+id = "YOUR_ID_FOR_TOKEN_CACHE"
 [[kv_namespaces]]
 binding = "OSINT_CACHE"
-id = "5558ace53efa4a0aa37dc035b17c256a"
+id = "YOUR_ID_FOR_OSINT_CACHE"
 
 # ============================================================================
 # D1 DATABASE
@@ -94,9 +94,8 @@ class_name = "AdminConsole"
 tag = "v1"
 new_sqlite_classes = ["TraceCoordinator", "RealtimeManager", "AdminConsole"]
 
+# ============================================================================
+# ENVIRONMENT VARIABLES
+# ============================================================================
 [vars]
-ENVIRONMENT = "production"
-ENABLE_OSINT = "true"
-RATE_LIMIT_MAX = "100"
-RATE_LIMIT_WINDOW = "60"
-PYTHON_BACKEND_URL = "https://nemesis-backend-ymr5.onrender.com"
+PYTHON_BACKEND_URL = "https://nemesis-tunnel.trycloudflare.com" # TODO: Update this in Cloudflare dashboard
