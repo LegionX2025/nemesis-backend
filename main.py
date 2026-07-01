@@ -216,8 +216,17 @@ async def api_darknet_search(q: str = ""):
             ]
         }
         
-        cursor = mongo_db.darknet_data.find(q_filter).sort("crawled_at", -1).limit(50)
-        docs = await cursor.to_list(length=50)
+        # Query both collections concurrently
+        cursor1 = mongo_db.darknet_data.find(q_filter).sort("crawled_at", -1).limit(50)
+        cursor2 = mongo_db.darknet.find(q_filter).sort("crawled_at", -1).limit(50)
+        
+        docs1 = await cursor1.to_list(length=50)
+        docs2 = await cursor2.to_list(length=50)
+        
+        # Combine, sort by date descending, and limit to 50
+        all_docs = docs1 + docs2
+        all_docs.sort(key=lambda x: str(x.get("crawled_at", "")), reverse=True)
+        docs = all_docs[:50]
         
         output = []
         for doc in docs:
@@ -251,6 +260,29 @@ async def get_health():
         "mongo_connected": get_mongo_status(),
         "active_traces": traces
     }
+
+@app.post("/admin/deploy")
+async def trigger_auto_deploy():
+    import subprocess
+    import os
+    try:
+        # Check if we are running on Render vs Locally
+        # If we are on Render, deploying locally isn't supported since git push needs auth
+        if os.environ.get("RENDER"):
+            return {"status": "error", "message": "Cannot deploy from inside the cloud container. Run this locally."}
+            
+        process = subprocess.Popen(
+            ["python", "auto_deploy.py"], 
+            stdout=subprocess.PIPE, 
+            stderr=subprocess.STDOUT, 
+            text=True
+        )
+        
+        # We could stream, but for simplicity we'll just wait for it to finish or return the start
+        # Actually, let's just return a success that it started to not block the UI
+        return {"status": "success", "message": "Deployment sequence initiated in the background."}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 @app.get("/admin/traces")
 async def get_traces():

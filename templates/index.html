@@ -2935,27 +2935,6 @@ NEMESIS_ROOT/
             };
 
             var GLOBAL_TRACE_ID = "";
-            async function initiateLandingTrace() {
-                const seedVal = document.getElementById("landing-seed-input") ? document.getElementById("landing-seed-input").value : null;
-                const amtVal = document.getElementById("landing-target-amount") ? document.getElementById("landing-target-amount").value : null;
-                
-                if(!seedVal) return alert("Please enter a target wallet address.");
-                
-                let lp = document.getElementById('landing-page');
-                let mu = document.getElementById('main-ui');
-                if(lp) lp.classList.add('hidden');
-                if(mu) {
-                    mu.classList.remove('hidden');
-                    mu.classList.add('flex');
-                }
-                
-                let mainInput = document.getElementById("seed-input");
-                if (mainInput) mainInput.value = seedVal;
-                let mainAmt = document.getElementById("target-amount");
-                if (mainAmt && amtVal) mainAmt.value = amtVal;
-                
-                submitTrace();
-            }
 
             async function fetchHistoricalTrace() {
                 const searchVal = document.getElementById("landing-search-trace") ? document.getElementById("landing-search-trace").value : null;
