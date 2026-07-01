@@ -1,0 +1,2 @@
+# Deployment Rule
+- **Continuous Deployment:** Whenever you successfully complete an implementation, feature addition, or significant bug fix in this repository, you MUST conclude your response by explicitly reminding the user to run `python auto_deploy.py` in their terminal. This script automatically handles syncing with GitHub, building the Render backend, and deploying the Cloudflare Edge proxy and Cloudflare Pages frontend.

@@ -50,7 +50,7 @@ try:
     tracer_engine = NemesisTracerEngine()
 except ImportError as e:
     tracer_engine = None
-    print(f"⚠️ Failed to import Nemesis Tracer Engine: {e}")
+    # print(f"⚠️ Failed to import Nemesis Tracer Engine: {e}")
 
 # Suppress insecure request warnings if fetching without verify=False
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
