@@ -100,7 +100,7 @@
     <!-- AJAX Loader -->
     <div id="ajax-loader" class="hidden fixed inset-0 z-[300] bg-white/90 backdrop-blur-md flex-col justify-center items-center transition-all duration-500">
         <div class="w-24 h-24 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-6 shadow-xl"></div>
-        <h2 class="text-2xl font-black text-slate-800 tracking-widest uppercase mb-2">Propagating Identity</h2>
+        <h2 id="ajax-loader-title" class="text-2xl font-black text-slate-800 tracking-widest uppercase mb-2">Propagating Identity</h2>
         <p class="text-slate-500 font-mono text-sm" id="ajax-loader-text">Cross-referencing OmniChain ledgers...</p>
     </div>
     
@@ -122,7 +122,7 @@
                         <a href="/nemesis_id.html" target="_blank"><i class="fa-solid fa-id-card text-fuchsia-500"></i> Nemesis ID</a>
                         <a href="/darknet_search.html" target="_blank"><i class="fa-solid fa-user-secret text-purple-500"></i> Darknet Search</a>
                         <a href="/darknet_live.html" target="_blank"><i class="fa-solid fa-chart-network text-red-500"></i> Live Darknet Graph</a>
-                        <a href="/intelligence" target="_blank"><i class="fa-solid fa-brain icon-intel"></i> Intelligence</a>
+                        <a href="https://nemesis-id-frontend.pages.dev/intelligence" target="_blank"><i class="fa-solid fa-brain icon-intel"></i> Intelligence</a>
                         <a href="/audit" target="_blank"><i class="fa-solid fa-shield-halved icon-audit"></i> Enterprise Audit</a>
                         <a onclick="openContentPage('tracing_engine')"><i class="fa-solid fa-microchip icon-trace"></i> Tracing Engine</a>
                     </div>
@@ -227,7 +227,7 @@
                     <a href="/audit" target="_blank" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-md text-[11px] font-bold shadow transition flex items-center gap-2 no-underline">
                         <i class="fa-solid fa-shield-halved"></i> Master Audit
                     </a>
-                    <a href="/intelligence" target="_blank" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-md text-[11px] font-bold shadow transition flex items-center gap-2 no-underline">
+                    <a href="https://nemesis-id-frontend.pages.dev/intelligence" target="_blank" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-md text-[11px] font-bold shadow transition flex items-center gap-2 no-underline">
                         <i class="fa-solid fa-brain"></i> Intelligence Base
                     </a>
                     <button onclick="toggleLogModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-md text-[11px] font-bold shadow transition flex items-center gap-2">
@@ -288,18 +288,67 @@
                     <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 shadow-inner w-44">
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Target Amount</label>
                         <div class="flex items-center border-b border-slate-300 pb-1">
-                            <select id="target-currency" class="bg-transparent text-xs font-bold text-slate-700 outline-none cursor-pointer pr-2 border-r border-slate-300 mr-2">
-                                <option value="USD">💵 USD</option>
-                                <option value="ETH">🔷 ETH</option>
-                                <option value="BTC">₿ BTC</option>
-                                <option value="TRX">🔴 TRX</option>
-                                <option value="SOL">🟣 SOL</option>
-                                <option value="BNB">🟡 BNB</option>
-                                <option value="MATIC">🟣 MATIC</option>
-                                <option value="USDT">🪙 USDT</option>
-                                <option value="USDC">🪙 USDC</option>
-                                <option value="XRP">✖ XRP</option>
-                            </select>
+                            <div id="custom-currency-selector" class="flex items-center cursor-pointer pr-2 border-r border-slate-300 mr-2 relative" onclick="document.getElementById('currency-dropdown-list').classList.toggle('hidden')">
+                                <div id="selected-currency-display" class="flex items-center gap-1.5 text-xs font-bold text-slate-700 w-16">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Flag_of_the_United_States.svg" class="w-4 h-4 rounded-full object-cover"> USD
+                                </div>
+                                <i class="fa-solid fa-chevron-down text-[8px] text-slate-400 ml-1"></i>
+                                
+                                <div id="currency-dropdown-list" class="hidden absolute top-full left-0 mt-1 w-32 bg-white border border-slate-200 rounded shadow-lg z-[100] max-h-60 overflow-y-auto">
+                                    <div class="flex items-center gap-2 p-2 hover:bg-slate-100 cursor-pointer text-xs font-bold text-slate-700" onclick="selectCurrency('USD', 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Flag_of_the_United_States.svg')">
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Flag_of_the_United_States.svg" class="w-4 h-4 rounded-full object-cover"> USD
+                                    </div>
+                                    <div class="flex items-center gap-2 p-2 hover:bg-slate-100 cursor-pointer text-xs font-bold text-slate-700" onclick="selectCurrency('USDT', 'https://cryptologos.cc/logos/tether-usdt-logo.svg?v=032')">
+                                        <img src="https://cryptologos.cc/logos/tether-usdt-logo.svg?v=032" class="w-4 h-4"> USDT
+                                    </div>
+                                    <div class="flex items-center gap-2 p-2 hover:bg-slate-100 cursor-pointer text-xs font-bold text-slate-700" onclick="selectCurrency('USDC', 'https://cryptologos.cc/logos/usd-coin-usdc-logo.svg?v=032')">
+                                        <img src="https://cryptologos.cc/logos/usd-coin-usdc-logo.svg?v=032" class="w-4 h-4"> USDC
+                                    </div>
+                                    <div class="flex items-center gap-2 p-2 hover:bg-slate-100 cursor-pointer text-xs font-bold text-slate-700" onclick="selectCurrency('ETH', 'https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=032')">
+                                        <img src="https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=032" class="w-4 h-4"> ETH
+                                    </div>
+                                    <div class="flex items-center gap-2 p-2 hover:bg-slate-100 cursor-pointer text-xs font-bold text-slate-700" onclick="selectCurrency('BTC', 'https://cryptologos.cc/logos/bitcoin-btc-logo.svg?v=032')">
+                                        <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.svg?v=032" class="w-4 h-4"> BTC
+                                    </div>
+                                    <div class="flex items-center gap-2 p-2 hover:bg-slate-100 cursor-pointer text-xs font-bold text-slate-700" onclick="selectCurrency('TRX', 'https://cryptologos.cc/logos/tron-trx-logo.svg?v=032')">
+                                        <img src="https://cryptologos.cc/logos/tron-trx-logo.svg?v=032" class="w-4 h-4"> TRX
+                                    </div>
+                                    <div class="flex items-center gap-2 p-2 hover:bg-slate-100 cursor-pointer text-xs font-bold text-slate-700" onclick="selectCurrency('SOL', 'https://cryptologos.cc/logos/solana-sol-logo.svg?v=032')">
+                                        <img src="https://cryptologos.cc/logos/solana-sol-logo.svg?v=032" class="w-4 h-4"> SOL
+                                    </div>
+                                    <div class="flex items-center gap-2 p-2 hover:bg-slate-100 cursor-pointer text-xs font-bold text-slate-700" onclick="selectCurrency('BNB', 'https://cryptologos.cc/logos/bnb-bnb-logo.svg?v=032')">
+                                        <img src="https://cryptologos.cc/logos/bnb-bnb-logo.svg?v=032" class="w-4 h-4"> BNB
+                                    </div>
+                                    <div class="flex items-center gap-2 p-2 hover:bg-slate-100 cursor-pointer text-xs font-bold text-slate-700" onclick="selectCurrency('POLYGON', 'https://cryptologos.cc/logos/polygon-matic-logo.svg?v=032')">
+                                        <img src="https://cryptologos.cc/logos/polygon-matic-logo.svg?v=032" class="w-4 h-4"> POLYGON
+                                    </div>
+                                    <div class="flex items-center gap-2 p-2 hover:bg-slate-100 cursor-pointer text-xs font-bold text-slate-700" onclick="selectCurrency('XRP', 'https://cryptologos.cc/logos/xrp-xrp-logo.svg?v=032')">
+                                        <img src="https://cryptologos.cc/logos/xrp-xrp-logo.svg?v=032" class="w-4 h-4"> XRP
+                                    </div>
+                                    <div class="flex items-center gap-2 p-2 hover:bg-slate-100 cursor-pointer text-xs font-bold text-slate-700" onclick="selectCurrency('XLM', 'https://cryptologos.cc/logos/stellar-xlm-logo.svg?v=032')">
+                                        <img src="https://cryptologos.cc/logos/stellar-xlm-logo.svg?v=032" class="w-4 h-4"> XLM
+                                    </div>
+                                    <div class="flex items-center gap-2 p-2 hover:bg-slate-100 cursor-pointer text-xs font-bold text-slate-700" onclick="selectCurrency('KAS', 'https://cryptologos.cc/logos/kaspa-kas-logo.svg?v=032')">
+                                        <img src="https://cryptologos.cc/logos/kaspa-kas-logo.svg?v=032" class="w-4 h-4"> KAS
+                                    </div>
+                                    <div class="flex items-center gap-2 p-2 hover:bg-slate-100 cursor-pointer text-xs font-bold text-slate-700" onclick="selectCurrency('HBAR', 'https://cryptologos.cc/logos/hedera-hbar-logo.svg?v=032')">
+                                        <img src="https://cryptologos.cc/logos/hedera-hbar-logo.svg?v=032" class="w-4 h-4"> HBAR
+                                    </div>
+                                    <div class="flex items-center gap-2 p-2 hover:bg-slate-100 cursor-pointer text-xs font-bold text-slate-700" onclick="selectCurrency('AVAX', 'https://cryptologos.cc/logos/avalanche-avax-logo.svg?v=032')">
+                                        <img src="https://cryptologos.cc/logos/avalanche-avax-logo.svg?v=032" class="w-4 h-4"> AVAX
+                                    </div>
+                                    <div class="flex items-center gap-2 p-2 hover:bg-slate-100 cursor-pointer text-xs font-bold text-slate-700" onclick="selectCurrency('ARB', 'https://cryptologos.cc/logos/arbitrum-arb-logo.svg?v=032')">
+                                        <img src="https://cryptologos.cc/logos/arbitrum-arb-logo.svg?v=032" class="w-4 h-4"> ARB
+                                    </div>
+                                    <div class="flex items-center gap-2 p-2 hover:bg-slate-100 cursor-pointer text-xs font-bold text-slate-700" onclick="selectCurrency('OP', 'https://cryptologos.cc/logos/optimism-ethereum-op-logo.svg?v=032')">
+                                        <img src="https://cryptologos.cc/logos/optimism-ethereum-op-logo.svg?v=032" class="w-4 h-4"> OP
+                                    </div>
+                                    <div class="flex items-center gap-2 p-2 hover:bg-slate-100 cursor-pointer text-xs font-bold text-slate-700" onclick="selectCurrency('BASE', 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/base/info/logo.png')">
+                                        <img src="https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/base/info/logo.png" class="w-4 h-4"> BASE
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" id="target-currency" value="USD">
                             <input type="number" id="target-amount" class="w-full text-xs bg-transparent outline-none font-mono text-slate-800" placeholder="80000">
                         </div>
                     </div>
@@ -1726,7 +1775,8 @@
             function closeReport() { document.getElementById('view-report').classList.add('hidden'); }
             
             function changeLayout() {
-                let val = document.getElementById("layoutSelect").value;
+                let layoutSelectEl = document.getElementById("layoutSelect");
+                let val = layoutSelectEl ? layoutSelectEl.value : "physics";
                 if (val === "physics") {
                     network.setOptions({ layout: { hierarchical: false }, physics: { enabled: true, solver: 'barnesHut' } });
                 } else if (val === "static") {
@@ -1747,7 +1797,8 @@
             }
 
             function changeMassiveLayout() {
-                let mode = document.getElementById("layout-mode").value;
+                let layoutModeEl = document.getElementById("layout-mode");
+                let mode = layoutModeEl ? layoutModeEl.value : "organic";
                 if (!network) return;
                 
                 if (mode === 'massive') {
@@ -1771,7 +1822,8 @@
             }
             
             function executeSearch() {
-                let query = document.getElementById("nodeSearch").value.toLowerCase();
+                let nodeSearchEl = document.getElementById("nodeSearch");
+                let query = nodeSearchEl ? nodeSearchEl.value.toLowerCase() : "";
                 let updates = [];
                 if(!query) {
                     allNodesMap.forEach(n => {
@@ -1800,7 +1852,8 @@
             }
             
             function highlightLossPaths() {
-                let targetAmountRaw = document.getElementById("target-amount").value;
+                let targetAmountEl = document.getElementById("target-amount");
+                let targetAmountRaw = targetAmountEl ? targetAmountEl.value : "";
                 let targetAmount = targetAmountRaw ? parseFloat(targetAmountRaw) : 0;
                 
                 let terminalNodes = new Set();
@@ -1945,7 +1998,8 @@
             }
             
             async function fetchHistoricalTrace() {
-                let traceId = document.getElementById("landing-search-trace").value.trim();
+                let searchTraceEl = document.getElementById("landing-search-trace");
+                let traceId = searchTraceEl ? searchTraceEl.value.trim() : "";
                 if(!traceId) return alert("Please enter a Nemesis Tracing ID");
                 
                 const baseUrl = isLocal ? 'http://127.0.0.1:3001' : 'https://cases.legionxgaming2021.workers.dev';
@@ -2762,7 +2816,8 @@ NEMESIS_ROOT/
             });
 
             window.changeLayout = function() {
-                let layout = document.getElementById("layoutSelect").value;
+                let layoutSelectEl2 = document.getElementById("layoutSelect");
+                let layout = layoutSelectEl2 ? layoutSelectEl2.value : "physics";
                 if (layout === "physics") {
                     network.setOptions({ layout: { hierarchical: { enabled: false } }, physics: { enabled: true } });
                 } else if (layout === "static") {
@@ -2800,7 +2855,8 @@ NEMESIS_ROOT/
 
 
             window.applyPathFilter = function() {
-                let filter = document.getElementById("pathFilterSelect").value;
+                let pathFilterSelectEl = document.getElementById("pathFilterSelect");
+                let filter = pathFilterSelectEl ? pathFilterSelectEl.value : "ALL";
                 if (filter === "ALL") {
                     let nodeUps = [], edgeUps = [];
                     allNodesMap.forEach(n => { n.hidden = false; nodeUps.push(n); });
@@ -2910,36 +2966,61 @@ NEMESIS_ROOT/
 
 
 
+            window.selectCurrency = function(code, imgUrl) {
+                document.getElementById('target-currency').value = code;
+                document.getElementById('selected-currency-display').innerHTML = `<img src="${imgUrl}" class="w-4 h-4 ${code==='USD'?'rounded-full object-cover':''}"> ${code}`;
+                document.getElementById('currency-dropdown-list').classList.add('hidden');
+                if (window.event) window.event.stopPropagation();
+            };
+
+            document.addEventListener('click', function(e) {
+                let selector = document.getElementById('custom-currency-selector');
+                let dropdown = document.getElementById('currency-dropdown-list');
+                if (selector && dropdown && !selector.contains(e.target)) {
+                    dropdown.classList.add('hidden');
+                }
+            });
+
             window.detectWalletChain = function() {
-                const rawVal = (document.getElementById("seed-input").value || "").trim();
+                let seedInputEl = document.getElementById("seed-input");
+                const rawVal = seedInputEl ? (seedInputEl.value || "").trim() : "";
                 const logoContainer = document.getElementById("network-logo-container");
                 if (!rawVal) {
                     logoContainer.innerHTML = "";
                     return;
                 }
                 
-                const tokens = rawVal.split(/[\s,]+/);
-                let detectedChains = new Set();
+                const tokens = rawVal.split(/[\s,]+/).filter(t => t.length > 0);
+                let detectedChains = new Map();
+                let validCount = 0;
                 
                 tokens.forEach(t => {
-                    if (!t) return;
+                    let matched = false;
                     if (t.length === 42 && t.toLowerCase().startsWith("0x")) {
-                        detectedChains.add("🔷 EVM");
+                        detectedChains.set("EVM", "https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=032"); matched = true;
                     } else if (t.startsWith("T") && t.length === 34) {
-                        detectedChains.add("🔴 Tron (TRX)");
+                        detectedChains.set("TRX", "https://cryptologos.cc/logos/tron-trx-logo.svg?v=032"); matched = true;
                     } else if (/^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/.test(t) || /^bc1[ac-hj-np-z02-9]{11,71}$/.test(t)) {
-                        detectedChains.add("₿ Bitcoin (BTC)");
+                        detectedChains.set("BTC", "https://cryptologos.cc/logos/bitcoin-btc-logo.svg?v=032"); matched = true;
                     } else if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(t) && !t.toLowerCase().startsWith("0x") && !t.toLowerCase().startsWith("bc1")) {
-                        detectedChains.add("🟣 Solana (SOL)");
+                        detectedChains.set("SOL", "https://cryptologos.cc/logos/solana-sol-logo.svg?v=032"); matched = true;
                     } else if (/^r[1-9A-HJ-NP-Za-km-z]{24,34}$/.test(t)) {
-                        detectedChains.add("✖ Ripple (XRP)");
+                        detectedChains.set("XRP", "https://cryptologos.cc/logos/xrp-xrp-logo.svg?v=032"); matched = true;
                     } else if (t.startsWith("G") && t.length === 56) {
-                        detectedChains.add("⭐ Stellar (XLM)");
+                        detectedChains.set("XLM", "https://cryptologos.cc/logos/stellar-xlm-logo.svg?v=032"); matched = true;
+                    } else if (t.startsWith("kaspa:")) {
+                        detectedChains.set("KAS", "https://cryptologos.cc/logos/kaspa-kas-logo.svg?v=032"); matched = true;
+                    } else if (/^0\.[0-9]+\.[0-9]+$/.test(t)) {
+                        detectedChains.set("HBAR", "https://cryptologos.cc/logos/hedera-hbar-logo.svg?v=032"); matched = true;
                     }
+                    if(matched) validCount++;
                 });
                 
                 if (detectedChains.size > 0) {
-                    logoContainer.innerHTML = Array.from(detectedChains).join(" | ");
+                    let html = Array.from(detectedChains.entries()).map(([name, url]) => {
+                        return `<span class="flex items-center gap-1"><img src="${url}" class="w-3.5 h-3.5" title="${name}"> ${name}</span>`;
+                    }).join('<span class="text-slate-300 mx-1">|</span>');
+                    logoContainer.innerHTML = `<div class="flex items-center">` + html + ` <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[9px] ml-2 shadow-sm border border-blue-200">${validCount} Wallets</span></div>`;
                 } else {
                     logoContainer.innerHTML = "Unknown Network (or no valid address)";
                 }
@@ -2987,28 +3068,27 @@ NEMESIS_ROOT/
             }
 
             async function submitTrace() {
-                document.getElementById('ajax-loader').classList.remove('hidden');
-                document.getElementById('ajax-loader').classList.add('flex');
+                const seedEl = document.getElementById("seed-input");
+                const amountEl = document.getElementById("target-amount");
+                const startEl = document.getElementById("start-date");
+                const endEl = document.getElementById("end-date");
+                const currencyEl = document.getElementById("target-currency");
+                const maxDepthEl = document.getElementById("max-depth");
+                const maxHopsEl = document.getElementById("max-hops");
                 
-                // Simulate propagation delay for UI effect
-                setTimeout(() => {
-                    document.getElementById('ajax-loader-text').innerText = "Resolving Neural Graph Topology...";
-                    setTimeout(() => {
-                        document.getElementById('ajax-loader').classList.add('hidden');
-                        document.getElementById('ajax-loader').classList.remove('flex');
-                    }, 1500);
-                }, 1500);
+                const seeds = seedEl ? seedEl.value.trim() : "";
+                if (!seeds) return alert("Please enter at least one seed wallet.");
+
+                const loader = document.getElementById('ajax-loader');
+                const loaderTitle = document.getElementById('ajax-loader-title');
+                const loaderText = document.getElementById('ajax-loader-text');
+                
+                loaderTitle.innerText = "INITIALIZING TRACE";
+                loaderText.innerText = "Getting ready to trace...";
+                loader.classList.remove('hidden');
+                loader.classList.add('flex');
 
                 try {
-                    const seedEl = document.getElementById("seed-input");
-                    const amountEl = document.getElementById("target-amount");
-                    const startEl = document.getElementById("start-date");
-                    const endEl = document.getElementById("end-date");
-                    const currencyEl = document.getElementById("target-currency");
-                    const maxDepthEl = document.getElementById("max-depth");
-                    const maxHopsEl = document.getElementById("max-hops");
-                    
-                    const seeds = seedEl ? seedEl.value.trim() : "";
                     const amount = amountEl ? amountEl.value.trim() : "";
                     const currency = currencyEl ? currencyEl.value : "USD";
                     const startDate = startEl ? startEl.value : "";
@@ -3016,13 +3096,15 @@ NEMESIS_ROOT/
                     const maxDepth = maxDepthEl ? parseInt(maxDepthEl.value) : 12;
                     const maxHops = maxHopsEl ? parseInt(maxHopsEl.value) : 1000;
                     
-                    if (!seeds) return alert("Please enter at least one seed wallet.");
                     GLOBAL_TRACE_SEEDS = seeds;
                     
                     window.autoComputeTarget = !amount;
                     window.autoComputedAmount = 0.0;
                     
                     document.getElementById("status").innerHTML = `<span class="text-blue-600 font-bold">Tracing Active... (Hybrid Parallel Fetching)</span>`;
+                    
+                    loaderText.innerText = "Dispatching to Nemesis Tracing Engine...";
+                    
                     const response = await fetch('https://nemesis-backend-rwp4.onrender.com/api/start_trace', {
                         method: 'POST', headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({ 
@@ -3037,7 +3119,14 @@ NEMESIS_ROOT/
                         })
                     });
                     const data = await response.json();
+                    
                     if (data.trace_id) {
+                        loaderText.innerText = "Connection Established. Streaming Live Graph...";
+                        setTimeout(() => {
+                            loader.classList.add('hidden');
+                            loader.classList.remove('flex');
+                        }, 800);
+
                         GLOBAL_TRACE_ID = data.trace_id;
                         let idDisplay = document.getElementById("trace-id-display");
                         if(idDisplay) {
@@ -3048,9 +3137,16 @@ NEMESIS_ROOT/
                         if(idVal) idVal.innerText = GLOBAL_TRACE_ID;
                         connectWebSocket(GLOBAL_TRACE_ID);
                     } else if (data.error) {
+                        loader.classList.add('hidden');
+                        loader.classList.remove('flex');
                         alert("Error: " + data.error);
                     }
-                } catch(e) { console.error("SubmitTrace Error:", e); alert("An error occurred starting the trace: " + e.message); }
+                } catch(e) { 
+                    loader.classList.add('hidden');
+                    loader.classList.remove('flex');
+                    console.error("SubmitTrace Error:", e); 
+                    alert("An error occurred starting the trace: " + e.message); 
+                }
             }
 
 
@@ -3779,14 +3875,17 @@ NEMESIS_ROOT/
                         else if(d.edge_type === "MINT") edgeTypeIcon = "🔨 MINT | ";
                         else if(d.edge_type === "BURN") edgeTypeIcon = "🔥 BURN | ";
                         else if(d.edge_type === "SWAP") edgeTypeIcon = "🔄 SWAP | ";
+                        else if(d.edge_type === "INTERNAL_LEDGER_LINK") edgeTypeIcon = "🏦 CEX ROUTE | ";
                         
                         let isCrossChain = d.state_transition === 'CROSS_CHAIN_ROUTING' || d.edge_type === 'BRIDGE_HOP';
                         let isObfuscation = d.edge_type === 'MIXER';
+                        let isInternalLedger = d.edge_type === 'INTERNAL_LEDGER_LINK';
                         let edgeDashes = false;
                         let edgeWidth = 1;
                         
                         if(isCrossChain) { edgeDashes = [5, 5]; edgeWidth = 3; edgeColor = '#db2777'; highColor = '#be185d'; }
                         if(isObfuscation) { edgeDashes = [2, 6]; edgeWidth = 3; edgeColor = '#ef4444'; highColor = '#dc2626'; }
+                        if(isInternalLedger) { edgeDashes = [4, 4]; edgeWidth = 3; edgeColor = '#10b981'; highColor = '#059669'; }
                         
                         let edgeLabel = `${edgeTypeIcon}${tokenIcon} ${d.amount.toFixed(4)} ${d.ticker}\nTx: ${d.tx.substring(0,12)}...\nDate: ${d.timestamp}`;
                         let edgeTitle = `Transaction Hash: ${d.tx}\nFrom: ${d.from}\nTo: ${d.to}\nAmount: ${d.amount.toFixed(4)} ${d.ticker}\nDate: ${d.timestamp}\nType: ${d.edge_type}\nConfidence: ${d.confidence}\nState Transition: ${d.state_transition || 'TRANSACTION_HOP'}\nForensic Fingerprint: ${d.fingerprint || 'Standard'}`;
@@ -3806,7 +3905,8 @@ NEMESIS_ROOT/
                             window.totalLossTraced += (d.usd || d.amount);
                             let widget = document.getElementById("total-traced-widget");
                             if(widget) {
-                                let targetRaw = document.getElementById("target-amount").value;
+                                let targetAmountEl3 = document.getElementById("target-amount");
+                                let targetRaw = targetAmountEl3 ? targetAmountEl3.value : "";
                                 let targetAmt = targetRaw ? parseFloat(targetRaw) : 0;
                                 let displayStr = "$" + window.totalLossTraced.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " USD";
                                 if (targetAmt > 0) displayStr += ` / Target: $${targetAmt.toLocaleString()}`;

@@ -114,7 +114,7 @@
                         <a href="/nemesis_id.html" target="_blank"><i class="fa-solid fa-id-card text-fuchsia-500"></i> Nemesis ID</a>
                         <a href="/darknet_search.html" target="_blank"><i class="fa-solid fa-user-secret text-purple-500"></i> Darknet Search</a>
                         <a href="/darknet_live.html" target="_blank"><i class="fa-solid fa-chart-network text-red-500"></i> Live Darknet Graph</a>
-                        <a href="/intelligence" target="_blank"><i class="fa-solid fa-brain icon-intel"></i> Intelligence</a>
+                        <a href="https://nemesis-id-frontend.pages.dev/intelligence" target="_blank"><i class="fa-solid fa-brain icon-intel"></i> Intelligence Matrix</a>
                         <a href="/audit" target="_blank"><i class="fa-solid fa-shield-halved icon-audit"></i> Enterprise Audit</a>
                         <a onclick="openContentPage('tracing_engine')"><i class="fa-solid fa-microchip icon-trace"></i> Tracing Engine</a>
                     </div>
@@ -1703,11 +1703,32 @@
                 } else if (val === "massive_graph") {
                     network.setOptions({ layout: { improvedLayout: false, hierarchical: false }, physics: { enabled: true, solver: 'forceAtlas2Based', forceAtlas2Based: { gravitationalConstant: -50, centralGravity: 0.01, springConstant: 0.08, springLength: 100, damping: 0.4 }, stabilization: { iterations: 1000 } } });
                 }
+                
+                if(val === "organic") {
+                    network.setOptions({
+                        physics: {
+                            enabled: true,
+                            solver: 'forceAtlas2Based',
+                            forceAtlas2Based: { gravitationalConstant: -50, centralGravity: 0.01, springLength: 100, springConstant: 0.08, damping: 0.4, avoidOverlap: 0 }
+                        }
+                    });
+                } else if(val === "physics") {
+                    network.setOptions({ physics: { enabled: true, solver: 'barnesHut', barnesHut: { gravitationalConstant: -8000, centralGravity: 0.3, springLength: 95, springConstant: 0.04, damping: 0.09, avoidOverlap: 0.1 } } });
+                } else if(val === "hierarchical") {
+                    network.setOptions({ layout: { hierarchical: { enabled: true, direction: "LR", sortMethod: "directed", levelSeparation: 150, nodeSpacing: 100, treeSpacing: 200 } }, physics: { enabled: false } });
+                }
             }
 
-            function changeMassiveLayout() {
-                let mode = document.getElementById("layout-mode").value;
-                if (!network) return;
+            window.changeLayoutMode = function() {
+                let layoutModeEl = document.getElementById("layout-mode");
+                let mode = layoutModeEl ? layoutModeEl.value : "organic";
+                if(mode === "grid") {
+                    network.setOptions({ layout: { hierarchical: { enabled: false } }, physics: { enabled: false } });
+                } else if (mode === "organic") {
+                    network.setOptions({ layout: { hierarchical: { enabled: false } }, physics: { enabled: true, solver: 'forceAtlas2Based' } });
+                } else if (mode === "hierarchical") {
+                    network.setOptions({ layout: { hierarchical: { enabled: true, direction: "LR", sortMethod: "directed" } }, physics: { enabled: false } });
+                }
                 
                 if (mode === 'massive') {
                     network.setOptions({
@@ -1716,9 +1737,9 @@
                             forceAtlas2Based: { gravitationalConstant: -100, centralGravity: 0.005, springLength: 200, springConstant: 0.05 },
                             maxVelocity: 50, minVelocity: 0.1, stabilization: { iterations: 150 }
                         },
-                        nodes: { font: { size: 0 } } // Hide labels to prevent canvas lag
+                        nodes: { font: { size: 0 } }
                     });
-                } else {
+                } else if (mode !== 'grid' && mode !== 'organic' && mode !== 'hierarchical') {
                     network.setOptions({
                         physics: {
                             solver: 'barnesHut',
@@ -1727,10 +1748,11 @@
                         nodes: { font: { size: 10, face: 'monospace', color: '#1e293b' } }
                     });
                 }
-            }
+            };
             
-            function executeSearch() {
-                let query = document.getElementById("nodeSearch").value.toLowerCase();
+            window.searchNodes = function() {
+                let nodeSearchEl = document.getElementById("nodeSearch");
+                let query = nodeSearchEl ? nodeSearchEl.value.toLowerCase() : "";
                 let updates = [];
                 if(!query) {
                     allNodesMap.forEach(n => {
@@ -1759,7 +1781,8 @@
             }
             
             function highlightLossPaths() {
-                let targetAmountRaw = document.getElementById("target-amount").value;
+                let targetAmountEl = document.getElementById("target-amount");
+                let targetAmountRaw = targetAmountEl ? targetAmountEl.value : "";
                 let targetAmount = targetAmountRaw ? parseFloat(targetAmountRaw) : 0;
                 
                 let terminalNodes = new Set();
@@ -1871,31 +1894,51 @@
             var allEdgesMap = new Map();
             var allNodesMap = new Map();
             window.initiateLandingTrace = function() {
-                let seed = document.getElementById("landing-seed-input").value;
-                let amt = document.getElementById("landing-target-amount").value;
-                let startDate = document.getElementById("landing-start-date").value;
-                let endDate = document.getElementById("landing-end-date").value;
+                let seedEl = document.getElementById("landing-seed-input");
+                let amtEl = document.getElementById("landing-target-amount");
+                let startDateEl = document.getElementById("landing-start-date");
+                let endDateEl = document.getElementById("landing-end-date");
+                
+                let seed = seedEl ? seedEl.value : "";
+                let amt = amtEl ? amtEl.value : "";
+                let startDate = startDateEl ? startDateEl.value : "";
+                let endDate = endDateEl ? endDateEl.value : "";
 
                 if (!seed.trim()) return alert("Please enter at least one seed wallet.");
                 
-                document.getElementById("seed-input").value = seed;
-                document.getElementById("target-amount").value = amt;
-                document.getElementById("start-date").value = startDate;
-                document.getElementById("end-date").value = endDate;
+                let seedInput = document.getElementById("seed-input");
+                let targetAmount = document.getElementById("target-amount");
+                let sDate = document.getElementById("start-date");
+                let eDate = document.getElementById("end-date");
+                
+                if (seedInput) seedInput.value = seed;
+                if (targetAmount) targetAmount.value = amt;
+                if (sDate) sDate.value = startDate;
+                if (eDate) eDate.value = endDate;
                 
                 let landing = document.getElementById("landing-page");
-                landing.style.opacity = "0";
-                setTimeout(() => { landing.style.display = "none"; }, 1200);
+                let mu = document.getElementById('main-ui');
+                if (landing) {
+                    landing.style.opacity = "0";
+                    setTimeout(() => { landing.style.display = "none"; }, 1200);
+                }
+                if (mu) {
+                    mu.classList.remove('hidden');
+                    mu.classList.add('flex');
+                }
                 
-                submitTrace();
+                if (typeof submitTrace === "function") {
+                    submitTrace();
+                }
             }
             
             async function fetchHistoricalTrace() {
-                let traceId = document.getElementById("landing-search-trace").value.trim();
+                let searchTraceEl = document.getElementById("landing-search-trace");
+                let traceId = searchTraceEl ? searchTraceEl.value.trim() : "";
                 if(!traceId) return alert("Please enter a Nemesis Tracing ID");
                 
                 let btn = document.querySelector("#landing-search-trace + button");
-                btn.innerText = "LOADING...";
+                if (btn) btn.innerText = "LOADING...";
                 
                 try {
                     let response = await fetch('https://nemesis-backend-rwp4.onrender.com/api/nemesis_id/search?query=' + encodeURIComponent(traceId));
@@ -2687,7 +2730,8 @@ NEMESIS_ROOT/
             });
 
             window.changeLayout = function() {
-                let layout = document.getElementById("layoutSelect").value;
+                let layoutSelectEl2 = document.getElementById("layoutSelect");
+                let layout = layoutSelectEl2 ? layoutSelectEl2.value : "physics";
                 if (layout === "physics") {
                     network.setOptions({ layout: { hierarchical: { enabled: false } }, physics: { enabled: true } });
                 } else if (layout === "static") {
@@ -2725,7 +2769,8 @@ NEMESIS_ROOT/
 
 
             window.applyPathFilter = function() {
-                let filter = document.getElementById("pathFilterSelect").value;
+                let pathFilterSelectEl = document.getElementById("pathFilterSelect");
+                let filter = pathFilterSelectEl ? pathFilterSelectEl.value : "ALL";
                 if (filter === "ALL") {
                     let nodeUps = [], edgeUps = [];
                     allNodesMap.forEach(n => { n.hidden = false; nodeUps.push(n); });
@@ -2836,7 +2881,8 @@ NEMESIS_ROOT/
 
 
             window.detectWalletChain = function() {
-                const rawVal = (document.getElementById("seed-input").value || "").trim();
+                let seedInputEl = document.getElementById("seed-input");
+                const rawVal = seedInputEl ? (seedInputEl.value || "").trim() : "";
                 const logoContainer = document.getElementById("network-logo-container");
                 if (!rawVal) {
                     logoContainer.innerHTML = "";
@@ -2871,27 +2917,7 @@ NEMESIS_ROOT/
             };
 
             var GLOBAL_TRACE_ID = "";
-            async function initiateLandingTrace() {
-                const seedVal = document.getElementById("landing-seed-input") ? document.getElementById("landing-seed-input").value : null;
-                const amtVal = document.getElementById("landing-target-amount") ? document.getElementById("landing-target-amount").value : null;
-                
-                if(!seedVal) return alert("Please enter a target wallet address.");
-                
-                let lp = document.getElementById('landing-page');
-                let mu = document.getElementById('main-ui');
-                if(lp) lp.classList.add('hidden');
-                if(mu) {
-                    mu.classList.remove('hidden');
-                    mu.classList.add('flex');
-                }
-                
-                let mainInput = document.getElementById("seed-input");
-                if (mainInput) mainInput.value = seedVal;
-                let mainAmt = document.getElementById("target-amount");
-                if (mainAmt && amtVal) mainAmt.value = amtVal;
-                
-                submitTrace();
-            }
+
 
             async function fetchHistoricalTrace() {
                 const searchVal = document.getElementById("landing-search-trace") ? document.getElementById("landing-search-trace").value : null;
@@ -3719,7 +3745,8 @@ NEMESIS_ROOT/
                             window.totalLossTraced += (d.usd || d.amount);
                             let widget = document.getElementById("total-traced-widget");
                             if(widget) {
-                                let targetRaw = document.getElementById("target-amount").value;
+                                let targetAmountEl3 = document.getElementById("target-amount");
+                                let targetRaw = targetAmountEl3 ? targetAmountEl3.value : "";
                                 let targetAmt = targetRaw ? parseFloat(targetRaw) : 0;
                                 let displayStr = "$" + window.totalLossTraced.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " USD";
                                 if (targetAmt > 0) displayStr += ` / Target: $${targetAmt.toLocaleString()}`;
@@ -4253,7 +4280,8 @@ NEMESIS_ROOT/
             };
             
             window.joinTraceById = function(tid) {
-                let idToJoin = tid || document.getElementById('join-trace-id').value.trim();
+                let joinTraceIdEl = document.getElementById('join-trace-id');
+                let idToJoin = tid || (joinTraceIdEl ? joinTraceIdEl.value.trim() : "");
                 if (!idToJoin) return alert("Please enter a Trace ID");
                 
                 // Close landing page if open

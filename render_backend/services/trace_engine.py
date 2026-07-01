@@ -162,6 +162,7 @@ SIGNATURE_REGISTRY = {
     "a1903eab": "Submit (Lido Liquid Staking)", "e90a182f": "Deposit (RocketPool)", "5a39626e": "DelegateTo (EigenLayer)",
     "fb3bdb41": "SwapExactTokensForTokensSupportingFeeOnTransferTokens (DEX)",
     "e47963be": "Deposit (Aave)", "47e7ef24": "Deposit (Compound)",
+    "c5ebeaec": "Borrow (Aave)", "5ce92ff6": "Repay (Aave)",
     "1cff79cd": "Execute (UniswapV4/UniversalRouter)", "5f575529": "Swap (Curve)", "3593564c": "Execute (0x Protocol)", "b2bdfcf7": "FlashLoan (Aave)"
 }
 
@@ -264,6 +265,8 @@ def detect_chain(val: str, override: str = "AUTO") -> str:
     elif val.startswith("r") and 25 <= len(val) <= 35: return "RIPPLE"
     elif val.startswith("G") and len(val) == 56: return "STELLAR"
     elif 32 <= len(val) <= 44 and not val.startswith("0x") and not val.startswith("bc1"): return "SOLANA"
+    elif val.startswith("kaspa:"): return "KASPA"
+    elif val.startswith("0.0."): return "HEDERA"
     return "INVALID"
 
 def get_asset_ticker(chain: str) -> str:
@@ -273,6 +276,8 @@ def get_asset_ticker(chain: str) -> str:
     elif chain == "RIPPLE": return "XRP"
     elif chain == "STELLAR": return "XLM"
     elif chain == "SOLANA": return "SOL"
+    elif chain == "KASPA": return "KAS"
+    elif chain == "HEDERA": return "HBAR"
     return "ETH"
 
 import re
@@ -442,13 +447,62 @@ def thread_safe_file_write(ledger_data, trace_id, narrative=""):
             "Transaction intelligence": row.get("intelligence", "")
         })
 
+    balances = {}
+    entity_map = {}
+    
+    for row in ledger_data:
+        from_addr = row.get("from", "")
+        to_addr = row.get("to", "")
+        ticker = row.get("ticker", "")
+        amt = float(row.get("amount", 0.0))
+        
+        sender_entity = row.get("sender_entity")
+        if not sender_entity or sender_entity.strip() == "": sender_entity = "Unknown"
+        receiver_entity = row.get("receiver_entity")
+        if not receiver_entity or receiver_entity.strip() == "": receiver_entity = "Unknown"
+        
+        entity_map[from_addr] = sender_entity
+        entity_map[to_addr] = receiver_entity
+        
+        balances[(from_addr, ticker)] = balances.get((from_addr, ticker), 0.0) - amt
+        balances[(to_addr, ticker)] = balances.get((to_addr, ticker), 0.0) + amt
+
+    landing_summary = {}
+    total_loss_usd = 0.0
+    for (addr, ticker), amt in balances.items():
+        if amt > 0.000001:
+            ent = entity_map.get(addr, "Unknown")
+            if ticker not in landing_summary: landing_summary[ticker] = {}
+            landing_summary[ticker][ent] = landing_summary[ticker].get(ent, 0.0) + amt
+
+    summary_lines = ["# --- TOTAL LOSS LANDING SUMMARY ---"]
+    summary_json = {}
+    for ticker, entities in landing_summary.items():
+        total_landed = sum(entities.values())
+        
+        rate = USD_RATES.get(ticker.upper(), 1.0) if ticker else 1.0
+        if ticker and ticker.upper() in ["USDT", "USDC", "DAI", "BUSD", "TETHER USD", "USD COIN"]: rate = 1.0
+        
+        summary_lines.append(f"# Asset: {ticker} (Total Landed: {total_landed:.4f})")
+        summary_json[ticker] = {"total_landed": total_landed, "breakdown": []}
+        for ent, amt in sorted(entities.items(), key=lambda x: x[1], reverse=True):
+            pct = (amt / total_landed) * 100 if total_landed > 0 else 0
+            usd_amt = amt * rate
+            total_loss_usd += usd_amt
+            summary_lines.append(f"#  - {ent}: {pct:.1f}% ({amt:.4f} {ticker} | ~${usd_amt:.2f} USD)")
+            summary_json[ticker]["breakdown"].append({"entity": ent, "amount": amt, "usd_value": round(usd_amt, 2), "percentage": round(pct, 2)})
+            
+    summary_lines.insert(1, f"# ESTIMATED TOTAL LOSS (USD): ~${total_loss_usd:.2f}")
+    summary_lines.append("# ----------------------------------\n")
+    summary_text = "\n".join(summary_lines)
+
     with FILE_WRITE_LOCK:
         try:
             with open(f"LFR_{trace_id}.json", "w", encoding="utf-8") as f: 
-                json.dump({"narrative": narrative, "data": unified_data}, f, indent=4)
+                json.dump({"narrative": narrative, "total_loss_landing": summary_json, "data": unified_data}, f, indent=4)
             with open(f"LFR_{trace_id}.csv", "w", newline="", encoding="utf-8") as f: 
-                # Add narrative as the first line of the CSV as a comment or meta field
                 f.write(f"# AI NARRATIVE: {narrative.replace(chr(10), ' ')}\n")
+                f.write(summary_text + "\n")
                 fieldnames = ["Date/Time (UTC)", "Type transcation(mixing,bridging)", "TX Hash", "From Wallet(Entity)", "To Wallet(Entity)", "To Receiver Entity", "Amount", "Transaction Type", "Behavioral Cluster", "Clustered address{root}ENTITY", "Confidence", "Transaction Attributions", "Transaction intelligence"]
                 writer = csv.DictWriter(f, fieldnames=fieldnames)
                 writer.writeheader()
@@ -459,7 +513,7 @@ def thread_safe_file_write(ledger_data, trace_id, narrative=""):
 async def classify_tx_intent(tx: dict) -> dict:
     input_data = tx.get("input", "")
     method = input_data[:10].lower().replace("0x", "") if input_data else ""
-    intent = {"action": "NATIVE_TRANSFER", "edge_type": "TRANSFER", "obf_path": "NONE", "raw_input": input_data, "method_id": method}
+    intent = {"action": "NATIVE_TRANSFER", "edge_type": "TRANSFER", "obf_path": "NONE", "raw_input": input_data, "method_id": method, "matrix_category": "NONE"}
     
     # Internal Tx checks based on typical RPC output
     if tx.get("isError") == "0" and not input_data:
@@ -470,26 +524,69 @@ async def classify_tx_intent(tx: dict) -> dict:
     if method in SIGNATURE_REGISTRY:
         sig_val = SIGNATURE_REGISTRY[method]
         intent["action"] = sig_val
-        if "DEX" in sig_val or "Swap" in sig_val or "UniswapV3" in sig_val: intent["edge_type"] = "SWAP"; intent["obf_path"] = "DEX_ROUTING"
-        elif "Bridge" in sig_val or "CCTP" in sig_val: intent["edge_type"] = "BRIDGE_HOP"; intent["obf_path"] = "BRIDGE"
-        elif "Mixer" in sig_val or "Railgun" in sig_val: intent["edge_type"] = "MIXER"; intent["obf_path"] = "MIXER"
-        elif "Sweep" in sig_val: intent["edge_type"] = "CEX_DEPOSIT"; intent["obf_path"] = "CUSTODIAL_SETTLEMENT"
-        elif "WETH" in sig_val and "Deposit" in sig_val: intent["edge_type"] = "LOCK"
-        elif "WETH" in sig_val and "Withdraw" in sig_val: intent["edge_type"] = "RELEASE"
-        elif "Mint" in sig_val: intent["edge_type"] = "MINT"
-        elif "Burn" in sig_val: intent["edge_type"] = "BURN"
-        elif "NFT" in sig_val: intent["edge_type"] = "NFT_TRADE"
-        elif "Staking" in sig_val or "Aave" in sig_val or "Compound" in sig_val or "EigenLayer" in sig_val: intent["edge_type"] = "STAKING"; intent["obf_path"] = "YIELD"
-        elif "Transfer" in sig_val: intent["edge_type"] = "TRANSFER"; intent["action"] = "TOKEN_TRANSFER"
+        if "DEX" in sig_val or "Swap" in sig_val or "UniswapV3" in sig_val: 
+            intent["edge_type"] = "SWAP"
+            intent["obf_path"] = "DEX_ROUTING"
+            intent["matrix_category"] = "Category C - DEX"
+        elif "Bridge" in sig_val or "CCTP" in sig_val: 
+            intent["edge_type"] = "BRIDGE_HOP"
+            intent["obf_path"] = "BRIDGE"
+            intent["matrix_category"] = "Category B - Bridge Hop"
+        elif "Mixer" in sig_val or "Railgun" in sig_val or "Tornado" in sig_val: 
+            intent["edge_type"] = "MIXER"
+            intent["obf_path"] = "MIXER"
+            intent["matrix_category"] = "Category C - Mixer"
+        elif "Sweep" in sig_val: 
+            intent["edge_type"] = "CEX_DEPOSIT"
+            intent["obf_path"] = "CUSTODIAL_SETTLEMENT"
+            intent["matrix_category"] = "Category D - CEX Deposit"
+        elif "WETH" in sig_val and "Deposit" in sig_val: 
+            intent["edge_type"] = "LOCK"
+            intent["matrix_category"] = "Category A - Wrapping"
+        elif "WETH" in sig_val and "Withdraw" in sig_val: 
+            intent["edge_type"] = "RELEASE"
+            intent["matrix_category"] = "Category A - Unwrapping"
+        elif "Mint" in sig_val: 
+            intent["edge_type"] = "MINT"
+            intent["matrix_category"] = "Category A - Mint"
+        elif "Burn" in sig_val: 
+            intent["edge_type"] = "BURN"
+            intent["matrix_category"] = "Category A - Burn"
+        elif "NFT" in sig_val: 
+            intent["edge_type"] = "NFT_TRADE"
+            intent["matrix_category"] = "Category G - NFT Laundering"
+        elif "Borrow" in sig_val: 
+            intent["edge_type"] = "BORROW"
+            intent["obf_path"] = "DEFI_MASKING"
+            intent["matrix_category"] = "Category F - DeFi Masking"
+        elif "Repay" in sig_val: 
+            intent["edge_type"] = "REPAY"
+            intent["obf_path"] = "DEFI_MASKING"
+            intent["matrix_category"] = "Category F - DeFi Masking"
+        elif "Staking" in sig_val or "Aave" in sig_val or "Compound" in sig_val or "EigenLayer" in sig_val: 
+            intent["edge_type"] = "STAKING"
+            intent["obf_path"] = "YIELD"
+            intent["matrix_category"] = "Category F - DeFi State Masking"
+        elif "Transfer" in sig_val: 
+            intent["edge_type"] = "TRANSFER"
+            intent["action"] = "TOKEN_TRANSFER"
     else:
         intent["action"] = "CONTRACT_CALL"
         intent["edge_type"] = "CONTRACT_INTERACTION"
     return intent
 
-async def find_bridge_symmetry(tx_hash: str):
+async def find_bridge_symmetry(tx_hash: str, chain: str = None):
     if mongo_db is None: return None
     try:
-        return await mongo_db.bridge_links.find_one({"$or": [{"mint_tx": tx_hash}, {"lock_tx": tx_hash}]})
+        # Cross-chain lock/mint pairs discovery
+        return await mongo_db.bridge_links.find_one({
+            "$or": [
+                {"mint_tx": tx_hash}, 
+                {"lock_tx": tx_hash}, 
+                {"burn_tx": tx_hash}, 
+                {"release_tx": tx_hash}
+            ]
+        })
     except:
         return None
 
@@ -501,13 +598,17 @@ async def find_identity_pivots(wallet_address: str):
     except:
         return []
 
-async def find_cex_withdrawals(exchange_address: str):
+async def find_cex_withdrawals(exchange_address: str, memo_tag: str = None):
     if mongo_db is None: return []
     try:
-        # Simulate CEX internal ledger withdrawal routing
-        cursor = mongo_db.transactions.find({"from": exchange_address}).sort("block_time", -1).limit(5)
+        # Trace INTERNAL_LEDGER_LINK via memo/tag reuse
+        query = {"from": exchange_address}
+        if memo_tag:
+            query["memo_tag"] = memo_tag
+            
+        cursor = mongo_db.transactions.find(query).sort("block_time", -1).limit(5)
         txs = await cursor.to_list(length=5)
-        return [tx.get("to") for tx in txs if tx.get("to")]
+        return [{"to": tx.get("to"), "edge_type": "INTERNAL_LEDGER_LINK"} for tx in txs if tx.get("to")]
     except:
         return []
 
@@ -604,13 +705,31 @@ class TraceEngine:
             "Connection": "keep-alive"
         }
         if chain == "BITCOIN":
-            for attempt in range(4):
-                try:
-                    async with BTC_API_SEMAPHORE:
-                        async with session.get(f"https://mempool.space/api/address/{addr}/txs", headers=headers, timeout=12) as r:
-                            if r.status == 200: return {"type": "btc", "data": await r.json(), "actual_chain": "BITCOIN"}
-                except: pass
+            mempool_txs = []
+            after_txid = None
+            for _ in range(40):
+                for attempt in range(4):
+                    try:
+                        async with BTC_API_SEMAPHORE:
+                            url = f"https://mempool.space/api/address/{addr}/txs"
+                            if after_txid: url += f"/chain/{after_txid}"
+                            async with session.get(url, headers=headers, timeout=12) as r:
+                                if r.status == 200:
+                                    data = await r.json()
+                                    mempool_txs.extend(data)
+                                    if len(data) == 25:
+                                        after_txid = data[-1].get("txid")
+                                    else:
+                                        after_txid = None
+                                    break
+                    except: pass
+                    await asyncio.sleep(1.5 ** attempt)
+                if not after_txid: break
                 
+            if mempool_txs:
+                return {"type": "btc", "data": mempool_txs, "actual_chain": "BITCOIN"}
+                
+            for attempt in range(4):
                 try:
                     async with BTC_API_SEMAPHORE:
                         async with session.get(f"https://blockstream.info/api/address/{addr}/txs", headers=headers, timeout=12) as r2:
@@ -621,14 +740,14 @@ class TraceEngine:
                         async with session.get(f"https://blockchain.info/rawaddr/{addr}", headers=headers, timeout=12) as r3:
                             if r3.status == 200:
                                 bdata = await r3.json()
-                            if "txs" in bdata:
-                                mempool_txs = []
-                                for tx in bdata["txs"]:
-                                    m_tx = {"txid": tx.get("hash", ""), "status": {"block_time": tx.get("time", 0)}}
-                                    m_tx["vin"] = [{"prevout": {"scriptpubkey_address": i.get("prev_out", {}).get("addr"), "value": i.get("prev_out", {}).get("value", 0)}} for i in tx.get("inputs", []) if i.get("prev_out")]
-                                    m_tx["vout"] = [{"scriptpubkey_address": o.get("addr"), "value": o.get("value", 0)} for o in tx.get("out", [])]
-                                    mempool_txs.append(m_tx)
-                                return {"type": "btc", "data": mempool_txs, "actual_chain": "BITCOIN"}
+                                if "txs" in bdata:
+                                    fallback_txs = []
+                                    for tx in bdata["txs"]:
+                                        m_tx = {"txid": tx.get("hash", ""), "status": {"block_time": tx.get("time", 0)}}
+                                        m_tx["vin"] = [{"prevout": {"scriptpubkey_address": i.get("prev_out", {}).get("addr"), "value": i.get("prev_out", {}).get("value", 0)}} for i in tx.get("inputs", []) if i.get("prev_out")]
+                                        m_tx["vout"] = [{"scriptpubkey_address": o.get("addr"), "value": o.get("value", 0)} for o in tx.get("out", [])]
+                                        fallback_txs.append(m_tx)
+                                    return {"type": "btc", "data": fallback_txs, "actual_chain": "BITCOIN"}
                 except: pass
                 await asyncio.sleep(1.5 ** attempt)
                 
@@ -640,23 +759,54 @@ class TraceEngine:
                 
             return {"type": "btc", "data": [], "actual_chain": "BITCOIN"}
             
+        elif chain == "KASPA":
+            all_txs = []
+            try:
+                # Kaspa REST API: https://api.kaspa.org/addresses/{address}/transactions
+                async with session.get(f"https://api.kaspa.org/addresses/{addr}/transactions", headers=headers, timeout=12) as r:
+                    if r.status == 200:
+                        d = await r.json()
+                        if isinstance(d, list): all_txs.extend(d)
+            except: pass
+            return {"type": "kaspa", "data": all_txs, "actual_chain": "KASPA"}
+
+        elif chain == "HEDERA":
+            all_txs = []
+            try:
+                # Hedera Mirror Node API: https://mainnet-public.mirrornode.hedera.com/api/v1/transactions?account.id={addr}
+                async with session.get(f"https://mainnet-public.mirrornode.hedera.com/api/v1/transactions?account.id={addr}&limit=100", headers=headers, timeout=12) as r:
+                    if r.status == 200:
+                        d = await r.json()
+                        if d.get("transactions"): all_txs.extend(d["transactions"])
+            except: pass
+            return {"type": "hedera", "data": all_txs, "actual_chain": "HEDERA"}
+
         elif chain == "TRON":
             all_txs = []
             try:
-                async with session.get(f"https://apilist.tronscan.org/api/transaction", params={"address": addr, "limit": 100, "sort": "-timestamp"}, headers=headers, timeout=12) as r:
-                    if r.status == 200:
-                        d = await r.json()
-                        all_txs.extend(d.get("data", []))
+                for offset in range(0, 10000, 50):
+                    async with session.get(f"https://apilist.tronscan.org/api/transaction", params={"address": addr, "limit": 50, "start": offset, "sort": "-timestamp"}, headers=headers, timeout=12) as r:
+                        if r.status == 200:
+                            d = await r.json()
+                            results = d.get("data", [])
+                            all_txs.extend(results)
+                            if len(results) < 50: break
+                        else: break
             except: pass
             try:
-                url = f"https://usdt.tokenview.io/api/usdt/addresstxlist/{addr}/1/50?apikey={CONFIG['TOKENVIEW_API_KEY']}"
-                async with session.get(url, headers=headers, timeout=12) as r:
-                    if r.status == 200:
-                        d = await r.json()
-                        if d.get("data"):
-                            data_arr = d["data"]
-                            if isinstance(data_arr, dict) and "data" in data_arr: all_txs.extend(data_arr["data"])
-                            elif isinstance(data_arr, list): all_txs.extend(data_arr)
+                for page in range(1, 201):
+                    url = f"https://usdt.tokenview.io/api/usdt/addresstxlist/{addr}/{page}/50?apikey={CONFIG.get('TOKENVIEW_API_KEY', '')}"
+                    async with session.get(url, headers=headers, timeout=12) as r:
+                        if r.status == 200:
+                            d = await r.json()
+                            results = []
+                            if d.get("data"):
+                                data_arr = d["data"]
+                                if isinstance(data_arr, dict) and "data" in data_arr: results = data_arr["data"]
+                                elif isinstance(data_arr, list): results = data_arr
+                            all_txs.extend(results)
+                            if len(results) < 50: break
+                        else: break
             except: pass
             
             if not all_txs and CONFIG.get("GETBLOCK_TRON_KEY"):
@@ -713,19 +863,28 @@ class TraceEngine:
         elif chain == "SOLANA":
             all_txs = []
             try:
-                payload = {"jsonrpc": "2.0", "id": 1, "method": "getSignaturesForAddress", "params": [addr, {"limit": 20}]}
-                async with session.post("https://api.mainnet-beta.solana.com", json=payload, timeout=12) as r:
-                    if r.status == 200:
-                        sigs = await r.json()
-                        for sig_obj in sigs.get("result", []):
-                            sig = sig_obj.get("signature")
-                            if sig:
-                                tx_payload = {"jsonrpc": "2.0", "id": 1, "method": "getTransaction", "params": [sig, {"encoding":"jsonParsed", "maxSupportedTransactionVersion":0}]}
-                                async with session.post("https://api.mainnet-beta.solana.com", json=tx_payload, timeout=8) as r2:
-                                    if r2.status == 200:
-                                        tdata = await r2.json()
-                                        if tdata.get("result"): all_txs.append(tdata["result"])
-                                await asyncio.sleep(0.5)
+                before_sig = None
+                for _ in range(50):
+                    params = [addr, {"limit": 20}]
+                    if before_sig: params[1]["before"] = before_sig
+                    payload = {"jsonrpc": "2.0", "id": 1, "method": "getSignaturesForAddress", "params": params}
+                    async with session.post("https://api.mainnet-beta.solana.com", json=payload, timeout=12) as r:
+                        if r.status == 200:
+                            sigs = await r.json()
+                            results = sigs.get("result", [])
+                            if not results: break
+                            for sig_obj in results:
+                                sig = sig_obj.get("signature")
+                                if sig:
+                                    tx_payload = {"jsonrpc": "2.0", "id": 1, "method": "getTransaction", "params": [sig, {"encoding":"jsonParsed", "maxSupportedTransactionVersion":0}]}
+                                    async with session.post("https://api.mainnet-beta.solana.com", json=tx_payload, timeout=8) as r2:
+                                        if r2.status == 200:
+                                            tdata = await r2.json()
+                                            if tdata.get("result"): all_txs.append(tdata["result"])
+                                    await asyncio.sleep(0.5)
+                            before_sig = results[-1].get("signature")
+                            if len(results) < 20: break
+                        else: break
             except Exception as e:
                 logger.error(f"Solana fetch failed for {addr}: {e}")
             return {"type": "solana", "data": all_txs, "actual_chain": "SOLANA"}
@@ -753,44 +912,46 @@ class TraceEngine:
         else:
             base_url = "https://api.etherscan.io/api"
             
-        url_native = f"{base_url}?module=account&action=txlist&address={addr}&startblock=0&endblock=99999999&page=1&offset=200&sort=desc&apikey={api_key}"
-        url_token = f"{base_url}?module=account&action=tokentxns&address={addr}&startblock=0&endblock=99999999&page=1&offset=200&sort=desc&apikey={api_key}"
-        url_internal = f"{base_url}?module=account&action=txlistinternal&address={addr}&startblock=0&endblock=99999999&page=1&offset=200&sort=desc&apikey={api_key}"
-        url_nft = f"{base_url}?module=account&action=tokennfttx&address={addr}&startblock=0&endblock=99999999&page=1&offset=200&sort=desc&apikey={api_key}"
-        url_1155 = f"{base_url}?module=account&action=token1155tx&address={addr}&startblock=0&endblock=99999999&page=1&offset=200&sort=desc&apikey={api_key}"
+        url_native = f"{base_url}?module=account&action=txlist&address={addr}&startblock=0&endblock=99999999&page={{page}}&offset=200&sort=desc&apikey={api_key}"
+        url_token = f"{base_url}?module=account&action=tokentxns&address={addr}&startblock=0&endblock=99999999&page={{page}}&offset=200&sort=desc&apikey={api_key}"
+        url_internal = f"{base_url}?module=account&action=txlistinternal&address={addr}&startblock=0&endblock=99999999&page={{page}}&offset=200&sort=desc&apikey={api_key}"
+        url_nft = f"{base_url}?module=account&action=tokennfttx&address={addr}&startblock=0&endblock=99999999&page={{page}}&offset=200&sort=desc&apikey={api_key}"
+        url_1155 = f"{base_url}?module=account&action=token1155tx&address={addr}&startblock=0&endblock=99999999&page={{page}}&offset=200&sort=desc&apikey={api_key}"
         
-        for url in [url_native, url_token, url_internal, url_nft, url_1155]:
-            for attempt in range(3):
-                try:
-                    async with EVM_API_SEMAPHORE:
-                        async with session.get(url, headers=headers, timeout=10) as r:
-                            if r.status == 200:
-                                raw_text = await r.text()
-                                try:
-                                    data = json.loads(raw_text)
-                                except:
-                                    break
+        for url_template in [url_native, url_token, url_internal, url_nft, url_1155]:
+            for page in range(1, 51):
+                url = url_template.format(page=page)
+                page_results = 0
+                for attempt in range(3):
+                    try:
+                        async with EVM_API_SEMAPHORE:
+                            async with session.get(url, headers=headers, timeout=10) as r:
+                                if r.status == 200:
+                                    raw_text = await r.text()
+                                    try: data = json.loads(raw_text)
+                                    except: break
                                     
-                                if data.get("status") == "1":
-                                    all_txs.extend(data.get("result", []))
-                                    break
-                                elif data.get("message") == "NOTOK":
-                                    msg_lower = str(data.get("result", "")).lower()
-                                    if "rate limit" in msg_lower or "limit" in msg_lower:
-                                        await asyncio.sleep(2.0 + attempt) 
-                                        continue
-                                    elif "invalid api key" in msg_lower:
-                                        url = url.replace(f"&apikey={api_key}", "")
-                                        continue
-                                    else:
+                                    if data.get("status") == "1":
+                                        results = data.get("result", [])
+                                        page_results = len(results)
+                                        all_txs.extend(results)
                                         break
-                                elif data.get("message") == "No transactions found":
-                                    break
-                                else:
-                                    break
-                        await asyncio.sleep(0.3)
-                except Exception as e:
-                    # Timeout or connection error, fallback silently
+                                    elif data.get("message") == "NOTOK":
+                                        msg_lower = str(data.get("result", "")).lower()
+                                        if "rate limit" in msg_lower or "limit" in msg_lower:
+                                            await asyncio.sleep(2.0 + attempt) 
+                                            continue
+                                        elif "invalid api key" in msg_lower:
+                                            url = url.replace(f"&apikey={api_key}", "")
+                                            continue
+                                        else: break
+                                    elif data.get("message") == "No transactions found":
+                                        break
+                                    else: break
+                            await asyncio.sleep(0.3)
+                    except Exception as e:
+                        break
+                if page_results < 200:
                     break
         
         # 1.5 Ankr Advanced API Fallback
@@ -960,9 +1121,18 @@ class TraceEngine:
             
             intent_data = {"action": "NATIVE_TRANSFER", "edge_type": "UTXO_TRANSFER", "obf_path": obf_path}
             
+            # Category E - Peel Chains & Fan-Out
             if len(tx.get("vin", [])) <= 2 and len(tx.get("vout", [])) >= 5:
                 intent_data["action"] = "UTXO_FAN_OUT"
                 intent_data["obf_path"] = "PEEL_CHAIN"
+                intent_data["matrix_category"] = "Category E - UTXO Fan-Out"
+                
+                # Check for equal output sizing
+                out_vals = [o.get("value", 0) for o in tx.get("vout", []) if o.get("value", 0) > 0]
+                if out_vals:
+                    val_counts = {v: out_vals.count(v) for v in set(out_vals)}
+                    if any(c >= 3 for c in val_counts.values()):
+                        intent_data["intelligence"] = "CoinJoin / Mixer Fixed Denomination (Category C)"
                 
             if is_sender:
                 for o in tx.get("vout", []):
@@ -999,6 +1169,12 @@ class TraceEngine:
                 except ValueError: amt = 0.0
             elif "volume" in tx:
                 try: amt = float(tx.get("volume"))
+                except ValueError: amt = 0.0
+            elif "value" in tx and tx.get("value") is not None:
+                try: amt = float(tx.get("value")) / 1_000_000
+                except ValueError: amt = 0.0
+            elif "quant" in tx and tx.get("quant") is not None:
+                try: amt = float(tx.get("quant")) / 1_000_000
                 except ValueError: amt = 0.0
                 
             if amt <= 0.000001: continue
@@ -1175,6 +1351,67 @@ class TraceEngine:
                         
                     if amt > 0.001:
                         await self.process_hop(session, addr, receiver[0], amt, tx.get('transaction', {}).get('signatures', [''])[0], timestamp, depth, chain, origin_seed, {'action': action, 'edge_type': edge_type}, 'SOL')
+            except: pass
+
+    async def process_kaspa_txs(self, session, addr, txs, depth, carry_val, obf_path, chain, origin_seed):
+        for tx in txs:
+            try:
+                tx_id = tx.get("transaction_id", "")
+                timestamp = str(tx.get("block_time", ""))
+                inputs = tx.get("inputs", [])
+                outputs = tx.get("outputs", [])
+                
+                # Calculate net change for this address
+                in_amt = sum(float(i.get("amount", 0)) for i in inputs if i.get("address") == addr)
+                out_amt = sum(float(o.get("amount", 0)) for o in outputs if o.get("address") == addr)
+                
+                intent_data = {'action': 'KASPA_TRANSFER', 'edge_type': 'UTXO_TRANSFER'}
+                
+                if len(inputs) <= 2 and len(outputs) >= 5:
+                    intent_data["action"] = "UTXO_FAN_OUT"
+                    intent_data["obf_path"] = "PEEL_CHAIN"
+                    intent_data["matrix_category"] = "Category E - UTXO Fan-Out"
+                
+                if in_amt > out_amt:
+                    # Sender is addr
+                    amt = in_amt - out_amt
+                    for out in outputs:
+                        if out.get("address") != addr:
+                            await self.process_hop(session, addr, out.get("address"), amt / len(outputs), tx_id, timestamp, depth, chain, origin_seed, intent_data)
+                else:
+                    # Receiver is addr
+                    amt = out_amt - in_amt
+                    intent_data['action'] = 'KASPA_RECV'
+                    for inp in inputs:
+                        if inp.get("address") != addr:
+                            await self.process_hop(session, inp.get("address"), addr, amt / max(1, len(inputs)), tx_id, timestamp, depth, chain, origin_seed, intent_data)
+            except: pass
+
+    async def process_hedera_txs(self, session, addr, txs, depth, carry_val, obf_path, chain, origin_seed):
+        for tx in txs:
+            try:
+                tx_id = tx.get("transaction_id", "")
+                timestamp = str(tx.get("consensus_timestamp", ""))
+                transfers = tx.get("transfers", [])
+                
+                memo = tx.get("memo_base64", "")
+                edge_type = "TRANSFER"
+                if memo:
+                    try:
+                        import base64
+                        decoded_memo = base64.b64decode(memo).decode('utf-8')
+                        if "Mint" in decoded_memo or tx.get("name") == "TokenMint": edge_type = "MINT"
+                    except: pass
+                
+                for t in transfers:
+                    t_acc = t.get("account", "")
+                    amt = float(t.get("amount", 0)) / 1e8
+                    if t_acc != addr and amt > 0:
+                        # Addr sent to t_acc
+                        await self.process_hop(session, addr, t_acc, amt, tx_id, timestamp, depth, chain, origin_seed, {'action': 'HEDERA_TRANSFER', 'edge_type': edge_type})
+                    elif t_acc != addr and amt < 0:
+                        # t_acc sent to Addr
+                        await self.process_hop(session, t_acc, addr, abs(amt), tx_id, timestamp, depth, chain, origin_seed, {'action': 'HEDERA_TRANSFER', 'edge_type': edge_type})
             except: pass
 
     async def process_hop(self, session, addr, to, amt, txid, timestamp, depth, chain, origin_seed, intent_data, ticker_override=None):
@@ -1393,6 +1630,7 @@ class TraceEngine:
             "intent_action": intent_data.get("action", "TRANSFER"),
             "edge_type": intent_data.get("edge_type", "TRANSFER"),
             "attributions": intent_data.get("obf_path", "NONE"),
+            "matrix_category": intent_data.get("matrix_category", "NONE"),
             "intelligence": intelligence,
             "fingerprint": fingerprint_logic,
             "state_transition": scenario_state,
@@ -1402,6 +1640,15 @@ class TraceEngine:
             "decoded_abi": c_abi,
             "contract_source_code": c_source
         }
+        
+        # Track Total Loss Landings
+        if is_terminal and not getattr(self, "terminal_aggregated", False):
+            if not hasattr(self, "total_loss_landed"): self.total_loss_landed = defaultdict(float)
+            if not hasattr(self, "total_loss_entities"): self.total_loss_entities = defaultdict(float)
+            
+            node["intelligence"] = f"TOTAL LOSS LANDING POINT ({receiver_entity_lbl})"
+            self.total_loss_landed[receiver_entity_lbl] += usd_value
+            self.total_loss_entities[to] += usd_value
         
         async with self.state_lock:
             self.ledger.append(node)
@@ -1545,6 +1792,10 @@ class TraceEngine:
                         await self.process_stellar_txs(session, addr, txs, depth, carry_val, obf_path, chain, origin_seed)
                     elif res["type"] == "solana":
                         await self.process_solana_txs(session, addr, txs, depth, carry_val, obf_path, chain, origin_seed)
+                    elif res["type"] == "kaspa":
+                        await self.process_kaspa_txs(session, addr, txs, depth, carry_val, obf_path, chain, origin_seed)
+                    elif res["type"] == "hedera":
+                        await self.process_hedera_txs(session, addr, txs, depth, carry_val, obf_path, chain, origin_seed)
                     else:
                         await self.process_evm_txs(session, addr, txs, depth, carry_val, obf_path, actual_chain, origin_seed)
             except Exception as e:
@@ -1589,6 +1840,17 @@ class TraceEngine:
                 except Exception as e:
                     logger.error(f"Narrative generation failed: {e}")
                 
+                # Construct Total Loss Summary
+                total_loss_summary = ""
+                if hasattr(self, "total_loss_landed") and self.total_loss_landed:
+                    total_loss_summary = "\n--- TOTAL LOSS ASSET LANDINGS ---\n"
+                    sorted_landings = sorted(self.total_loss_landed.items(), key=lambda x: x[1], reverse=True)
+                    for entity, val in sorted_landings:
+                        if val > 1.0:
+                            total_loss_summary += f"- {entity}: ${val:,.2f}\n"
+                    
+                    narrative = narrative + "\n" + total_loss_summary
+
                 self.ai_narrative = narrative
 
                 # Save trace metadata to Mongo
@@ -1599,7 +1861,8 @@ class TraceEngine:
                             "seeds": self.seeds,
                             "timestamp": datetime.now(timezone.utc),
                             "tx_count": len(self.ledger),
-                            "narrative": narrative
+                            "narrative": narrative,
+                            "total_loss_landed": dict(getattr(self, "total_loss_landed", {}))
                         })
                         await mongo_db.traces_data.insert_one({
                             "trace_id": self.trace_id,
