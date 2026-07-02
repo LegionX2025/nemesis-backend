@@ -77,7 +77,7 @@ def main():
 
     # 3. CLOUDFLARE DEPLOY (FRONTEND)
     print("\n>>> [3/3] Deploying Main Frontend (Cloudflare Pages)")
-    frontend_dir = os.path.join(os.getcwd(), "cloudflare_frontend")
+    frontend_dir = os.path.join(os.getcwd(), "local_deploy", "templates")
     if not os.path.exists(frontend_dir):
         print(f"[ERROR] Frontend directory not found: {frontend_dir}")
         sys.exit(1)

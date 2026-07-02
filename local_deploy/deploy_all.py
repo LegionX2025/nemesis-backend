@@ -425,7 +425,7 @@ deleted_classes = ["TraceSessionDO"]
 # ENVIRONMENT VARIABLES
 # ============================================================================
 [vars]
-PYTHON_BACKEND_URL = "https://nemesis-tunnel.trycloudflare.com" # TODO: Update this in Cloudflare dashboard
+PYTHON_BACKEND_URL = "https://nemesis-backend-rwp4.onrender.com"
 """
     for k, v in env_vars.items():
         # Escape backslashes first, then quotes in value
