@@ -35,7 +35,19 @@ def main():
     
     # 1. GIT DEPLOY (RENDER)
     print("\n>>> [1/3] Syncing to Global Repository (Render Backend)")
-    run_cmd("git add .")
+    print("    -> Wiping git cache to ensure strict project-file-only deployment...")
+    run_cmd("git rm -r --cached .", exit_on_error=False)
+    
+    print("    -> Adding strict core project files...")
+    core_files = [
+        "local_deploy/", "cloudflare_frontend/", "cloudflare_worker/", 
+        "render_backend/", "services/", "templates/", "static/", "scraper_service/", "graph/",
+        "requirements.txt", "render.yaml", "auto_deploy.py", "deploy_all.py", 
+        "build_nemesis_id.py", "app.py", "main.py", "Dockerfile", ".gitignore"
+    ]
+    for f in core_files:
+        if os.path.exists(os.path.join(os.getcwd(), f.strip("/"))):
+            run_cmd(f"git add {f}")
     
     # Commit might fail if there are no changes, so we don't exit on error
     success, log = run_cmd('git commit -m "Auto-Deploy from Nemesis Command Center"', exit_on_error=False)

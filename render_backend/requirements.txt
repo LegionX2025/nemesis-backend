@@ -18,7 +18,7 @@ scikit-learn
 python-multipart
 rich
 stem
-PyPDF2
+pypdf
 python-docx
 python-pptx
 openpyxl

@@ -113,7 +113,7 @@ CONFIG = {
     "OPTIMISMSCAN_API_KEY": os.getenv("OPTIMISMSCAN_API_KEY", "AYQRQWFDJRK8WAX2ICJ8U4JUSYXZT5J7II"),
     "BASESCAN_API_KEY": os.getenv("BASESCAN_API_KEY", "AYQRQWFDJRK8WAX2ICJ8U4JUSYXZT5J7II"),
     "GEMINI_API_KEY": os.getenv("GEMINI_API_KEYS", "").split(',')[0].strip('"') if os.getenv("GEMINI_API_KEYS") else "",
-    "MONGO_URI": "mongodb+srv://MKpBkrUw:Z63zGHQaiYG6rhrb@us-east-1.ufsuw.mongodb.net/blockchain",
+    "MONGO_URI": os.getenv("DATABASE_MONGO_URL", os.getenv("MONGO_URI", "mongodb+srv://MKpBkrUw:Z63zGHQaiYG6rhrb@us-east-1.ufsuw.mongodb.net/blockchain")),
     "TOKENVIEW_API_KEY": os.getenv("GETBLOCK_TRON_KEY", "2c9414b6d83947f5aa7a1f2f2f341cfc"),
     "OKLINK_API_KEY": os.getenv("OKLINK_API_KEY", ""),
     "ETHPLORER_API_KEY": os.getenv("ETHPLORER_API_KEY", "EK-jzMjY-tyVwyEJ-wj3su"),
@@ -181,7 +181,9 @@ async def init_mongodb():
     global mongo_client, mongo_db
     try:
         if mongo_client is None:
-            mongo_url = "mongodb+srv://MKpBkrUw:Z63zGHQaiYG6rhrb@us-east-1.ufsuw.mongodb.net/blockchain"
+            mongo_url = CONFIG.get("MONGO_URI") or os.getenv("DATABASE_MONGO_URL") or os.getenv("MONGO_URI")
+            if not mongo_url:
+                raise ValueError("MongoDB URI is not configured in .env (DATABASE_MONGO_URL or MONGO_URI)")
             mongo_client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=15000)
             
             try:

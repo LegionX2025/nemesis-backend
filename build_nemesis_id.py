@@ -37,13 +37,20 @@ def build():
 
     # 3. Strip out unwanted inputs for NEMESIS ID (Dates, Amounts, Multiple Addresses)
     # Landing page replacement
-    landing_pattern = r'<div class="landing-input-group">.*?</div>\s*</main>'
+    landing_pattern = r'<div class="landing-input-group[^"]*">.*?</div>\s*</main>'
     new_landing = """<div class="landing-input-group">
                         <div>
                             <label>Target Wallet Address</label>
                             <input type="text" id="landing-seed-input" placeholder="Enter 0x... address" class="w-full bg-white border border-slate-200/20 rounded p-3 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:bg-white/90 transition shadow-sm" style="background: rgba(255,255,255,0.7);">
                         </div>
                         <button class="landing-btn-primary" onclick="initiateLandingTrace()">GENERATE NEMESIS ID &rarr;</button>
+                        
+                        <!-- Hidden inputs to satisfy initiateLandingTrace JS requirements -->
+                        <div class="hidden">
+                            <input type="number" id="landing-target-amount" value="0">
+                            <input type="date" id="landing-start-date">
+                            <input type="date" id="landing-end-date">
+                        </div>
                         
                         <div class="h-px bg-slate-200 w-full my-2"></div>
                         
@@ -60,13 +67,12 @@ def build():
     
     # Trace Control Panel replacement
     # Convert textarea to input text for single wallet
-    content = content.replace('<textarea id="seed-input" rows="2"', '<input type="text" id="seed-input"')
-    content = content.replace('</textarea>', '')
+    content = re.sub(r'<textarea id="seed-input"[^>]*>.*?</textarea>', '<input type="text" id="seed-input" class="w-full bg-slate-900 border border-slate-700 text-slate-300 font-mono focus:outline-none focus:border-blue-500 p-4 rounded-xl shadow-inner transition" placeholder="Enter Target Wallet Address (0x...)">', content, flags=re.DOTALL)
     content = content.replace('<span>Target Seed Wallets / TXs (One per line)</span>', '<span>Target Wallet Address</span>')
     
-    # Remove Filters & Control div
-    filters_pattern = r'<!-- Filters & Control -->.*?<!-- Execute Button -->'
-    content = re.sub(filters_pattern, '<!-- Execute Button -->', content, flags=re.DOTALL)
+    # Remove Parameters div from trace dashboard for NEMESIS ID
+    filters_pattern = r'<!-- Parameters -->.*?<!-- Primary Action Buttons -->'
+    content = re.sub(filters_pattern, '<!-- Primary Action Buttons -->', content, flags=re.DOTALL)
     
     # Modify trace button text
     content = content.replace('<span>Start Trace</span>', '<span>Generate ID</span>')

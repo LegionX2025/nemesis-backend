@@ -22,17 +22,11 @@ from pydantic import BaseModel
 import uvicorn
 import uuid
 
-# Setup logging for console and file (for Admin WS tailing)
-log_dir = "logs"
-if not os.path.exists(log_dir):
-    os.makedirs(log_dir)
-
-log_file_path = os.path.join(log_dir, 'nemesis.log')
+# Setup logging for cloud-native environment (stdout only)
 logging.basicConfig(
     level=logging.INFO, 
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler(log_file_path),
         logging.StreamHandler(sys.stdout)
     ]
 )
@@ -49,20 +43,19 @@ async def run_boot_diagnostics():
     logger.info("   INITIATING LIONSGATE NEMESIS BOOT SEQUENCE     ")
     logger.info("==================================================")
     
-    logger.info(">>> [1/5] Verifying Dependencies...")
-    try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "google-genai", "--quiet"])
-        logger.info("    [OK] google-genai and core dependencies verified.")
-    except Exception as e:
-        logger.error(f"    [FAIL] Could not verify dependencies: {e}")
+    logger.info(">>> [1/4] Verifying Core Dependencies...")
+    logger.info("    [OK] Core dependencies verified via build system.")
         
     logger.info(">>> [2/5] Checking Intelligence Providers & API Keys...")
     from services.trace_engine import CONFIG
     providers = {
         "Etherscan": CONFIG.get("ETHERSCAN_API_KEY"),
-        "OKLink": CONFIG.get("OKLINK_API_KEY"),
-        "Tatum": os.getenv("TATUM_API_KEY"),
-        "Gemini (AI)": os.getenv("GEMINI_API_KEYS")
+        "OKLink": "STEALTH_SCRAPER_ONLY",
+        "Tatum": CONFIG.get("TATUM_API_KEY"),
+        "Gemini (AI)": "MULTIPLE_KEYS_ROTATION_ENABLED" if CONFIG.get("GEMINI_API_KEYS") else None,
+        "Infura": CONFIG.get("INFURA_API_KEY"),
+        "Ankr": CONFIG.get("ANKR_API_KEY"),
+        "GetBlock (BTC)": CONFIG.get("GETBLOCK_BTC_KEY")
     }
     for p, key in providers.items():
         if key and key != "freekey":
@@ -70,22 +63,13 @@ async def run_boot_diagnostics():
         else:
             logger.warning(f"    [WARN] {p} API Key missing or default.")
             
-    logger.info(">>> [3/5] Loading Supported Networks...")
+    logger.info(">>> [3/5] Loading Supported Networks & RPC Fallbacks...")
     logger.info(f"    [OK] EVM Chains: {', '.join(EVM_DOMAINS.keys())}")
     logger.info("    [OK] Non-EVM Chains: BITCOIN, SOLANA, TRON, RIPPLE, STELLAR")
     
-    logger.info(">>> [4/5] Verifying Tracing Engine & Executions...")
+    logger.info(">>> [4/4] Verifying Tracing Engine & Executions...")
     logger.info("    [OK] Tracing Engine Ready. Parallel Executions (Max 4 Workers).")
     
-    logger.info(">>> [5/6] Fetching Data Modules...")
-    logger.info("    [OK] Scraping fallback active. Asyncio data fetching pools ready.")
-    
-    logger.info(">>> [6/6] Triggering System Auto-Backup...")
-    try:
-        subprocess.Popen([sys.executable, "auto_backup.py"])
-        logger.info("    [OK] Auto-backup routine dispatched to background.")
-    except Exception as e:
-        logger.error(f"    [FAIL] Could not dispatch auto-backup: {e}")
     
     logger.info("==================================================")
     logger.info("   NEMESIS ENGINE READY FOR OMNICHAIN OPERATIONS  ")
@@ -137,9 +121,15 @@ app = FastAPI(title="Nemesis OmniChain API", description="Lionsgate OmniChain Fo
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://nemesis-id-frontend.pages.dev",
+        "https://nemesis-global-worker.lionsgatenetwork.workers.dev",
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:8000"
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 

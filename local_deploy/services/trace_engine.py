@@ -308,32 +308,12 @@ class OKLinkParser(HTMLParser):
         if self.in_target:
             self.current_text.append(data)
 
-async def fetch_oklink_label(session, chain: str, address: str) -> str:
-    cmap = {"BTC": "btc", "BITCOIN": "btc", "ETH": "eth", "ETHEREUM": "eth", "POLYGON": "polygon", "BSC": "bsc", "TRX": "trx", "TRON": "trx", "EVM_AUTO": "eth", "BASE": "base", "ARBITRUM": "arbitrum", "OPTIMISM": "optimism"}
-    cname = cmap.get(chain.upper())
-    if not cname: return None
-    url = f"https://www.oklink.com/{cname}/address/{address}"
-    try:
-        async with session.get(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0"}, timeout=8.0) as resp:
-            if resp.status == 200:
-                html = await resp.text()
-                parser = OKLinkParser()
-                parser.feed(html)
-                for raw_text in parser.results:
-                    label = raw_text.replace('#', '').strip()
-                    if label and len(label) > 2 and "0x" not in label.lower() and not label.lower().startswith("bc1") and label.lower() != "address": 
-                        return label
-                
-                match_json = re.search(r'"entityName"\s*:\s*"([^"]+)"', html)
-                if match_json: return match_json.group(1)
-                match_tag = re.search(r'"addressTag"\s*:\s*"([^"]+)"', html)
-                if match_tag: return match_tag.group(1)
-    except: pass
-    return None
-
 async def auto_scrape_label(session, chain, address):
-    ok_label = await fetch_oklink_label(session, chain, address)
-    if ok_label: return ok_label, "OKLink"
+    # Enforce Stealth OKLink Scraping (No API Keys as requested)
+    from services.scraper_engine import scraper_instance
+    if scraper_instance and scraper_instance.playwright:
+        ok_label, ok_cluster = await scraper_instance.scrape_oklink(address, chain)
+        if ok_label: return ok_label, "OKLink"
     
     if chain in ["ETHEREUM", "EVM_AUTO", "ETH"]:
         url = f"https://ethplorer.io/search/{address}"
@@ -1615,21 +1595,38 @@ class TraceEngine:
                 
                 # AI Recombination Narrative Generation
                 narrative = "No recombination narrative could be generated."
-                try:
-                    recombined = [row for row in self.ledger if row.get("is_consolidation") and row.get("to") not in self.seeds]
-                    if recombined and os.getenv("GEMINI_API_KEYS"):
-                        api_keys = os.getenv("GEMINI_API_KEYS", "").split(",")
-                        client = genai.Client(api_key=api_keys[0].strip())
-                        prompt = f"Analyze these {len(recombined)} consolidated downstream transactions and write a 3-sentence forensic narrative identifying if this looks like a mixer blender exit recombination. Provide high-confidence findings."
-                        resp = client.models.generate_content(
-                            model="gemini-2.5-flash",
-                            contents=prompt
-                        )
-                        narrative = resp.text
-                    elif recombined:
-                        narrative = f"Found {len(recombined)} downstream consolidation points, indicative of potential blender recombination."
-                except Exception as e:
-                    logger.error(f"Narrative generation failed: {e}")
+                recombined = [row for row in self.ledger if row.get("is_consolidation") and row.get("to") not in self.seeds]
+                if recombined and os.getenv("GEMINI_API_KEYS"):
+                    api_keys = [k.strip() for k in os.getenv("GEMINI_API_KEYS", "").split(",") if k.strip()]
+                    model_order = os.getenv("AI_MODEL_ORDER", "gemini-3.1-pro-preview,gemini-3-pro-preview,gemini-2.5-flash,gemini-2.5-flash-lite,gemini-2.0-flash").split(",")
+                    
+                    success = False
+                    for key in api_keys:
+                        if success: break
+                        try:
+                            client = genai.Client(api_key=key)
+                            prompt = f"Analyze these {len(recombined)} consolidated downstream transactions and write a 3-sentence forensic narrative identifying if this looks like a mixer blender exit recombination. Provide high-confidence findings."
+                            
+                            for model_name in model_order:
+                                try:
+                                    resp = client.models.generate_content(
+                                        model=model_name.strip(),
+                                        contents=prompt
+                                    )
+                                    narrative = resp.text
+                                    success = True
+                                    logger.info(f"    [OK] AI Narrative generated using model: {model_name.strip()} on key rotation.")
+                                    break
+                                except Exception as model_e:
+                                    logger.debug(f"    [WARN] Model {model_name} failed: {model_e}. Trying next model...")
+                        except Exception as key_e:
+                            logger.warning(f"    [WARN] Gemini API Key exhausted/failed: {key_e}. Rotating to next key...")
+                            
+                    if not success:
+                        narrative = f"Found {len(recombined)} downstream consolidation points, indicative of potential blender recombination. (AI Engine offline/exhausted)"
+                        
+                elif recombined:
+                    narrative = f"Found {len(recombined)} downstream consolidation points, indicative of potential blender recombination."
                 
                 self.ai_narrative = narrative
 

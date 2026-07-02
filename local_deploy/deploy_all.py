@@ -378,13 +378,16 @@ name = "ADMIN_CONSOLE"
 class_name = "AdminConsole"
 
 [[migrations]]
-tag = "v1"
+tag = "v2"
 new_sqlite_classes = ["TraceCoordinator", "RealtimeManager", "AdminConsole"]
+deleted_classes = ["TraceSessionDO"]
 """
     # Load .env variables for wrangler.toml
     env_vars = {}
     try:
-        with open("../.env", "r", encoding="utf-8") as env_file:
+        # Try root .env first, then fallback to ../.env if cwd is local_deploy
+        env_path = ".env" if os.path.exists(".env") else "../.env"
+        with open(env_path, "r", encoding="utf-8") as env_file:
             for line in env_file:
                 line = line.strip()
                 if line and not line.startswith("#") and "=" in line:
@@ -405,8 +408,8 @@ new_sqlite_classes = ["TraceCoordinator", "RealtimeManager", "AdminConsole"]
 PYTHON_BACKEND_URL = "https://nemesis-tunnel.trycloudflare.com" # TODO: Update this in Cloudflare dashboard
 """
     for k, v in env_vars.items():
-        # Escape quotes in value
-        safe_v = str(v).replace('"', '\\"')
+        # Escape backslashes first, then quotes in value
+        safe_v = str(v).replace('\\', '\\\\').replace('"', '\\"')
         toml_content += f'{k} = "{safe_v}"\n'
         
     write_file(worker_dir / "wrangler.toml", toml_content)

@@ -147,9 +147,9 @@
                     </div>
                     <div class="landing-links">
                         <a href="/nemesis_id.html" target="_blank"><i class="fa-solid fa-id-card text-fuchsia-500"></i> Nemesis ID</a>
-                        <a href="/intelligence" target="_blank"><i class="fa-solid fa-brain icon-intel"></i> Intelligence</a>
-                        <a href="/audit" target="_blank"><i class="fa-solid fa-shield-halved icon-audit"></i> Enterprise Audit</a>
-                        <a href="/api_docs" target="_blank"><i class="fa-solid fa-book icon-intel"></i> API Docs</a>
+                        <a href="/nemesis_intelligence.html" target="_blank"><i class="fa-solid fa-brain icon-intel"></i> Intelligence</a>
+                        <a href="/audit.html" target="_blank"><i class="fa-solid fa-shield-halved icon-audit"></i> Enterprise Audit</a>
+                        <a href="/api_docs.html" target="_blank"><i class="fa-solid fa-book icon-intel"></i> API Docs</a>
                         <a onclick="openContentPage('tracing_engine')"><i class="fa-solid fa-microchip icon-trace"></i> Tracing Engine</a>
                     </div>
                 </nav>
@@ -160,68 +160,19 @@
                     <h2 class="text-xl font-bold text-slate-400 tracking-widest uppercase mb-6">By Lionsgate Intelligence Network</h2>
                     <p class="landing-subtitle">Illuminating the dark web. Intercept, analyze, and visualize global cross-chain fund flows instantly. Uncover obfuscated threat actor syndicates with military-grade behavioral attribution.</p>
                     
-                    <div class="landing-input-group !max-w-3xl">
-                        <!-- File Upload Zone -->
-                        <div id="file-upload-zone" class="border-2 border-dashed border-blue-400/50 rounded-xl p-8 text-center hover:bg-blue-50/50 transition cursor-pointer flex flex-col items-center justify-center gap-3 relative" ondrop="handleFileDrop(event)" ondragover="event.preventDefault(); this.classList.add('bg-blue-50/50', 'border-blue-500')" ondragleave="this.classList.remove('bg-blue-50/50', 'border-blue-500')" onclick="document.getElementById('file-input').click()">
-                            <input type="file" id="file-input" class="hidden" multiple accept=".pdf,.txt,.csv,.docx,.log" onchange="handleFileSelect(event)">
-                            <div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-2 shadow-sm">
-                                <i class="fa-solid fa-cloud-arrow-up text-2xl"></i>
-                            </div>
-                            <h3 class="font-bold text-slate-700 text-lg">Import Case Files</h3>
-                            <p class="text-xs text-slate-500">Drag & Drop or click to upload PDF, TXT, CSV, DOCX logs</p>
-                            <div id="upload-status" class="absolute inset-0 bg-white/90 backdrop-blur-sm rounded-xl flex items-center justify-center font-bold text-blue-600 hidden flex-col gap-2">
-                                <i class="fa-solid fa-circle-notch fa-spin text-3xl"></i>
-                                <span>LLM Analyzing Intel...</span>
-                            </div>
+                    <div class="landing-input-group">
+                        <div>
+                            <label>Target Wallet Address</label>
+                            <input type="text" id="landing-seed-input" placeholder="Enter 0x... address" class="w-full bg-white border border-slate-200/20 rounded p-3 text-slate-700 font-mono focus:outline-none focus:border-blue-400 focus:bg-white/90 transition shadow-sm" style="background: rgba(255,255,255,0.7);">
                         </div>
-
-                        <!-- LLM Summary Panel (Hidden by default) -->
-                        <div id="llm-summary-panel" class="hidden bg-slate-50 border border-slate-200 rounded-xl p-6 shadow-inner text-left text-sm text-slate-700">
-                            <h4 class="font-bold text-slate-900 border-b border-slate-200 pb-2 mb-3 flex items-center gap-2">
-                                <i class="fa-solid fa-robot text-blue-600"></i> Intelligence Summary
-                            </h4>
-                            <p id="llm-summary-text" class="mb-4 leading-relaxed font-serif text-slate-600"></p>
-                            <div class="grid grid-cols-2 gap-4 bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
-                                <div><span class="text-xs font-bold text-slate-400 uppercase">Loss Amount</span><br><span id="llm-loss-amount" class="font-mono text-red-500 font-bold"></span></div>
-                                <div><span class="text-xs font-bold text-slate-400 uppercase">Incidents Found</span><br><span id="llm-incidents" class="font-bold text-slate-700"></span></div>
-                                <div class="col-span-2"><span class="text-xs font-bold text-slate-400 uppercase">Suspect Addresses</span><br><div id="llm-suspects" class="font-mono text-xs max-h-20 overflow-y-auto break-all bg-slate-50 p-2 rounded border border-slate-200 mt-1"></div></div>
-                            </div>
-                        </div>
-
-                        <!-- Manual Overrides (Populated by LLM) -->
-                        <div class="mt-4 pt-4 border-t border-slate-200/50">
-                            <label>Target Seed Wallets / Suspects</label>
-                            <textarea id="landing-seed-input" rows="2" placeholder="Auto-populated or Enter 0x... addresses">
-                        </div>
-                        <div class="flex gap-4 w-full">
-                            <div class="flex-1">
-                                <label>Total Loss Amount to Trace</label>
-                                <input type="number" id="landing-target-amount" placeholder="e.g. 80000" class="w-full bg-white border border-slate-200/20 rounded p-3 text-slate-700 font-mono focus:outline-none focus:border-blue-400 transition" style="background: rgba(255,255,255,0.7);">
-                            </div>
-                            <div class="flex-1">
-                                <label>Network Chain</label>
-                                <select id="landing-chain-select" class="w-full bg-white border border-slate-200/20 rounded p-3 text-slate-700 font-mono focus:outline-none focus:border-blue-400 transition" style="background: rgba(255,255,255,0.7);">
-                                    <option value="AUTO">Auto-Detect</option>
-                                    <option value="ETH">Ethereum</option>
-                                    <option value="BSC">BSC</option>
-                                    <option value="BTC">Bitcoin</option>
-                                    <option value="TRX">Tron</option>
-                                    <option value="SOL">Solana</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="hidden">
-                            <input type="date" id="landing-start-date">
-                            <input type="date" id="landing-end-date">
-                        </div>
-                        <button class="landing-btn-primary mt-4" onclick="initiateLandingTrace()"><i class="fa-solid fa-radar text-blue-400 mr-2"></i> GENERATE NEMESIS ID &rarr;</button>
+                        <button class="landing-btn-primary" onclick="initiateLandingTrace()">GENERATE NEMESIS ID &rarr;</button>
                         
-                        <div class="h-px bg-slate-200 w-full my-4"></div>
+                        <div class="h-px bg-slate-200 w-full my-2"></div>
                         
                         <div>
-                            <label>Trace ID / Nemesis ID Retrieval</label>
+                            <label>Nemesis ID Retrieval</label>
                             <div class="flex gap-2 mt-2">
-                                <input type="text" id="landing-search-trace" placeholder="e.g. NID-XXXX or Trace ID" class="flex-grow w-full bg-white border border-slate-200/20 text-slate-700 font-mono focus:outline-none focus:border-blue-400 p-3 rounded-lg" style="background: rgba(255,255,255,0.7);">
+                                <input type="text" id="landing-search-trace" placeholder="e.g. NID-XXXX" class="flex-grow w-full bg-white border border-slate-200/20 text-slate-700 font-mono focus:outline-none focus:border-blue-400 p-3 rounded-lg" style="background: rgba(255,255,255,0.7);">
                                 <button class="landing-btn-primary !mt-0 px-6" onclick="fetchHistoricalTrace()">RETRIEVE</button>
                             </div>
                         </div>
@@ -346,45 +297,7 @@
                         <span>Seed Wallets (One per line)</span>
                         <span id="network-logo-container" class="text-blue-500 font-bold"></span>
                     </label>
-                    <textarea id="seed-input" class="w-full h-12 text-xs bg-transparent focus:outline-none font-mono text-slate-800 resize-none" placeholder="Enter 0x... addresses" oninput="detectWalletChain()">
-                </div>
-
-                <!-- Parameters -->
-                <div class="flex gap-3">
-                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 shadow-inner w-32">
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Start Date</label>
-                        <input type="date" id="start-date" class="w-full text-xs bg-transparent focus:outline-none text-slate-800 font-mono">
-                    </div>
-                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 shadow-inner w-32">
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">End Date</label>
-                        <input type="date" id="end-date" class="w-full text-xs bg-transparent focus:outline-none text-slate-800 font-mono">
-                    </div>
-                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 shadow-inner w-44">
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Target Amount</label>
-                        <div class="flex items-center border-b border-slate-300 pb-1">
-                            <select id="target-currency" class="bg-transparent text-xs font-bold text-slate-700 outline-none cursor-pointer pr-2 border-r border-slate-300 mr-2">
-                                <option value="USD">💵 USD</option>
-                                <option value="ETH">🔷 ETH</option>
-                                <option value="BTC">₿ BTC</option>
-                                <option value="TRX">🔴 TRX</option>
-                                <option value="SOL">🟣 SOL</option>
-                                <option value="BNB">🟡 BNB</option>
-                                <option value="MATIC">🟣 MATIC</option>
-                                <option value="USDT">🪙 USDT</option>
-                                <option value="USDC">🪙 USDC</option>
-                                <option value="XRP">✖ XRP</option>
-                            </select>
-                            <input type="number" id="target-amount" class="w-full text-xs bg-transparent outline-none font-mono text-slate-800" placeholder="80000">
-                        </div>
-                    </div>
-                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 shadow-inner w-24">
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Depth</label>
-                        <input type="number" id="max-depth" class="w-full text-xs bg-transparent focus:outline-none text-slate-800 font-mono" value="12">
-                    </div>
-                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 shadow-inner w-24">
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Hops</label>
-                        <input type="number" id="max-hops" class="w-full text-xs bg-transparent focus:outline-none text-slate-800 font-mono" value="1000">
-                    </div>
+                    <input type="text" id="seed-input" class="w-full bg-slate-900 border border-slate-700 text-slate-300 font-mono focus:outline-none focus:border-blue-500 p-4 rounded-xl shadow-inner transition" placeholder="Enter Target Wallet Address (0x...)">
                 </div>
 
                 <!-- Primary Action Buttons -->
