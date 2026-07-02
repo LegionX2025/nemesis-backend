@@ -32,3 +32,6 @@ flask
 flask-cors
 web3
 playwright-stealth
+neo4j
+kafka-python
+ijson
