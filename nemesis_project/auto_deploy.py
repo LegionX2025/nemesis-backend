@@ -37,27 +37,9 @@ def main():
     print("    -> Installing Python requirements (Root)...")
     run_cmd("pip install -r requirements.txt", exit_on_error=False)
     
-    # Find local_deploy
-    local_deploy_base = os.path.join(os.getcwd(), "local_deploy")
-    if not os.path.exists(local_deploy_base):
-        local_deploy_base = os.path.abspath(os.path.join(os.getcwd(), "..", "local_deploy"))
-        
-    if os.path.exists(os.path.join(local_deploy_base, "requirements.txt")):
-        print("    -> Installing Python requirements (local_deploy)...")
-        run_cmd("pip install -r requirements.txt", cwd=local_deploy_base, exit_on_error=False)
-        
-    if os.path.exists("render_backend/requirements.txt"):
-        print("    -> Installing Python requirements (render_backend)...")
-        run_cmd("pip install -r requirements.txt", cwd="render_backend", exit_on_error=False)
-        
     if os.path.exists("cloudflare_worker/package.json"):
         print("    -> Installing Node.js requirements (cloudflare_worker)...")
         run_cmd("npm install", cwd="cloudflare_worker", exit_on_error=False)
-        
-    worker_dir = os.path.join(local_deploy_base, "nemesis-global-worker")
-    if os.path.exists(os.path.join(worker_dir, "package.json")):
-        print("    -> Installing Node.js requirements (nemesis-global-worker)...")
-        run_cmd("npm install", cwd=worker_dir, exit_on_error=False)
     
     # 1. GIT DEPLOY (RENDER)
     print("\n>>> [1/3] Syncing to Global Repository (Render Backend)")
@@ -93,22 +75,43 @@ def main():
 
     # 2. CLOUDFLARE DEPLOY (EDGE PROXY)
     print("\n>>> [2/3] Deploying Edge Architecture (Cloudflare Worker)")
-    worker_dir = os.path.join(local_deploy_base, "nemesis-global-worker")
+    worker_dir = os.path.join(os.getcwd(), "cloudflare_worker")
     if not os.path.exists(worker_dir):
-        print(f"[ERROR] Worker directory not found: {worker_dir}")
-        sys.exit(1)
-        
-    run_cmd("npx wrangler deploy src/index.ts -c wrangler.toml --compatibility-date 2024-12-01", cwd=worker_dir)
-    print("    -> Cloudflare Edge proxy successfully deployed!")
+        print(f"    -> [INFO] No cloudflare_worker directory found in {os.getcwd()}, skipping edge proxy deployment.")
+    else:
+        run_cmd("npx wrangler deploy src/index.ts -c wrangler.toml --compatibility-date 2024-12-01", cwd=worker_dir)
+        print("    -> Cloudflare Edge proxy successfully deployed!")
 
     # 3. CLOUDFLARE DEPLOY (FRONTEND)
     print("\n>>> [3/3] Deploying Main Frontend (Cloudflare Pages)")
-    frontend_dir = os.path.join(local_deploy_base, "templates")
+    frontend_dir = os.path.join(os.getcwd(), "templates")
+    static_dir = os.path.join(os.getcwd(), "static")
+    build_dir = os.path.join(os.getcwd(), "cf_pages_build")
+    
     if not os.path.exists(frontend_dir):
         print(f"[ERROR] Frontend directory not found: {frontend_dir}")
         sys.exit(1)
         
-    run_cmd("npx wrangler pages deploy . --project-name nemesis-id-frontend", cwd=frontend_dir)
+    print("    -> Preparing build directory with templates and static assets...")
+    import shutil
+    if os.path.exists(build_dir):
+        shutil.rmtree(build_dir)
+    os.makedirs(build_dir)
+    
+    # Copy all templates into the root of the build dir
+    for item in os.listdir(frontend_dir):
+        s = os.path.join(frontend_dir, item)
+        d = os.path.join(build_dir, item)
+        if os.path.isdir(s):
+            shutil.copytree(s, d)
+        else:
+            shutil.copy2(s, d)
+            
+    # Copy static dir into build_dir/static
+    if os.path.exists(static_dir):
+        shutil.copytree(static_dir, os.path.join(build_dir, "static"))
+        
+    run_cmd("npx wrangler pages deploy . --project-name nemesis-id-frontend", cwd=build_dir)
     print("    -> Cloudflare Pages frontend successfully deployed!")
     
     print("\n============================================================")

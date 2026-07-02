@@ -393,7 +393,7 @@
                     </button>
                 </div>
                 
-                <button onclick="toggleTxPanelGlobal()" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-[11px] font-bold rounded-lg transition-all flex items-center justify-between w-full mt-1">
+                <button onclick="toggleLogModal()" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-[11px] font-bold rounded-lg transition-all flex items-center justify-between w-full mt-1">
                     <div class="flex items-center gap-2"><i class="fa-solid fa-list-check text-emerald-500"></i> EVIDENCE TRANSACTION LIVE LOGS</div>
                 </button>
                 
@@ -1247,8 +1247,8 @@
                     let recvAmts = {};
                     window.exportedDataRows.forEach(r => {
                         let usd = r.usd || r.amount || 0;
-                        if(r.to.toLowerCase() === addr) senderAmts[r.from] = (senderAmts[r.from]||0) + usd;
-                        if(r.from.toLowerCase() === addr) recvAmts[r.to] = (recvAmts[r.to]||0) + usd;
+                        if (r.to.toLowerCase() === addr) senderAmts[r.from] = (senderAmts[r.from] || 0) + usd;
+                        if (r.from.toLowerCase() === addr) recvAmts[r.to] = (recvAmts[r.to] || 0) + usd;
                     });
                     
                     for(let s in senderAmts) { if(senderAmts[s] > maxSendUsd) { maxSendUsd = senderAmts[s]; topSender = s; } }
@@ -1387,7 +1387,7 @@
                             <div class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Calculated AML Risk Exposure (Nemesis Algorithm V2)</div>
                             <div class="text-6xl font-black ${riskColor} mb-2">${riskScore}/100</div>
                             <div class="flex justify-center gap-2 mb-4">
-                                <span class="bg-white px-2 py-1 border border-slate-200 rounded text-[10px] font-bold text-slate-600 font-mono">Formula: \`Σ(hop_weight) * entity_risk + velocity_modifier\`</span>
+                                <span class="bg-white px-2 py-1 border border-slate-200 rounded text-[10px] font-bold text-slate-600 font-mono">Formula: 'Σ(hop_weight) * entity_risk + velocity_modifier'</span>
                             </div>
                             <p class="text-xs text-slate-600 max-w-md mx-auto font-sans">Exposure rate calculated via multi-hop heuristic analysis against known illicit endpoints and sanctioned entities on the local ledger trace.</p>
                         </div>
@@ -3810,22 +3810,22 @@ NEMESIS_ROOT/
                 else if (upper.includes("KUCOIN")) { bgColor = "#f0fdf4"; textColor = "#14532d"; }
                 else if (isMixer || upper.includes("MIXER") || upper.includes("TORNADO") || upper.includes("RAILGUN")) { bgColor = "#1e293b"; textColor = "#fca5a5"; }
                 
-                let chainLogoUrl = "";
+                let chainLogoEmoji = "🌐";
                 let chainName = "UNKNOWN";
                 if (chain) {
                     let c = chain.toUpperCase();
-                    if (c.includes("BITCOIN") || c.includes("BTC")) { chainLogoUrl = "https://cryptologos.cc/logos/bitcoin-btc-logo.svg"; chainName = "BITCOIN"; }
-                    else if (c.includes("ETHEREUM") || c.includes("ETH")) { chainLogoUrl = "https://cryptologos.cc/logos/ethereum-eth-logo.svg"; chainName = "ETHEREUM"; }
-                    else if (c.includes("TRON") || c.includes("TRX")) { chainLogoUrl = "https://cryptologos.cc/logos/tron-trx-logo.svg"; chainName = "TRON"; }
-                    else if (c.includes("POLYGON") || c.includes("MATIC") || c.includes("POL")) { chainLogoUrl = "https://cryptologos.cc/logos/polygon-matic-logo.svg"; chainName = "POLYGON"; }
-                    else if (c.includes("BSC") || c.includes("BINANCE")) { chainLogoUrl = "https://cryptologos.cc/logos/bnb-bnb-logo.svg"; chainName = "BSC"; }
-                    else if (c.includes("BASE")) { chainLogoUrl = "https://avatars.githubusercontent.com/u/108554348?v=4"; chainName = "BASE"; }
-                    else if (c.includes("ARBITRUM") || c.includes("ARB")) { chainLogoUrl = "https://cryptologos.cc/logos/arbitrum-arb-logo.svg"; chainName = "ARBITRUM"; }
-                    else if (c.includes("OPTIMISM") || c.includes("OPT")) { chainLogoUrl = "https://cryptologos.cc/logos/optimism-ethereum-op-logo.svg"; chainName = "OPTIMISM"; }
-                    else if (c.includes("SOLANA") || c.includes("SOL")) { chainLogoUrl = "https://cryptologos.cc/logos/solana-sol-logo.svg"; chainName = "SOLANA"; }
-                    else chainLogoUrl = "https://cryptologos.cc/logos/usd-coin-usdc-logo.svg";
+                    if (c.includes("BITCOIN") || c.includes("BTC")) { chainLogoEmoji = "₿"; chainName = "BITCOIN"; }
+                    else if (c.includes("ETHEREUM") || c.includes("ETH")) { chainLogoEmoji = "🔷"; chainName = "ETHEREUM"; }
+                    else if (c.includes("TRON") || c.includes("TRX")) { chainLogoEmoji = "🔴"; chainName = "TRON"; }
+                    else if (c.includes("POLYGON") || c.includes("MATIC") || c.includes("POL")) { chainLogoEmoji = "🟣"; chainName = "POLYGON"; }
+                    else if (c.includes("BSC") || c.includes("BINANCE")) { chainLogoEmoji = "🟡"; chainName = "BSC"; }
+                    else if (c.includes("BASE")) { chainLogoEmoji = "🔵"; chainName = "BASE"; }
+                    else if (c.includes("ARBITRUM") || c.includes("ARB")) { chainLogoEmoji = "🟦"; chainName = "ARBITRUM"; }
+                    else if (c.includes("OPTIMISM") || c.includes("OPT")) { chainLogoEmoji = "🔴"; chainName = "OPTIMISM"; }
+                    else if (c.includes("SOLANA") || c.includes("SOL")) { chainLogoEmoji = "🟣"; chainName = "SOLANA"; }
+                    else chainLogoEmoji = "💵";
                 } else {
-                    chainLogoUrl = "https://cryptologos.cc/logos/usd-coin-usdc-logo.svg";
+                    chainLogoEmoji = "💵";
                 }
 
                 let displayLabel = entityLabel.length > 20 ? entityLabel.substring(0,20) + "..." : entityLabel;
@@ -3872,7 +3872,7 @@ NEMESIS_ROOT/
                     <circle cx="200" cy="200" r="60" fill="#ffffff" stroke="#1e293b" stroke-width="6" filter="url(#glow)"/>
                     
                     <!-- Center Image (Crypto Logo) -->
-                    <image href="${chainLogoUrl}" x="160" y="160" height="80" width="80" />
+                    <text x="200" y="225" font-size="60" text-anchor="middle">${chainLogoEmoji}</text>
                     
                     ${isSuspect ? '<circle cx="200" cy="200" r="70" fill="none" stroke="#ef4444" stroke-width="4" stroke-dasharray="10 5" />' : ''}
                     ${isMixer ? '<circle cx="200" cy="200" r="70" fill="none" stroke="#64748b" stroke-width="4" stroke-dasharray="5 5" />' : ''}
@@ -4068,7 +4068,8 @@ NEMESIS_ROOT/
                         if (nodeFrom) {
                             nodeFrom.outflowUSD = (nodeFrom.outflowUSD || 0) + (d.usd || d.amount);
                             // Update SVG with new amount
-                            nodeFrom.image = getSafeIconUrl(nodeFrom.title.split('\\n')[1].replace('Entity: ', ''), false, false, false, false, nodeFrom.chain, nodeFrom.id, `$${nodeFrom.outflowUSD.toLocaleString()}`);
+                            let entityName = d.sender_entity || (nodeFrom.title && nodeFrom.title.includes('Entity: ') ? nodeFrom.title.split('\\n').find(l => l.includes('Entity:')).replace('Entity: ', '').trim() : 'Unknown');
+                            nodeFrom.image = getSafeIconUrl(entityName, false, false, false, false, nodeFrom.chain, nodeFrom.id, `$${nodeFrom.outflowUSD.toLocaleString()}`);
                             window.nodeUpdateQueue.push(nodeFrom);
                         }
                         

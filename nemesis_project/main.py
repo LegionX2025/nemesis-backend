@@ -5,6 +5,8 @@ import subprocess
 def auto_install_dependencies():
     print("\n[SYSTEM] Auto-installing dependencies from requirements.txt...")
     try:
+        print("[SYSTEM] Upgrading pip...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
         subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt", "--no-cache-dir"])
         print("[SYSTEM] Dependencies verified and installed.")
         
@@ -129,25 +131,7 @@ async def lifespan(app: FastAPI):
         from services.scraper_engine import scraper_instance
         await scraper_instance.start()
         
-        # Start Darknet Crawler
-        try:
-            import sys
-            import os
-            import subprocess
-            # Add darknet folder to sys.path so it can be imported
-            darknet_path = os.path.join(os.path.dirname(__file__), "darknet")
-            if darknet_path not in sys.path:
-                sys.path.append(darknet_path)
-                
-            # Open the darknet console in a new terminal
-            bat_path = os.path.join(os.path.dirname(__file__), "start_darknet_ui.bat")
-            subprocess.Popen(f'start cmd /c "{bat_path}"', shell=True)
-            
-            from darknetv2 import start_headless_crawler
-            start_headless_crawler()
-            logger.info("    [OK] Darknet headless crawler initialized and console spawned.")
-        except Exception as e:
-            logger.error(f"    [FAIL] Failed to initialize Darknet crawler: {e}")
+        # Darknet crawler will be run independently by the user in a separate terminal.
         
     asyncio.create_task(init_background())
     
@@ -165,7 +149,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/static", StaticFiles(directory="."), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 active_sessions = {}
 templates = Jinja2Templates(directory="templates")
