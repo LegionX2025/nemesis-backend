@@ -1504,54 +1504,6 @@ class TraceEngine:
                 chain_type = res.get("type", "evm")
                 actual_chain = res.get("actual_chain", chain)
                 
-                # --- START DEMO INJECTION ---
-                demo_addresses = {
-                    "0x7675dc2856fca0c22ed3c57979388fbf236de57f", "bc1qprtnld4jf43uq6h9y460d76annunqag9dhcv52",
-                    "0x616c6bb9d5bb443d03a7bd5746404897de106a93", "bc1qm341sc65zpw791xes69zkqmk6ee3ewf0j77s3h",
-                    "ra58pazqdhh2e6lta4vpqegaztuz3z3ur", "bc1qpa8n0a5ckt7wkdw3cn8eklsz3z0kn89knme5a9",
-                    "tx4s14f3p8vj9yyw1r7fuvz7v6m7g9r5v4", "5qq8h7v91b7x3qjqy6y5e2p32d3z9x4e2v"
-                }
-                if not txs and addr.lower() in demo_addresses:
-                    logger.info(f"Injecting mock transaction for demo address: {addr}")
-                    if chain_type == "btc":
-                        txs.append({
-                            "txid": "MOCK_BTC_TX_" + addr[-8:],
-                            "status": {"block_time": int(datetime.now(timezone.utc).timestamp())},
-                            "vin": [{"prevout": {"scriptpubkey_address": addr, "value": 500000000}}],
-                            "vout": [{"scriptpubkey_address": "bc1qmockdestination_btc_address", "value": 500000000}]
-                        })
-                    elif chain_type == "solana":
-                        txs.append({
-                            "blockTime": int(datetime.now(timezone.utc).timestamp()),
-                            "meta": {"preBalances": [5000000000, 0], "postBalances": [0, 5000000000]},
-                            "transaction": {"message": {"accountKeys": [addr, "MockSolanaDestinationAddress"]}, "signatures": ["MOCK_SIG"]}
-                        })
-                    elif chain_type == "tron":
-                        txs.append({
-                            "hash": "MOCK_TRX_" + addr[-8:], "ownerAddress": addr, "toAddress": "TMockDestinationAddress", "amount": 5000000000, "timestamp": int(datetime.now(timezone.utc).timestamp()) * 1000
-                        })
-                    elif chain_type == "stellar":
-                        from datetime import datetime, timezone
-                        txs.append({
-                            "type": "payment", "from": addr, "to": "GMockStellarDestinationAddress", "amount": "5000", "asset_type": "native", "created_at": datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'), "transaction_hash": "MOCK_XLM_TX"
-                        })
-                    elif chain_type == "ripple":
-                        from datetime import datetime, timezone
-                        txs.append({
-                            "tx": {"TransactionType": "Payment", "Account": addr, "Destination": "rMockRippleDestination", "Amount": "5000000000", "date": int(datetime.now(timezone.utc).timestamp()) - 946684800, "hash": "MOCK_XRP_TX"}
-                        })
-                    else: # evm
-                        from datetime import datetime, timezone
-                        txs.append({
-                            "hash": "0xMOCK_TX_" + addr.lower()[:8],
-                            "from": addr.lower(),
-                            "to": "0xMockDestination",
-                            "value": "5000000000000000000",
-                            "timeStamp": str(int(datetime.now(timezone.utc).timestamp())),
-                            "tokenSymbol": ""
-                        })
-                # --- END DEMO INJECTION ---
-                
                 logger.info(f"[{actual_chain}] Fetched {len(txs)} txs for {addr}")
                 
                 if txs:
