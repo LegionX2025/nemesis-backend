@@ -1,12 +1,10 @@
-FROM python:3.11-slim
+FROM mcr.microsoft.com/playwright/python:v1.40.0-jammy
 
 WORKDIR /app
 
-# Install system dependencies (for Playwright and other native libs)
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
-    libffi-dev \
-    libssl-dev \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -16,10 +14,6 @@ COPY requirements.txt .
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install Playwright browsers (for the web scraping fallback)
-RUN playwright install chromium
-RUN playwright install-deps chromium
-
 # Copy application code
 COPY . .
 
@@ -28,4 +22,4 @@ ENV PORT=3001
 EXPOSE $PORT
 
 # Start FastAPI server
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-3001}"]
+CMD ["sh", "-c", "uvicorn local_deploy.main:app --host 0.0.0.0 --port ${PORT:-3001}"]

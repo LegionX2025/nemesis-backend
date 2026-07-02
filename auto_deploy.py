@@ -55,7 +55,15 @@ def main():
         print("    -> No new backend changes to commit. Proceeding to push...")
         
     run_cmd("git push origin main")
-    print("    -> GitHub sync complete. Render backend is building!")
+    print("    -> GitHub sync complete.")
+
+    print("    -> Triggering Render Deploy Hook...")
+    import urllib.request
+    try:
+        urllib.request.urlopen("https://api.render.com/deploy/srv-d92fghho3t8c73bg5740?key=YskS46ltPHo")
+        print("    -> Render backend is building!")
+    except Exception as e:
+        print(f"    -> [WARNING] Failed to trigger Render hook: {e}")
 
     # 2. CLOUDFLARE DEPLOY (EDGE PROXY)
     print("\n>>> [2/3] Deploying Edge Architecture (Cloudflare Worker)")
