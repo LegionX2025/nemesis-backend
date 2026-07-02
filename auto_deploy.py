@@ -72,7 +72,7 @@ def main():
         print(f"[ERROR] Worker directory not found: {worker_dir}")
         sys.exit(1)
         
-    run_cmd("npx wrangler deploy src/index.ts", cwd=worker_dir)
+    run_cmd("npx wrangler deploy src/index.ts -c wrangler.toml --compatibility-date 2024-12-01", cwd=worker_dir)
     print("    -> Cloudflare Edge proxy successfully deployed!")
 
     # 3. CLOUDFLARE DEPLOY (FRONTEND)
