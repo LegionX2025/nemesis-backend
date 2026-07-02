@@ -37,9 +37,14 @@ def main():
     print("    -> Installing Python requirements (Root)...")
     run_cmd("pip install -r requirements.txt", exit_on_error=False)
     
-    if os.path.exists("local_deploy/requirements.txt"):
+    # Find local_deploy
+    local_deploy_base = os.path.join(os.getcwd(), "local_deploy")
+    if not os.path.exists(local_deploy_base):
+        local_deploy_base = os.path.abspath(os.path.join(os.getcwd(), "..", "local_deploy"))
+        
+    if os.path.exists(os.path.join(local_deploy_base, "requirements.txt")):
         print("    -> Installing Python requirements (local_deploy)...")
-        run_cmd("pip install -r requirements.txt", cwd="local_deploy", exit_on_error=False)
+        run_cmd("pip install -r requirements.txt", cwd=local_deploy_base, exit_on_error=False)
         
     if os.path.exists("render_backend/requirements.txt"):
         print("    -> Installing Python requirements (render_backend)...")
@@ -49,7 +54,7 @@ def main():
         print("    -> Installing Node.js requirements (cloudflare_worker)...")
         run_cmd("npm install", cwd="cloudflare_worker", exit_on_error=False)
         
-    worker_dir = os.path.join(os.getcwd(), "local_deploy", "nemesis-global-worker")
+    worker_dir = os.path.join(local_deploy_base, "nemesis-global-worker")
     if os.path.exists(os.path.join(worker_dir, "package.json")):
         print("    -> Installing Node.js requirements (nemesis-global-worker)...")
         run_cmd("npm install", cwd=worker_dir, exit_on_error=False)
@@ -88,7 +93,7 @@ def main():
 
     # 2. CLOUDFLARE DEPLOY (EDGE PROXY)
     print("\n>>> [2/3] Deploying Edge Architecture (Cloudflare Worker)")
-    worker_dir = os.path.join(os.getcwd(), "local_deploy", "nemesis-global-worker")
+    worker_dir = os.path.join(local_deploy_base, "nemesis-global-worker")
     if not os.path.exists(worker_dir):
         print(f"[ERROR] Worker directory not found: {worker_dir}")
         sys.exit(1)
@@ -98,7 +103,7 @@ def main():
 
     # 3. CLOUDFLARE DEPLOY (FRONTEND)
     print("\n>>> [3/3] Deploying Main Frontend (Cloudflare Pages)")
-    frontend_dir = os.path.join(os.getcwd(), "local_deploy", "templates")
+    frontend_dir = os.path.join(local_deploy_base, "templates")
     if not os.path.exists(frontend_dir):
         print(f"[ERROR] Frontend directory not found: {frontend_dir}")
         sys.exit(1)
