@@ -114,36 +114,12 @@ from rich.tree import Tree
 from rich.align import Align
 from rich import box
 
-# Google Sheets Imports
-from google.oauth2.credentials import Credentials
-from google.auth.transport.requests import Request
-from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
-
 import os
-try:
-    # Set up Google Sheets connection using the downloaded JSON
-    GS_SCOPES = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    secret_path = "client_secret_191155966605-ctiald95kn7tl023c6lmhuklpmuatat8.apps.googleusercontent.com.json"
-    if os.path.exists(secret_path):
-        creds = ServiceAccountCredentials.from_json_keyfile_name(secret_path, GS_SCOPES)
-        gs_client = gspread.authorize(creds)
-    else:
-        gs_client = None
-    # The user hasn't provided a spreadsheet ID/Name yet, we'll wait for it.
-    gs_sheet = None 
-except Exception as e:
-    gs_client = None
-    gs_sheet = None
+gs_client = None
+gs_sheet = None
 
 def upload_to_google_sheets(record):
-    if gs_sheet:
-        try:
-            gs_sheet.append_row(list(record.values()))
-        except Exception as e:
-            print(f"⚠️ [WARNING] Failed to upload to sheet: {e}")
+    pass
 
 # DB drivers
 try:
@@ -1131,195 +1107,17 @@ class AutonomousTaskExecutor:
 # -------------------- GOOGLE SHEETS API INTEGRATION --------------------
 class GoogleSheetsManager:
     def __init__(self):
-        self.scopes = ['https://www.googleapis.com/auth/spreadsheets']
-        self.spreadsheet_ids = [s.strip() for s in os.getenv("SPREADSHEET_IDS", "").split(",") if s.strip()]
-        self.api_key = os.getenv("GOOGLE_SHEETS_API_KEY", "")
-        self.export_queue = Queue()
-        self.creds = None
-        self.service = None
-        self.row_count = 0
-        self.max_rows = 40000
-        self.sheet_name = "Sheet1"
-        
-        # --- NEW: Customizable Header Row ---
-        self.custom_headers = ["Extraction Timestamp", "Entity Class", "Identifier Type", "Extracted Value", "Confidence Score (%)", "Source URL"]
-        
-        self.client_config = {
-            "installed": {
-                "client_id": os.getenv("GOOGLE_CLIENT_ID", ""),
-                "project_id": os.getenv("GOOGLE_PROJECT_ID", ""),
-                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                "token_uri": "https://oauth2.googleapis.com/token",
-                "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-                "client_secret": os.getenv("GOOGLE_CLIENT_SECRET", ""),
-                "redirect_uris": ["http://localhost"]
-            }
-        }
-        self.authenticate()
-        
-        if self.service:
-            self.batch_thread = threading.Thread(target=self._batch_upload_worker, daemon=True)
-            self.batch_thread.start()
-
+        pass
     def authenticate(self):
-        try:
-            if os.path.exists('token.json'):
-                self.creds = Credentials.from_authorized_user_file('token.json', self.scopes)
-            if not self.creds or not self.creds.valid:
-                if self.creds and self.creds.expired and self.creds.refresh_token:
-                    self.creds.refresh(Request())
-                else:
-                    flow = InstalledAppFlow.from_client_config(self.client_config, self.scopes)
-                self.creds = flow.run_local_server(port=0)
-                with open('token.json', 'w') as token:
-                    token.write(self.creds.to_json())
-            
-            if self.creds:
-                self.service = build('sheets', 'v4', credentials=self.creds, developerKey=self.api_key)
-                log("[SHEETS] Google Sheets API Authenticated Successfully.", style="bold green")
-            else:
-                log("[SHEETS] Credentials not found. Google Sheets sync disabled.", style="yellow")
-        except Exception as e:
-            log(f"[SHEETS] Auth Error: {e}", style="red")
-
+        pass
     def export_entity(self, entity, url):
-        if not self.service: return
-        values = [
-            datetime.now(timezone.utc).isoformat(),
-            entity.get("ontology_class", "UNKNOWN"),
-            entity.get("type", "UNKNOWN"),
-            entity.get("value", "UNKNOWN"),
-            entity.get("confidence", 0.0),
-            url
-        ]
-        self.export_queue.put(values)
-
-    def _upload_batch(self, batch):
-        if not batch: return 0
-        try:
-            if self.row_count + len(batch) >= self.max_rows or self.row_count == 0:
-                if self.row_count + len(batch) >= self.max_rows:
-                    self.sheet_name = f"Darknet_Intel_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-                    body = {'requests': [{'addSheet': {'properties': {'title': self.sheet_name}}}]}
-                    for sheet_id in self.spreadsheet_ids:
-                        try: self.service.spreadsheets().batchUpdate(spreadsheetId=sheet_id, body=body).execute()
-                        except Exception: pass
-                    self.row_count = 0
-                    log(f"[SHEETS] Maximum capacity reached. Generated new sheet: {self.sheet_name}", style="cyan")
-                
-                if self.row_count == 0:
-                    header_body = {'values': [self.custom_headers]}
-                    for sheet_id in self.spreadsheet_ids:
-                        try: self.service.spreadsheets().values().append(spreadsheetId=sheet_id, range=f"{self.sheet_name}!A1:F1", valueInputOption="USER_ENTERED", body=header_body).execute()
-                        except Exception: pass
-
-            body = {'values': batch}
-            range_name = f"{self.sheet_name}!A:F"
-            for sheet_id in self.spreadsheet_ids:
-                try: self.service.spreadsheets().values().append(spreadsheetId=sheet_id, range=range_name, valueInputOption="USER_ENTERED", body=body).execute()
-                except Exception as e: log(f"[SHEETS] Batch Append Error for {sheet_id}: {e}", style="dim red")
-            
-            self.row_count += len(batch)
-            log(f"[SHEETS] Auto-Synced {len(batch)} entities to Google Sheets matrix.", style="bold green")
-            return len(batch)
-        except Exception as e:
-            log(f"[SHEETS] Batch Export Error: {e}", style="dim red")
-            return 0
-
-    def _batch_upload_worker(self):
-        while True:
-            batch = []
-            while not self.export_queue.empty() and len(batch) < 1000:
-                try: batch.append(self.export_queue.get_nowait())
-                except Empty: break
-            
-            if batch:
-                self._upload_batch(batch)
-            
-            time.sleep(5)
-
+        pass
     def force_flush(self):
-        batch = []
-        while not self.export_queue.empty():
-            try: batch.append(self.export_queue.get_nowait())
-            except Empty: break
-        if batch: return self._upload_batch(batch)
         return 0
-
     def clear_sheet(self):
-        if not self.service: return False
-        success = True
-        for sheet_id in self.spreadsheet_ids:
-            try:
-                self.service.spreadsheets().values().clear(
-                    spreadsheetId=sheet_id, range=f"{self.sheet_name}!A2:F"
-                ).execute()
-            except Exception as e:
-                log(f"[SHEETS] Clear Error for {sheet_id}: {e}", style="red")
-                success = False
-        self.row_count = 0
-        if success:
-            log("[SHEETS] Successfully cleared the Google Sheets via Terminal Command.", style="bold green")
-        return success
-
+        return False
     def sync_from_sheets(self, db_handler):
-        if not self.service: return
-        for sheet_id in self.spreadsheet_ids:
-            try:
-                result = self.service.spreadsheets().values().get(
-                    spreadsheetId=sheet_id,
-                    range=f"{self.sheet_name}!A2:F"
-                ).execute()
-                rows = result.get('values', [])
-                if not rows: continue
-
-                imported_urls = {}
-                for row in rows:
-                    if len(row) < 6: continue
-                    ts, ont_class, e_type, val, conf, url = row[0], row[1], row[2], row[3], row[4], row[5]
-                    if url not in imported_urls:
-                        imported_urls[url] = {"ts": ts, "entities": []}
-                    
-                    # OSINT Cross-Reference Logic for IP Addresses during Sync
-                    tasks = []
-                    if ont_class == "IP_ADDRESS":
-                        tasks.extend([f"AbuseIPDB Threat Check: https://www.abuseipdb.com/check/{val}", f"Shodan Port Enumeration: https://www.shodan.io/host/{val}"])
-                        try:
-                            r = requests.get(f"https://ipapi.co/{val}/json/", timeout=5)
-                            if r.status_code == 200:
-                                loc = r.json()
-                                tasks.append(f"Geo-IP Validated: {loc.get('city')}, {loc.get('country_name')} | ISP: {loc.get('org')}")
-                        except Exception as e:
-                            import logging, traceback
-                            logging.error(f'[Recovered Exception in darknetv2.py] {e}')
-                            traceback.print_exc()
-
-                    imported_urls[url]["entities"].append({
-                        "type": e_type,
-                        "ontology_class": ont_class,
-                        "value": val,
-                        "confidence": float(conf) if conf.replace('.', '', 1).isdigit() else 0.5,
-                        "sourceSpan": url,
-                        "timestamp": ts,
-                        "autonomous_tasks": tasks
-                    })
-
-                imported = 0
-                for url, data in imported_urls.items():
-                    existing = db_handler.get_record(url)
-                    if not existing:
-                        record = {
-                            "hash-ID": hashlib.sha256(url.encode()).hexdigest(), "crawled_at": data["ts"],
-                            "web_info": { "url": url, "title": "Imported from Sheets", "description": "Auto-synchronized from Google Sheets", "query_parameters": {}, "content": "Entities imported from Google Sheets synchronization.", "links": [], "subpages": [] },
-                            "uie_entities": data["entities"], "keywords_detected": []
-                        }
-                        db_handler.insert_record(record)
-                        imported += 1
-                        
-                if imported > 0:
-                    log(f"[SHEETS] Successfully synchronized {imported} new documents from Google Sheets {sheet_id} into the Intelligence Matrix.", style="bold green")
-            except Exception as e:
-                log(f"[SHEETS] Sync Error for {sheet_id}: {e}", style="red")
+        pass
 
 # -------------------- DOCUMENT EXTRACTION & STORAGE MANAGER --------------------
 class DocumentStorageManager:

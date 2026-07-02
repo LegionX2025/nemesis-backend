@@ -1,8 +1,6 @@
 fastapi
 uvicorn
 websockets
-motor
-pymongo
 python-dotenv
 playwright
 beautifulsoup4
@@ -23,11 +21,6 @@ python-docx
 python-pptx
 openpyxl
 fake_useragent
-google-api-python-client
-google-auth-httplib2
-google-auth-oauthlib
-gspread
-oauth2client
 PySocks
 flask
 flask-cors

@@ -1912,7 +1912,7 @@
                 btn.innerText = "LOADING...";
                 
                 try {
-                    let response = await fetch('https://nemesis-backend-rwp4.onrender.com/api/nemesis_id/search?query=' + encodeURIComponent(traceId));
+                    let response = await fetch('https://nemesis-api.legionxgaming2021.workers.dev/api/nemesis_id/search?query=' + encodeURIComponent(traceId));
                     let data = await response.json();
                     
                     if(data.error) {
@@ -2017,7 +2017,7 @@
                 });
                 
                 const entityIds = unmappedNodes.map(n => n.id);
-                fetch('https://nemesis-backend-rwp4.onrender.com/api/resolve_entity', {
+                fetch('https://nemesis-api.legionxgaming2021.workers.dev/api/resolve_entity', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ entities: entityIds })
@@ -3037,7 +3037,7 @@ NEMESIS_ROOT/
                     window.autoComputedAmount = 0.0;
                     
                     document.getElementById("status").innerHTML = `<span class="text-blue-600 font-bold">Tracing Active... (Hybrid Parallel Fetching)</span>`;
-                    const response = await fetch('https://nemesis-backend-rwp4.onrender.com/api/start_trace', {
+                    const response = await fetch('https://nemesis-api.legionxgaming2021.workers.dev/api/start_trace', {
                         method: 'POST', headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({ 
                             seeds: seeds, 
@@ -4092,7 +4092,7 @@ NEMESIS_ROOT/
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
                 
-                fetch('https://nemesis-backend-rwp4.onrender.com/api/deep_evidence', {
+                fetch('https://nemesis-api.legionxgaming2021.workers.dev/api/deep_evidence', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -4346,7 +4346,7 @@ NEMESIS_ROOT/
                 document.getElementById('joinTraceModal').classList.add('flex');
                 
                 try {
-                    let resp = await fetch('https://nemesis-backend-rwp4.onrender.com/admin/health');
+                    let resp = await fetch('https://nemesis-api.legionxgaming2021.workers.dev/admin/health');
                     let data = await resp.json();
                     let traces = data.active_traces || [];
                     
@@ -4542,7 +4542,7 @@ NEMESIS_ROOT/
                 
                 try {
                     // Make sure URL points to the backend
-                    let backendUrl = "https://nemesis-backend-rwp4.onrender.com";
+                    let backendUrl = "https://nemesis-api.legionxgaming2021.workers.dev";
                     if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
                         backendUrl = window.location.protocol + "//" + window.location.host;
                     }

@@ -15,8 +15,6 @@ from google import genai
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from collections import defaultdict
-from motor.motor_asyncio import AsyncIOMotorClient
-from pymongo.errors import DuplicateKeyError
 import pandas as pd
 import numpy as np
 from sklearn.cluster import DBSCAN
@@ -165,7 +163,7 @@ SIGNATURE_REGISTRY = {
     "1cff79cd": "Execute (UniswapV4/UniversalRouter)", "5f575529": "Swap (Curve)", "3593564c": "Execute (0x Protocol)", "b2bdfcf7": "FlashLoan (Aave)"
 }
 
-D1_WORKER_URL = os.environ.get("D1_WORKER_URL", "https://nemesis-global-worker.lionsgate-nemesis.workers.dev")
+D1_WORKER_URL = os.environ.get("D1_WORKER_URL", "https://nemesis-api.legionxgaming2021.workers.dev")
 D1_WORKER_AUTH_TOKEN = os.environ.get("D1_WORKER_AUTH_TOKEN", "lgn-stealth-api-key-2026")
 
 async def init_mongodb():
@@ -418,29 +416,31 @@ async def classify_tx_intent(tx: dict) -> dict:
     return intent
 
 async def find_bridge_symmetry(tx_hash: str):
-    if mongo_db is None: return None
-    try:
-        return await mongo_db.bridge_links.find_one({"$or": [{"mint_tx": tx_hash}, {"lock_tx": tx_hash}]})
-    except:
-        return None
+    res = await _d1_post("/db-api/query", {
+        "query": "SELECT * FROM bridge_links WHERE lock_tx = ? OR mint_tx = ?",
+        "params": [tx_hash, tx_hash]
+    })
+    if res and res.get("success") and res.get("result"):
+        return res["result"][0]
+    return None
 
 async def find_identity_pivots(wallet_address: str):
-    if mongo_db is None: return []
-    try:
-        cursor = mongo_db.identity_artifacts.find({"linked_entities": wallet_address})
-        return await cursor.to_list(length=100)
-    except:
-        return []
+    res = await _d1_post("/db-api/query", {
+        "query": "SELECT * FROM entities WHERE labels LIKE ?",
+        "params": [f"%{wallet_address}%"]
+    })
+    if res and res.get("success") and res.get("result"):
+        return res["result"]
+    return []
 
 async def find_cex_withdrawals(exchange_address: str):
-    if mongo_db is None: return []
-    try:
-        # Simulate CEX internal ledger withdrawal routing
-        cursor = mongo_db.transactions.find({"from": exchange_address}).sort("block_time", -1).limit(5)
-        txs = await cursor.to_list(length=5)
-        return [tx.get("to") for tx in txs if tx.get("to")]
-    except:
-        return []
+    res = await _d1_post("/db-api/query", {
+        "query": "SELECT to_address FROM transactions WHERE from_address = ? ORDER BY block_time DESC LIMIT 5",
+        "params": [exchange_address]
+    })
+    if res and res.get("success") and res.get("result"):
+        return [row.get("to_address") for row in res["result"] if row.get("to_address")]
+    return []
 
 class ClusteringEngine:
     def __init__(self): 
@@ -1002,12 +1002,11 @@ class TraceEngine:
                 hash = tx_data.get('hash', '')
                 
                 dest_tag = tx_data.get('DestinationTag')
-                if dest_tag and mongo_db is not None:
-                    asyncio.create_task(mongo_db.identity_artifacts.update_one(
-                        {"value": str(dest_tag), "type": "DestinationTag"},
-                        {"$addToSet": {"linked_entities": {"$each": [f_addr, t_addr]}}, "$set": {"chain": chain}},
-                        upsert=True
-                    ))
+                if dest_tag:
+                    asyncio.create_task(_d1_post("/db-api/query", {
+                        "query": "INSERT INTO entities (id, address, chain, type, labels) VALUES (?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET labels = entities.labels || ',' || excluded.labels",
+                        "params": [f"{dest_tag}_{chain}", str(dest_tag), chain, "DestinationTag", f"{f_addr},{t_addr}"]
+                    }))
                     
                 if amt > 0.001:
                     if f_addr == addr: await self.process_hop(session, addr, t_addr, amt, hash, timestamp, depth, chain, origin_seed, {'action':'RIPPLE_SEND'}, asset)
@@ -1028,12 +1027,11 @@ class TraceEngine:
                 hash = tx.get('transaction_hash', '')
                 
                 memo = tx.get('memo')
-                if memo and mongo_db is not None:
-                    asyncio.create_task(mongo_db.identity_artifacts.update_one(
-                        {"value": str(memo), "type": "Memo"},
-                        {"$addToSet": {"linked_entities": {"$each": [f_addr, t_addr]}}, "$set": {"chain": chain}},
-                        upsert=True
-                    ))
+                if memo:
+                    asyncio.create_task(_d1_post("/db-api/query", {
+                        "query": "INSERT INTO entities (id, address, chain, type, labels) VALUES (?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET labels = entities.labels || ',' || excluded.labels",
+                        "params": [f"{memo}_{chain}", str(memo), chain, "Memo", f"{f_addr},{t_addr}"]
+                    }))
                     
                 if amt > 0.001:
                     if f_addr == addr: await self.process_hop(session, addr, t_addr, amt, hash, timestamp, depth, chain, origin_seed, {'action':'STELLAR_SEND'}, asset)
@@ -1173,8 +1171,7 @@ class TraceEngine:
                     self.queue.put_nowait((tgt_address, depth + 1, amt, "BRIDGE_PIVOT", tgt_chain, origin_seed))
                 else:
                     # Heuristic Fallback: Inject to other chains to search for mints
-                    if mongo_db is not None:
-                        asyncio.create_task(mongo_db.bridge_links.insert_one({"lock_tx": txid, "asset": ticker, "chain": chain}))
+                    # Heuristic Fallback: Inject to other chains to search for mints
                     for any_chain in ["ETHEREUM", "BSC", "POLYGON", "ARBITRUM", "OPTIMISM", "BASE", "SOLANA", "TRON", "BITCOIN"]:
                         if any_chain != chain:
                             self.queue.put_nowait((to, depth + 1, amt, "BRIDGE_PIVOT_SEARCH", any_chain, origin_seed))
@@ -1338,68 +1335,7 @@ class TraceEngine:
         async with self.state_lock:
             self.ledger.append(node)
             
-        if mongo_db is not None:
-            async def _bg_save():
-                try:
-                    dt_stamp = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
-                    edge_type = intent_data.get("edge_type", "TRANSFER")
-                    
-                    # 1. Insert Entities
-                    try:
-                        await mongo_db.entities.insert_one(
-                            {"address": addr, "chain": chain, "id": f"{addr}_{chain}", "type": "wallet", "labels": [sender_entity_lbl], "last_seen": dt_stamp}
-                        )
-                    except Exception: pass
-                    
-                    try:
-                        await mongo_db.entities.insert_one(
-                            {"address": to, "chain": chain, "id": f"{to}_{chain}", "type": "wallet", "labels": [receiver_entity_lbl], "last_seen": dt_stamp}
-                        )
-                    except Exception: pass
-                    
-                    # 2. Insert Transaction envelope
-                    try:
-                        await mongo_db.transactions.insert_one(
-                            {"_id": txid, "chain": chain, "block_time": dt_stamp, "from": addr, "to": to, 
-                             "value": str(amt), "parsed": {"method": intent_data.get("action"), "asset": ticker, "amount": str(amt)}}
-                        )
-                    except Exception: pass
-                    
-                    # 3. Insert Event (if applicable)
-                    if intent_data.get("action") and intent_data.get("action") != "NATIVE_TRANSFER":
-                        try:
-                            await mongo_db.events.insert_one({
-                                "tx_hash": txid, "chain": chain, "event_type": edge_type,
-                                "signature": intent_data.get("action"),
-                                "source_entity": addr, "target_entity": to,
-                                "asset": ticker, "amount": str(amt)
-                            })
-                        except Exception: pass
-                    
-                    # 4. Insert State Edge
-                    try:
-                        await mongo_db.state_edges.insert_one({
-                            "trace_id": self.trace_id,
-                            "from": addr, "to": to, "edge_type": edge_type,
-                            "tx_hash": txid, "chain": chain, "asset": ticker, "amount": str(amt),
-                            "confidence": confidence_level, "timestamp": dt_stamp
-                        })
-                    except Exception: pass
-                    
-                    # 5. Backward compatibility for old UI
-                    try:
-                        await mongo_db.edges.insert_one({
-                            "trace_id": self.trace_id,
-                            "from": addr, "to": to, "edge_type": edge_type,
-                            "tx_hash": txid, "chain": chain, "asset": ticker, "amount": str(amt),
-                            "confidence": confidence_level, "timestamp": dt_stamp, "is_terminal": is_terminal
-                        })
-                    except Exception: pass
-                except Exception as e:
-                    if "not authorized" not in str(e).lower() and "update" not in str(e).lower() and "e11000" not in str(e).lower() and "duplicate" not in str(e).lower():
-                        logger.error(f"Mongo state schema insertion failed: {e}")
-            
-            asyncio.create_task(_bg_save())
+        # Mongo removed
 
         for ws in list(self.clients):
             try: await ws.send_json(node)

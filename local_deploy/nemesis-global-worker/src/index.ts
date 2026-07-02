@@ -58,6 +58,34 @@ app.get('/api/pg-test', async (c) => {
   }
 })
 
+// D1 Database Proxy Endpoint
+app.post('/db-api/query', async (c) => {
+  try {
+    const { query, params } = await c.req.json();
+    if (!query) return c.json({ success: false, error: "Query is required" }, 400);
+    
+    let stmt = c.env.DB.prepare(query);
+    if (params && Array.isArray(params)) {
+      stmt = stmt.bind(...params);
+    }
+    
+    // Determine if it's a read or write operation
+    const isWrite = query.trim().toUpperCase().startsWith('INSERT') || 
+                    query.trim().toUpperCase().startsWith('UPDATE') || 
+                    query.trim().toUpperCase().startsWith('DELETE');
+                    
+    if (isWrite) {
+      const result = await stmt.run();
+      return c.json({ success: true, result });
+    } else {
+      const result = await stmt.all();
+      return c.json({ success: true, result: result.results });
+    }
+  } catch (e) {
+    return c.json({ success: false, error: e instanceof Error ? e.message : String(e) }, 500);
+  }
+})
+
 app.all('/api/*', (c) => proxyToBackend(c, c.req.path))
 app.all('/admin/*', (c) => proxyToBackend(c, c.req.path))
 

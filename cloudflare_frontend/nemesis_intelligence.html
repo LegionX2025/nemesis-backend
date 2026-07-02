@@ -354,7 +354,7 @@
 
         async function init() {
             try {
-                const res = await fetch('https://nemesis-backend-rwp4.onrender.com/api/ontology');
+                const res = await fetch('https://nemesis-api.legionxgaming2021.workers.dev/api/ontology');
                 const data = await res.json();
                 ontologyData = data.scenarios || [];
                 universalMatrix = data.matrix || {};
