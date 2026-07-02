@@ -1,7 +1,7 @@
 name = "nemesis-api"
 main = "src/index.ts"
 compatibility_date = "2024-02-08"
-node_compat = true
+compatibility_flags = ["nodejs_compat"]
 
 
 
