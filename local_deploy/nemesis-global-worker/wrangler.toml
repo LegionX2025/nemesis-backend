@@ -106,7 +106,7 @@ localConnectionString = "postgresql://admin:!Nemesis2026@ep-morning-glitter-adpz
 # ENVIRONMENT VARIABLES
 # ============================================================================
 [vars]
-PYTHON_BACKEND_URL = "https://nemesis-tunnel.trycloudflare.com" # TODO: Update this in Cloudflare dashboard
+PYTHON_BACKEND_URL = "https://nemesis-backend-rwp4.onrender.com"
 NODE_ENV = "production"
 APP_NAME = "nemesis-platform"
 APP_MODE = "production"

@@ -9,10 +9,10 @@
         // DYNAMIC BACKEND ROUTING FOR CLOUDFLARE/LOCAL
         // ==========================================
         const IS_LOCAL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-        window.BACKEND_URL = IS_LOCAL ? "" : "http://127.0.0.1:3001";
+        window.BACKEND_URL = IS_LOCAL ? "" : "https://nemesis-api.legionxgaming2021.workers.dev";
         
         let protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
-        window.WS_URL = IS_LOCAL ? (protocol + window.location.host) : "ws://127.0.0.1:3001";
+        window.WS_URL = IS_LOCAL ? (protocol + window.location.host) : "wss://nemesis-backend-rwp4.onrender.com";
         // ==========================================
 </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -436,18 +436,21 @@
         }
 
         function initLogsWS() {
-            // Mocking the WS connection for the unified dashboard demo since backend is Edge now
-            setInterval(() => {
-                const logs = [
-                    {src: 'BACKEND', msg: 'Tracing engine cycle complete. Delta: 4ms'},
-                    {src: 'EDGE', msg: 'KV cache read hit for 0x767...'},
-                    {src: 'FRONTEND', msg: 'User interaction: Zoom graph'},
-                    {src: 'BACKEND', msg: 'Connecting to remote RPC node...', type: 'WARNING'},
-                    {src: 'EDGE', msg: 'Wrangler deployment check ok.'}
-                ];
-                const log = logs[Math.floor(Math.random() * logs.length)];
-                appendLog(log.msg, log.src, log.type);
-            }, 3000);
+            let adminWsUrl = window.WS_URL + "/ws/admin";
+            const ws = new WebSocket(adminWsUrl);
+            ws.onopen = () => {
+                appendLog("Connected to Admin WebSocket Stream", "EDGE", "INFO");
+            };
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    appendLog(data.msg, data.src, data.type);
+                } catch(e) {}
+            };
+            ws.onclose = () => {
+                appendLog("Admin WebSocket Stream Disconnected. Reconnecting in 5s...", "EDGE", "WARNING");
+                setTimeout(initLogsWS, 5000);
+            };
         }
 
         // Module: Benchmark Chart

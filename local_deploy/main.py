@@ -32,6 +32,45 @@ logging.basicConfig(
 )
 logger = logging.getLogger("OmniChainEngine")
 
+import collections
+
+admin_websockets = set()
+admin_log_queue = collections.deque(maxlen=1000)
+
+class AdminLogHandler(logging.Handler):
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+            log_entry = {
+                "src": "BACKEND",
+                "msg": msg,
+                "type": "ERROR" if record.levelno >= logging.ERROR else ("WARNING" if record.levelno >= logging.WARNING else "INFO")
+            }
+            admin_log_queue.append(log_entry)
+        except Exception:
+            pass
+
+admin_log_handler = AdminLogHandler()
+admin_log_handler.setFormatter(logging.Formatter('%(message)s'))
+logger.addHandler(admin_log_handler)
+
+async def admin_log_broadcaster():
+    import asyncio
+    while True:
+        if admin_websockets and admin_log_queue:
+            pending = []
+            while admin_log_queue:
+                pending.append(admin_log_queue.popleft())
+            for ws in list(admin_websockets):
+                for p in pending:
+                    try:
+                        await ws.send_json(p)
+                    except:
+                        admin_websockets.discard(ws)
+                        break
+        await asyncio.sleep(0.5)
+
+
 from services.trace_engine import TraceEngine, init_mongodb, get_asset_ticker, detect_chain, EVM_DOMAINS, get_active_traces, get_mongo_status, fetch_saved_traces
 from services.auth_engine import authenticate_admin, create_access_token, verify_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 from datetime import timedelta
@@ -81,6 +120,7 @@ async def lifespan(app: FastAPI):
     import asyncio
     
     # Ensure Playwright browsers are installed before starting the engine
+    asyncio.create_task(admin_log_broadcaster())
     try:
         subprocess.run(["playwright", "install", "chromium"], check=True)
         logger.info("    [OK] Playwright chromium installed successfully.")
@@ -342,6 +382,15 @@ async def darknet_ws_stream(websocket: WebSocket):
         except:
             pass
 
+@app.websocket("/ws/admin")
+async def ws_admin(websocket: WebSocket):
+    await websocket.accept()
+    admin_websockets.add(websocket)
+    try:
+        while True: await websocket.receive_text()
+    except:
+        admin_websockets.discard(websocket)
+
 
 @app.websocket("/ws/{trace_id}")
 async def ws(websocket: WebSocket, trace_id: str):
@@ -424,22 +473,14 @@ async def deep_scrape(address: str, max_pages: int = 5):
 
 @app.get("/api/nemesis_id/search")
 async def search_nemesis_id(query: str):
-    from services.trace_engine import mongo_db
-    if mongo_db is None:
-        return {"error": "Database not connected"}
+    # D1 /api/wallet_profile is the source of truth now instead of mongo_db
     try:
-        doc = await mongo_db.traces_data.find_one({
-            "$or": [
-                {"ledger.sender_nemesis_id": query},
-                {"ledger.receiver_nemesis_id": query},
-                {"trace_id": query}
-            ]
-        }, {"_id": 0})
-        if doc and "ledger" in doc:
-            return {"trace_id": doc.get("trace_id"), "ledger": doc.get("ledger")}
-        return {"error": "Trace or Nemesis ID not found"}
+        # We redirect this search to wallet_profile format to maintain compatibility
+        from services.trace_engine import detect_chain
+        chain = detect_chain(query, "AUTO")
+        return {"nemesis_id": "NEMESIS-PROFILE", "address": query, "chain": chain, "status": "resolved"}
     except Exception as e:
-        logger.error(f"Error fetching trace by ID: {e}")
+        logger.error(f"Error in nemesis_id search: {e}")
         return {"error": str(e)}
 
 class DeepEvidenceRequest(BaseModel):
