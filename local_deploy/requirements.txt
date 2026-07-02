@@ -29,3 +29,6 @@ google-auth-oauthlib
 gspread
 oauth2client
 PySocks
+flask
+flask-cors
+web3

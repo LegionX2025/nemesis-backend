@@ -13,17 +13,22 @@
 
             // Define initiateLandingTrace early to prevent ReferenceError if clicked before heavy scripts load
             window.initiateLandingTrace = function() {
-                let seed = document.getElementById("landing-seed-input").value;
-                let amt = document.getElementById("landing-target-amount").value;
-                let startDate = document.getElementById("landing-start-date").value;
-                let endDate = document.getElementById("landing-end-date").value;
+                let seedEl = document.getElementById("landing-seed-input");
+                let amtEl = document.getElementById("landing-target-amount");
+                let startDateEl = document.getElementById("landing-start-date");
+                let endDateEl = document.getElementById("landing-end-date");
+                
+                let seed = seedEl ? seedEl.value : "";
+                let amt = amtEl ? amtEl.value : "";
+                let startDate = startDateEl ? startDateEl.value : "";
+                let endDate = endDateEl ? endDateEl.value : "";
 
                 if (!seed.trim()) return alert("Please enter at least one seed wallet.");
                 
-                document.getElementById("seed-input").value = seed;
-                document.getElementById("target-amount").value = amt;
-                document.getElementById("start-date").value = startDate;
-                document.getElementById("end-date").value = endDate;
+                if (document.getElementById("seed-input")) document.getElementById("seed-input").value = seed;
+                if (document.getElementById("target-amount")) document.getElementById("target-amount").value = amt;
+                if (document.getElementById("start-date")) document.getElementById("start-date").value = startDate;
+                if (document.getElementById("end-date")) document.getElementById("end-date").value = endDate;
                 
                 let landing = document.getElementById("landing-page");
                 if(landing) {
@@ -1979,7 +1984,7 @@
                 btn.innerText = "LOADING...";
                 
                 try {
-                    let response = await fetch('https://nemesis-api.legionxgaming2021.workers.dev/api/nemesis_id/search?query=' + encodeURIComponent(traceId));
+                    let response = await fetch('https://nemesis-backend-rwp4.onrender.com/api/nemesis_id/search?query=' + encodeURIComponent(traceId));
                     let data = await response.json();
                     
                     if(data.error) {
@@ -2084,7 +2089,7 @@
                 });
                 
                 const entityIds = unmappedNodes.map(n => n.id);
-                fetch('https://nemesis-api.legionxgaming2021.workers.dev/api/resolve_entity', {
+                fetch('https://nemesis-backend-rwp4.onrender.com/api/resolve_entity', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ entities: entityIds })
@@ -3092,7 +3097,7 @@ NEMESIS_ROOT/
                     window.autoComputedAmount = 0.0;
                     
                     document.getElementById("status").innerHTML = `<span class="text-blue-600 font-bold">Tracing Active... (Hybrid Parallel Fetching)</span>`;
-                    const response = await fetch('https://nemesis-api.legionxgaming2021.workers.dev/api/start_trace', {
+                    const response = await fetch('https://nemesis-backend-rwp4.onrender.com/api/start_trace', {
                         method: 'POST', headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({ 
                             seeds: seeds, 
@@ -3715,7 +3720,7 @@ NEMESIS_ROOT/
             function connectWebSocket(traceId) {
                 if (!traceId) return;
                 let protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
-                ws = new WebSocket("wss://nemesis-api.legionxgaming2021.workers.dev/ws/" + traceId);
+                ws = new WebSocket("wss://nemesis-backend-rwp4.onrender.com/ws/" + traceId);
                 
                 ws.onopen = () => {
                     wsReconnectDelay = 1000;
@@ -4147,7 +4152,7 @@ NEMESIS_ROOT/
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
                 
-                fetch('https://nemesis-api.legionxgaming2021.workers.dev/api/deep_evidence', {
+                fetch('https://nemesis-backend-rwp4.onrender.com/api/deep_evidence', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -4401,7 +4406,7 @@ NEMESIS_ROOT/
                 document.getElementById('joinTraceModal').classList.add('flex');
                 
                 try {
-                    let resp = await fetch('https://nemesis-api.legionxgaming2021.workers.dev/admin/health');
+                    let resp = await fetch('https://nemesis-backend-rwp4.onrender.com/admin/health');
                     let data = await resp.json();
                     let traces = data.active_traces || [];
                     

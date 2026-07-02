@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { Client } from 'pg'
 import { TraceCoordinator, RealtimeManager, AdminConsole } from './durable_objects'
 
 type Bindings = {
@@ -16,6 +17,7 @@ type Bindings = {
   TRACE_COORDINATOR: DurableObjectNamespace
   REALTIME_MANAGER: DurableObjectNamespace
   ADMIN_CONSOLE: DurableObjectNamespace
+  HYPERDRIVE: Hyperdrive
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -39,6 +41,22 @@ const proxyToBackend = async (c: any, path: string) => {
   
   return fetch(proxyReq);
 }
+
+// Postgres Test Route using Hyperdrive
+app.get('/api/pg-test', async (c) => {
+  const client = new Client({ connectionString: c.env.HYPERDRIVE.connectionString });
+  await client.connect();
+
+  try {
+    const result = await client.query("SELECT * FROM pg_tables");
+    return c.json({ result: result.rows });
+  } catch (e) {
+    return c.json({ error: e instanceof Error ? e.message : String(e) }, 500);
+  } finally {
+    // Prevent connection leaks
+    await client.end();
+  }
+})
 
 app.all('/api/*', (c) => proxyToBackend(c, c.req.path))
 app.all('/admin/*', (c) => proxyToBackend(c, c.req.path))

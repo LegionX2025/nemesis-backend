@@ -9,13 +9,15 @@
     "tail": "wrangler tail"
   },
   "dependencies": {
+    "@types/pg": "^8.20.0",
     "hono": "^4.6.0",
     "jose": "^5.9.0",
+    "pg": "^8.22.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241205.0",
     "typescript": "^5.6.3",
-    "wrangler": "^3.90.0"
+    "wrangler": "^4.106.0"
   }
 }

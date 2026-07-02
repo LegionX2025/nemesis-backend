@@ -13,17 +13,22 @@
 
             // Define initiateLandingTrace early to prevent ReferenceError if clicked before heavy scripts load
             window.initiateLandingTrace = function() {
-                let seed = document.getElementById("landing-seed-input").value;
-                let amt = document.getElementById("landing-target-amount").value;
-                let startDate = document.getElementById("landing-start-date").value;
-                let endDate = document.getElementById("landing-end-date").value;
+                let seedEl = document.getElementById("landing-seed-input");
+                let amtEl = document.getElementById("landing-target-amount");
+                let startDateEl = document.getElementById("landing-start-date");
+                let endDateEl = document.getElementById("landing-end-date");
+                
+                let seed = seedEl ? seedEl.value : "";
+                let amt = amtEl ? amtEl.value : "";
+                let startDate = startDateEl ? startDateEl.value : "";
+                let endDate = endDateEl ? endDateEl.value : "";
 
                 if (!seed.trim()) return alert("Please enter at least one seed wallet.");
                 
-                document.getElementById("seed-input").value = seed;
-                document.getElementById("target-amount").value = amt;
-                document.getElementById("start-date").value = startDate;
-                document.getElementById("end-date").value = endDate;
+                if (document.getElementById("seed-input")) document.getElementById("seed-input").value = seed;
+                if (document.getElementById("target-amount")) document.getElementById("target-amount").value = amt;
+                if (document.getElementById("start-date")) document.getElementById("start-date").value = startDate;
+                if (document.getElementById("end-date")) document.getElementById("end-date").value = endDate;
                 
                 let landing = document.getElementById("landing-page");
                 if(landing) {
@@ -167,6 +172,13 @@
                         </div>
                         <button class="landing-btn-primary" onclick="initiateLandingTrace()">GENERATE NEMESIS ID &rarr;</button>
                         
+                        <!-- Hidden inputs to satisfy initiateLandingTrace JS requirements -->
+                        <div class="hidden">
+                            <input type="number" id="landing-target-amount" value="0">
+                            <input type="date" id="landing-start-date">
+                            <input type="date" id="landing-end-date">
+                        </div>
+                        
                         <div class="h-px bg-slate-200 w-full my-2"></div>
                         
                         <div>
@@ -250,10 +262,10 @@
                         </div>
                     </label>
                     
-                    <a href="/audit" target="_blank" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-md text-[11px] font-bold shadow transition flex items-center gap-2 no-underline">
+                    <a href="/audit.html" target="_blank" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-md text-[11px] font-bold shadow transition flex items-center gap-2 no-underline">
                         <i class="fa-solid fa-shield-halved"></i> Master Audit
                     </a>
-                    <a href="/intelligence" target="_blank" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-md text-[11px] font-bold shadow transition flex items-center gap-2 no-underline">
+                    <a href="/nemesis_intelligence.html" target="_blank" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-md text-[11px] font-bold shadow transition flex items-center gap-2 no-underline">
                         <i class="fa-solid fa-brain"></i> Intelligence Base
                     </a>
                     <button onclick="toggleLogModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-md text-[11px] font-bold shadow transition flex items-center gap-2">

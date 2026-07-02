@@ -60,7 +60,7 @@ def main():
     print("    -> Triggering Render Deploy Hook...")
     import urllib.request
     try:
-        urllib.request.urlopen("https://api.render.com/deploy/srv-d92fghho3t8c73bg5740?key=YskS46ltPHo")
+        urllib.request.urlopen("https://api.render.com/deploy/srv-d932a7uq1p3s73eaauf0?key=ksDcebRkWzg")
         print("    -> Render backend is building!")
     except Exception as e:
         print(f"    -> [WARNING] Failed to trigger Render hook: {e}")

@@ -13,17 +13,22 @@
 
             // Define initiateLandingTrace early to prevent ReferenceError if clicked before heavy scripts load
             window.initiateLandingTrace = function() {
-                let seed = document.getElementById("landing-seed-input").value;
-                let amt = document.getElementById("landing-target-amount").value;
-                let startDate = document.getElementById("landing-start-date").value;
-                let endDate = document.getElementById("landing-end-date").value;
+                let seedEl = document.getElementById("landing-seed-input");
+                let amtEl = document.getElementById("landing-target-amount");
+                let startDateEl = document.getElementById("landing-start-date");
+                let endDateEl = document.getElementById("landing-end-date");
+                
+                let seed = seedEl ? seedEl.value : "";
+                let amt = amtEl ? amtEl.value : "";
+                let startDate = startDateEl ? startDateEl.value : "";
+                let endDate = endDateEl ? endDateEl.value : "";
 
                 if (!seed.trim()) return alert("Please enter at least one seed wallet.");
                 
-                document.getElementById("seed-input").value = seed;
-                document.getElementById("target-amount").value = amt;
-                document.getElementById("start-date").value = startDate;
-                document.getElementById("end-date").value = endDate;
+                if (document.getElementById("seed-input")) document.getElementById("seed-input").value = seed;
+                if (document.getElementById("target-amount")) document.getElementById("target-amount").value = amt;
+                if (document.getElementById("start-date")) document.getElementById("start-date").value = startDate;
+                if (document.getElementById("end-date")) document.getElementById("end-date").value = endDate;
                 
                 let landing = document.getElementById("landing-page");
                 if(landing) {
