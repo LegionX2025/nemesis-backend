@@ -122,15 +122,19 @@ from googleapiclient.discovery import build
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
+import os
 try:
     # Set up Google Sheets connection using the downloaded JSON
     GS_SCOPES = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    creds = ServiceAccountCredentials.from_json_keyfile_name("client_secret_191155966605-ctiald95kn7tl023c6lmhuklpmuatat8.apps.googleusercontent.com.json", GS_SCOPES)
-    gs_client = gspread.authorize(creds)
+    secret_path = "client_secret_191155966605-ctiald95kn7tl023c6lmhuklpmuatat8.apps.googleusercontent.com.json"
+    if os.path.exists(secret_path):
+        creds = ServiceAccountCredentials.from_json_keyfile_name(secret_path, GS_SCOPES)
+        gs_client = gspread.authorize(creds)
+    else:
+        gs_client = None
     # The user hasn't provided a spreadsheet ID/Name yet, we'll wait for it.
     gs_sheet = None 
 except Exception as e:
-    print(f"⚠️ [WARNING] Failed to initialize Google Sheets Auto-Upload: {e}")
     gs_client = None
     gs_sheet = None
 

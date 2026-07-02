@@ -87,9 +87,8 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"    [FAIL] Failed to install Playwright browsers: {e}")
     
-    # Run MongoDB and Scraper initialization in the background so they don't block the web server from starting
+    # Run Scraper initialization in the background so they don't block the web server from starting
     async def init_background():
-        await init_mongodb()
         from services.scraper_engine import scraper_instance
         await scraper_instance.start()
         
@@ -147,6 +146,7 @@ class TraceRequest(BaseModel):
     chain_override: str = "AUTO"
     max_depth: int = 12
     max_hops: int = 1000
+    tracing_method: str = "tracer"
 
 @app.get("/")
 async def dashboard(request: Request):
@@ -250,8 +250,17 @@ async def get_traces():
 async def api_start_trace(req: TraceRequest, request: Request):
     try:
         raw_seeds = req.seeds.replace('"', '').replace("'", "")
-        tokens = re.split(r'[\s,]+', raw_seeds)
         seeds_list = []
+        pathfinding_targets = []
+        
+        # Support "Wallet A - Wallet B" syntax for Asset Tracer
+        if " - " in raw_seeds:
+            parts = [p.strip() for p in raw_seeds.split(" - ")]
+            raw_seeds = parts[0]
+            if len(parts) > 1:
+                pathfinding_targets.append(parts[1].lower())
+                
+        tokens = re.split(r'[\s,]+', raw_seeds)
         for t in tokens:
             t = t.strip()
             if not t: continue
@@ -269,7 +278,7 @@ async def api_start_trace(req: TraceRequest, request: Request):
         trace_id = str(uuid.uuid4())[:8]
         
         engine = TraceEngine(trace_id)
-        engine.setup(seeds_list, calc_amt, req.chain_override, req.start_date, req.end_date, req.target_currency, req.max_depth, req.max_hops)
+        engine.setup(seeds_list, calc_amt, req.chain_override, req.start_date, req.end_date, req.target_currency, req.max_depth, req.max_hops, req.tracing_method, pathfinding_targets)
         active_sessions[trace_id] = engine
         
         client_ip = request.client.host if request.client else "unknown"
@@ -348,7 +357,8 @@ async def ws(websocket: WebSocket, trace_id: str):
     await websocket.send_json({
         "type": "INIT",
         "seeds": engine.seeds,
-        "seed_chains": engine.seed_chains
+        "seed_chains": engine.seed_chains,
+        "tracing_method": getattr(engine, "tracing_method", "tracer")
     })
     
     # Hydrate new clients: send existing nodes

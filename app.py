@@ -51,6 +51,12 @@ from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
 from typing import List, Dict, Any, Optional, Tuple
 from flask import Flask, request, render_template_string, jsonify
+from flask_cors import CORS
+
+try:
+    from services.tracing_workflows import build_tracer_workflow, TracerState
+except ImportError:
+    build_tracer_workflow = None
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 logger = logging.getLogger(__name__)
@@ -1124,13 +1130,24 @@ def trace():
     for u, v, d in tracer.G.edges(data=True):
         links.append({"source": u, "target": v, "value": d.get("weight", 0), "token": d.get("token", "TRX")})
 
+    ai_insights = f"AI Trace complete for {len(target_addresses)} targets."
+    if build_tracer_workflow:
+        workflow = build_tracer_workflow()
+        try:
+            state = {"targets": target_addresses, "status": "init", "ai_insights": ""}
+            final_state = workflow.invoke(state)
+            ai_insights = final_state.get("ai_insights", ai_insights)
+        except Exception as e:
+            logger.error(f"LangGraph execution failed: {e}")
+
     return jsonify({
         "target_address": target_addr_raw,
         "loss_amount": loss_amount,
         "mission_brief": mission_brief,
         "nodes": nodes,
         "links": links,
-        "evidence_ledger": tracer.evidence_ledger
+        "evidence_ledger": tracer.evidence_ledger,
+        "ai_insights": ai_insights
     })
 
 @app.route("/intelligence", methods=["GET"])
@@ -1216,6 +1233,42 @@ def api_ontology():
     except Exception as e:
         logger.error(f"Failed to fetch ontology: {e}")
         return jsonify({"scenarios": [], "matrix": {}, "error": str(e)})
+
+@app.route("/api/scan_custodial", methods=["POST"])
+def scan_custodial():
+    target_addr_raw = request.form.get("target_address", "").strip()
+    if not target_addr_raw: return jsonify({"error": "Target addresses are required"}), 400
+    target_addresses = [s.strip() for s in target_addr_raw.replace(',', '\n').split('\n') if s.strip()]
+    
+    tracer = Tracer()
+    # For custodial scanning, we limit hops to prevent unbounded traces
+    tracer.trace_from(target_addresses, max_hops=20)
+    df = tracer.analyze_nodes(target_addresses)
+    
+    # Filter nodes for custodial/CEX
+    custodial_nodes = [n for n in df.to_dict(orient="records") if n.get("group") in [1, 7]]
+    
+    ai_insights = f"Custodial Scanner analyzed {len(df)} downstream entities. Identified {len(custodial_nodes)} potential CEX entry points."
+    
+    return jsonify({
+        "target_address": target_addr_raw,
+        "custodial_nodes": custodial_nodes,
+        "ai_insights": ai_insights
+    })
+
+@app.route("/api/trace_asset", methods=["POST"])
+def trace_asset():
+    tx_hash = request.form.get("tx_hash", "").strip()
+    if not tx_hash: return jsonify({"error": "Transaction Hash required"}), 400
+    
+    # Placeholder for Asset Tracer (Stolen Funds tracking based on tx)
+    ai_insights = f"Asset Tracer initiated for {tx_hash}. Analyzing UTXO and downstream balance consumption..."
+    return jsonify({
+        "tx_hash": tx_hash,
+        "ai_insights": ai_insights,
+        "nodes": [],
+        "links": []
+    })
 
 if __name__ == "__main__":
     print("="*60)

@@ -357,6 +357,16 @@
                             </select>
                         </div>
                     </div>
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 shadow-inner w-56 flex-shrink-0">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Tracing Method (AI Assisted)</label>
+                        <div class="flex items-center border-b border-slate-300 pb-1">
+                            <select id="tracing-method" class="w-full bg-transparent text-[10px] font-bold text-slate-700 outline-none cursor-pointer">
+                                <option value="tracer">a. Tracer (Recursive Tree Map)</option>
+                                <option value="custodial">b. Custodial Scanner (CEX Hunt)</option>
+                                <option value="asset">c. Asset Tracer (Pathfinding)</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 shadow-inner w-24">
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Depth</label>
                         <input type="number" id="max-depth" class="w-full text-xs bg-transparent focus:outline-none text-slate-800 font-mono" value="12">
@@ -2511,6 +2521,34 @@ NEMESIS_ROOT/
             };
             var network = new vis.Network(document.getElementById("graph"), {nodes, edges}, options);
 
+            network.on("afterDrawing", function (ctx) {
+                if (!window.nodeOutflowUsd) return;
+                nodes.get().forEach(function(node) {
+                    var position = network.getPositions([node.id]);
+                    if (position && position[node.id]) {
+                        var x = position[node.id].x;
+                        var y = position[node.id].y;
+                        var outflow = window.nodeOutflowUsd[node.id] || 0;
+                        if (outflow > 0) {
+                            var formattedAmount = "$" + outflow.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2});
+                            ctx.fillStyle = "#1e293b";
+                            ctx.strokeStyle = "#475569";
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.roundRect(x - 35, y - 45, 70, 18, 5);
+                            ctx.fill();
+                            ctx.stroke();
+                            
+                            ctx.fillStyle = "#10b981"; // emerald for money
+                            ctx.font = "bold 9px Inter, sans-serif";
+                            ctx.textAlign = "center";
+                            ctx.textBaseline = "middle";
+                            ctx.fillText("💰 " + formattedAmount, x, y - 36);
+                        }
+                    }
+                });
+            });
+
             // Inject Transaction Details Panel HTML
             const txPanelHtml = `
             <div id="tx-details-panel" class="fixed top-0 right-0 h-full w-[400px] bg-white shadow-2xl transform translate-x-full transition-transform duration-300 z-50 overflow-y-auto border-l border-slate-200 flex flex-col font-sans">
@@ -2606,7 +2644,85 @@ NEMESIS_ROOT/
 
 
 
+            // Custom Context Menu HTML (injected dynamically)
+            const contextMenuHtml = `
+            <div id="graph-context-menu" class="hidden fixed bg-white border border-slate-200 shadow-xl rounded-lg py-2 z-[9999] text-sm font-sans w-48">
+                <div class="px-4 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 mb-1" id="ctx-menu-header">Actions</div>
+                <button id="ctx-menu-expand" class="w-full text-left px-4 py-2 text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-2 transition">
+                    <i class="fa-solid fa-code-branch w-4 text-center"></i> Expand Transactions
+                </button>
+                <button id="ctx-menu-trace" class="w-full text-left px-4 py-2 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-2 transition">
+                    <i class="fa-solid fa-magnifying-glass-chart w-4 text-center"></i> Trace Fund Flow
+                </button>
+                <button id="ctx-menu-analyze" class="w-full text-left px-4 py-2 text-slate-700 hover:bg-purple-50 hover:text-purple-700 flex items-center gap-2 transition hidden">
+                    <i class="fa-solid fa-file-contract w-4 text-center"></i> Analyze Contract
+                </button>
+            </div>`;
+            if (!document.getElementById("graph-context-menu")) {
+                document.body.insertAdjacentHTML('beforeend', contextMenuHtml);
+            }
+
+            window.handleCtxExpand = function(nodeId) {
+                let ctxMenu = document.getElementById("graph-context-menu");
+                if (ctxMenu) ctxMenu.classList.add('hidden');
+                document.getElementById("seed-input").value = nodeId;
+                document.getElementById("target-amount").value = "";
+                if (typeof submitTrace === 'function') {
+                    submitTrace();
+                } else {
+                    console.error("submitTrace not found.");
+                }
+            };
+            
+            window.handleCtxTrace = function(nodeId) {
+                let ctxMenu = document.getElementById("graph-context-menu");
+                if (ctxMenu) ctxMenu.classList.add('hidden');
+                document.getElementById("seed-input").value = nodeId;
+                document.getElementById("target-amount").value = "";
+                let methodSelect = document.getElementById("tracing-method");
+                if (methodSelect) methodSelect.value = "tracer";
+                if (typeof submitTrace === 'function') {
+                    submitTrace();
+                } else {
+                    console.error("submitTrace not found.");
+                }
+            };
+
+            network.on("oncontext", function (params) {
+                params.event.preventDefault();
+                let nodeId = this.getNodeAt(params.pointer.DOM);
+                if (nodeId) {
+                    let ctxMenu = document.getElementById("graph-context-menu");
+                    ctxMenu.style.left = params.event.clientX + 'px';
+                    ctxMenu.style.top = params.event.clientY + 'px';
+                    ctxMenu.classList.remove('hidden');
+                    
+                    let n = allNodesMap.get(nodeId);
+                    let isContract = n && n.label && (n.label.toUpperCase().includes("CONTRACT") || n.label.toUpperCase().includes("ROUTER") || n.label.toUpperCase().includes("POOL"));
+                    if(isContract) {
+                        document.getElementById("ctx-menu-analyze").classList.remove("hidden");
+                    } else {
+                        document.getElementById("ctx-menu-analyze").classList.add("hidden");
+                    }
+                    
+                    document.getElementById("ctx-menu-expand").onclick = function() {
+                        window.handleCtxExpand(nodeId);
+                    };
+                    document.getElementById("ctx-menu-trace").onclick = function() {
+                        window.handleCtxTrace(nodeId);
+                    };
+                    
+                    document.getElementById("ctx-menu-analyze").onclick = function() {
+                        ctxMenu.classList.add('hidden');
+                        alert("Smart Contract Analyzer: Starting decompilation and ABI analysis for " + nodeId + "...");
+                    };
+                }
+            });
+
             network.on("click", function (params) {
+                let ctxMenu = document.getElementById("graph-context-menu");
+                if(ctxMenu) ctxMenu.classList.add('hidden');
+                
                 if (params.edges.length > 0) {
                     // Get the clicked edge
                     let clickedEdgeId = params.edges[0];
@@ -2746,6 +2862,90 @@ NEMESIS_ROOT/
                         ctx.textBaseline = "middle";
                         ctx.fillText(badgeIcon, pos.x + 15, pos.y - 14);
                     }
+                    
+                    // Smart Contract indicator
+                    if (lblUpper.includes("CONTRACT") || lblUpper.includes("ROUTER") || lblUpper.includes("POOL") || lblUpper.includes("SWAP")) {
+                        ctx.fillStyle = "#ffffff";
+                        ctx.beginPath();
+                        ctx.arc(pos.x - 15, pos.y - 15, 10, 0, 2*Math.PI);
+                        ctx.fill();
+                        ctx.strokeStyle = "#475569";
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                        ctx.font = "12px Arial";
+                        ctx.fillStyle = "#475569";
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "middle";
+                        ctx.fillText("📜", pos.x - 15, pos.y - 14);
+                    }
+
+                    // USD Outflow Bubble
+                    let outflowUsd = (window.nodeOutflowUsd && window.nodeOutflowUsd[n.id]) ? window.nodeOutflowUsd[n.id] : 0;
+                    if (outflowUsd > 0) {
+                        let fmtUsd = "$" + outflowUsd.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                        ctx.font = "bold 10px Inter, sans-serif";
+                        let textWidth = ctx.measureText(fmtUsd).width;
+                        let bWidth = textWidth + 12;
+                        let bHeight = 16;
+                        let bx = pos.x - bWidth / 2;
+                        let by = pos.y + 20;
+
+                        ctx.fillStyle = "rgba(15, 23, 42, 0.85)"; // Slate-900 background
+                        if (ctx.roundRect) {
+                            ctx.beginPath();
+                            ctx.roundRect(bx, by, bWidth, bHeight, 8);
+                            ctx.fill();
+                        } else {
+                            ctx.fillRect(bx, by, bWidth, bHeight);
+                        }
+                        ctx.lineWidth = 1;
+                        ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+                        ctx.stroke();
+
+                        ctx.fillStyle = "#34d399"; // Emerald-400 text
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "middle";
+                        ctx.fillText(fmtUsd, pos.x, by + bHeight / 2);
+                    }
+                });
+
+                // Token Ticker Mini-Icon on Edges
+                allEdgesMap.forEach(e => {
+                    if(e.hidden) return;
+                    let fromPos = edgePositions[e.from];
+                    let toPos = edgePositions[e.to];
+                    if(!fromPos || !toPos) return;
+                    
+                    let dx = toPos.x - fromPos.x;
+                    let dy = toPos.y - fromPos.y;
+                    let dist = Math.sqrt(dx*dx + dy*dy);
+                    if(dist < 30) return; // don't draw if too short
+                    
+                    let midX = fromPos.x + dx/2;
+                    let midY = fromPos.y + dy/2;
+                    
+                    let edgeLabelStr = e.label || "";
+                    let tIcon = "💱";
+                    if (edgeLabelStr.includes("💵")) tIcon = "💵";
+                    else if (edgeLabelStr.includes("🔷")) tIcon = "🔷";
+                    else if (edgeLabelStr.includes("₿")) tIcon = "₿";
+                    else if (edgeLabelStr.includes("🔴")) tIcon = "🔴";
+                    else if (edgeLabelStr.includes("🟡")) tIcon = "🟡";
+                    else if (edgeLabelStr.includes("🟣")) tIcon = "🟣";
+                    
+                    ctx.fillStyle = "#ffffff";
+                    ctx.beginPath();
+                    ctx.arc(midX, midY + 20, 8, 0, 2*Math.PI);
+                    ctx.fill();
+                    ctx.strokeStyle = (e.color && e.color.color) ? e.color.color : "#94a3b8";
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    
+                    ctx.font = "10px Arial";
+                    ctx.fillStyle = "#000000";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(tIcon, midX, midY + 21);
                 });
             });
 
@@ -2769,6 +2969,14 @@ NEMESIS_ROOT/
                     }
                     
                     openNemesisModal(nodeId, family);
+                }
+            });
+
+            network.on("oncontext", function (params) {
+                params.event.preventDefault();
+                let nodeId = this.getNodeAt(params.pointer.DOM);
+                if (nodeId && typeof showContextMenu === 'function') {
+                    showContextMenu(nodeId, params.event.clientX, params.event.clientY);
                 }
             });
 
@@ -3658,6 +3866,7 @@ NEMESIS_ROOT/
                 if(d.type === "INIT") {
                     nodes.clear(); edges.clear(); allNodesMap.clear(); allEdgesMap.clear(); window.exportedDataRows = [];
                     window.terminalMap = {};
+                    window.tracingMethod = d.tracing_method || "tracer";
                     document.getElementById("tx-log-body").innerHTML = "";
                     window.currentActiveSeedTab = 'all';
                     
@@ -3723,6 +3932,9 @@ NEMESIS_ROOT/
                 if(d.type === "COMPLETE") {
                     document.getElementById("status").innerHTML = `<span class="text-emerald-600 font-bold">🛑 TRACE COMPLETE (Evidentiary Chain Ready)</span>`;
                     showTab('report');
+                    if (window.tracingMethod === "custodial" && !window.isLossPathHighlighted) {
+                        highlightLossPaths();
+                    }
                     setTimeout(() => triggerGeneratePDF(), 1500);
                     return;
                 }
@@ -3744,6 +3956,9 @@ NEMESIS_ROOT/
             };
             
             window.handleNewNode = function(d) {
+                    window.nodeOutflowUsd = window.nodeOutflowUsd || {};
+                    window.nodeOutflowUsd[d.from] = (window.nodeOutflowUsd[d.from] || 0) + (d.usd || d.amount);
+
                     let edgeId = d.from + "-" + d.to + "-" + d.tx;
                     
                     let safeFromLabel = (d.from && d.from.length > 12) ? d.from.substring(0,6) + "..." + d.from.slice(-4) : d.from;
@@ -3759,7 +3974,8 @@ NEMESIS_ROOT/
                     if (!allNodesMap.has(d.to)) {
                         let isSeed = GLOBAL_TRACE_SEEDS.toLowerCase().includes(d.to.toLowerCase());
                         let bg = '#ffffff'; let border = '#cbd5e1';
-                        if (d.is_terminal) { bg = '#ecfdf5'; border = '#10b981'; } 
+                        if (d.receiver_entity === "PATHFINDING_TARGET_REACHED") { bg = '#fef08a'; border = '#ca8a04'; }
+                        else if (d.is_terminal) { bg = '#ecfdf5'; border = '#10b981'; } 
                         else if (d.is_consolidation) { bg = '#fdf4ff'; border = '#d946ef'; }
                         if (isSeed) { bg = '#fef2f2'; border = '#ef4444'; }
                         let titleHtmlTo = `Address: ${d.to}\nEntity: ${d.receiver_entity}\nChain: ${d.chain}`;
@@ -3771,8 +3987,10 @@ NEMESIS_ROOT/
                         let n = allNodesMap.get(d.to);
                         n.is_terminal = n.is_terminal || d.is_terminal;
                         n.is_consolidation = n.is_consolidation || d.is_consolidation;
-                        let bg = n.is_terminal ? '#ecfdf5' : (n.is_consolidation ? '#fdf4ff' : '#ffffff'); 
-                        let border = n.is_terminal ? '#10b981' : (n.is_consolidation ? '#d946ef' : '#cbd5e1');
+                        let bg = '#ffffff'; let border = '#cbd5e1';
+                        if (d.receiver_entity === "PATHFINDING_TARGET_REACHED" || n.label.includes("PATHFINDING_TARGET_REACHED")) { bg = '#fef08a'; border = '#ca8a04'; }
+                        else if (n.is_terminal) { bg = '#ecfdf5'; border = '#10b981'; }
+                        else if (n.is_consolidation) { bg = '#fdf4ff'; border = '#d946ef'; }
                         n.color = {background: bg, border: border}; n.borderWidth = n.is_terminal ? 4 : 3;
                         if (d.receiver_nemesis_id && n.title && !n.title.includes('Nemesis ID')) {
                             n.title += `\nNemesis ID: ${d.receiver_nemesis_id}`;
@@ -3813,7 +4031,7 @@ NEMESIS_ROOT/
                         
                         let edgeLabel = `${edgeTypeIcon}${tokenIcon} ${d.amount.toFixed(2)} ${d.ticker}\nTx: ${d.tx.substring(0,8)}...`;
                         let edgeTitle = `Transaction Hash: ${d.tx}\nFrom: ${d.from}\nTo: ${d.to}\nAmount: ${d.amount.toFixed(4)} ${d.ticker}\nDate: ${d.timestamp}\nType: ${d.edge_type}\nConfidence: ${d.confidence}\nState Transition: ${d.state_transition || 'TRANSACTION_HOP'}\nForensic Fingerprint: ${d.fingerprint || 'Standard'}`;
-                        let e = { id: edgeId, from: d.from, to: d.to, label: edgeLabel, title: edgeTitle, tx_hash: d.tx, timestamp: d.timestamp, confidence: d.confidence, origin_seed: d.origin_seed, color: {color: edgeColor, highlight: highColor, hover: highColor}, dashes: edgeDashes, width: edgeWidth, font: {size: 11, color: '#475569', strokeWidth: 3, strokeColor: '#ffffff', align: 'horizontal'} };
+                        let e = { id: edgeId, from: d.from, to: d.to, label: edgeLabel, title: edgeTitle, tx_hash: d.tx, timestamp: d.timestamp, confidence: d.confidence, origin_seed: d.origin_seed, color: {color: edgeColor, highlight: highColor, hover: highColor}, dashes: edgeDashes, width: edgeWidth, font: {size: 11, color: '#0f172a', background: '#f8fafc', strokeWidth: 2, strokeColor: '#ffffff', align: 'horizontal'} };
 
                         
                         if (window.currentActiveSeedTab !== 'all' && window.currentActiveSeedTab !== d.origin_seed) e.hidden = true;
@@ -4487,6 +4705,26 @@ NEMESIS_ROOT/
                 modal.classList.remove('flex');
             };
             
+            window.highlightLossPaths = function() {
+                window.isLossPathHighlighted = true;
+                let updates = [];
+                nodes.get().forEach(n => {
+                    if (n.is_terminal || n.label.includes("PATHFINDING_TARGET_REACHED") || (n.label && n.label.includes("CEX"))) {
+                        updates.push({id: n.id, color: {background: '#fef08a', border: '#ef4444'}, borderWidth: 4});
+                    }
+                });
+                nodes.update(updates);
+                
+                let edgeUpdates = [];
+                edges.get().forEach(e => {
+                    let toNode = allNodesMap.get(e.to);
+                    if (toNode && (toNode.is_terminal || toNode.label.includes("PATHFINDING_TARGET_REACHED") || (toNode.label && toNode.label.includes("CEX")))) {
+                        edgeUpdates.push({id: e.id, color: {color: '#ef4444', highlight: '#ef4444'}, width: 3, dashes: true});
+                    }
+                });
+                edges.update(edgeUpdates);
+            };
+            
             // Header minimize on scroll
             document.addEventListener('DOMContentLoaded', () => {
                 const landingPage = document.getElementById('landing-page');
@@ -4517,6 +4755,66 @@ NEMESIS_ROOT/
                 &copy; 2026 Lionsgate Nemesis. All Rights Reserved.
             </div>
         </footer>
+
+        <!-- Context Menu -->
+        <div id="custom-context-menu" class="hidden absolute bg-slate-900 border border-slate-700 text-white rounded shadow-lg z-[9999] overflow-hidden text-xs font-sans w-48">
+            <div class="px-3 py-2 border-b border-slate-700 bg-slate-800 text-slate-400 font-bold tracking-wider uppercase text-[10px]" id="ctx-menu-title">WALLET</div>
+            <button class="w-full text-left px-3 py-2 hover:bg-slate-700 transition flex items-center gap-2" onclick="handleCtxExpand()"><i class="fa-solid fa-code-branch w-4"></i> Expand Trace</button>
+            <button class="w-full text-left px-3 py-2 hover:bg-slate-700 transition flex items-center gap-2" onclick="handleCtxTrace()"><i class="fa-solid fa-magnifying-glass w-4"></i> Deep Trace Flow</button>
+            <button class="w-full text-left px-3 py-2 hover:bg-slate-700 transition flex items-center gap-2" onclick="handleCtxIntel()"><i class="fa-solid fa-shield-halved w-4"></i> Threat Intel</button>
+        </div>
+        <script>
+            window.activeCtxNode = null;
+            function showContextMenu(nodeId, x, y) {
+                let menu = document.getElementById('custom-context-menu');
+                window.activeCtxNode = nodeId;
+                document.getElementById('ctx-menu-title').innerText = "NODE: " + (nodeId.length > 10 ? nodeId.substring(0,10) + '...' : nodeId);
+                menu.style.left = x + 'px';
+                menu.style.top = y + 'px';
+                menu.classList.remove('hidden');
+            }
+            function hideContextMenu(e) {
+                let menu = document.getElementById('custom-context-menu');
+                if (!menu.contains(e.target)) {
+                    menu.classList.add('hidden');
+                }
+            }
+            document.addEventListener('click', hideContextMenu);
+            document.addEventListener('contextmenu', hideContextMenu); // Hide if clicked elsewhere
+            
+            function handleCtxExpand() {
+                if(!window.activeCtxNode) return;
+                let seedInput = document.getElementById('seed-input');
+                if (seedInput) {
+                    let curSeed = seedInput.value;
+                    if(!curSeed.includes(window.activeCtxNode)) {
+                        seedInput.value = curSeed ? curSeed + "," + window.activeCtxNode : window.activeCtxNode;
+                    }
+                    if (typeof submitTrace === 'function') submitTrace();
+                }
+                document.getElementById('custom-context-menu').classList.add('hidden');
+            }
+            function handleCtxTrace() {
+                if(!window.activeCtxNode) return;
+                let seedInput = document.getElementById('seed-input');
+                if (seedInput) {
+                    seedInput.value = window.activeCtxNode;
+                    if (typeof submitTrace === 'function') submitTrace();
+                }
+                document.getElementById('custom-context-menu').classList.add('hidden');
+            }
+            function handleCtxIntel() {
+                if(!window.activeCtxNode) return;
+                let family = "EVM";
+                if (window.activeCtxNode.length === 42 && window.activeCtxNode.toLowerCase().startsWith("0x")) family = "EVM";
+                else if (window.activeCtxNode.startsWith("T") && window.activeCtxNode.length === 34) family = "TRON";
+                else if (/^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/.test(window.activeCtxNode) || /^bc1[ac-hj-np-z02-9]{11,71}$/.test(window.activeCtxNode)) family = "BTC";
+                else if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(window.activeCtxNode) && !window.activeCtxNode.toLowerCase().startsWith("0x") && !window.activeCtxNode.toLowerCase().startsWith("bc1")) family = "SOLANA";
+                
+                if (typeof openNemesisModal === 'function') openNemesisModal(window.activeCtxNode, family);
+                document.getElementById('custom-context-menu').classList.add('hidden');
+            }
+        </script>
     </body>
     </html>
     

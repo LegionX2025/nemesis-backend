@@ -21,3 +21,7 @@ logs/
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Large Data Files
+local_deploy/data/*.json
+local_deploy/data/

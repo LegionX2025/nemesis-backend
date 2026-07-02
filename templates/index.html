@@ -2549,7 +2549,7 @@ NEMESIS_ROOT/
                 },
                 edges: { 
                     arrows: 'to', 
-                    font: { align: 'top', size: 11, color: '#334155', background: 'rgba(255,255,255,0.9)', strokeWidth: 0 }, 
+                    font: { align: 'top', size: 12, color: '#1e293b', background: 'rgba(255,255,255,0.95)', strokeWidth: 2, strokeColor: '#ffffff' }, 
                     smooth: { type: 'cubicBezier', forceDirection: 'horizontal', roundness: 0.4 },
                     color: { color: '#94a3b8', highlight: '#3b82f6', hover: '#3b82f6' },
                     width: 2
@@ -2614,6 +2614,51 @@ NEMESIS_ROOT/
                 </div>
             </div>`;
             document.body.insertAdjacentHTML('beforeend', txPanelHtml);
+
+            <!-- Node Context Menu -->
+            <div id="node-context-menu" class="hidden absolute bg-white shadow-xl border border-slate-200 rounded-lg py-2 w-56 z-[100] text-sm font-sans">
+                <div class="px-4 py-2 font-bold text-slate-800 border-b border-slate-100 mb-1" id="ctx-menu-title">Node Options</div>
+                <button onclick="ctxAction('expand')" class="w-full text-left px-4 py-2 hover:bg-blue-50 text-slate-700 flex items-center gap-2 transition">
+                    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg> Expand Transactions
+                </button>
+                <button onclick="ctxAction('trace')" class="w-full text-left px-4 py-2 hover:bg-emerald-50 text-slate-700 flex items-center gap-2 transition">
+                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg> Trace Fund Flow
+                </button>
+                <button onclick="ctxAction('analyzer')" class="w-full text-left px-4 py-2 hover:bg-purple-50 text-slate-700 flex items-center gap-2 transition">
+                    <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg> Smart Contract Analyzer
+                </button>
+            </div>
+
+            window.activeCtxNode = null;
+            window.showNodeContextMenu = function(nodeId, x, y) {
+                window.activeCtxNode = nodeId;
+                let menu = document.getElementById("node-context-menu");
+                menu.classList.remove("hidden");
+                menu.style.left = x + "px";
+                menu.style.top = y + "px";
+                document.getElementById("ctx-menu-title").innerText = nodeId.substring(0,10) + "...";
+            };
+            document.addEventListener('click', function(e) {
+                let menu = document.getElementById("node-context-menu");
+                if(menu && !menu.contains(e.target)) {
+                    menu.classList.add("hidden");
+                }
+            });
+            window.ctxAction = function(action) {
+                let menu = document.getElementById("node-context-menu");
+                menu.classList.add("hidden");
+                if(!window.activeCtxNode) return;
+                
+                if(action === 'expand') {
+                    alert("Expanding transactions for " + window.activeCtxNode);
+                    // Could dispatch an API call here for dynamic expansion
+                } else if(action === 'trace') {
+                    document.getElementById("target-seeds").value = window.activeCtxNode;
+                    if(typeof startTrace === 'function') startTrace();
+                } else if(action === 'analyzer') {
+                    alert("Running Smart Contract Analysis on " + window.activeCtxNode);
+                }
+            };
 
             window.closeTxPanel = function() {
                 document.getElementById('tx-details-panel').classList.add('translate-x-full');
@@ -2696,6 +2741,14 @@ NEMESIS_ROOT/
             };
 
 
+
+            network.on("oncontext", function (params) {
+                params.event.preventDefault();
+                let nodeId = this.getNodeAt(params.pointer.DOM);
+                if (nodeId) {
+                    window.showNodeContextMenu(nodeId, params.event.clientX, params.event.clientY);
+                }
+            });
 
             network.on("click", function (params) {
                 if (params.edges.length > 0) {
@@ -2836,6 +2889,35 @@ NEMESIS_ROOT/
                         ctx.textAlign = "center";
                         ctx.textBaseline = "middle";
                         ctx.fillText(badgeIcon, pos.x + 15, pos.y - 14);
+                    }
+                    
+                    // USD Outflow Bubble
+                    if (n.outflowUSD > 0) {
+                        let amountStr = "$" + n.outflowUSD.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                        ctx.font = "bold 11px Inter, sans-serif";
+                        let textWidth = ctx.measureText(amountStr).width;
+                        let bubbleWidth = textWidth + 12;
+                        let bubbleHeight = 18;
+                        let bx = pos.x - bubbleWidth / 2;
+                        let by = pos.y + 25; // below the node
+                        
+                        ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+                        ctx.beginPath();
+                        if (ctx.roundRect) {
+                            ctx.roundRect(bx, by, bubbleWidth, bubbleHeight, 8);
+                        } else {
+                            ctx.rect(bx, by, bubbleWidth, bubbleHeight);
+                        }
+                        ctx.fill();
+                        
+                        ctx.strokeStyle = "rgba(239, 68, 68, 0.5)"; // red border for outflow
+                        ctx.lineWidth = 1.5;
+                        ctx.stroke();
+                        
+                        ctx.fillStyle = "#ef4444"; // red text
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "middle";
+                        ctx.fillText(amountStr, pos.x, by + bubbleHeight / 2);
                     }
                 });
             });
@@ -3891,7 +3973,7 @@ NEMESIS_ROOT/
                         if(isCrossChain) { edgeDashes = [5, 5]; edgeWidth = 3; edgeColor = '#db2777'; highColor = '#be185d'; }
                         if(isObfuscation) { edgeDashes = [2, 6]; edgeWidth = 3; edgeColor = '#ef4444'; highColor = '#dc2626'; }
                         
-                        let edgeLabel = `${edgeTypeIcon}${tokenIcon} ${d.amount.toFixed(4)} ${d.ticker}\nTx: ${d.tx.substring(0,12)}...\nDate: ${d.timestamp}`;
+                        let edgeLabel = `${edgeTypeIcon}${tokenIcon} ${d.amount.toFixed(4)} ${d.ticker}\nTx: ${d.tx.substring(0,8)}...`;
                         let edgeTitle = `Transaction Hash: ${d.tx}\nFrom: ${d.from}\nTo: ${d.to}\nAmount: ${d.amount.toFixed(4)} ${d.ticker}\nDate: ${d.timestamp}\nType: ${d.edge_type}\nConfidence: ${d.confidence}\nState Transition: ${d.state_transition || 'TRANSACTION_HOP'}\nForensic Fingerprint: ${d.fingerprint || 'Standard'}`;
                         let e = { id: edgeId, from: d.from, to: d.to, label: edgeLabel, title: edgeTitle, tx_hash: d.tx, timestamp: d.timestamp, confidence: d.confidence, origin_seed: d.origin_seed, color: {color: edgeColor, highlight: highColor, hover: highColor}, dashes: edgeDashes, width: edgeWidth };
                         
@@ -3899,6 +3981,11 @@ NEMESIS_ROOT/
                         
                         allEdgesMap.set(edgeId, e); window.edgeAddQueue.push(e);
                         window.exportedDataRows.push(d);
+                        
+                        let nodeFrom = allNodesMap.get(d.from);
+                        if (nodeFrom) {
+                            nodeFrom.outflowUSD = (nodeFrom.outflowUSD || 0) + (d.usd || d.amount);
+                        }
                         
                         if (window.autoComputeTarget && GLOBAL_TRACE_SEEDS.toLowerCase().includes(d.from.toLowerCase())) {
                             window.autoComputedAmount += (d.usd || d.amount);

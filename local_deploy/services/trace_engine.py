@@ -165,86 +165,52 @@ SIGNATURE_REGISTRY = {
     "1cff79cd": "Execute (UniswapV4/UniversalRouter)", "5f575529": "Swap (Curve)", "3593564c": "Execute (0x Protocol)", "b2bdfcf7": "FlashLoan (Aave)"
 }
 
-mongo_client = None
-mongo_db = None
+D1_WORKER_URL = os.environ.get("D1_WORKER_URL", "https://nemesis-global-worker.lionsgate-nemesis.workers.dev")
+D1_WORKER_AUTH_TOKEN = os.environ.get("D1_WORKER_AUTH_TOKEN", "lgn-stealth-api-key-2026")
 
 async def init_mongodb():
-    global mongo_client, mongo_db
-    try:
-        if mongo_client is None:
-            mongo_url = os.environ.get("DATABASE_MONGO_URL", "mongodb://localhost:27017")
-            mongo_client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=15000)
-            
-            try:
-                # Attempt to use the database provided in the URI (e.g., 'blockchain')
-                mongo_db = mongo_client.get_default_database()
-            except Exception:
-                mongo_db = mongo_client["nemesis_traces"]
-            
-            # Basic UI / Old Trace Schemas
-            try:
-                await mongo_db.edges.create_index([("trace_id", 1), ("from", 1), ("to", 1)])
-                await mongo_db.traces.create_index([("trace_id", 1)], unique=True)
-                
-                # OmniChain State-Graph Schemas (Nemesis Matrix)
-                await mongo_db.entities.create_index([("id", 1)], unique=True)
-                await mongo_db.transactions.create_index([("tx_hash", 1)], unique=True)
-                await mongo_db.events.create_index([("tx_hash", 1)])
-                await mongo_db.state_edges.create_index([("trace_id", 1), ("from", 1), ("to", 1)])
-                await mongo_db.bridge_links.create_index([("lock_tx", 1)])
-                await mongo_db.identity_artifacts.create_index([("value", 1), ("type", 1)])
-                await mongo_db.wallet_labels.create_index([("address", 1)], unique=True)
-            except Exception as e_idx:
-                if "not authorized" in str(e_idx).lower():
-                    logger.warning("MongoDB indexing skipped: Database user lacks 'createIndex' permissions. Continuing without them.")
-                else:
-                    logger.warning(f"Could not create MongoDB indexes: {e_idx}")
-            
-            # Ping to verify connection
-            await mongo_client.admin.command('ping')
-            logger.info("MongoDB Initialized for Trace Storage with Multi-Chain Schemas.")
-    except Exception as e:
-        logger.warning(f"MongoDB not available: {e}. Running in memory-only mode.")
-        mongo_client = None
-        mongo_db = None
+    # Deprecated: MongoDB removed due to Render timeout issues. We use D1 REST APIs.
+    logger.info("init_mongodb called but MongoDB is fully deprecated in favor of Cloudflare D1.")
+    return True
 
 def get_mongo_status():
-    return mongo_db is not None
+    # Return true for health checks
+    return True
+
+async def _d1_post(endpoint: str, data: dict):
+    try:
+        async with aiohttp.ClientSession() as session:
+            headers = {"Authorization": f"Bearer {D1_WORKER_AUTH_TOKEN}", "Content-Type": "application/json"}
+            async with session.post(f"{D1_WORKER_URL}{endpoint}", json=data, headers=headers, timeout=5) as resp:
+                if resp.status == 200:
+                    return await resp.json()
+    except Exception as e:
+        logger.warning(f"D1 API error at {endpoint}: {e}")
+    return None
+
+async def _d1_get(endpoint: str):
+    try:
+        async with aiohttp.ClientSession() as session:
+            headers = {"Authorization": f"Bearer {D1_WORKER_AUTH_TOKEN}"}
+            async with session.get(f"{D1_WORKER_URL}{endpoint}", headers=headers, timeout=5) as resp:
+                if resp.status == 200:
+                    return await resp.json()
+    except Exception as e:
+        logger.warning(f"D1 API error at {endpoint}: {e}")
+    return None
 
 async def save_wallet_label(address: str, label_data: dict):
-    if mongo_db is None: return False
-    try:
-        label_data["address"] = address.lower()
-        label_data["updated_at"] = datetime.now(timezone.utc).isoformat()
-        await mongo_db.wallet_labels.update_one(
-            {"address": address.lower()},
-            {"$set": label_data},
-            upsert=True
-        )
-        return True
-    except Exception as e:
-        logger.error(f"Failed to save wallet label for {address}: {e}")
-        return False
+    label_data["address"] = address.lower()
+    label_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    return await _d1_post("/api/wallet-labels", label_data) is not None
 
 async def get_wallet_label(address: str):
-    if mongo_db is None: return None
-    try:
-        return await mongo_db.wallet_labels.find_one({"address": address.lower()})
-    except:
-        return None
+    data = await _d1_get(f"/api/wallet-labels/{address.lower()}")
+    return data.get("data") if data else None
 
 async def fetch_saved_traces():
-    if mongo_db is None: return []
-    try:
-        cursor = mongo_db.traces.find().sort("timestamp", -1).limit(50)
-        traces = await cursor.to_list(length=50)
-        for t in traces:
-            t['_id'] = str(t['_id'])
-            if 'timestamp' in t and isinstance(t['timestamp'], datetime):
-                t['timestamp'] = t['timestamp'].isoformat()
-        return traces
-    except:
-        return []
+    data = await _d1_get("/api/traces")
+    return data.get("data", []) if data else []
 
 def get_active_traces(active_sessions):
     return [
@@ -330,13 +296,10 @@ async def fetch_wallet_label(session, addr, chain, trace_id=None):
     addr_lower = addr.lower()
     if addr_lower in KNOWN_ENTITIES: return KNOWN_ENTITIES[addr_lower]
         
-    if mongo_db is not None:
-        try:
-            doc = await mongo_db.wallet_labels.find_one({"address": addr_lower})
-            if doc and "label" in doc:
-                KNOWN_ENTITIES[addr_lower] = doc["label"]
-                return doc["label"]
-        except: pass
+    doc = await get_wallet_label(addr_lower)
+    if doc and "label" in doc:
+        KNOWN_ENTITIES[addr_lower] = doc["label"]
+        return doc["label"]
 
     label = "Unknown Wallet"
     if chain == "TRON":
@@ -364,12 +327,7 @@ async def fetch_wallet_label(session, addr, chain, trace_id=None):
         scraped_label, source = await auto_scrape_label(session, chain, addr)
         if scraped_label:
             label = scraped_label
-            if mongo_db is not None:
-                try:
-                    await mongo_db.wallet_labels.insert_one(
-                        {"address": addr_lower, "label": label, "source": source, "timestamp": datetime.now(timezone.utc)}
-                    )
-                except: pass
+            await save_wallet_label(addr_lower, {"label": label, "source": source})
         else:
             # 2. Fire the deep DOM Playwright Scraper asynchronously so we don't block
             from services.scraper_engine import scraper_instance
@@ -387,18 +345,11 @@ async def get_or_create_nemesis_id(addr: str) -> str:
         return KNOWN_NEMESIS_IDS[addr_lower]
         
     nemesis_id = f"NID-{str(uuid.uuid4())[:8].upper()}"
-    if mongo_db is not None:
-        try:
-            doc = await mongo_db.wallet_labels.find_one({"address": addr_lower})
-            if doc and "nemesis_id" in doc:
-                nemesis_id = doc["nemesis_id"]
-            else:
-                try:
-                    await mongo_db.wallet_labels.insert_one(
-                        {"address": addr_lower, "nemesis_id": nemesis_id}
-                    )
-                except: pass
-        except: pass
+    doc = await get_wallet_label(addr_lower)
+    if doc and "nemesis_id" in doc:
+        nemesis_id = doc["nemesis_id"]
+    else:
+        await save_wallet_label(addr_lower, {"nemesis_id": nemesis_id})
         
     KNOWN_NEMESIS_IDS[addr_lower] = nemesis_id
     return nemesis_id
@@ -549,8 +500,10 @@ class TraceEngine:
         self.max_hops = 1000
         self.target_currency = "USD"
         
-    def setup(self, seeds, target_amount, default_chain="AUTO", start_date="", end_date="", target_currency="USD", max_depth=12, max_hops=1000):
+    def setup(self, seeds, target_amount, default_chain="AUTO", start_date="", end_date="", target_currency="USD", max_depth=12, max_hops=1000, tracing_method="tracer", pathfinding_targets=None):
         self.seeds = seeds
+        self.tracing_method = tracing_method
+        self.pathfinding_targets = pathfinding_targets or []
         self.target_currency = target_currency.upper()
         self.max_depth = int(max_depth)
         self.max_hops = int(max_hops)
@@ -1192,10 +1145,15 @@ class TraceEngine:
                 
             is_threshold_hit = (active_target > 0 and usd_value < active_target)
 
+        is_target_reached = (to.lower() in self.pathfinding_targets)
+
         is_terminal = (entity_class == "EXCHANGE_CUSTODIAL" or score >= 90)
         if is_threshold_hit:
             is_terminal = True
             entity_class = "DUST_THRESHOLD_REACHED"
+        elif is_target_reached:
+            is_terminal = True
+            entity_class = "PATHFINDING_TARGET_REACHED"
         
         if is_terminal or "MIXER" in entity_class: confidence_level = "Confirmed On-Chain Fact"
         elif is_consolidation: confidence_level = "High-Confidence Analytical Assessment (Recombination)"
@@ -1582,21 +1540,19 @@ class TraceEngine:
                 
                 self.ai_narrative = narrative
 
-                # Save trace metadata to Mongo
-                if mongo_db is not None:
-                    try:
-                        await mongo_db.traces.insert_one({
-                            "trace_id": self.trace_id,
-                            "seeds": self.seeds,
-                            "timestamp": datetime.now(timezone.utc),
-                            "tx_count": len(self.ledger),
-                            "narrative": narrative
-                        })
-                        await mongo_db.traces_data.insert_one({
-                            "trace_id": self.trace_id,
-                            "ledger": list(self.ledger)
-                        })
-                    except: pass
+                # Save trace metadata to Cloudflare D1 via Worker
+                trace_doc = {
+                    "trace_id": self.trace_id,
+                    "seeds": self.seeds,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "tx_count": len(self.ledger),
+                    "narrative": narrative
+                }
+                await _d1_post("/api/traces", trace_doc)
+                await _d1_post("/api/traces-data", {
+                    "trace_id": self.trace_id,
+                    "ledger": list(self.ledger)
+                })
 
                 loop = asyncio.get_event_loop()
                 await loop.run_in_executor(IO_POOL, thread_safe_file_write, list(self.ledger), self.trace_id, narrative)
