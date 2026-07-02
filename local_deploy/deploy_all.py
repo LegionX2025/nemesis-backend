@@ -450,8 +450,13 @@ PYTHON_BACKEND_URL = "https://nemesis-backend-rwp4.onrender.com"
     # ---------------------------------------------------------
     print("\n--- Installing Dependencies ---")
     current_dir = os.getcwd()
+    
+    print("-> Installing Python dependencies...")
+    run_cmd(["pip", "install", "-r", "requirements.txt"], check=False)
+    
     os.chdir(worker_dir)
     
+    print("-> Installing Node.js dependencies...")
     # Run npm install (using check=False so we don't crash on warnings)
     run_cmd(["npm", "install"], check=False)
     

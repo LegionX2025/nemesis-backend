@@ -33,6 +33,27 @@ def main():
     print(" 🚀 NEMESIS OMNI-DEPLOYER: INITIATING UPLINK")
     print("============================================================")
     
+    print("\n>>> [0/3] Installing Pre-flight Dependencies")
+    print("    -> Installing Python requirements (Root)...")
+    run_cmd("pip install -r requirements.txt", exit_on_error=False)
+    
+    if os.path.exists("local_deploy/requirements.txt"):
+        print("    -> Installing Python requirements (local_deploy)...")
+        run_cmd("pip install -r requirements.txt", cwd="local_deploy", exit_on_error=False)
+        
+    if os.path.exists("render_backend/requirements.txt"):
+        print("    -> Installing Python requirements (render_backend)...")
+        run_cmd("pip install -r requirements.txt", cwd="render_backend", exit_on_error=False)
+        
+    if os.path.exists("cloudflare_worker/package.json"):
+        print("    -> Installing Node.js requirements (cloudflare_worker)...")
+        run_cmd("npm install", cwd="cloudflare_worker", exit_on_error=False)
+        
+    worker_dir = os.path.join(os.getcwd(), "local_deploy", "nemesis-global-worker")
+    if os.path.exists(os.path.join(worker_dir, "package.json")):
+        print("    -> Installing Node.js requirements (nemesis-global-worker)...")
+        run_cmd("npm install", cwd=worker_dir, exit_on_error=False)
+    
     # 1. GIT DEPLOY (RENDER)
     print("\n>>> [1/3] Syncing to Global Repository (Render Backend)")
     print("    -> Wiping git cache to ensure strict project-file-only deployment...")

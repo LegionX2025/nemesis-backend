@@ -61,6 +61,23 @@ def main():
     clean_directory("cloudflare_frontend", keep_files=[".git", "package.json", "node_modules", "tailwind.config.js"])
     print("    -> Cleanup complete.")
     
+    print("\n[PRE-FLIGHT] Installing Dependencies...")
+    print("    -> Installing Python requirements (Root)...")
+    subprocess.run(["pip", "install", "-r", "requirements.txt"], check=False)
+    
+    if os.path.exists("local_deploy/requirements.txt"):
+        print("    -> Installing Python requirements (local_deploy)...")
+        subprocess.run(["pip", "install", "-r", "requirements.txt"], cwd="local_deploy", check=False)
+        
+    if os.path.exists("cloudflare_worker/package.json"):
+        print("    -> Installing Node.js requirements (cloudflare_worker)...")
+        subprocess.run(["npm", "install"], cwd="cloudflare_worker", check=False, shell=True)
+        
+    worker_dir = os.path.join(os.getcwd(), "local_deploy", "nemesis-global-worker")
+    if os.path.exists(os.path.join(worker_dir, "package.json")):
+        print("    -> Installing Node.js requirements (nemesis-global-worker)...")
+        subprocess.run(["npm", "install"], cwd=worker_dir, check=False, shell=True)
+    
     # 0. Sync root backend files to render_backend/
     print("\n[0] Synchronizing Backend Files...")
     render_backend_dir = "render_backend"
