@@ -68,5 +68,13 @@ app.get('/ws/:trace_id', (c) => {
   return stub.fetch(c.req.raw)
 })
 
-export default app
+export default {
+  fetch: app.fetch,
+  async queue(batch: any, env: Bindings, ctx: any) {
+    console.log(`Processing queue: ${batch.queue}`);
+    for (const message of batch.messages) {
+      console.log(`Message: ${JSON.stringify(message.body)}`);
+    }
+  }
+}
 export { TraceCoordinator, RealtimeManager, AdminConsole }
