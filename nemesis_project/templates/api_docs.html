@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NEMESIS Enterprise API | Lionsgate Network</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    {% include 'includes/head_assets.html' %}
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(15,23,42,0.1);
+        }
+        .markdown-body h1 { font-size: 2.25rem; font-weight: 800; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; margin-top: 2rem; margin-bottom: 1rem; color: #0f172a; letter-spacing: -0.025em; }
+        .markdown-body h2 { font-size: 1.5rem; font-weight: 700; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.3rem; margin-top: 1.5rem; margin-bottom: 1rem; color: #1e293b; }
+        .markdown-body h3 { font-size: 1.25rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; color: #334155; }
+        .markdown-body p { margin-top: 0; margin-bottom: 1rem; line-height: 1.6; color: #475569; }
+        .markdown-body ul { padding-left: 2em; margin-bottom: 1rem; list-style-type: disc; color: #475569; }
+        .markdown-body li { margin-top: 0.25em; }
+        .markdown-body pre { background-color: #0f172a; border-radius: 8px; padding: 16px; overflow: auto; margin-bottom: 1rem; }
+        .markdown-body code { font-family: 'JetBrains Mono', monospace; font-size: 85%; }
+        .markdown-body pre code { color: #e2e8f0; background: transparent; padding: 0; font-size: 0.9rem; }
+        .markdown-body p code, .markdown-body li code { background-color: rgba(15,23,42,0.05); padding: 0.2em 0.4em; border-radius: 6px; color: #db2777; font-weight: 600; }
+        .markdown-body table { border-spacing: 0; border-collapse: collapse; margin-top: 0; margin-bottom: 16px; width: 100%; }
+        .markdown-body table th { font-weight: 600; background: #f8fafc; color: #334155; }
+        .markdown-body table th, .markdown-body table td { padding: 6px 13px; border: 1px solid #e2e8f0; color: #475569; }
+        .markdown-body hr { height: 1px; padding: 0; margin: 24px 0; background-color: #e2e8f0; border: 0; }
+        .markdown-body strong { color: #0f172a; font-weight: 700; }
+        
+        main { background: transparent !important; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen text-slate-800">
+    {% include 'includes/global_nav.html' %}
+
+    <main class="flex-grow py-10 px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="glass-text-container text-center mb-10">
+            <h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 tracking-widest">NEMESIS API GATEWAY</h1>
+            <p class="text-sm text-slate-500 font-bold tracking-widest uppercase">Developer Documentation</p>
+        </div>
+        <div id="content" class="markdown-body">
+            <div class="flex justify-center my-10"><i class="fa-solid fa-circle-notch fa-spin text-4xl text-slate-300"></i></div>
+        </div>
+    </main>
+
+    {% include 'includes/footer.html' %}
+
+    <!-- Markdown Source -->
+    <textarea id="markdown-source" style="display:none;">
+# NEMESIS Enterprise API Documentation
+
+## OmniChain Blockchain Intelligence & Digital Forensics Platform
+
+**Version:** 2.0 Enterprise  
+**API Gateway:** Cloudflare Workers Edge (`nemesis-api`)  
+**Compute Engine:** FastAPI Intelligence Core  
+**Transport:** HTTPS • WebSockets • HTTP/2 • HTTP/3  
+**Architecture:** Edge-First • Multi-Cloud • Event-Driven • Zero-Trust  
+
+---
+
+# Overview
+
+The **NEMESIS Enterprise API** provides a unified interface for blockchain intelligence, digital forensics, cryptocurrency tracing, OSINT correlation, darknet intelligence, AI-assisted investigations, and cross-chain entity resolution.
+
+The platform is composed of two major investigative modules:
+
+* **NEMESIS Tracer Engine** — Multi-chain forensic tracing, graph analysis, and transaction intelligence.
+* **NEMESIS ID Engine** — Universal entity intelligence, wallet profiling, behavioral analytics, attribution, and knowledge graph construction.
+
+All client requests terminate at the **Cloudflare Edge API Gateway**, where authentication, authorization, caching, observability, telemetry, and request validation are enforced before secure proxying to the FastAPI Intelligence Engine.
+
+---
+
+# Base URLs
+
+* **Production Engine:** `https://nemesis.lionsgate.network`
+* **API Gateway Edge:** `https://api.nemesis.lionsgate.network/v1`
+* **WebSockets Edge:** `wss://ws.nemesis.lionsgate.network`
+
+---
+
+# Authentication
+
+The NEMESIS API utilizes Zero-Trust authentication architecture. Requests must be authenticated via Bearer tokens (JWT) or Service Account API Keys.
+
+```http
+Authorization: Bearer <token>
+```
+or
+```http
+X-Nemesis-API-Key: <api_key>
+```
+
+---
+
+# Core Workflows
+
+## Initiation
+
+Investigations are initiated by generating a trace operation. A Trace ID is returned asynchronously.
+
+```http
+POST /api/trace
+```
+**Body:**
+```json
+{
+  "address": "0x1234567890abcdef...",
+  "chain": "ethereum",
+  "max_depth": 3,
+  "max_hops": 50
+}
+```
+
+## Graph Analysis
+```http
+GET /api/graph/{trace_id}
+```
+Returns a fully constructed knowledge graph representation in D3.js compatible format for visualization.
+
+## Deep Evidence Analysis
+```http
+POST /api/deep_evidence
+```
+Performs advanced forensic analysis using multiple intelligence providers and AI.
+
+Capabilities include: ABI decoding, Contract analysis, Function signature identification, Transaction explanation, Cross-chain correlation, Risk scoring, Behavioral interpretation, AI-generated forensic narrative.
+
+---
+
+# NEMESIS ID Engine
+
+The NEMESIS ID Engine constructs a unified digital identity for blockchain entities. It correlates:
+Wallet addresses, Smart contracts, Exchanges, Bridges, Mixers, ENS domains, Darknet identities, OSINT artifacts, Investigation history.
+
+## Search
+```http
+GET /api/nemesis_id/search
+```
+Supported query types: Nemesis ID, Wallet Address, Transaction Hash, Trace ID, ENS Domain, Entity Name.
+
+---
+
+# Wallet Intelligence
+
+```http
+GET /api/wallet_profile/{address}
+```
+Returns comprehensive wallet intelligence including: Native balance, Token balances, NFT holdings, Portfolio valuation, Chain activity, Labels, Risk score, Exchange exposure, AML indicators, Sanctions screening, Historical activity.
+
+---
+
+# Deep Blockchain Scraping
+
+```http
+GET /api/deep_scrape/{address}
+```
+Launches the Playwright Intelligence Engine for browser-based acquisition of blockchain explorer data. Collected data includes:
+Complete transaction history, Internal transactions, ERC-20/721/1155 transfers, Contract interactions, Gas statistics, Address labels, Explorer metadata.
+
+---
+
+# Darknet Intelligence
+
+```http
+GET /api/darknet/search
+```
+Queries the NEMESIS Darknet Intelligence Repository. Searches include:
+Onion services, Threat actor aliases, Cryptocurrency addresses, Email addresses, Usernames, Market listings, Data leaks, Credential dumps, Intelligence reports.
+
+---
+
+# Administrative APIs
+
+Administrative endpoints expose operational capabilities including:
+
+```http
+POST /api/login
+GET /admin/health
+GET /admin/traces
+GET /api/admin/cases
+POST /api/admin/cases
+GET /api/admin/db_stats
+GET /api/admin/config
+POST /api/admin/config
+```
+
+These endpoints require administrative authentication and are intended for internal operational use.
+
+---
+
+# Cloudflare Edge Services
+
+The API is deployed behind Cloudflare Enterprise and integrates with:
+Workers, KV, D1, R2, Durable Objects, Queues, Browser Rendering, AI Gateway, Analytics Engine, Zero Trust, WAF, API Shield, Rate Limiting, Smart Placement, Logpush, Observability, Vectorize (planned), Hyperdrive (planned).
+    </textarea>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const markdownSource = document.getElementById('markdown-source').value;
+            const htmlContent = marked.parse(markdownSource);
+            document.getElementById('content').innerHTML = htmlContent;
+        });
+    </script>
+</body>
+</html>
