@@ -31,6 +31,8 @@ from intel.abi_decoder import ABIDecoder
 from intel.bridge_resolver import BridgeResolver
 from intel.cex_clustering import CEXClusterer
 from services.graph_model import graph_db
+from services.ontology import map_tx_to_ontology
+from services.price_oracle import get_historical_usd_value, get_current_usd_value
 
 
 logger = logging.getLogger("OmniChainEngine")
@@ -115,7 +117,7 @@ CONFIG = {
     "OPTIMISMSCAN_API_KEY": os.getenv("OPTIMISMSCAN_API_KEY", "AYQRQWFDJRK8WAX2ICJ8U4JUSYXZT5J7II"),
     "BASESCAN_API_KEY": os.getenv("BASESCAN_API_KEY", "AYQRQWFDJRK8WAX2ICJ8U4JUSYXZT5J7II"),
     "GEMINI_API_KEY": os.getenv("GEMINI_API_KEYS", "").split(',')[0].strip('"') if os.getenv("GEMINI_API_KEYS") else "",
-    "MONGO_URI": os.getenv("DATABASE_MONGO_URL", os.getenv("MONGO_URI", "mongodb+srv://MKpBkrUw:Z63zGHQaiYG6rhrb@us-east-1.ufsuw.mongodb.net/blockchain")),
+    "MONGO_URI": os.getenv("MONGODB_URI", os.getenv("DATABASE_MONGO_URL", os.getenv("MONGO_URI", "mongodb+srv://nemesis:nemesis2026@nemesisdb.vir5vg2.mongodb.net/?appName=nemesisdb"))),
     "TOKENVIEW_API_KEY": os.getenv("GETBLOCK_TRON_KEY", "2c9414b6d83947f5aa7a1f2f2f341cfc"),
     "OKLINK_API_KEY": os.getenv("OKLINK_API_KEY", ""),
     "ETHPLORER_API_KEY": os.getenv("ETHPLORER_API_KEY", "EK-jzMjY-tyVwyEJ-wj3su"),
@@ -1256,11 +1258,23 @@ class TraceEngine:
             
             is_consolidation = len(self.inbound_sources[to]) > 1 
             
-        # Attempt to find the rate based on ticker, fallback to chain rate
-        rate = USD_RATES.get(ticker, USD_RATES.get(chain, 1))
-        # Stablecoins default to 1
-        if ticker in ["USDT", "USDC", "DAI", "BUSD"]: rate = 1.0
-        usd_value = amt * rate
+        # Attempt to get historical price
+        try:
+            from datetime import datetime, timezone
+            timestamp_dt = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+            timestamp_int = int(timestamp_dt.timestamp())
+        except:
+            import time
+            timestamp_int = int(time.time())
+            
+        usd_value = await get_historical_usd_value(chain, intent_data.get('tokenAddress', ''), amt, timestamp_int)
+        
+        if usd_value == 0:
+            if ticker in ["USDT", "USDC", "DAI", "BUSD", "USDD", "TUSD", "FRAX"]:
+                usd_value = amt * 1.0
+            else:
+                rate = USD_RATES.get(ticker, USD_RATES.get(chain, 1.0))
+                usd_value = amt * rate
         
         async with self.state_lock:
             if addr in self.seeds and self.target_asset_amount == 0.0:
@@ -1441,6 +1455,13 @@ class TraceEngine:
             c_abi = '[{"inputs":[{"internalType":"uint","name":"amountIn","type":"uint"},{"internalType":"uint","name":"amountOutMin","type":"uint"},{"internalType":"address[]","name":"path","type":"address[]"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint","name":"deadline","type":"uint"}],"name":"swapExactTokensForTokens","outputs":[],"stateMutability":"nonpayable","type":"function"}]'
             c_source = "contract UniswapV2Router02 {\\n    function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] path, address to, uint deadline) external {\\n        // Swap logic & liquidity pool routing\\n    }\\n}"
 
+        onto = map_tx_to_ontology({
+            "edge_type": intent_data.get("edge_type", "TRANSFER"),
+            "intent_action": intent_data.get("action", "TRANSFER"),
+            "receiver_entity": receiver_entity_lbl,
+            "action": intent_data.get("action", "Transfer")
+        })
+
         node = {
             "type": "LEDGER", "chain": chain, "ticker": ticker,
             "timestamp": timestamp, "from": addr, "sender_entity": sender_entity_lbl, "sender_nemesis_id": sender_nemesis_id,
@@ -1451,6 +1472,8 @@ class TraceEngine:
             "confidence": confidence_level, "origin_seed": origin_seed,
             "intent_action": intent_data.get("action", "TRANSFER"),
             "edge_type": intent_data.get("edge_type", "TRANSFER"),
+            "ontology_flow_type": onto.get("flow_type"),
+            "ontology_tx_category": onto.get("tx_category"),
             "attributions": intent_data.get("obf_path", "NONE"),
             "intelligence": intelligence,
             "fingerprint": fingerprint_logic,

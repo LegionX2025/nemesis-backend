@@ -645,9 +645,14 @@ async def deep_scrape(address: str, max_pages: int = 5):
 
 @app.get("/api/nemesis_id/profile/{address}")
 async def nemesis_id_profile(address: str):
-    return {
+    from services.trace_engine import mongo_db
+    if mongo_db is None:
+        return {"error": "Database not connected"}
+    
+    # Defaults
+    profile = {
         "address": address,
-        "network": "Ethereum",
+        "network": "AUTO",
         "entity": "Unknown / Unlabeled",
         "balance": "0.00",
         "first_activity": "N/A",
@@ -657,29 +662,121 @@ async def nemesis_id_profile(address: str):
         "total_transactions": "0",
         "clustered_addresses": []
     }
+    
+    try:
+        # Check if we have labels
+        label_doc = await mongo_db.wallet_labels.find_one({"address": {"$regex": f"^{address}$", "$options": "i"}})
+        if label_doc:
+            profile["entity"] = label_doc.get("label", "Unknown")
+            if "tags" in label_doc:
+                profile["clustered_addresses"] = label_doc["tags"]
+        
+        # Check if we have traces that involved this wallet
+        # Find first appearance
+        trace_doc = await mongo_db.traces_data.find_one(
+            {"$or": [{"ledger.from": {"$regex": f"^{address}$", "$options": "i"}}, {"ledger.to": {"$regex": f"^{address}$", "$options": "i"}}]},
+            sort=[("timestamp", 1)]
+        )
+        if trace_doc:
+            for l in trace_doc.get("ledger", []):
+                if l.get("from", "").lower() == address.lower() or l.get("to", "").lower() == address.lower():
+                    profile["first_activity"] = l.get("timestamp", "N/A")
+                    break
+                    
+        return profile
+    except Exception as e:
+        logger.error(f"Error fetching profile for {address}: {e}")
+        return profile
 
 @app.get("/api/nemesis_id/aml/{address}")
 async def nemesis_id_aml(address: str):
-    return {
+    from services.trace_engine import mongo_db
+    if mongo_db is None:
+        return {"error": "Database not connected"}
+        
+    aml_data = {
         "risk_score": 0,
-        "risk_level": "Unknown",
+        "risk_level": "Low",
         "flags": [],
         "sanctions": []
     }
+    
+    try:
+        label_doc = await mongo_db.wallet_labels.find_one({"address": {"$regex": f"^{address}$", "$options": "i"}})
+        if label_doc:
+            tags = label_doc.get("tags", [])
+            label_lower = label_doc.get("label", "").lower()
+            
+            if "hack" in label_lower or "exploit" in label_lower or "phish" in label_lower:
+                aml_data["risk_score"] = 95
+                aml_data["risk_level"] = "Critical"
+                aml_data["flags"].append("Known Exploiter / Hacker")
+            elif "mixer" in label_lower or "tornado" in label_lower:
+                aml_data["risk_score"] = 85
+                aml_data["risk_level"] = "High"
+                aml_data["flags"].append("Mixer / Obfuscation Service")
+            elif "sanction" in label_lower or "ofac" in label_lower:
+                aml_data["risk_score"] = 100
+                aml_data["risk_level"] = "Critical (Sanctioned)"
+                aml_data["sanctions"].append("OFAC Specially Designated National")
+            
+            for tag in tags:
+                aml_data["flags"].append(tag)
+                
+        return aml_data
+    except Exception as e:
+        logger.error(f"Error fetching AML for {address}: {e}")
+        return aml_data
 
 @app.get("/api/nemesis_id/intel/{address}")
 async def nemesis_id_intel(address: str):
-    return {
-        "intel_summary": "No intelligence found.",
+    from services.trace_engine import mongo_db
+    if mongo_db is None:
+        return {"error": "Database not connected"}
+        
+    intel = {
+        "intel_summary": "No specific darknet or OSINT intelligence found.",
         "tags": [],
         "sources": []
     }
+    
+    try:
+        # Search darknet collections
+        dn_doc = await mongo_db.darknet.find_one({"$text": {"$search": address}})
+        if dn_doc:
+            intel["intel_summary"] = "Address observed in Darknet intelligence sources."
+            intel["sources"].append(dn_doc.get("url", "Darknet Market / Forum"))
+            intel["tags"].append("Darknet Mention")
+            
+        return intel
+    except Exception as e:
+        logger.error(f"Error fetching intel for {address}: {e}")
+        return intel
 
 @app.get("/api/nemesis_id/tx_history/{address}")
 async def nemesis_id_tx_history(address: str):
-    return {
-        "transactions": []
-    }
+    from services.trace_engine import mongo_db
+    if mongo_db is None:
+        return {"error": "Database not connected"}
+        
+    try:
+        # Fetch relevant ledger entries from recent traces
+        cursor = mongo_db.traces_data.find(
+            {"$or": [{"ledger.from": {"$regex": f"^{address}$", "$options": "i"}}, {"ledger.to": {"$regex": f"^{address}$", "$options": "i"}}]},
+            {"ledger": 1, "trace_id": 1, "timestamp": 1}
+        ).sort("timestamp", -1).limit(5)
+        
+        docs = await cursor.to_list(length=5)
+        transactions = []
+        for doc in docs:
+            for l in doc.get("ledger", []):
+                if l.get("from", "").lower() == address.lower() or l.get("to", "").lower() == address.lower():
+                    transactions.append(l)
+                    
+        return {"transactions": transactions[:20]}
+    except Exception as e:
+        logger.error(f"Error fetching tx history for {address}: {e}")
+        return {"transactions": []}
 
 class NemesisIDReportRequest(BaseModel):
     address: str
