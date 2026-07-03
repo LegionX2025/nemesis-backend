@@ -1,0 +1,191 @@
+{% set active_page = 'id' %}
+{% include 'includes/head_assets.html' %}
+{% include 'includes/global_nav.html' %}
+
+<!-- Main Content -->
+<main class="flex-1 relative w-full h-screen overflow-hidden flex">
+    <div class="flex-1 overflow-y-auto p-8 relative">
+        <!-- Landing State -->
+        <div id="id-landing" class="max-w-3xl mx-auto flex flex-col items-center justify-center h-full w-full z-10 relative">
+            <i class="fa-solid fa-id-card text-6xl text-fuchsia-500 mb-6 drop-shadow-[0_0_15px_rgba(217,70,239,0.5)]"></i>
+            <h2 class="text-4xl font-black text-slate-800 tracking-tight mb-2">NEMESIS ID</h2>
+            <p class="text-slate-500 uppercase tracking-widest font-bold mb-8 text-center">Enter Wallet Address to Reconstruct Identity</p>
+            
+            <div class="w-full bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-xl shadow-slate-200/50 border border-white flex flex-col gap-4">
+                <div class="relative">
+                    <div id="chain-logo-container" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 overflow-hidden shadow-sm">
+                        <i class="fa-solid fa-link text-slate-400 text-sm"></i>
+                    </div>
+                    <input type="text" id="id-search-input" oninput="detectChainID()" placeholder="Enter Address (0x..., bc1..., etc)" class="w-full border border-slate-200 rounded-xl pl-16 pr-4 py-4 text-lg font-mono focus:outline-none focus:border-fuchsia-500 focus:ring-2 focus:ring-fuchsia-200 shadow-inner bg-white/90">
+                </div>
+                <button onclick="executeNemesisID()" class="w-full bg-fuchsia-600 hover:bg-fuchsia-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-fuchsia-500/30 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-bolt"></i> RECONSTRUCT PROFILE
+                </button>
+            </div>
+        </div>
+
+        <!-- Dashboard State (Initially Hidden) -->
+        <div id="id-dashboard" class="hidden max-w-7xl mx-auto flex-col gap-8 w-full z-10 relative">
+            <!-- Dashboard Header -->
+            <div class="flex justify-between items-end border-b border-slate-200 pb-4 bg-white/50 p-6 rounded-2xl backdrop-blur-sm border border-white">
+                <div>
+                    <h2 class="text-3xl font-black text-slate-800 tracking-tight">NEMESIS ID</h2>
+                    <p class="text-sm font-medium text-slate-500 uppercase tracking-widest mt-1">Digital Identity & Intelligence Profile</p>
+                </div>
+                <div class="flex gap-4">
+                    <input type="text" placeholder="Search Identity (NID-XXXX, 0x...)" class="border border-slate-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500 shadow-inner w-64">
+                    <button class="bg-fuchsia-600 hover:bg-fuchsia-700 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-md transition-colors">Search</button>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Column: Profile Card -->
+                <div class="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-white flex flex-col items-center text-center">
+                    <div class="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center mb-4 border-4 border-white shadow-sm relative">
+                        <i class="fa-solid fa-user-secret text-4xl text-slate-400"></i>
+                        <div class="absolute bottom-0 right-0 w-6 h-6 bg-red-500 rounded-full border-2 border-white flex items-center justify-center shadow">
+                            <i class="fa-solid fa-triangle-exclamation text-white text-[10px]"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800" id="dash-id-entity">UNKNOWN ENTITY</h3>
+                    <p class="text-xs text-slate-500 font-mono mt-1 break-all px-4" id="dash-id-address">Address</p>
+                    <div class="mt-4 px-4 py-1 bg-red-50 border border-red-100 text-red-600 text-[10px] font-bold uppercase tracking-wider rounded-full shadow-sm">
+                        High Risk Target
+                    </div>
+                    
+                    <div class="w-full mt-8 text-left">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 mb-3">Known Identifiers</h4>
+                        <div class="flex flex-col gap-2 font-mono text-xs">
+                            <div class="flex justify-between p-2 bg-slate-50/50 border border-slate-100 rounded">
+                                <span class="text-slate-500">Balance</span>
+                                <span class="text-slate-700 font-bold" id="dash-id-balance">$0.00</span>
+                            </div>
+                            <div class="flex justify-between p-2 bg-slate-50/50 border border-slate-100 rounded">
+                                <span class="text-slate-500">Native Val</span>
+                                <span class="text-slate-700 font-bold" id="dash-id-native">0.00</span>
+                            </div>
+                            <div class="flex justify-between p-2 bg-slate-50/50 border border-slate-100 rounded">
+                                <span class="text-slate-500">Total Sent</span>
+                                <span class="text-slate-700 font-bold" id="dash-id-sent">$0.00</span>
+                            </div>
+                            <div class="flex justify-between p-2 bg-slate-50/50 border border-slate-100 rounded">
+                                <span class="text-slate-500">Total Recv</span>
+                                <span class="text-slate-700 font-bold" id="dash-id-received">$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Threat Gauge & Metrics -->
+                <div class="lg:col-span-2 flex flex-col gap-6">
+                    <!-- Threat Score Row -->
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-white flex items-center">
+                            <div class="w-24 h-24 rounded-full border-[6px] border-red-500 flex items-center justify-center text-red-500 font-black text-3xl shadow-[0_0_30px_rgba(239,68,68,0.2)] bg-white shrink-0">
+                                92
+                            </div>
+                            <div class="ml-6">
+                                <h4 class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">NEMESIS Threat Score</h4>
+                                <p class="text-2xl font-black text-slate-800 mt-1">CRITICAL</p>
+                                <p class="text-xs text-slate-500 mt-1">Tainted funds linked to OFAC sanctions.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg shadow-slate-200/50 border border-white flex flex-col justify-center">
+                            <h4 class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">KYC/AML Status</h4>
+                            <div class="flex items-center gap-3 mt-3">
+                                <div class="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 shadow-sm"><i class="fa-solid fa-building-columns"></i></div>
+                                <div>
+                                    <p class="text-sm font-bold text-slate-700">Binance</p>
+                                    <p class="text-xs text-red-500 font-bold">Account Frozen</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 mt-3">
+                                <div class="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 shadow-sm"><i class="fa-solid fa-building-columns"></i></div>
+                                <div>
+                                    <p class="text-sm font-bold text-slate-700">Kraken</p>
+                                    <p class="text-xs text-slate-500">No matching records</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Feed -->
+                    <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-lg shadow-slate-200/50 border border-white flex-1 flex flex-col overflow-hidden min-h-[300px]">
+                        <div class="bg-slate-50/50 px-6 py-4 border-b border-slate-100 backdrop-blur-md">
+                            <h4 class="text-slate-500 text-xs font-bold uppercase tracking-widest">Behavioral Intelligence Feed</h4>
+                        </div>
+                        <div class="p-6 flex flex-col gap-4 overflow-y-auto">
+                            <div class="flex gap-4">
+                                <div class="w-2 h-2 rounded-full bg-blue-500 mt-1.5 shadow-[0_0_10px_rgba(59,130,246,0.6)]"></div>
+                                <div>
+                                    <p class="text-sm font-bold text-slate-700">Tornado Cash Deposit</p>
+                                    <p class="text-xs text-slate-500">100 ETH deposited to mixer contract.</p>
+                                    <p class="text-[10px] font-mono text-slate-400 mt-1">2 hours ago</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-4">
+                                <div class="w-2 h-2 rounded-full bg-purple-500 mt-1.5 shadow-[0_0_10px_rgba(168,85,247,0.6)]"></div>
+                                <div>
+                                    <p class="text-sm font-bold text-slate-700">Cross-chain Bridge Activation</p>
+                                    <p class="text-xs text-slate-500">Funds bridged from Ethereum to Polygon via Stargate.</p>
+                                    <p class="text-[10px] font-mono text-slate-400 mt-1">5 hours ago</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    function detectChainID() {
+        const address = document.getElementById('id-search-input').value.trim();
+        const chain = identifyChain(address);
+        document.getElementById('chain-logo-container').innerHTML = CHAIN_LOGOS[chain];
+    }
+
+    async function executeNemesisID() {
+        const address = document.getElementById('id-search-input').value.trim();
+        if (!address) {
+            alert("Please enter a wallet address.");
+            return;
+        }
+        
+        showGlobalLoader("Fusing Blockchain, OSINT & Identity Graphs...");
+        
+        try {
+            const response = await fetch(`/api/nemesis_id/profile/${address}`);
+            const data = await response.json();
+            
+            if (data.error) {
+                alert(data.error);
+                hideGlobalLoader();
+                return;
+            }
+            
+            console.log("Nemesis ID Data:", data);
+            
+            document.getElementById('dash-id-entity').innerText = data.entity || 'Unknown Entity';
+            document.getElementById('dash-id-address').innerText = data.address || address;
+            document.getElementById('dash-id-balance').innerText = data.balance || '$0.00';
+            document.getElementById('dash-id-native').innerText = data.native_value || '0.00';
+            document.getElementById('dash-id-sent').innerText = data.total_sent || '$0.00';
+            document.getElementById('dash-id-received').innerText = data.total_received || '$0.00';
+            
+            document.getElementById('id-landing').classList.add('hidden');
+            document.getElementById('id-dashboard').classList.remove('hidden');
+            document.getElementById('id-dashboard').classList.add('flex');
+        } catch (error) {
+            console.error("Error fetching Nemesis ID data:", error);
+            alert("Failed to reconstruct profile. Check console for details.");
+        } finally {
+            hideGlobalLoader();
+        }
+    }
+</script>
+
+{% include 'includes/footer.html' %}

@@ -1,0 +1,37 @@
+<!-- Sidebar Navigation -->
+<aside class="w-72 bg-white/90 backdrop-blur-md border-r border-slate-200 h-screen sticky top-0 flex flex-col py-10 z-50 shrink-0 shadow-lg shadow-slate-200/50">
+    <div class="mb-14 flex flex-col items-center px-4 text-center">
+        <img src="/static/logo_nemesis.jpeg" alt="Nemesis Logo" class="h-14 w-14 rounded-xl border border-slate-200 shadow-sm mb-4">
+        <h1 class="text-base font-black uppercase tracking-widest text-slate-900 leading-tight">LIONSGATE</h1>
+        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mt-2">INTELLIGENCE NETWORK</p>
+    </div>
+    
+    <nav class="flex flex-col w-full gap-2 px-6">
+        <a href="/" class="px-6 py-4 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-3 {% if active_page == 'home' %}bg-gradient-to-r from-blue-50 to-blue-100/50 text-blue-700 shadow-sm border border-blue-100{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-700{% endif %}">
+            HOME
+        </a>
+        
+        <a href="/tracer" class="px-6 py-4 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-3 {% if active_page == 'tracer' %}bg-gradient-to-r from-blue-50 to-blue-100/50 text-blue-700 shadow-sm border border-blue-100{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-700{% endif %}">
+            NEMESIS TRACER
+        </a>
+        
+        <a href="/id" class="px-6 py-4 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-3 {% if active_page == 'id' %}bg-gradient-to-r from-blue-50 to-blue-100/50 text-blue-700 shadow-sm border border-blue-100{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-700{% endif %}">
+            NEMESIS ID
+        </a>
+        
+        <a href="/audit" class="px-6 py-4 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-3 {% if active_page == 'audit' %}bg-gradient-to-r from-blue-50 to-blue-100/50 text-blue-700 shadow-sm border border-blue-100{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-700{% endif %}">
+            ENTERPRISE AUDIT
+        </a>
+        
+        <a href="/docs" class="px-6 py-4 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-3 {% if active_page == 'docs' %}bg-gradient-to-r from-blue-50 to-blue-100/50 text-blue-700 shadow-sm border border-blue-100{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-700{% endif %}">
+            API DOCS
+        </a>
+    </nav>
+    
+    <div class="mt-auto px-10 text-center">
+        <p class="text-[9px] text-slate-400 font-mono uppercase tracking-widest">
+            System Online<br>
+            <span class="text-emerald-500">Node Secure</span>
+        </p>
+    </div>
+</aside>
