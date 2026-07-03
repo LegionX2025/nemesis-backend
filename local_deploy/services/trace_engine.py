@@ -264,7 +264,9 @@ async def auto_compute_loss_amount(seeds_list, default_chain="AUTO"):
                     api_key = CONFIG.get(key_var, CONFIG.get("ETHERSCAN_API_KEY", ""))
                     
                     url = f"{base_url}?module=proxy&action=eth_getTransactionByHash&txhash={seed}&apikey={api_key}"
+                    url_receipt = f"{base_url}?module=proxy&action=eth_getTransactionReceipt&txhash={seed}&apikey={api_key}"
                     tasks.append( (seed, net_upper, url, "tx") )
+                    tasks.append( (seed, net_upper, url_receipt, "tx_receipt") )
             
             elif chain in EVM_DOMAINS or chain == "EVM_AUTO":
                 networks = EVM_DOMAINS.keys() if chain == "EVM_AUTO" else [chain]
@@ -307,6 +309,32 @@ async def auto_compute_loss_amount(seeds_list, default_chain="AUTO"):
                                 val_eth = int(val_hex, 16) / 10**18
                                 to_addr = res.get("to")
                                 return ("tx", val_eth * USD_RATES.get(net_upper, 3000.0), to_addr)
+                        
+                        elif req_type == "tx_receipt":
+                            res = data.get("result")
+                            if res and isinstance(res, dict) and res.get("logs"):
+                                total_usd = 0.0
+                                main_receiver = None
+                                transfer_topic = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+                                for log in res["logs"]:
+                                    topics = log.get("topics", [])
+                                    if len(topics) == 3 and topics[0] == transfer_topic:
+                                        to_hex = topics[2]
+                                        receiver = "0x" + to_hex[-40:]
+                                        val_hex = log.get("data", "0x0")
+                                        val_raw = int(val_hex, 16) if val_hex != "0x" else 0
+                                        
+                                        # Heuristic: if value > 1e12, probably 18 decimals, otherwise 6 decimals (stablecoin)
+                                        if val_raw > 10**14:
+                                            usd = (val_raw / 10**18) * USD_RATES.get(net_upper, 3000.0)
+                                        else:
+                                            usd = val_raw / 10**6 # Assume USDT/USDC equivalent
+                                            
+                                        total_usd += usd
+                                        main_receiver = receiver
+                                if total_usd > 0:
+                                    return ("tx", total_usd, main_receiver)
+
                         else:
                             txs = data.get("result", [])
                             total = 0.0

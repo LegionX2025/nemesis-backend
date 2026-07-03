@@ -94,24 +94,66 @@
 
             <form id="traceForm" onsubmit="event.preventDefault(); startTrace();">
                 <div class="mb-4">
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono">Trace Seeds (Wallets or TX Hashes)</label>
-                    <textarea id="trace_seeds" rows="3" class="w-full p-4 rounded-xl transition text-sm resize-none" placeholder="0xabc...&#10;0xdef..." required></textarea>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono flex justify-between items-center">
+                        <span>Trace Seeds (Wallets or TX Hashes)</span>
+                        <span id="tx-hash-badge" class="hidden bg-blue-100 text-blue-700 text-[10px] px-2 py-1 rounded font-bold"><i class="fa-solid fa-bolt text-yellow-500 mr-1"></i> TX HASH AUTO-EXTRACT</span>
+                    </label>
+                    <textarea id="trace_seeds" rows="3" class="w-full p-4 rounded-xl transition text-sm resize-none" placeholder="0xabc...&#10;0xdef..." required oninput="checkTxHash()"></textarea>
+                    <p id="tx-hash-helper" class="text-[10px] text-slate-400 mt-1 hidden">TX Hash Detected: Backend will auto-extract total outflow amount and receiver wallet as trace seed.</p>
                 </div>
                 
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono">Target Network Chain</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none" id="chain-icon-container">
+                            <i class="fa-solid fa-globe text-slate-400"></i>
+                        </div>
+                        <select id="target_chain" class="w-full pl-10 pr-4 py-3 rounded-xl transition bg-white/90 border border-slate-300 font-mono text-sm appearance-none" onchange="updateChainIcon()">
+                            <option value="AUTO" data-icon="fa-globe">Auto Detect Cross-Chain</option>
+                            <option value="ETHEREUM" data-icon-src="https://cryptologos.cc/logos/ethereum-eth-logo.png">Ethereum (ERC20/ETH)</option>
+                            <option value="BSC" data-icon-src="https://cryptologos.cc/logos/bnb-bnb-logo.png">Binance Smart Chain</option>
+                            <option value="POLYGON" data-icon-src="https://cryptologos.cc/logos/polygon-matic-logo.png">Polygon (MATIC)</option>
+                            <option value="ARBITRUM" data-icon-src="https://cryptologos.cc/logos/arbitrum-arb-logo.png">Arbitrum</option>
+                            <option value="OPTIMISM" data-icon-src="https://cryptologos.cc/logos/optimism-op-logo.png">Optimism</option>
+                            <option value="AVALANCHE" data-icon-src="https://cryptologos.cc/logos/avalanche-avax-logo.png">Avalanche (C-Chain)</option>
+                            <option value="BASE" data-icon-src="https://github.com/base-org/brand-kit/raw/main/logo/symbol/Base_Symbol_Blue.png">Base</option>
+                            <option value="BITCOIN" data-icon-src="https://cryptologos.cc/logos/bitcoin-btc-logo.png">Bitcoin (UTXO)</option>
+                            <option value="TRON" data-icon-src="https://cryptologos.cc/logos/tron-trx-logo.png">Tron (TRC20)</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <i class="fa-solid fa-chevron-down text-slate-400 text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="mb-8">
                     <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono flex justify-between">
-                        <span>Target Amount to Trace (Optional)</span>
+                        <span>Total Loss Amount to Trace (Optional)</span>
                         <span class="text-blue-500 font-normal">Leave blank for auto-computation</span>
                     </label>
-                    <div class="relative flex items-center">
-                        <div class="absolute left-4 text-slate-400 font-bold">$</div>
-                        <input type="number" id="trace_amount" class="w-full pl-8 pr-4 py-3 rounded-xl transition" placeholder="0.00">
+                    <div class="flex gap-2">
+                        <div class="relative w-1/3">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none" id="currency-icon-container">
+                                <i class="fa-solid fa-dollar-sign text-emerald-500"></i>
+                            </div>
+                            <select id="target_currency" class="w-full pl-8 pr-4 py-3 rounded-xl transition bg-white/90 border border-slate-300 font-mono text-sm appearance-none" onchange="updateCurrencyIcon()">
+                                <option value="USD" data-icon="fa-dollar-sign text-emerald-500">USD</option>
+                                <option value="ETH" data-icon-src="https://cryptologos.cc/logos/ethereum-eth-logo.png">ETH</option>
+                                <option value="BTC" data-icon-src="https://cryptologos.cc/logos/bitcoin-btc-logo.png">BTC</option>
+                                <option value="USDC" data-icon-src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png">USDC</option>
+                                <option value="USDT" data-icon-src="https://cryptologos.cc/logos/tether-usdt-logo.png">USDT</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <i class="fa-solid fa-chevron-down text-slate-400 text-xs"></i>
+                            </div>
+                        </div>
+                        <input type="number" step="any" id="trace_amount" class="w-2/3 pl-4 pr-4 py-3 rounded-xl transition" placeholder="0.00">
                     </div>
                 </div>
                 
                 <div class="flex justify-center">
                     <button type="button" onclick="startTrace()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-mono font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-blue-600/20 transition text-sm uppercase tracking-widest flex items-center justify-center gap-3">
-                        <i class="fa-solid fa-play"></i> Initialize Core Trace
+                        <i class="fa-solid fa-play"></i> Initialize Omni-Chain Trace
                     </button>
                 </div>
             </form>
@@ -119,9 +161,48 @@
     </div>
 
     <script>
+        function updateChainIcon() {
+            const select = document.getElementById('target_chain');
+            const opt = select.options[select.selectedIndex];
+            const container = document.getElementById('chain-icon-container');
+            if (opt.dataset.iconSrc) {
+                container.innerHTML = `<img src="${opt.dataset.iconSrc}" class="w-4 h-4 object-contain">`;
+            } else {
+                container.innerHTML = `<i class="fa-solid ${opt.dataset.icon} text-slate-400"></i>`;
+            }
+        }
+
+        function updateCurrencyIcon() {
+            const select = document.getElementById('target_currency');
+            const opt = select.options[select.selectedIndex];
+            const container = document.getElementById('currency-icon-container');
+            if (opt.dataset.iconSrc) {
+                container.innerHTML = `<img src="${opt.dataset.iconSrc}" class="w-4 h-4 object-contain">`;
+            } else {
+                container.innerHTML = `<i class="fa-solid ${opt.dataset.icon}"></i>`;
+            }
+        }
+        
+        function checkTxHash() {
+            const seeds = document.getElementById('trace_seeds').value.trim();
+            const badge = document.getElementById('tx-hash-badge');
+            const helper = document.getElementById('tx-hash-helper');
+            
+            // Check for EVM or Bitcoin tx hash patterns (64-66 hex chars)
+            if (/^(0x)?[a-fA-F0-9]{64}$/i.test(seeds)) {
+                badge.classList.remove('hidden');
+                helper.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+                helper.classList.add('hidden');
+            }
+        }
+
         async function startTrace() {
             const seeds = document.getElementById('trace_seeds').value.trim();
             const amount = document.getElementById('trace_amount').value.trim();
+            const currency = document.getElementById('target_currency').value;
+            const chain = document.getElementById('target_chain').value;
             
             if (!seeds) {
                 alert("Please provide at least one seed address or transaction hash.");
@@ -135,9 +216,9 @@
             // Cycle loader text
             const texts = [
                 "Auto-Computing Trace Thresholds...",
-                "Bypassing Sub-Graph Limitations...",
+                "Decoding Omni-Chain Ledger Events...",
                 "Generating Transaction Vectors...",
-                "Deploying Autonomous Trace..."
+                "Deploying Autonomous Cross-Chain Trace..."
             ];
             let i = 0;
             const textEl = document.getElementById('loader-text');
@@ -156,7 +237,8 @@
                     body: JSON.stringify({
                         seeds: seeds,
                         target_amount: amount ? parseFloat(amount) : 0,
-                        target_currency: "USD",
+                        target_currency: currency,
+                        chain_override: chain,
                         max_depth: 10,
                         max_hops: 15
                     })
