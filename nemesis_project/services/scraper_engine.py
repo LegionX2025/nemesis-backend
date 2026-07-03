@@ -18,11 +18,32 @@ BEHAVIOR_KEYWORDS = {
     "DARKNET": ["darknet", "silk road", "hydra", "black market", "sanctioned", "ofac", "blacklisted", "scam", "phishing", "hack", "exploiter"],
 }
 
+# Universal EVM Explorer Endpoints
+EXPLORER_REGISTRY = {
+    "ETHEREUM": "https://etherscan.io",
+    "ETH": "https://etherscan.io",
+    "BASE": "https://basescan.org",
+    "ARBITRUM": "https://arbiscan.io",
+    "OPTIMISM": "https://optimistic.etherscan.io",
+    "POLYGON": "https://polygonscan.com",
+    "BSC": "https://bscscan.com",
+    "AVALANCHE": "https://snowtrace.io",
+    "FANTOM": "https://ftmscan.com",
+    "SONIC": "https://sonicscan.org",
+    "SCROLL": "https://scrollscan.com",
+    "LINEA": "https://lineascan.build",
+    "BLAST": "https://blastscan.io",
+    "MANTLE": "https://mantlescan.xyz",
+    "CRONOS": "https://cronoscan.com",
+    "GNOSIS": "https://gnosisscan.io"
+}
+
 class AutoScraper:
     def __init__(self):
         self.playwright = None
         self.browser = None
         self.context = None
+        self.swarm_semaphore = asyncio.Semaphore(3) # Max 3 concurrent Playwright tabs to prevent OOM
         
     async def start(self):
         try:
@@ -299,22 +320,18 @@ class AutoScraper:
                 "source": "Playwright Auto-Scraper"
             }
             
-            # Save to MongoDB immediately
-            from services.trace_engine import mongo_db
-            if mongo_db is not None:
-                import datetime
-                try:
-                    await mongo_db.wallet_labels.insert_one(
-                        {"address": address.lower(), "label": result["label"], "cluster": result["cluster"], "source": result["source"], "timestamp": datetime.datetime.now(datetime.timezone.utc)}
-                    )
-                    logger.info(f"Playwright Scraper resolved {address}: {result['label']}")
-                except Exception as e:
-                    if "duplicate" in str(e).lower() or "e11000" in str(e).lower():
-                        pass # We already have it
-                    elif "not authorized" in str(e).lower():
-                        logger.warning("MongoDB skipped: Database user lacks 'insert' permissions for wallet_labels.")
-                    else:
-                        logger.error(f"Mongo insert failed in scraper: {e}")
+            # Save to Universal Databases immediately
+            from services.database_connector import db_connector
+            
+            # Fire and forget auto-save
+            asyncio.create_task(db_connector.save_entity(
+                address=address,
+                chain=chain,
+                label=result["label"],
+                cluster=result["cluster"],
+                tags=[],
+                metadata={"source": result["source"]}
+            ))
             
             # Broadcast to active trace websocket
             if trace_id:
@@ -337,9 +354,12 @@ class AutoScraper:
             return result
         return None
 
-    async def deep_scrape_etherscan(self, address: str, max_pages: int = 5) -> dict:
-        """Deep scrape of Etherscan for granular parsing of Txs, Internal, ERC-20, EIP-7702, and Assets."""
+    async def universal_deep_scrape(self, address: str, chain: str = "ETHEREUM", max_pages: int = 5) -> dict:
+        """Deep scrape of EVM explorers for granular parsing using parallel swarm logic."""
         if not self.context: return {"error": "Scraper not initialized"}
+        
+        # Resolve Base URL
+        base_url = EXPLORER_REGISTRY.get(chain.upper(), "https://etherscan.io")
         
         result = {
             "address": address.lower(),
@@ -353,12 +373,13 @@ class AutoScraper:
             "cards": []
         }
         
-        page = await self.context.new_page()
-        try:
-            url = f"https://etherscan.io/address/{address}"
-            logger.info(f"[DEEP SCRAPE] Loading {url}")
-            await page.goto(url, wait_until="domcontentloaded", timeout=25000)
-            await page.wait_for_timeout(4000) # Wait for Cloudflare/React
+        async with self.swarm_semaphore: # Bound concurrent Playwright tabs
+            page = await self.context.new_page()
+            try:
+                url = f"{base_url}/address/{address}"
+                logger.info(f"[DEEP SCRAPE] Swarm Agent hitting {url}")
+                await page.goto(url, wait_until="domcontentloaded", timeout=25000)
+                await page.wait_for_timeout(4000) # Wait for Cloudflare/React
             
             # 1. Assets / Portfolio Extraction
             logger.info(f"[DEEP SCRAPE] Extracting Assets for {address}")
