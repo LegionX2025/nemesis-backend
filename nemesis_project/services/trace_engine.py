@@ -44,6 +44,15 @@ try:
 except ImportError:
     run_syndicate_clustering = None
 
+try:
+    from services.osint_engine import osint_engine
+    from services.identity_engine import identity_engine
+    from services.database_connector import db_connector
+except ImportError:
+    osint_engine = None
+    identity_engine = None
+    db_connector = None
+
 gbeo = GBEOParser()
 ml_engine = MachineLearningEngine()
 auto_scraper = AutoScraper()
@@ -1347,6 +1356,22 @@ class TraceEngine:
         if is_terminal or "MIXER" in entity_class: confidence_level = "Confirmed On-Chain Fact"
         elif is_consolidation: confidence_level = "High-Confidence Analytical Assessment (Recombination)"
         else: confidence_level = "High-Confidence Analytical Assessment"
+        
+        # --- GLOBAL OSINT PIPELINE TRIGGER ---
+        # Trigger deep OSINT on high-value, terminal, or highly-consolidated nodes
+        if (is_terminal or is_consolidation or active_target > 1000) and osint_engine and identity_engine:
+            async def trigger_osint():
+                try:
+                    logger.info(f"[OSINT TRIGGER] Initiating Global OSINT sweep for {to}")
+                    osint_results = await osint_engine.run_full_osint_pipeline(to)
+                    resolved_node = identity_engine.resolve_entity(to, osint_results)
+                    if db_connector:
+                        await db_connector.save_identity_graph(resolved_node)
+                except Exception as e:
+                    logger.error(f"OSINT execution failed for {to}: {e}")
+            
+            asyncio.create_task(trigger_osint())
+        # --------------------------------------
         
         if to not in self.visited and depth < self.max_depth and not is_threshold_hit: 
             # 1. Regular Traversal
