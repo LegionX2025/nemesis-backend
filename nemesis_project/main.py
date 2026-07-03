@@ -16,8 +16,9 @@ def auto_install_dependencies():
     except Exception as e:
         print(f"[SYSTEM] Warning: Failed to auto-install dependencies: {e}\n")
 
-auto_install_dependencies()
-
+# Only run auto-install if not in a production environment like Render
+if not os.environ.get("RENDER"):
+    auto_install_dependencies()
 os.environ["LOKY_MAX_CPU_COUNT"] = "4"
 os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "0"
 import re
@@ -168,11 +169,34 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://nemesis-id-frontend.pages.dev", 
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3000"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def validate_edge_signature(request: Request, call_next):
+    # Only protect /api/ routes
+    if request.url.path.startswith("/api/"):
+        secret = os.getenv("NEMESIS_EDGE_SECRET", "default_dev_secret_override")
+        sig = request.headers.get("X-Nemesis-Signature")
+        
+        # In a real prod setup, you'd strictly enforce this.
+        # For this execution, we enforce it but allow the dev secret.
+        if sig != secret:
+            return JSONResponse(
+                status_code=403, 
+                content={"message": "Forbidden: Invalid Edge Proxy Signature. Direct API access is denied."}
+            )
+            
+    response = await call_next(request)
+    return response
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 

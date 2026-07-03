@@ -21,5 +21,5 @@ COPY . .
 ENV PORT=3001
 EXPOSE $PORT
 
-# Start FastAPI server
-CMD ["sh", "-c", "uvicorn local_deploy.main:app --host 0.0.0.0 --port ${PORT:-3001}"]
+# Start FastAPI server with Uvicorn multi-worker scaling
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-3001} --workers 4"]

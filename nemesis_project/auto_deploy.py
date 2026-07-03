@@ -83,6 +83,12 @@ def run_cmd(cmd, cwd=".", exit_on_error=True, max_retries=3):
         sys.exit(1)
     return False, output_log
 
+def check_binary_exists(binary_name):
+    print(f"    -> Verifying '{binary_name}' is installed...")
+    if shutil.which(binary_name) is None:
+        print(f"[CRITICAL ERROR] '{binary_name}' is not installed or not in PATH. Please install it before deploying.")
+        sys.exit(1)
+
 def main():
     print("============================================================")
     print(" 🚀 NEMESIS OMNI-DEPLOYER: INFRASTRUCTURE-AS-CODE INITIATING")
@@ -94,7 +100,10 @@ def main():
         os.environ["CLOUDFLARE_API_TOKEN"] = cf_token.strip().strip('"').strip("'").replace('\n', '')
 
     # 0. PRE-FLIGHT
-    print("\n>>> [0/4] Installing Pre-flight Dependencies")
+    print("\n>>> [0/4] Installing Pre-flight Dependencies & Validating Binaries")
+    check_binary_exists("git")
+    check_binary_exists("npm")
+    check_binary_exists("npx")
     print("    -> Installing Python requirements (Root)...")
     run_cmd("pip install -r requirements.txt", exit_on_error=False)
     

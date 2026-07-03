@@ -16,5 +16,9 @@ CREATE TABLE cached_traces (
     chain TEXT NOT NULL,
     trace_data JSON,
     cached_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    expires_at DATETIME
 );
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_event ON audit_logs(event_type);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_ip ON audit_logs(actor_ip);
+CREATE INDEX IF NOT EXISTS idx_cached_traces_seed ON cached_traces(seed_wallet);
+CREATE INDEX IF NOT EXISTS idx_cached_traces_chain ON cached_traces(chain);

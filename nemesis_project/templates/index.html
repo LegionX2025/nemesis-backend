@@ -86,6 +86,7 @@
             .sidebar-link:hover { background: #f1f5f9; color: #0f172a; }
             .sidebar-link.active { background: linear-gradient(90deg, rgba(251,207,232,0.3), rgba(191,219,254,0.3)); color: #0f172a; border-left: 4px solid #3b82f6; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
         </style>
+        <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     </head>
     <body class="flex flex-row h-screen spa-mode">
         <!-- SPA Sidebar -->
@@ -133,19 +134,38 @@
                                 
                                 <div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
                                     <div class="flex items-center gap-3">
-                                        <button class="text-slate-400 hover:text-indigo-500 transition-colors tooltip" title="Upload Files (CSV, JSON, TXT)" onclick="document.getElementById('file-upload').click()">
+                                        <button class="text-slate-400 hover:text-indigo-500 transition-colors tooltip flex items-center gap-2" title="Upload Files or Images (CSV, JSON, TXT, PNG, JPG)" onclick="document.getElementById('file-upload').click()">
                                             <i class="fa-solid fa-paperclip text-lg"></i>
+                                            <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Upload Files / Images</span>
                                         </button>
-                                        <input type="file" id="file-upload" class="hidden" multiple accept=".csv,.txt,.json,.pdf" onchange="handlePromptFileUpload(event)">
+                                        <input type="file" id="file-upload" class="hidden" multiple accept=".csv,.txt,.json,.pdf,.png,.jpg,.jpeg" onchange="handlePromptFileUpload(event)">
                                         
-                                        <select id="landing-chain-select" class="text-sm bg-slate-100 text-slate-600 rounded-lg px-3 py-1.5 border-none outline-none focus:ring-2 focus:ring-indigo-100 font-medium">
-                                            <option value="ALL">Auto-Detect Chain</option>
-                                            <option value="ETH">Ethereum</option>
-                                            <option value="BTC">Bitcoin</option>
-                                            <option value="BASE">Base</option>
-                                            <option value="SOL">Solana</option>
-                                        </select>
-                                        <div id="file-badges" class="flex gap-2"></div>
+                                        <!-- Custom Dropdown for Auto-Detect Chain -->
+                                        <div class="relative" id="landing-chain-custom-dropdown-container">
+                                            <input type="hidden" id="landing-chain-select" value="ALL">
+                                            <button type="button" onclick="toggleDropdown('landing-chain-custom-dropdown')" class="flex items-center justify-between bg-slate-100 text-slate-600 rounded-lg px-3 py-1.5 border-none outline-none focus:ring-2 focus:ring-indigo-100 font-medium text-sm min-w-[160px]">
+                                                <div class="flex items-center gap-2" id="landing-chain-custom-selected">
+                                                    <span class="text-sm w-4 text-center">🌐</span>
+                                                    <span>Auto-Detect Chain</span>
+                                                </div>
+                                                <i class="fa-solid fa-chevron-down text-[10px] ml-2"></i>
+                                            </button>
+                                            <div id="landing-chain-custom-dropdown" class="hidden absolute z-50 w-[220px] mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-60 overflow-y-auto left-0">
+                                                <button type="button" onclick="selectDropdownOption('landing-chain-select', 'ALL', '🌐', 'Auto-Detect Chain', 'landing-chain-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><span class="text-sm w-4 text-center">🌐</span><span>Auto-Detect Chain</span></button>
+                                                <button type="button" onclick="selectDropdownOption('landing-chain-select', 'ETH', 'https://cryptologos.cc/logos/ethereum-eth-logo.svg', 'Ethereum (ETH)', 'landing-chain-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/ethereum-eth-logo.svg" class="w-4 h-4 object-contain"><span>Ethereum (ETH)</span></button>
+                                                <button type="button" onclick="selectDropdownOption('landing-chain-select', 'BTC', 'https://cryptologos.cc/logos/bitcoin-btc-logo.svg', 'Bitcoin (BTC)', 'landing-chain-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/bitcoin-btc-logo.svg" class="w-4 h-4 object-contain"><span>Bitcoin (BTC)</span></button>
+                                                <button type="button" onclick="selectDropdownOption('landing-chain-select', 'BSC', 'https://cryptologos.cc/logos/bnb-bnb-logo.svg', 'Binance Smart Chain', 'landing-chain-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/bnb-bnb-logo.svg" class="w-4 h-4 object-contain"><span>Binance Smart Chain</span></button>
+                                                <button type="button" onclick="selectDropdownOption('landing-chain-select', 'POLYGON', 'https://cryptologos.cc/logos/polygon-matic-logo.svg', 'Polygon (MATIC)', 'landing-chain-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/polygon-matic-logo.svg" class="w-4 h-4 object-contain"><span>Polygon (MATIC)</span></button>
+                                                <button type="button" onclick="selectDropdownOption('landing-chain-select', 'ARBITRUM', 'https://cryptologos.cc/logos/arbitrum-arb-logo.svg', 'Arbitrum (ARB)', 'landing-chain-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/arbitrum-arb-logo.svg" class="w-4 h-4 object-contain"><span>Arbitrum (ARB)</span></button>
+                                                <button type="button" onclick="selectDropdownOption('landing-chain-select', 'OPTIMISM', 'https://cryptologos.cc/logos/optimism-ethereum-op-logo.svg', 'Optimism (OP)', 'landing-chain-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/optimism-ethereum-op-logo.svg" class="w-4 h-4 object-contain"><span>Optimism (OP)</span></button>
+                                                <button type="button" onclick="selectDropdownOption('landing-chain-select', 'BASE', 'https://logowik.com/content/uploads/images/base-coin8494.logowik.com.webp', 'Base', 'landing-chain-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://logowik.com/content/uploads/images/base-coin8494.logowik.com.webp" class="w-4 h-4 object-contain"><span>Base</span></button>
+                                                <button type="button" onclick="selectDropdownOption('landing-chain-select', 'SOL', 'https://cryptologos.cc/logos/solana-sol-logo.svg', 'Solana (SOL)', 'landing-chain-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/solana-sol-logo.svg" class="w-4 h-4 object-contain"><span>Solana (SOL)</span></button>
+                                                <button type="button" onclick="selectDropdownOption('landing-chain-select', 'TRX', 'https://cryptologos.cc/logos/tron-trx-logo.svg', 'Tron (TRX)', 'landing-chain-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/tron-trx-logo.svg" class="w-4 h-4 object-contain"><span>Tron (TRX)</span></button>
+                                                <button type="button" onclick="selectDropdownOption('landing-chain-select', 'XRP', 'https://cryptologos.cc/logos/xrp-xrp-logo.svg', 'Ripple (XRP)', 'landing-chain-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/xrp-xrp-logo.svg" class="w-4 h-4 object-contain"><span>Ripple (XRP)</span></button>
+                                                <button type="button" onclick="selectDropdownOption('landing-chain-select', 'AVAX', 'https://cryptologos.cc/logos/avalanche-avax-logo.svg', 'Avalanche (AVAX)', 'landing-chain-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/avalanche-avax-logo.svg" class="w-4 h-4 object-contain"><span>Avalanche (AVAX)</span></button>
+                                            </div>
+                                        </div>
+                                        <div id="file-badges" class="flex gap-2 flex-wrap"></div>
                                     </div>
                                     
                                     <button onclick="startAiExtraction()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-xl font-semibold shadow-lg shadow-indigo-200 transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2">
@@ -257,15 +277,27 @@
                             <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Total loss assets target amount</label>
                             <div class="flex border border-slate-200 rounded-lg overflow-hidden bg-white/90 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-200">
                                 <input type="number" id="tracer-target-amount-input" placeholder="e.g. 50000" class="w-full p-3 font-mono focus:outline-none bg-transparent">
-                                <select id="tracer-target-currency-input" class="bg-slate-50 border-l border-slate-200 px-3 font-bold text-slate-700 outline-none cursor-pointer text-xs">
-                                    <option value="USD">💵 USD</option>
-                                    <option value="ETH">🔷 ETH</option>
-                                    <option value="BTC">₿ BTC</option>
-                                    <option value="TRX">🔴 TRX</option>
-                                    <option value="SOL">🟣 SOL</option>
-                                    <option value="BNB">🟡 BNB</option>
-                                    <option value="MATIC">🟣 MATIC</option>
-                                </select>
+                                <div class="relative border-l border-slate-200" id="tracer-currency-custom-dropdown-container">
+                                    <input type="hidden" id="tracer-target-currency-input" value="USD">
+                                    <button type="button" onclick="toggleDropdown('tracer-currency-custom-dropdown')" class="flex items-center justify-between bg-slate-50 px-3 font-bold text-slate-700 outline-none cursor-pointer text-xs h-full min-w-[90px]">
+                                        <div class="flex items-center gap-2" id="tracer-currency-custom-selected">
+                                            <span class="text-sm w-4 text-center">💵</span>
+                                            <span>USD</span>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-down text-[10px] ml-2"></i>
+                                    </button>
+                                    <div id="tracer-currency-custom-dropdown" class="hidden absolute z-50 w-[140px] mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-60 overflow-y-auto right-0">
+                                        <button type="button" onclick="selectDropdownOption('tracer-target-currency-input', 'USD', '💵', 'USD', 'tracer-currency-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><span class="text-sm w-4 text-center">💵</span><span>USD</span></button>
+                                        <button type="button" onclick="selectDropdownOption('tracer-target-currency-input', 'ETH', 'https://cryptologos.cc/logos/ethereum-eth-logo.svg', 'ETH', 'tracer-currency-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/ethereum-eth-logo.svg" class="w-4 h-4 object-contain"><span>ETH</span></button>
+                                        <button type="button" onclick="selectDropdownOption('tracer-target-currency-input', 'BTC', 'https://cryptologos.cc/logos/bitcoin-btc-logo.svg', 'BTC', 'tracer-currency-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/bitcoin-btc-logo.svg" class="w-4 h-4 object-contain"><span>BTC</span></button>
+                                        <button type="button" onclick="selectDropdownOption('tracer-target-currency-input', 'BNB', 'https://cryptologos.cc/logos/bnb-bnb-logo.svg', 'BNB', 'tracer-currency-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/bnb-bnb-logo.svg" class="w-4 h-4 object-contain"><span>BNB</span></button>
+                                        <button type="button" onclick="selectDropdownOption('tracer-target-currency-input', 'USDT', 'https://cryptologos.cc/logos/tether-usdt-logo.svg', 'USDT', 'tracer-currency-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/tether-usdt-logo.svg" class="w-4 h-4 object-contain"><span>USDT</span></button>
+                                        <button type="button" onclick="selectDropdownOption('tracer-target-currency-input', 'USDC', 'https://cryptologos.cc/logos/usd-coin-usdc-logo.svg', 'USDC', 'tracer-currency-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/usd-coin-usdc-logo.svg" class="w-4 h-4 object-contain"><span>USDC</span></button>
+                                        <button type="button" onclick="selectDropdownOption('tracer-target-currency-input', 'TRX', 'https://cryptologos.cc/logos/tron-trx-logo.svg', 'TRX', 'tracer-currency-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/tron-trx-logo.svg" class="w-4 h-4 object-contain"><span>TRX</span></button>
+                                        <button type="button" onclick="selectDropdownOption('tracer-target-currency-input', 'SOL', 'https://cryptologos.cc/logos/solana-sol-logo.svg', 'SOL', 'tracer-currency-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/solana-sol-logo.svg" class="w-4 h-4 object-contain"><span>SOL</span></button>
+                                        <button type="button" onclick="selectDropdownOption('tracer-target-currency-input', 'MATIC', 'https://cryptologos.cc/logos/polygon-matic-logo.svg', 'MATIC', 'tracer-currency-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/polygon-matic-logo.svg" class="w-4 h-4 object-contain"><span>MATIC</span></button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="flex flex-col gap-1">
@@ -294,7 +326,7 @@
                         <span>Seed Wallets (One per line)</span>
                         <span id="network-logo-container" class="text-blue-500 font-bold"></span>
                     </label>
-                    <textarea id="seed-input" class="w-full h-12 text-xs bg-transparent focus:outline-none font-mono text-slate-800 resize-none" placeholder="Enter 0x... addresses" oninput="detectWalletChain()"></textarea>
+                    <textarea id="seed-input" class="w-full min-h-[120px] h-32 text-xs bg-transparent focus:outline-none font-mono text-slate-800 resize-none py-2" placeholder="Enter 0x... addresses&#10;One per line" oninput="detectWalletChain()"></textarea>
                 </div>
 
                 <!-- Parameters -->
@@ -4501,14 +4533,70 @@ NEMESIS_ROOT/
             function handlePromptFileUpload(event) {
                 const files = event.target.files;
                 const badgesContainer = document.getElementById('file-badges');
+                const promptBox = document.getElementById('high-end-prompt');
                 for(let i=0; i<files.length; i++) {
-                    uploadedFiles.push(files[i]);
+                    const file = files[i];
+                    uploadedFiles.push(file);
                     const badge = document.createElement('span');
+                    badge.id = `badge-${Date.now()}-${i}`;
                     badge.className = "px-2 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded flex items-center gap-1";
-                    badge.innerHTML = `<i class="fa-solid fa-file-lines"></i> ${files[i].name} <i class="fa-solid fa-xmark ml-1 cursor-pointer hover:text-red-500" onclick="this.parentElement.remove()"></i>`;
-                    badgesContainer.appendChild(badge);
+                    
+                    if (file.type.startsWith('image/')) {
+                        badge.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-indigo-400"></i> OCR Processing... <i class="fa-solid fa-xmark ml-1 cursor-pointer hover:text-red-500" onclick="this.parentElement.remove()"></i>`;
+                        badgesContainer.appendChild(badge);
+                        
+                        if(typeof Tesseract !== 'undefined') {
+                            Tesseract.recognize(
+                                file,
+                                'eng',
+                                { logger: m => { if(m.status === 'recognizing text') { console.log(`OCR Progress: ${Math.round(m.progress * 100)}%`); } } }
+                            ).then(({ data: { text } }) => {
+                                badge.innerHTML = `<i class="fa-solid fa-image"></i> ${file.name} <i class="fa-solid fa-xmark ml-1 cursor-pointer hover:text-red-500" onclick="this.parentElement.remove()"></i>`;
+                                promptBox.value = promptBox.value + (promptBox.value ? '\n\n' : '') + `[OCR Extracted from ${file.name}]:\n` + text;
+                                promptBox.style.height = 'auto';
+                                promptBox.style.height = promptBox.scrollHeight + 'px';
+                            }).catch(err => {
+                                badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-500"></i> OCR Failed <i class="fa-solid fa-xmark ml-1 cursor-pointer hover:text-red-500" onclick="this.parentElement.remove()"></i>`;
+                                console.error('OCR Error:', err);
+                            });
+                        } else {
+                            badge.innerHTML = `<i class="fa-solid fa-image"></i> ${file.name} (OCR Unavailable) <i class="fa-solid fa-xmark ml-1 cursor-pointer hover:text-red-500" onclick="this.parentElement.remove()"></i>`;
+                            badgesContainer.appendChild(badge);
+                        }
+                    } else {
+                        badge.innerHTML = `<i class="fa-solid fa-file-lines"></i> ${file.name} <i class="fa-solid fa-xmark ml-1 cursor-pointer hover:text-red-500" onclick="this.parentElement.remove()"></i>`;
+                        badgesContainer.appendChild(badge);
+                    }
                 }
             }
+            
+            // Custom Dropdown Logic
+            function toggleDropdown(dropdownId) {
+                const dropdown = document.getElementById(dropdownId);
+                const isHidden = dropdown.classList.contains('hidden');
+                document.querySelectorAll('[id$="-dropdown"]').forEach(el => el.classList.add('hidden')); // Close all other dropdowns
+                if (isHidden) {
+                    dropdown.classList.remove('hidden');
+                }
+            }
+
+            function selectDropdownOption(inputId, value, icon, text, selectedContainerId) {
+                document.getElementById(inputId).value = value;
+                const selectedContainer = document.getElementById(selectedContainerId);
+                if (icon.startsWith('http')) {
+                    selectedContainer.innerHTML = `<img src="${icon}" class="w-4 h-4 object-contain"><span>${text}</span>`;
+                } else {
+                    selectedContainer.innerHTML = `<span class="text-sm w-4 text-center">${icon}</span><span>${text}</span>`;
+                }
+                document.querySelectorAll('[id$="-dropdown"]').forEach(el => el.classList.add('hidden'));
+            }
+            
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!event.target.closest('[id$="-dropdown-container"]')) {
+                    document.querySelectorAll('[id$="-dropdown"]').forEach(el => el.classList.add('hidden'));
+                }
+            });
             
             // Drag and drop logic
             const promptWrapper = document.querySelector('.prompt-container-wrapper');

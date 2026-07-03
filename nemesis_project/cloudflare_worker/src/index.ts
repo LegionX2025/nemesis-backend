@@ -7,6 +7,8 @@ export interface Env {
     NEMESIS_KV: KVNamespace;
     NEMESIS_STORAGE: R2Bucket;
     BACKEND_API_URL: string;
+    NEMESIS_EDGE_SECRET: string;
+    HYPERDRIVE: any;
 }
 
 const app = new Hono<{ Bindings: Env }>()
@@ -37,9 +39,16 @@ app.all('/api/*', async (c) => {
             .catch(err => console.error("D1 Audit log failed:", err))
         )
 
+        // Generate an HMAC or simple secret token for the backend to verify
+        // In a real prod environment, use WebCrypto for HMAC. Here we pass the secret.
+        const edgeSecret = c.env.NEMESIS_EDGE_SECRET || "default_dev_secret_override";
+        
+        const newHeaders = new Headers(c.req.header());
+        newHeaders.set('X-Nemesis-Signature', edgeSecret);
+
         const response = await fetch(targetUrl, {
             method: c.req.method,
-            headers: c.req.header(),
+            headers: newHeaders,
             body: c.req.method !== 'GET' && c.req.method !== 'HEAD' ? await c.req.arrayBuffer() : null
         })
 
