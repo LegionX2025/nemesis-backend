@@ -165,7 +165,8 @@ app.add_middleware(
         "https://nemesis-global-worker.lionsgatenetwork.workers.dev",
         "http://localhost:3000",
         "http://localhost:5173",
-        "http://127.0.0.1:8000"
+        "http://127.0.0.1:8000",
+        "null"
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
@@ -912,5 +913,5 @@ async def nemesis_generate_report(req: NemesisReportRequest):
         return {"markdown": f"Error generating report: {str(e)}"}
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 3001))
+    port = int(os.environ.get("PORT", 8088))
     uvicorn.run(app, host="0.0.0.0", port=port)

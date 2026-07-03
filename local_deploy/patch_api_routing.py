@@ -13,10 +13,10 @@ def patch_file(filepath):
         // DYNAMIC BACKEND ROUTING FOR CLOUDFLARE/LOCAL
         // ==========================================
         const IS_LOCAL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-        window.BACKEND_URL = IS_LOCAL ? "" : "http://127.0.0.1:3001";
+        window.BACKEND_URL = IS_LOCAL ? "" : "http://127.0.0.1:8000";
         
         let protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
-        window.WS_URL = IS_LOCAL ? (protocol + window.location.host) : "ws://127.0.0.1:3001";
+        window.WS_URL = IS_LOCAL ? (protocol + window.location.host) : "ws://127.0.0.1:8000";
         // ==========================================
 """
     if "DYNAMIC BACKEND ROUTING" not in content:

@@ -41,14 +41,7 @@ def main():
         print("    -> Installing Python requirements (local_deploy)...")
         run_cmd("pip install -r requirements.txt", cwd="local_deploy", exit_on_error=False)
         
-    if os.path.exists("render_backend/requirements.txt"):
-        print("    -> Installing Python requirements (render_backend)...")
-        run_cmd("pip install -r requirements.txt", cwd="render_backend", exit_on_error=False)
-        
-    if os.path.exists("cloudflare_worker/package.json"):
-        print("    -> Installing Node.js requirements (cloudflare_worker)...")
-        run_cmd("npm install", cwd="cloudflare_worker", exit_on_error=False)
-        
+
     worker_dir = os.path.join(os.getcwd(), "local_deploy", "nemesis-global-worker")
     if os.path.exists(os.path.join(worker_dir, "package.json")):
         print("    -> Installing Node.js requirements (nemesis-global-worker)...")
@@ -61,10 +54,9 @@ def main():
     
     print("    -> Adding strict core project files...")
     core_files = [
-        "local_deploy/", "cloudflare_frontend/", "cloudflare_worker/", 
-        "render_backend/", "services/", "templates/", "static/", "scraper_service/", "graph/",
-        "requirements.txt", "render.yaml", "auto_deploy.py", "deploy_all.py", 
-        "build_nemesis_id.py", "app.py", "main.py", "Dockerfile", ".gitignore"
+        "local_deploy/",
+        "requirements.txt", "render.yaml", "auto_deploy.py", 
+        "Dockerfile", ".gitignore"
     ]
     for f in core_files:
         if os.path.exists(os.path.join(os.getcwd(), f.strip("/"))):

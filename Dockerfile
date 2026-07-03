@@ -17,9 +17,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Expose port (Render sets PORT env variable automatically, but we default to 3001)
+# Expose port
 ENV PORT=3001
 EXPOSE $PORT
 
+# Change working directory to local_deploy where the actual project lives
+WORKDIR /app/local_deploy
+
 # Start FastAPI server
-CMD ["sh", "-c", "uvicorn local_deploy.main:app --host 0.0.0.0 --port ${PORT:-3001}"]
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-3001}"]

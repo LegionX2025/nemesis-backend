@@ -4170,40 +4170,87 @@ NEMESIS_ROOT/
                 }
             }
 
-            function getSafeIconUrl(entityLabel, isMixer, isVictim, isSuspect, isCluster, chain) {
+            function getSafeIconUrl(entityLabel, isMixer, isVictim, isSuspect, isCluster, chain, amountUsd = 0) {
                 let upper = (entityLabel || "").toUpperCase();
                 
-                let bgColor = "#1e293b"; // slate-800
-                let textColor = "#ffffff";
-                let text = "W"; // default wallet
-                let borderColor = "#334155";
+                let bgColor = "#ffffff";
+                let textColor = "#0f172a";
+                let borderColor = "#e2e8f0";
+                let text = "W";
+                let category = "UNKNOWN ENTITY";
+                let badgeColor = "#64748b";
+                let badgeBg = "#f1f5f9";
                 
-                if (isVictim || upper.includes("VICTIM")) { bgColor = "#059669"; text = "V"; borderColor = "#34d399"; }
-                else if (isSuspect || upper.includes("SUSPECT")) { bgColor = "#dc2626"; text = "S"; borderColor = "#f87171"; }
-                else if (isCluster || upper.includes("SYS-ACTOR") || upper.includes("THREAT ACTOR")) { bgColor = "#9333ea"; text = "C"; borderColor = "#c084fc"; }
-                else if (upper.includes("BINANCE")) { bgColor = "#ca8a04"; text = "B"; borderColor = "#facc15"; }
-                else if (upper.includes("OKX") || upper.includes("OKLINK")) { bgColor = "#000000"; text = "O"; borderColor = "#ffffff"; }
-                else if (upper.includes("KRAKEN")) { bgColor = "#4f46e5"; text = "K"; borderColor = "#818cf8"; }
-                else if (upper.includes("COINBASE")) { bgColor = "#2563eb"; text = "C"; borderColor = "#60a5fa"; }
-                else if (upper.includes("HUOBI") || upper.includes("HTX")) { bgColor = "#0284c7"; text = "H"; borderColor = "#38bdf8"; }
-                else if (upper.includes("KUCOIN")) { bgColor = "#16a34a"; text = "K"; borderColor = "#4ade80"; }
-                else if (isMixer || upper.includes("MIXER") || upper.includes("TORNADO") || upper.includes("RAILGUN")) { bgColor = "#111827"; text = "M"; borderColor = "#ef4444"; }
-                else if (chain) {
+                let logoUrl = null;
+                
+                // Clearbit logo logic
+                if (upper.includes("BINANCE")) { logoUrl = "https://logo.clearbit.com/binance.com"; category = "EXCHANGE"; badgeBg = "#eff6ff"; badgeColor = "#1d4ed8"; borderColor = "#bfdbfe"; }
+                else if (upper.includes("KRAKEN")) { logoUrl = "https://logo.clearbit.com/kraken.com"; category = "EXCHANGE"; badgeBg = "#eff6ff"; badgeColor = "#1d4ed8"; }
+                else if (upper.includes("COINBASE")) { logoUrl = "https://logo.clearbit.com/coinbase.com"; category = "EXCHANGE"; badgeBg = "#eff6ff"; badgeColor = "#1d4ed8"; }
+                else if (upper.includes("OKX")) { logoUrl = "https://logo.clearbit.com/okx.com"; category = "EXCHANGE"; badgeBg = "#eff6ff"; badgeColor = "#1d4ed8"; }
+                else if (upper.includes("HUOBI") || upper.includes("HTX")) { logoUrl = "https://logo.clearbit.com/htx.com"; category = "EXCHANGE"; badgeBg = "#eff6ff"; badgeColor = "#1d4ed8"; }
+                else if (upper.includes("KUCOIN")) { logoUrl = "https://logo.clearbit.com/kucoin.com"; category = "EXCHANGE"; badgeBg = "#eff6ff"; badgeColor = "#1d4ed8"; }
+                else if (isMixer || upper.includes("MIXER") || upper.includes("TORNADO")) { logoUrl = "https://cryptologos.cc/logos/tornado-cash-torn-logo.png"; category = "MIXER"; badgeBg = "#fef2f2"; badgeColor = "#dc2626"; borderColor = "#fca5a5"; }
+                else if (isVictim || upper.includes("VICTIM")) { text = "V"; category = "VICTIM"; badgeBg = "#ecfdf5"; badgeColor = "#059669"; }
+                else if (isSuspect || upper.includes("SUSPECT")) { text = "S"; category = "SUSPECT"; badgeBg = "#fef2f2"; badgeColor = "#dc2626"; borderColor = "#fca5a5"; }
+                else if (isCluster || upper.includes("CLUSTER")) { text = "C"; category = "CLUSTER"; badgeBg = "#faf5ff"; badgeColor = "#9333ea"; }
+                
+                let chainLogo = null;
+                if (!logoUrl && chain) {
                     let c = chain.toUpperCase();
-                    if (c.includes("BITCOIN") || c.includes("BTC")) { bgColor = "#ea580c"; text = "₿"; borderColor = "#fb923c"; }
-                    else if (c.includes("ETHEREUM") || c.includes("ETH")) { bgColor = "#4f46e5"; text = "Ξ"; borderColor = "#818cf8"; }
-                    else if (c.includes("TRON") || c.includes("TRX")) { bgColor = "#dc2626"; text = "T"; borderColor = "#f87171"; }
-                    else if (c.includes("POLYGON") || c.includes("MATIC")) { bgColor = "#7e22ce"; text = "P"; borderColor = "#c084fc"; }
-                    else if (c.includes("BSC") || c.includes("BINANCE")) { bgColor = "#ca8a04"; text = "B"; borderColor = "#facc15"; }
-                    else if (c.includes("BASE")) { bgColor = "#2563eb"; text = "B"; borderColor = "#60a5fa"; }
-                    else if (c.includes("ARBITRUM") || c.includes("ARB")) { bgColor = "#0284c7"; text = "A"; borderColor = "#38bdf8"; }
-                    else if (c.includes("OPTIMISM") || c.includes("OPT")) { bgColor = "#ea0000"; text = "O"; borderColor = "#ff4d4d"; }
-                    else if (c.includes("AVALANCHE") || c.includes("AVAX")) { bgColor = "#dc2626"; text = "A"; borderColor = "#f87171"; }
-                    else if (c.includes("SOLANA") || c.includes("SOL")) { bgColor = "#14b8a6"; text = "S"; borderColor = "#5eead4"; }
-                    else if (c.includes("XRP")) { bgColor = "#000000"; text = "X"; borderColor = "#ffffff"; }
+                    if (c.includes("BITCOIN") || c.includes("BTC")) { chainLogo = "https://cryptologos.cc/logos/bitcoin-btc-logo.png"; }
+                    else if (c.includes("ETHEREUM") || c.includes("ETH")) { chainLogo = "https://cryptologos.cc/logos/ethereum-eth-logo.png"; }
+                    else if (c.includes("TRON") || c.includes("TRX")) { chainLogo = "https://cryptologos.cc/logos/tron-trx-logo.png"; }
+                    else if (c.includes("POLYGON") || c.includes("MATIC")) { chainLogo = "https://cryptologos.cc/logos/polygon-matic-logo.png"; }
+                    else if (c.includes("BSC") || c.includes("BINANCE")) { chainLogo = "https://cryptologos.cc/logos/bnb-bnb-logo.png"; }
+                    else if (c.includes("SOLANA") || c.includes("SOL")) { chainLogo = "https://cryptologos.cc/logos/solana-sol-logo.png"; }
                 }
                 
-                const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="${bgColor}" stroke="${borderColor}" stroke-width="4"/><text x="50" y="50" font-family="Inter, sans-serif" font-size="44" font-weight="900" fill="${textColor}" text-anchor="middle" dominant-baseline="central">${text}</text></svg>`;
+                let finalImage = logoUrl || chainLogo;
+                
+                let imgTag = finalImage 
+                    ? `<image href="${finalImage}" x="70" y="50" width="60" height="60" preserveAspectRatio="xMidYMid slice" clip-path="url(#circleClip)"/>` 
+                    : `<text x="100" y="80" font-family="Inter, sans-serif" font-size="44" font-weight="900" fill="#334155" text-anchor="middle" dominant-baseline="central">${text}</text>`;
+                
+                let amtDisplay = amountUsd > 0 ? ("$" + amountUsd.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})) : "$0.00";
+                let amtColor = amountUsd > 0 ? "#2563eb" : "#64748b"; // Blue if active, grey if zero
+                
+                let statusIcon = "";
+                if (isSuspect) {
+                    statusIcon = `<circle cx="135" cy="115" r="14" fill="#ffffff"/><circle cx="135" cy="115" r="12" fill="#ef4444"/><text x="135" y="115" font-family="Inter, sans-serif" font-size="16" font-weight="900" fill="#ffffff" text-anchor="middle" dominant-baseline="central">!</text>`;
+                } else if (category === "EXCHANGE") {
+                    statusIcon = `<circle cx="135" cy="115" r="14" fill="#ffffff"/><circle cx="135" cy="115" r="12" fill="#10b981"/><path d="M129 115 l4 4 l8 -8" stroke="#ffffff" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+                } else {
+                    statusIcon = `<circle cx="135" cy="115" r="14" fill="#ffffff"/><circle cx="135" cy="115" r="12" fill="#64748b"/><text x="135" y="115" font-family="Inter, sans-serif" font-size="14" font-weight="900" fill="#ffffff" text-anchor="middle" dominant-baseline="central">?</text>`;
+                }
+                
+                let safeLabel = entityLabel.length > 15 ? entityLabel.substring(0,12) + "..." : entityLabel;
+                
+                const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="250">
+                  <defs>
+                    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.1" flood-color="#000000"/>
+                    </filter>
+                    <clipPath id="circleClip">
+                        <circle cx="100" cy="80" r="42" />
+                    </clipPath>
+                  </defs>
+                  
+                  <circle cx="100" cy="80" r="50" fill="none" stroke="${borderColor}" stroke-width="2" stroke-dasharray="4 2"/>
+                  <circle cx="100" cy="80" r="42" fill="#ffffff" filter="url(#shadow)"/>
+                  
+                  ${imgTag}
+                  
+                  <text x="100" y="160" font-family="Inter, sans-serif" font-size="20" font-weight="800" fill="${amtColor}" text-anchor="middle">${amtDisplay}</text>
+                  
+                  <rect x="30" y="175" width="140" height="26" rx="13" fill="${badgeBg}" stroke="${borderColor}" stroke-width="1"/>
+                  <text x="100" y="192" font-family="Inter, sans-serif" font-size="12" font-weight="800" fill="${badgeColor}" text-anchor="middle">${safeLabel}</text>
+                  
+                  <text x="100" y="220" font-family="Inter, sans-serif" font-size="11" font-weight="700" fill="#64748b" text-anchor="middle" letter-spacing="1.5">${category}</text>
+                  
+                  ${statusIcon}
+                </svg>`;
+                
                 return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
             }
 
@@ -4329,40 +4376,42 @@ NEMESIS_ROOT/
             window.handleNewNode = function(d) {
                     window.nodeOutflowUsd = window.nodeOutflowUsd || {};
                     window.nodeOutflowUsd[d.from] = (window.nodeOutflowUsd[d.from] || 0) + (d.usd || d.amount);
+                    window.nodeOutflowUsd[d.to] = (window.nodeOutflowUsd[d.to] || 0) + (d.usd || d.amount);
 
                     let edgeId = d.from + "-" + d.to + "-" + d.tx;
                     
-                    let safeFromLabel = (d.from && d.from.length > 12) ? d.from.substring(0,6) + "..." + d.from.slice(-4) : d.from;
-                    let safeToLabel = (d.to && d.to.length > 12) ? d.to.substring(0,6) + "..." + d.to.slice(-4) : d.to;
-
                     if (!allNodesMap.has(d.from)) {
                         let isSeed = GLOBAL_TRACE_SEEDS.toLowerCase().includes(d.from.toLowerCase());
                         let titleHtmlFrom = `Address: ${d.from}\nEntity: ${d.sender_entity}\nChain: ${d.chain}`;
                         if (d.sender_nemesis_id) titleHtmlFrom += `\nNemesis ID: ${d.sender_nemesis_id}`;
-                        let n = { id: d.from, label: `${safeFromLabel}\n${isSeed ? 'SUSPECT WALLET ADDRESS' : d.sender_entity}`, title: titleHtmlFrom, image: getSafeIconUrl(d.sender_entity, false, false, isSeed || d.sender_entity.includes("SUSPECT"), false, d.chain), shape: 'circularImage', color: {background: isSeed ? '#fef2f2' : '#ffffff', border: isSeed ? '#ef4444' : '#cbd5e1'}, borderWidth: isSeed ? 3 : 2, chain: d.chain, nemesis_id: d.sender_nemesis_id, font: {size: 14, color: '#334155', face: 'Inter'} };
+                        let amt = window.nodeOutflowUsd[d.from];
+                        let svgImg = getSafeIconUrl(d.sender_entity, false, false, isSeed || d.sender_entity.includes("SUSPECT"), false, d.chain, amt);
+                        let n = { id: d.from, title: titleHtmlFrom, image: svgImg, shape: 'image', size: 80, chain: d.chain, nemesis_id: d.sender_nemesis_id };
                         allNodesMap.set(d.from, n); window.nodeAddQueue.push(n);
+                    } else {
+                        let n = allNodesMap.get(d.from);
+                        let isSeed = GLOBAL_TRACE_SEEDS.toLowerCase().includes(d.from.toLowerCase());
+                        let amt = window.nodeOutflowUsd[d.from];
+                        n.image = getSafeIconUrl(d.sender_entity, false, false, isSeed || d.sender_entity.includes("SUSPECT"), false, d.chain, amt);
+                        window.nodeUpdateQueue.push(n);
                     }
+                    
                     if (!allNodesMap.has(d.to)) {
                         let isSeed = GLOBAL_TRACE_SEEDS.toLowerCase().includes(d.to.toLowerCase());
-                        let bg = '#ffffff'; let border = '#cbd5e1';
-                        if (d.receiver_entity === "PATHFINDING_TARGET_REACHED") { bg = '#fef08a'; border = '#ca8a04'; }
-                        else if (d.is_terminal) { bg = '#ecfdf5'; border = '#10b981'; } 
-                        else if (d.is_consolidation) { bg = '#fdf4ff'; border = '#d946ef'; }
-                        if (isSeed) { bg = '#fef2f2'; border = '#ef4444'; }
                         let titleHtmlTo = `Address: ${d.to}\nEntity: ${d.receiver_entity}\nChain: ${d.chain}`;
                         if (d.receiver_nemesis_id) titleHtmlTo += `\nNemesis ID: ${d.receiver_nemesis_id}`;
+                        let amt = window.nodeOutflowUsd[d.to];
+                        let svgImg = getSafeIconUrl(d.receiver_entity, d.edge_type === "MIXER", false, isSeed || d.receiver_entity.includes("SUSPECT"), false, d.chain, amt);
                         
-                        let n = { id: d.to, label: `${safeToLabel}\n${isSeed ? 'SUSPECT WALLET ADDRESS' : d.receiver_entity}`, title: titleHtmlTo, image: getSafeIconUrl(d.receiver_entity, d.edge_type === "MIXER", false, isSeed || d.receiver_entity.includes("SUSPECT"), false, d.chain), shape: 'circularImage', color: {background: bg, border: border}, borderWidth: d.is_terminal ? 4 : (isSeed ? 3 : 2), is_terminal: d.is_terminal, is_consolidation: d.is_consolidation, chain: d.chain, nemesis_id: d.receiver_nemesis_id, font: {size: 14, color: '#334155', face: 'Inter'} };
+                        let n = { id: d.to, title: titleHtmlTo, image: svgImg, shape: 'image', size: 80, is_terminal: d.is_terminal, is_consolidation: d.is_consolidation, chain: d.chain, nemesis_id: d.receiver_nemesis_id };
                         allNodesMap.set(d.to, n); window.nodeAddQueue.push(n);
-                    } else if (d.is_terminal || d.is_consolidation || d.receiver_entity !== "Unknown Wallet") {
+                    } else {
                         let n = allNodesMap.get(d.to);
                         n.is_terminal = n.is_terminal || d.is_terminal;
                         n.is_consolidation = n.is_consolidation || d.is_consolidation;
-                        let bg = '#ffffff'; let border = '#cbd5e1';
-                        if (d.receiver_entity === "PATHFINDING_TARGET_REACHED" || n.label.includes("PATHFINDING_TARGET_REACHED")) { bg = '#fef08a'; border = '#ca8a04'; }
-                        else if (n.is_terminal) { bg = '#ecfdf5'; border = '#10b981'; }
-                        else if (n.is_consolidation) { bg = '#fdf4ff'; border = '#d946ef'; }
-                        n.color = {background: bg, border: border}; n.borderWidth = n.is_terminal ? 4 : 3;
+                        let isSeed = GLOBAL_TRACE_SEEDS.toLowerCase().includes(d.to.toLowerCase());
+                        let amt = window.nodeOutflowUsd[d.to];
+                        n.image = getSafeIconUrl(d.receiver_entity, d.edge_type === "MIXER", false, isSeed || d.receiver_entity.includes("SUSPECT"), false, d.chain, amt);
                         if (d.receiver_nemesis_id && n.title && !n.title.includes('Nemesis ID')) {
                             n.title += `\nNemesis ID: ${d.receiver_nemesis_id}`;
                             n.nemesis_id = d.receiver_nemesis_id;
@@ -4400,9 +4449,36 @@ NEMESIS_ROOT/
                         if(isCrossChain) { edgeDashes = [5, 5]; edgeWidth = 3; edgeColor = '#db2777'; highColor = '#be185d'; }
                         if(isObfuscation) { edgeDashes = [2, 6]; edgeWidth = 3; edgeColor = '#ef4444'; highColor = '#dc2626'; }
                         
-                        let edgeLabel = `${edgeTypeIcon}${tokenIcon} ${d.amount.toFixed(2)} ${d.ticker}\nTx: ${d.tx.substring(0,8)}...`;
+                        let amtUsdStr = d.usd ? "$" + d.usd.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : d.amount.toFixed(2) + " " + d.ticker;
+                        let edgeLabel = `<i>${tokenIcon} ${d.ticker}</i>\nOUTFLOW\n<b>${amtUsdStr}</b>\n<code>Tx: ${d.tx.substring(0,8)}...</code>`;
                         let edgeTitle = `Transaction Hash: ${d.tx}\nFrom: ${d.from}\nTo: ${d.to}\nAmount: ${d.amount.toFixed(4)} ${d.ticker}\nDate: ${d.timestamp}\nType: ${d.edge_type}\nConfidence: ${d.confidence}\nState Transition: ${d.state_transition || 'TRANSACTION_HOP'}\nForensic Fingerprint: ${d.fingerprint || 'Standard'}`;
-                        let e = { id: edgeId, from: d.from, to: d.to, label: edgeLabel, title: edgeTitle, tx_hash: d.tx, timestamp: d.timestamp, confidence: d.confidence, origin_seed: d.origin_seed, color: {color: edgeColor, highlight: highColor, hover: highColor}, dashes: edgeDashes, width: edgeWidth, font: {size: 11, color: '#0f172a', background: '#f8fafc', strokeWidth: 2, strokeColor: '#ffffff', align: 'horizontal'} };
+                        let e = { 
+                            id: edgeId, 
+                            from: d.from, 
+                            to: d.to, 
+                            label: edgeLabel, 
+                            title: edgeTitle, 
+                            tx_hash: d.tx, 
+                            timestamp: d.timestamp, 
+                            confidence: d.confidence, 
+                            origin_seed: d.origin_seed, 
+                            color: {color: edgeColor, highlight: highColor, hover: highColor}, 
+                            dashes: edgeDashes, 
+                            width: edgeWidth, 
+                            font: {
+                                multi: 'html',
+                                size: 10, 
+                                color: '#94a3b8',
+                                face: 'Inter',
+                                background: 'rgba(255,255,255,0.85)', 
+                                strokeWidth: 2, 
+                                strokeColor: '#ffffff', 
+                                align: 'horizontal',
+                                bold: { color: '#dc2626', size: 14, face: 'Inter' },
+                                ital: { color: '#0f172a', size: 12, face: 'Inter' },
+                                mono: { color: '#64748b', size: 10, face: 'monospace' }
+                            } 
+                        };
 
                         
                         if (window.currentActiveSeedTab !== 'all' && window.currentActiveSeedTab !== d.origin_seed) e.hidden = true;
@@ -5251,6 +5327,38 @@ NEMESIS_ROOT/
                 // Trigger resize for vis.js
                 setTimeout(() => { if(window.network) window.network.fit(); }, 300);
             }
+
+            document.addEventListener("DOMContentLoaded", () => {
+                const params = new URLSearchParams(window.location.search);
+                const traceId = params.get('trace_id');
+                if (traceId) {
+                    // Hide landing page and show main UI
+                    let lp = document.getElementById('landing-page');
+                    let mu = document.getElementById('main-ui');
+                    if(lp) lp.classList.add('hidden');
+                    if(mu) {
+                        mu.classList.remove('hidden');
+                        mu.classList.add('flex');
+                    }
+                    
+                    // Set trace ID display
+                    GLOBAL_TRACE_ID = traceId;
+                    let idDisplay = document.getElementById("trace-id-display");
+                    if(idDisplay) {
+                        idDisplay.classList.remove("hidden");
+                        idDisplay.classList.add("flex");
+                    }
+                    let idVal = document.getElementById("trace-id-val");
+                    if(idVal) idVal.innerText = GLOBAL_TRACE_ID;
+                    
+                    document.getElementById("status").innerHTML = `<span class="text-blue-600 font-bold">Connecting to Trace Stream...</span>`;
+                    
+                    // Connect WebSocket
+                    if (typeof connectWebSocket === 'function') {
+                        connectWebSocket(traceId);
+                    }
+                }
+            });
         </script>
     </body>
     </html>
