@@ -49,8 +49,13 @@ class GodmodeEngine:
         return self.auto_pilot_enabled
 
     async def query_gemini_to_heal(self, error_log: str):
-        if not self.gemini_key:
-            await self.broadcast("> [FATAL] GEMINI_API_KEY NOT CONFIGURED. CANNOT HEAL.")
+        # Load keys fresh just in case they were updated in env
+        GEMINI_API_KEYS = os.environ.get("GEMINI_API_KEYS", os.environ.get("GEMINI_API_KEY", ""))
+        gemini_keys = [k.strip() for k in GEMINI_API_KEYS.split(",") if k.strip()]
+        AIML_KEY = os.environ.get("AIML_API_KEY_BAGOODEX", os.environ.get("AIML_API_KEY_CHATGPT"))
+
+        if not gemini_keys and not AIML_KEY:
+            await self.broadcast("> [FATAL] NO API KEYS CONFIGURED (GEMINI OR AIML). CANNOT HEAL.")
             return None
             
         await self.broadcast(f"> [GODMODE] Analyzing error trace...\n> {error_log.splitlines()[-1] if error_log.strip() else 'Unknown error'}")
@@ -72,36 +77,60 @@ For example, write a script to read the broken file, string replace the error, a
 ONLY OUTPUT VALID PYTHON CODE. Do not include markdown code blocks (like ```python) in your response, just the raw python code. DO NOT OUTPUT ANYTHING ELSE.
         """
         
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={self.gemini_key}"
-        headers = {"Content-Type": "application/json"}
-        payload = {
-            "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"temperature": 0.2}
-        }
-        
-        try:
-            # We use an executor because requests is synchronous
-            loop = asyncio.get_event_loop()
-            response = await loop.run_in_executor(None, lambda: requests.post(url, headers=headers, json=payload))
-            response.raise_for_status()
-            result = response.json()
-            text = result["candidates"][0]["content"]["parts"][0]["text"]
-            
-            # Clean up markdown if the LLM hallucinated it
-            if text.startswith("```python"):
-                text = text[9:]
-            if text.startswith("```"):
-                text = text[3:]
-            if text.endswith("```"):
-                text = text[:-3]
-                
-            text = text.strip()
-            
-            await self.broadcast(f"> [GODMODE] Patch generated:\n```python\n{text}\n```")
-            return text
-        except Exception as e:
-            await self.broadcast(f"> [GODMODE] Failed to generate patch: {e}")
-            return None
+        loop = asyncio.get_event_loop()
+
+        # Try Gemini Keys First
+        for key in gemini_keys:
+            if not key.startswith("AIza"): continue
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={key}"
+            headers = {"Content-Type": "application/json"}
+            payload = {
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"temperature": 0.2}
+            }
+            try:
+                response = await loop.run_in_executor(None, lambda: requests.post(url, headers=headers, json=payload, timeout=15))
+                if response.status_code == 429:
+                    await self.broadcast(f"> [GODMODE] Gemini key {key[:8]}... rate limited. Rotating...")
+                    continue
+                response.raise_for_status()
+                result = response.json()
+                text = result["candidates"][0]["content"]["parts"][0]["text"]
+                return self._clean_script(text)
+            except Exception as e:
+                await self.broadcast(f"> [GODMODE] Failed with Gemini key {key[:8]}... : {e}")
+                continue
+
+        # Fallback to AIML Gateways
+        if AIML_KEY:
+            await self.broadcast("> [GODMODE] Falling back to AIML Gateways...")
+            try:
+                url = "https://api.aimlapi.com/v1/chat/completions"
+                headers = {"Authorization": f"Bearer {AIML_KEY}", "Content-Type": "application/json"}
+                payload = {
+                    "model": "gpt-4o",
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.2
+                }
+                response = await loop.run_in_executor(None, lambda: requests.post(url, headers=headers, json=payload, timeout=20))
+                response.raise_for_status()
+                result = response.json()
+                text = result["choices"][0]["message"]["content"]
+                return self._clean_script(text)
+            except Exception as e:
+                await self.broadcast(f"> [GODMODE] AIML fallback failed: {e}")
+
+        await self.broadcast("> [GODMODE] All AI healing models exhausted or failed.")
+        return None
+
+    def _clean_script(self, text):
+        if text.startswith("```python"):
+            text = text[9:]
+        if text.startswith("```"):
+            text = text[3:]
+        if text.endswith("```"):
+            text = text[:-3]
+        return text.strip()
 
     async def heal_runtime_error(self, error_log: str):
         if not self.auto_pilot_enabled:
