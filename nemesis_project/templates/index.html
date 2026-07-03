@@ -267,10 +267,10 @@
                 
                 <div class="w-full bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-xl shadow-slate-200/50 border border-white flex flex-col gap-4">
                     <div class="relative">
-                        <div id="tracer-chain-logo-container" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 overflow-hidden shadow-sm">
+                        <div id="tracer-chain-logo-container" class="absolute left-4 top-6 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 overflow-hidden shadow-sm">
                             <i class="fa-solid fa-link text-slate-400 text-sm"></i>
                         </div>
-                        <input type="text" id="tracer-search-input" oninput="detectTracerChainID()" placeholder="SEED/SUSPECT Wallet address or TX HASH" class="w-full border border-slate-200 rounded-xl pl-16 pr-4 py-4 text-lg font-mono focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 shadow-inner bg-white/90">
+                        <textarea id="tracer-search-input" oninput="detectTracerChainID()" placeholder="SEED/SUSPECT Wallet addresses or TX HASHES&#10;(Input one per line)" class="w-full border border-slate-200 rounded-xl pl-16 pr-4 py-4 text-lg font-mono focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 shadow-inner bg-white/90 min-h-[120px] resize-y leading-relaxed"></textarea>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="flex flex-col gap-1">
@@ -296,6 +296,13 @@
                                         <button type="button" onclick="selectDropdownOption('tracer-target-currency-input', 'TRX', 'https://cryptologos.cc/logos/tron-trx-logo.svg', 'TRX', 'tracer-currency-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/tron-trx-logo.svg" class="w-4 h-4 object-contain"><span>TRX</span></button>
                                         <button type="button" onclick="selectDropdownOption('tracer-target-currency-input', 'SOL', 'https://cryptologos.cc/logos/solana-sol-logo.svg', 'SOL', 'tracer-currency-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/solana-sol-logo.svg" class="w-4 h-4 object-contain"><span>SOL</span></button>
                                         <button type="button" onclick="selectDropdownOption('tracer-target-currency-input', 'MATIC', 'https://cryptologos.cc/logos/polygon-matic-logo.svg', 'MATIC', 'tracer-currency-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/polygon-matic-logo.svg" class="w-4 h-4 object-contain"><span>MATIC</span></button>
+                                        <button type="button" onclick="selectDropdownOption('tracer-target-currency-input', 'AVAX', 'https://cryptologos.cc/logos/avalanche-avax-logo.svg', 'AVAX', 'tracer-currency-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/avalanche-avax-logo.svg" class="w-4 h-4 object-contain"><span>AVAX</span></button>
+                                        <button type="button" onclick="selectDropdownOption('tracer-target-currency-input', 'ADA', 'https://cryptologos.cc/logos/cardano-ada-logo.svg', 'ADA', 'tracer-currency-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/cardano-ada-logo.svg" class="w-4 h-4 object-contain"><span>ADA</span></button>
+                                        <button type="button" onclick="selectDropdownOption('tracer-target-currency-input', 'DOT', 'https://cryptologos.cc/logos/polkadot-new-dot-logo.svg', 'DOT', 'tracer-currency-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/polkadot-new-dot-logo.svg" class="w-4 h-4 object-contain"><span>DOT</span></button>
+                                        <button type="button" onclick="selectDropdownOption('tracer-target-currency-input', 'LINK', 'https://cryptologos.cc/logos/chainlink-link-logo.svg', 'LINK', 'tracer-currency-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/chainlink-link-logo.svg" class="w-4 h-4 object-contain"><span>LINK</span></button>
+                                        <button type="button" onclick="selectDropdownOption('tracer-target-currency-input', 'DOGE', 'https://cryptologos.cc/logos/dogecoin-doge-logo.svg', 'DOGE', 'tracer-currency-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/dogecoin-doge-logo.svg" class="w-4 h-4 object-contain"><span>DOGE</span></button>
+                                        <button type="button" onclick="selectDropdownOption('tracer-target-currency-input', 'XRP', 'https://cryptologos.cc/logos/xrp-xrp-logo.svg', 'XRP', 'tracer-currency-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/xrp-xrp-logo.svg" class="w-4 h-4 object-contain"><span>XRP</span></button>
+                                        <button type="button" onclick="selectDropdownOption('tracer-target-currency-input', 'UNI', 'https://cryptologos.cc/logos/uniswap-uni-logo.svg', 'UNI', 'tracer-currency-custom-selected')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/uniswap-uni-logo.svg" class="w-4 h-4 object-contain"><span>UNI</span></button>
                                     </div>
                                 </div>
                             </div>
@@ -4656,9 +4663,12 @@ NEMESIS_ROOT/
                 dashboard.classList.remove('hidden');
                 
                 // Basic regex simulation of AI extraction from the user's prompt
-                const btcMatches = text.match(/bc1[a-zA-HJ-NP-Z0-9]{39,59}|1[a-zA-HJ-NP-Z0-9]{25,39}/g) || [];
-                const ethMatches = text.match(/0x[a-fA-F0-9]{40}/gi) || [];
-                const amountMatches = text.match(/\$?\d{1,3}(,\d{3})*(\.\d+)?\s*(USDC|ETH|BTC|AERO)/g) || ["$80,000 USDC"];
+                // Filter out transaction hashes (66 chars with 0x) so they aren't confused as wallets
+                const cleanText = text.replace(/0x[a-fA-F0-9]{64}/gi, '');
+                
+                const btcMatches = cleanText.match(/\b(bc1[a-zA-HJ-NP-Z0-9]{39,59}|1[a-zA-HJ-NP-Z0-9]{25,39})\b/g) || [];
+                const ethMatches = cleanText.match(/\b0x[a-fA-F0-9]{40}\b/gi) || [];
+                const amountMatches = text.match(/\$?\d+(,\d{3})*(\.\d+)?\s*(USDC|USDT|ETH|BTC|AERO)/gi) || ["$80,000 USDC"];
                 const dateMatches = text.match(/\d{2}\/\d{2}\/\d{2,4}/g) || ["05/04/2026"];
                 
                 let suspectsHtml = '';
@@ -4699,14 +4709,47 @@ NEMESIS_ROOT/
             function launchTracingExecution() {
                 const dashboard = document.getElementById('summary-dashboard-container');
                 dashboard.classList.add('scale-95', 'opacity-0');
+                
+                // Get all extracted suspects
+                const suspectNodes = document.getElementById('summary-suspects').querySelectorAll('div.truncate');
+                let targetAddresses = [];
+                suspectNodes.forEach(node => {
+                    targetAddresses.push(node.innerText.trim());
+                });
+
+                // Get extracted loss and currency
+                const lossText = document.getElementById('summary-loss').innerText || "";
+                let extractedAmount = lossText.replace(/[^0-9.]/g, ''); // Extract just numbers and decimal
+                let extractedCurrency = "USD";
+                
+                // Try to infer currency
+                if(lossText.includes("USDC")) extractedCurrency = "USDC";
+                else if(lossText.includes("USDT")) extractedCurrency = "USDT";
+                else if(lossText.includes("ETH")) extractedCurrency = "ETH";
+                else if(lossText.includes("BTC")) extractedCurrency = "BTC";
+                else if(lossText.includes("SOL")) extractedCurrency = "SOL";
+
                 setTimeout(() => {
                     dashboard.classList.add('hidden');
                     // Setup the tracer inputs based on the extraction
-                    document.getElementById('landing-search-trace').value = "OMNI-" + Math.floor(Math.random()*10000);
+                    if(targetAddresses.length > 0) {
+                        document.getElementById('tracer-search-input').value = targetAddresses.join('\n');
+                        detectTracerChainID();
+                    }
+                    if(extractedAmount) {
+                        document.getElementById('tracer-target-amount-input').value = extractedAmount;
+                    }
+                    if(extractedCurrency) {
+                        // Attempt to update the dropdown if it matches a known currency
+                        const btn = document.querySelector(`#tracer-currency-custom-dropdown button[onclick*="'${extractedCurrency}'"]`);
+                        if(btn) btn.click();
+                    }
                     navigateTo('view-tracer');
-                    // We simulate the trace init
+                    // Simulate the trace init
                     setTimeout(() => {
-                        initiateLandingTrace();
+                        if(typeof executeNemesisTracer === 'function') {
+                            executeNemesisTracer();
+                        }
                     }, 500);
                 }, 500);
             }
@@ -4816,25 +4859,34 @@ NEMESIS_ROOT/
                 try {
                     // Start the trace
                     const req = {
-                        seed_address: address,
+                        seeds: address,
                         max_depth: 1000000,
                         target_currency: document.getElementById('tracer-target-currency-input').value || "USD",
                         min_value: 0,
-                        target_amount: parseFloat(document.getElementById('tracer-target-amount-input').value) || null,
-                        start_date: document.getElementById('tracer-start-date').value || null,
-                        end_date: document.getElementById('tracer-end-date').value || null
+                        target_amount: document.getElementById('tracer-target-amount-input').value || "",
+                        start_date: document.getElementById('tracer-start-date').value || "",
+                        end_date: document.getElementById('tracer-end-date').value || ""
                     };
                     
-                    const response = await fetch('https://nemesis-backend.onrender.com/api/start_trace', {
+                    const response = await fetch('/api/start_trace', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(req)
                     });
                     
-                    const data = await response.json();
+                    let data;
+                    try {
+                        data = await response.json();
+                    } catch (e) {
+                        const text = await response.text();
+                        console.error("Non-JSON Response:", text);
+                        showToast("API Error: Backend returned an invalid response.");
+                        hideGlobalLoader();
+                        return;
+                    }
                     
-                    if (data.status === "error") {
-                        showToast(data.message);
+                    if (!response.ok || data.status === "error") {
+                        showToast(data.message || data.error || data.detail || "Error initiating trace");
                         hideGlobalLoader();
                         return;
                     }

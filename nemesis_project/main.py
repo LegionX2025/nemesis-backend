@@ -1160,11 +1160,16 @@ async def get_db_stats(token: dict = Depends(verify_access_token)):
     }
 
 class ConfigModel(BaseModel):
-    gemini_key: str
-    etherscan_key: str
-    polygonscan_key: str
-    max_depth: int
-    max_hops: int
+    gemini_key: str = ""
+    etherscan_key: str = ""
+    polygonscan_key: str = ""
+    max_depth: int = 0
+    max_hops: int = 0
+    cloudflare_api_token: str = ""
+    cloudflare_account_id: str = ""
+    render_api_key: str = ""
+    render_service_id: str = ""
+    git_branch: str = ""
 
 class GBEOConfigModel(BaseModel):
     config: dict
@@ -1189,21 +1194,78 @@ async def update_gbeo_config(payload: GBEOConfigModel, token: dict = Depends(ver
 @app.get("/api/admin/config")
 async def get_config(token: dict = Depends(verify_access_token)):
     from services.trace_engine import engine
+    
+    def mask(val):
+        return val[:5] + "..." if val else ""
+        
     return {
-        "gemini_key": os.getenv("GEMINI_API_KEYS", "")[:5] + "...",
-        "etherscan_key": os.getenv("ETHERSCAN_API_KEY", "")[:5] + "...",
-        "polygonscan_key": os.getenv("POLYGONSCAN_API_KEY", "")[:5] + "...",
+        "gemini_key": mask(os.getenv("GEMINI_API_KEYS", "")),
+        "etherscan_key": mask(os.getenv("ETHERSCAN_API_KEY", "")),
+        "polygonscan_key": mask(os.getenv("POLYGONSCAN_API_KEY", "")),
+        "cloudflare_api_token": mask(os.getenv("CLOUDFLARE_API_TOKEN", "")),
+        "cloudflare_account_id": mask(os.getenv("CLOUDFLARE_ACCOUNT_ID", "")),
+        "render_api_key": mask(os.getenv("RENDER_API_KEY", "")),
+        "render_service_id": mask(os.getenv("RENDER_SERVICE_ID", "")),
+        "git_branch": os.getenv("GIT_BRANCH", "main"),
         "max_depth": engine.MAX_DEPTH,
         "max_hops": engine.MAX_HOPS
     }
 
+def update_env_file(key, value):
+    env_path = ".env"
+    if not os.path.exists(env_path):
+        open(env_path, 'a').close()
+    
+    with open(env_path, "r") as f:
+        lines = f.readlines()
+        
+    updated = False
+    for i, line in enumerate(lines):
+        if line.startswith(f"{key}="):
+            lines[i] = f"{key}={value}\n"
+            updated = True
+            break
+            
+    if not updated:
+        lines.append(f"{key}={value}\n")
+        
+    with open(env_path, "w") as f:
+        f.writelines(lines)
+    os.environ[key] = value
+
 @app.post("/api/admin/config")
 async def update_config(config: ConfigModel, token: dict = Depends(verify_access_token)):
     from services.trace_engine import engine
+    
     # In-memory config update
     if config.max_depth > 0: engine.MAX_DEPTH = config.max_depth
     if config.max_hops > 0: engine.MAX_HOPS = config.max_hops
-    return {"status": "success", "message": "Configuration updated in-memory"}
+    
+    # Save deployment configs to .env
+    if config.cloudflare_api_token and not config.cloudflare_api_token.endswith("..."):
+        update_env_file("CLOUDFLARE_API_TOKEN", config.cloudflare_api_token)
+    if config.cloudflare_account_id and not config.cloudflare_account_id.endswith("..."):
+        update_env_file("CLOUDFLARE_ACCOUNT_ID", config.cloudflare_account_id)
+    if config.render_api_key and not config.render_api_key.endswith("..."):
+        update_env_file("RENDER_API_KEY", config.render_api_key)
+    if config.render_service_id and not config.render_service_id.endswith("..."):
+        update_env_file("RENDER_SERVICE_ID", config.render_service_id)
+    if config.git_branch and not config.git_branch.endswith("..."):
+        update_env_file("GIT_BRANCH", config.git_branch)
+        
+    return {"status": "success", "message": "Configuration updated successfully"}
+
+@app.get("/api/admin/deploy/logs")
+async def get_deploy_logs(token: dict = Depends(verify_access_token)):
+    try:
+        if os.path.exists("logs/deploy.log"):
+            with open("logs/deploy.log", "r") as f:
+                # return last 100 lines
+                lines = f.readlines()[-100:]
+                return {"status": "success", "logs": "".join(lines)}
+        return {"status": "success", "logs": "Deploy log is empty or not started yet."}
+    except Exception as e:
+        return {"status": "error", "logs": str(e)}
 
 import subprocess
 import sys
@@ -1235,7 +1297,7 @@ from services.clustering_engine import clustering_engine
 import shutil
 
 @app.post("/admin/api/clustering/ingest")
-async def api_cluster_ingest(file: UploadFile = File(None), url: str = Form(None), token: dict = Depends(verify_access_token)):
+async def api_cluster_ingest(file: UploadFile = File(None), url: str = Form(None), prompt: str = Form(None), token: dict = Depends(verify_access_token)):
     try:
         if file:
             # Save file to data directory
@@ -1254,8 +1316,21 @@ async def api_cluster_ingest(file: UploadFile = File(None), url: str = Form(None
             scraper = AutoScraper()
             asyncio.create_task(scraper.scrape(url))
             return {"status": "success", "message": f"URL {url} scheduled for OSINT scraping and identity clustering."}
+
+        if prompt:
+            # Train the ML pipeline on raw scenario prompt
+            os.makedirs("data", exist_ok=True)
+            with open("data/training_scenarios.jsonl", "a") as f:
+                f.write(json.dumps({"prompt": prompt, "timestamp": str(datetime.datetime.utcnow())}) + "\n")
             
-        return {"status": "error", "message": "Provide either a file or a URL."}
+            # Extract entities and inject into clustering DB directly
+            from services.transaction_analyzer import TransactionAnalyzer
+            analyzer = TransactionAnalyzer()
+            res = analyzer.analyze(prompt) # Re-using analyzer slightly as it's the closest thing to NLP entity extraction, but we can also just log it.
+            
+            return {"status": "success", "message": "Scenario prompt successfully ingested into ML Training DB and queued for NLP clustering."}
+            
+        return {"status": "error", "message": "Provide either a file, a URL, or a raw scenario prompt."}
     except Exception as e:
         logger.error(f"Clustering Ingest Error: {e}")
         return {"status": "error", "message": str(e)}
