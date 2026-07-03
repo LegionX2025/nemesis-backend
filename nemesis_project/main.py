@@ -1150,5 +1150,47 @@ async def trigger_godmode(token: dict = Depends(verify_access_token)):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+# --- CLUSTERING ENGINE ROUTES ---
+from services.clustering_engine import clustering_engine
+import shutil
+
+@app.post("/admin/api/clustering/ingest")
+async def api_cluster_ingest(file: UploadFile = File(None), url: str = Form(None), token: dict = Depends(verify_access_token)):
+    try:
+        if file:
+            # Save file to data directory
+            os.makedirs("data", exist_ok=True)
+            filepath = os.path.join("data", file.filename)
+            with open(filepath, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            
+            # Trigger ingestion
+            asyncio.create_task(clustering_engine.ingest_from_file(filepath))
+            return {"status": "success", "message": f"File {file.filename} ingested and queued for clustering pipeline."}
+            
+        if url:
+            # Simple URL scrape fallback
+            from services.scraper_engine import AutoScraper
+            scraper = AutoScraper()
+            asyncio.create_task(scraper.scrape(url))
+            return {"status": "success", "message": f"URL {url} scheduled for OSINT scraping and identity clustering."}
+            
+        return {"status": "error", "message": "Provide either a file or a URL."}
+    except Exception as e:
+        logger.error(f"Clustering Ingest Error: {e}")
+        return {"status": "error", "message": str(e)}
+
+@app.post("/admin/api/clustering/run")
+async def api_cluster_run(token: dict = Depends(verify_access_token)):
+    try:
+        results = await clustering_engine.run_full_clustering_suite()
+        if "error" in results:
+            return {"status": "error", "message": results["error"]}
+        return {"status": "success", "data": results}
+    except Exception as e:
+        logger.error(f"Clustering Run Error: {e}")
+        return {"status": "error", "message": str(e)}
+
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=3001)

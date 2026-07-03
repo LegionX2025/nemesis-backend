@@ -22,7 +22,7 @@ class UniversalDatabaseConnector:
 
     def init_mongodb(self):
         try:
-            mongo_uri = os.environ.get("MONGODB_URI")
+            mongo_uri = os.environ.get("MONGODB_URI") or os.environ.get("DATABASE_MONGO_URL") or "mongodb+srv://nemesis:nemesis2026@nemesisdb.vir5vg2.mongodb.net/?appName=nemesisdb"
             if mongo_uri:
                 import motor.motor_asyncio
                 self.mongo_client = motor.motor_asyncio.AsyncIOMotorClient(mongo_uri)

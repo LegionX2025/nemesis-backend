@@ -46,6 +46,9 @@
                 <a href="#" onclick="switchTab('godmode')" id="tab-godmode" class="sidebar-item flex items-center gap-3 px-4 py-3 text-emerald-600 font-black rounded-lg transition border border-emerald-200 bg-emerald-50 hover:bg-emerald-100">
                     <i class="fa-solid fa-wand-magic-sparkles w-4"></i> Godmode Deployer
                 </a>
+                <a href="#" onclick="switchTab('clustering')" id="tab-clustering" class="sidebar-item flex items-center gap-3 px-4 py-3 text-purple-600 font-bold rounded-lg transition border border-purple-200 bg-purple-50 hover:bg-purple-100 mt-2">
+                    <i class="fa-solid fa-brain w-4"></i> ML Clustering Engine
+                </a>
             </nav>
             <div class="p-4 border-t border-slate-200">
                 <button onclick="logout()" class="w-full py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded border border-red-200 text-xs font-bold transition uppercase tracking-wider flex justify-center items-center gap-2">
@@ -168,6 +171,62 @@
                     </div>
                     <p class="text-xs text-slate-600 mb-4">Edit the raw GBEO v4 Ontology JSON. This controls the active auto-ingest scraper networks and canonical URL resolution.</p>
                     <textarea id="gbeo-editor" class="w-full h-96 p-4 bg-slate-900 text-emerald-400 font-mono text-xs rounded border border-slate-700 focus:outline-none focus:border-blue-500" spellcheck="false"></textarea>
+                </div>
+            </div>
+            <!-- Clustering Engine View -->
+            <div id="view-clustering" class="hidden space-y-6">
+                <div class="glass-panel p-8 rounded-xl border border-purple-200 shadow-purple-500/10">
+                    <h3 class="text-purple-600 text-lg uppercase tracking-widest font-black mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-brain"></i> Machine Learning Clustering Engine
+                    </h3>
+                    <p class="text-xs text-slate-600 mb-6 max-w-2xl">
+                        Ingest wallet data from URLs or massive files. Auto-cluster entities based on attribution similarity (NLP/TF-IDF) and peel-chain structures (DBSCAN).
+                    </p>
+                    
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <!-- Ingestion Module -->
+                        <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+                            <h4 class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4 border-b pb-2"><i class="fa-solid fa-cloud-arrow-up"></i> Data Ingestion</h4>
+                            
+                            <form id="ingest-form" onsubmit="submitClusteringIngest(event)" class="space-y-4">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Import JSON / JSONL File</label>
+                                    <input type="file" id="ingest-file" class="w-full text-xs text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-bold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 cursor-pointer">
+                                </div>
+                                <div class="text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest">- OR -</div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Scrape via URL</label>
+                                    <input type="text" id="ingest-url" placeholder="https://etherscan.io/address/..." class="w-full text-xs p-2 rounded border border-slate-300 focus:outline-none focus:border-purple-500 bg-slate-50">
+                                </div>
+                                <button type="submit" class="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold uppercase tracking-widest rounded transition flex justify-center items-center gap-2">
+                                    <i class="fa-solid fa-database"></i> Add to Cluster Engine
+                                </button>
+                            </form>
+                            <div id="ingest-status" class="mt-3 text-[10px] font-mono text-emerald-600 hidden"></div>
+                        </div>
+
+                        <!-- Engine Controls -->
+                        <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm flex flex-col justify-center items-center text-center">
+                            <i class="fa-solid fa-network-wired text-4xl text-purple-200 mb-4"></i>
+                            <h4 class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Execute Clustering Suite</h4>
+                            <p class="text-[10px] text-slate-400 mb-6 max-w-xs">Run Scikit-Learn pipelines to group all active identities in the database.</p>
+                            
+                            <button onclick="runClustering()" id="btn-run-cluster" class="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black tracking-widest uppercase rounded shadow-lg transition transform active:scale-95 flex items-center gap-3">
+                                <i class="fa-solid fa-bolt"></i> Initialize Algorithm
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Visualization -->
+                    <div class="bg-slate-900 p-6 rounded-lg shadow-inner border border-slate-700">
+                        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 flex items-center justify-between">
+                            <span><i class="fa-solid fa-chart-pie"></i> Cluster Mapping Results</span>
+                            <span id="cluster-timestamp" class="text-[9px] font-mono font-normal"></span>
+                        </h4>
+                        <div id="clustering-results" class="h-64 overflow-y-auto font-mono text-[10px] text-purple-300 leading-relaxed break-words whitespace-pre-wrap">
+                            > WAITING FOR CLUSTERING EXECUTION...
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -418,6 +477,74 @@
                 if (res.ok) showToast("Engine config updated.");
             } catch(e) {
                 console.error(e);
+            }
+        }
+
+        // --- CLUSTERING ENGINE ---
+        async function submitClusteringIngest(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('ingest-file');
+            const urlInput = document.getElementById('ingest-url');
+            const statusDiv = document.getElementById('ingest-status');
+            
+            const formData = new FormData();
+            if (fileInput.files.length > 0) {
+                formData.append('file', fileInput.files[0]);
+            } else if (urlInput.value) {
+                formData.append('url', urlInput.value);
+            } else {
+                alert("Please provide a file or URL.");
+                return;
+            }
+
+            statusDiv.classList.remove('hidden');
+            statusDiv.innerText = "> INITIATING INGESTION PROTOCOL...";
+
+            try {
+                const res = await fetch('/admin/api/clustering/ingest', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                const data = await res.json();
+                statusDiv.innerText = `> [${data.status.toUpperCase()}] ${data.message}`;
+                if (data.status === 'success') {
+                    statusDiv.classList.add('text-emerald-500');
+                    statusDiv.classList.remove('text-red-500');
+                } else {
+                    statusDiv.classList.add('text-red-500');
+                    statusDiv.classList.remove('text-emerald-500');
+                }
+            } catch (err) {
+                statusDiv.innerText = `> [ERROR] ${err.message}`;
+            }
+        }
+
+        async function runClustering() {
+            const resultsDiv = document.getElementById('clustering-results');
+            const timeSpan = document.getElementById('cluster-timestamp');
+            const btn = document.getElementById('btn-run-cluster');
+            
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+            resultsDiv.innerText = '> INITIALIZING KMEANS AND DBSCAN PIPELINES...\n> EXTRACTING TF-IDF VECTORS...';
+
+            try {
+                const res = await fetch('/admin/api/clustering/run', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                
+                if (data.status === 'success') {
+                    timeSpan.innerText = `Last Run: ${data.data.timestamp}`;
+                    resultsDiv.innerText = JSON.stringify(data.data, null, 2);
+                } else {
+                    resultsDiv.innerText = `> [ERROR] ${data.message}`;
+                }
+            } catch (err) {
+                resultsDiv.innerText = `> [FATAL] Engine failure: ${err.message}`;
+            } finally {
+                btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Initialize Algorithm';
             }
         }
 

@@ -380,6 +380,9 @@ class AutoScraper:
                 logger.info(f"[DEEP SCRAPE] Swarm Agent hitting {url}")
                 await page.goto(url, wait_until="domcontentloaded", timeout=25000)
                 await page.wait_for_timeout(4000) # Wait for Cloudflare/React
+            except Exception as e:
+                logger.error(f"[DEEP SCRAPE] Failed to load {url}: {e}")
+                return result
             
             # 1. Assets / Portfolio Extraction
             logger.info(f"[DEEP SCRAPE] Extracting Assets for {address}")
