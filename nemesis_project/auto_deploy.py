@@ -35,6 +35,11 @@ def main():
     print(" 🚀 NEMESIS OMNI-DEPLOYER: INFRASTRUCTURE-AS-CODE INITIATING")
     print("============================================================")
     
+    # Sanitize Cloudflare Token
+    cf_token = os.environ.get("CLOUDFLARE_API_TOKEN", "")
+    if cf_token:
+        os.environ["CLOUDFLARE_API_TOKEN"] = cf_token.strip().strip('"').strip("'").replace('\n', '')
+
     # 0. PRE-FLIGHT
     print("\n>>> [0/4] Installing Pre-flight Dependencies")
     print("    -> Installing Python requirements (Root)...")
@@ -43,6 +48,20 @@ def main():
     if os.path.exists("cloudflare_worker/package.json"):
         print("    -> Installing Node.js requirements (cloudflare_worker)...")
         run_cmd("npm install", cwd="cloudflare_worker", exit_on_error=False)
+        print("    -> Running npm audit fix...")
+        run_cmd("npm audit fix", cwd="cloudflare_worker", exit_on_error=False)
+        
+    # Ensure .gitignore exists to prevent LFS issues
+    gitignore_content = "node_modules/\ncloudflare_worker/node_modules/\ncf_pages_build/\nvenv/\n__pycache__/\n.env\n"
+    if not os.path.exists(".gitignore"):
+        with open(".gitignore", "w", encoding="utf-8") as f:
+            f.write(gitignore_content)
+    else:
+        with open(".gitignore", "r", encoding="utf-8") as f:
+            current_gitignore = f.read()
+        if "node_modules" not in current_gitignore:
+            with open(".gitignore", "a", encoding="utf-8") as f:
+                f.write("\n" + gitignore_content)
 
     # 1. CLOUDFLARE INFRASTRUCTURE (D1, KV, R2)
     print("\n>>> [1/4] Provisioning Cloudflare Edge Resources")

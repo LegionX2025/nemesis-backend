@@ -1096,5 +1096,17 @@ async def update_config(config: ConfigModel, token: dict = Depends(verify_access
     if config.max_hops > 0: engine.MAX_HOPS = config.max_hops
     return {"status": "success", "message": "Configuration updated in-memory"}
 
+import subprocess
+import sys
+
+@app.post("/api/admin/godmode/deploy")
+async def trigger_godmode(token: dict = Depends(verify_access_token)):
+    try:
+        # Spawn godmode.py in the background
+        subprocess.Popen([sys.executable, "godmode.py"])
+        return {"status": "success", "message": "Omni-Healing Godmode Deployer Initiated."}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=3001)

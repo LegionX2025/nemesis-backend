@@ -43,6 +43,9 @@
                 <a href="#" onclick="switchTab('parsers')" id="tab-parsers" class="sidebar-item flex items-center gap-3 px-4 py-3 text-slate-500 rounded-lg transition border">
                     <i class="fa-solid fa-network-wired w-4"></i> Blockchain Parsers
                 </a>
+                <a href="#" onclick="switchTab('godmode')" id="tab-godmode" class="sidebar-item flex items-center gap-3 px-4 py-3 text-emerald-600 font-black rounded-lg transition border border-emerald-200 bg-emerald-50 hover:bg-emerald-100">
+                    <i class="fa-solid fa-wand-magic-sparkles w-4"></i> Godmode Deployer
+                </a>
             </nav>
             <div class="p-4 border-t border-slate-200">
                 <button onclick="logout()" class="w-full py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded border border-red-200 text-xs font-bold transition uppercase tracking-wider flex justify-center items-center gap-2">
@@ -167,6 +170,31 @@
                     <textarea id="gbeo-editor" class="w-full h-96 p-4 bg-slate-900 text-emerald-400 font-mono text-xs rounded border border-slate-700 focus:outline-none focus:border-blue-500" spellcheck="false"></textarea>
                 </div>
             </div>
+
+            <!-- Godmode View -->
+            <div id="view-godmode" class="hidden space-y-6">
+                <div class="glass-panel p-8 rounded-xl border border-emerald-200 shadow-emerald-500/10">
+                    <h3 class="text-emerald-600 text-lg uppercase tracking-widest font-black mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Omni-Healing Godmode Deployer
+                    </h3>
+                    <p class="text-xs text-slate-600 mb-6 max-w-2xl">
+                        This module integrates the Gemini API to autonomously monitor the deployment process to Cloudflare and Render. If errors occur, the AI will diagnose the logs, patch the source code, and recursively re-attempt deployment until stabilization is achieved.
+                    </p>
+                    <div class="bg-slate-900 p-6 rounded-lg mb-6 shadow-inner border border-slate-700">
+                        <div class="flex items-center gap-4 mb-4 pb-4 border-b border-slate-700">
+                            <button id="btn-trigger-godmode" onclick="triggerGodmode()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black tracking-widest uppercase rounded shadow-[0_0_15px_rgba(16,185,129,0.4)] transition transform active:scale-95 flex items-center gap-3">
+                                <i class="fa-solid fa-rocket"></i> Initiate Omni-Deployment
+                            </button>
+                            <span id="godmode-status" class="text-slate-400 font-mono text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-slate-600"></span> STANDBY
+                            </span>
+                        </div>
+                        <div class="h-64 overflow-y-auto font-mono text-[10px] text-emerald-400 leading-relaxed" id="godmode-logs">
+                            > SYSTEM READY. WAITING FOR COMMAND...<br>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <div class="mt-auto">
                 {% include 'includes/footer.html' %}
@@ -195,14 +223,15 @@
 
         // Tab Switching
         function switchTab(tabId) {
-            const tabs = ['logs', 'cases', 'database', 'config', 'engine', 'parsers'];
+            const tabs = ['logs', 'cases', 'database', 'config', 'engine', 'parsers', 'godmode'];
             const titles = {
                 'logs': 'Live Console Logs',
                 'cases': 'Case Management',
                 'database': 'Database Statistics',
                 'config': 'API Configuration',
                 'engine': 'Engine Controls',
-                'parsers': 'Blockchain Parsers Configuration'
+                'parsers': 'Blockchain Parsers Configuration',
+                'godmode': 'Omni-Healing Godmode Deployer'
             };
 
             tabs.forEach(t => {
@@ -251,12 +280,41 @@
                 });
                 const data = await res.json();
                 if (data.status === 'success') {
-                    showToast('GBEO Ontology Saved Successfully!');
+                    alert('GBEO Ontology updated successfully.');
                 } else {
-                    showToast('Error saving GBEO: ' + data.message);
+                    alert('Error: ' + data.message);
                 }
             } catch (err) {
-                showToast('Invalid JSON Format');
+                alert('Invalid JSON format.');
+            }
+        }
+
+        async function triggerGodmode() {
+            const btn = document.getElementById('btn-trigger-godmode');
+            const status = document.getElementById('godmode-status');
+            const logs = document.getElementById('godmode-logs');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ENGAGING PROTOCOL...';
+            status.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> SYSTEM ACTIVE';
+            logs.innerHTML += '<br><span class="text-emerald-300">> INITIALIZING OMNI-HEALING ORCHESTRATOR...</span>';
+            
+            try {
+                const res = await fetch(`${baseUrl}/api/admin/godmode/deploy`, {
+                    method: 'POST',
+                    headers: authHeaders
+                });
+                const data = await res.json();
+                
+                if (data.status === 'success') {
+                    logs.innerHTML += `<br><span class="text-blue-400">> ${data.message}</span>`;
+                    logs.innerHTML += '<br><span class="text-emerald-400">> Background Agent spawned. Tailing system logs...</span>';
+                    // We simulate tailing since the websocket would handle real logs
+                } else {
+                    logs.innerHTML += `<br><span class="text-red-500">> SYSTEM FAILURE: ${data.message}</span>`;
+                }
+            } catch (err) {
+                logs.innerHTML += `<br><span class="text-red-500">> CRITICAL ERROR: ${err}</span>`;
             }
         }
 
