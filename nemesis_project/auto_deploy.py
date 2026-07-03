@@ -71,7 +71,7 @@ def main():
         print("    -> D1 Database might already exist or authentication needed.")
     
     print("    -> Attempting to provision KV Namespace (NEMESIS_KV)...")
-    success, log = run_cmd("npx wrangler kv:namespace create NEMESIS_KV", exit_on_error=False)
+    success, log = run_cmd("npx wrangler kv namespace create NEMESIS_KV", exit_on_error=False)
     
     print("    -> Attempting to provision R2 Bucket (nemesis-assets)...")
     success, log = run_cmd("npx wrangler r2 bucket create nemesis-assets", exit_on_error=False)
