@@ -4,6 +4,9 @@ import sys
 import shutil
 import urllib.request
 import traceback
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def run_cmd(cmd, cwd=None, exit_on_error=True, max_retries=3):
     print(f"\n[EXEC] {cmd}" + (f" (in {cwd})" if cwd else ""))
