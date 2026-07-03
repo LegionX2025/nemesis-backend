@@ -152,18 +152,23 @@ class AutoScraper:
                 except Exception as e:
                     logger.warning(f"Could not extract Bitcoin gas price: {e}")
             
-            # Use Playwright evaluation to grab all deeply nested text elements
-            text_blob = await page.evaluate('''() => {
-                const elements = Array.from(document.querySelectorAll('*'));
-                // Filter elements that have direct text nodes to avoid massive duplication
-                const textNodes = elements.filter(el => {
-                    return Array.from(el.childNodes).some(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0);
-                });
-                return textNodes.map(e => e.textContent.trim()).join(" | ");
-            }''')
+            # 2. Extract Tags using fallback selectors for robust scraping
+            tags = []
+            try:
+                tag_locators = await page.locator('.text-ellipsis, div[class*="tag-md"] .text-ellipsis').all()
+                for locator in tag_locators:
+                    text = await locator.inner_text()
+                    clean_text = text.strip().lstrip('#').strip()
+                    if clean_text and len(clean_text) > 2 and clean_text not in ["Overview", "Transactions", "Token"]:
+                        tags.append(clean_text)
+            except Exception as e:
+                logger.warning(f"OkLink tag locator failed: {e}")
+                
+            tags = list(set(tags))
+            text_blob = " | ".join(tags)
             
-            # Try multi-search layout as well
-            if not any(k in text_blob.lower() for k in ["exchange", "mixer", "hot wallet"]):
+            # Try multi-search layout as well if tags are empty
+            if not tags:
                 multi_url = f"https://www.oklink.com/multi-search#key={address}"
                 try:
                     await page.goto(multi_url, wait_until="domcontentloaded", timeout=10000)
@@ -181,6 +186,10 @@ class AutoScraper:
                 label += f" (BTC Gas: {btc_gas_price})"
             elif btc_gas_price and not label:
                 label = f"BTC Gas: {btc_gas_price}"
+                
+            # Prefer extracted tags directly if classification failed
+            if not label and tags:
+                label = tags[0]
                 
             return label, cluster
         except Exception as e:

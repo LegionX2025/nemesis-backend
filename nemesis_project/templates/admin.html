@@ -260,9 +260,11 @@
 
         async function fetchGBEO() {
             try {
-                const res = await fetch(`${baseUrl}/api/gbeo`, { headers: authHeaders });
+                const res = await fetch(`${baseUrl}/api/admin/gbeo_config`, { headers: authHeaders });
                 const data = await res.json();
-                if (data.status === 'success') {
+                if (data.networks || Object.keys(data).length > 0) { // The raw JSON doesn't wrap in {status: 'success', data: ...}
+                    document.getElementById('gbeo-editor').value = JSON.stringify(data, null, 2);
+                } else if (data.status === 'success') {
                     document.getElementById('gbeo-editor').value = JSON.stringify(data.data, null, 2);
                 }
             } catch (err) {
@@ -273,10 +275,10 @@
         async function saveGBEO() {
             try {
                 const payload = JSON.parse(document.getElementById('gbeo-editor').value);
-                const res = await fetch(`${baseUrl}/api/gbeo/update`, {
+                const res = await fetch(`${baseUrl}/api/admin/gbeo_config`, {
                     method: 'POST',
                     headers: authHeaders,
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({config: payload})
                 });
                 const data = await res.json();
                 if (data.status === 'success') {

@@ -441,6 +441,28 @@ async def api_ontology():
         logger.error(f"Failed to fetch ontology: {e}")
         return {"scenarios": [], "matrix": {}, "error": str(e)}
 
+@app.get("/api/ml/gbio")
+async def api_ml_gbio():
+    from services.ml_engine import ml_engine
+    return ml_engine.get_ontology()
+
+@app.post("/api/ml/ingest")
+async def api_ml_ingest():
+    from services.ml_engine import ml_engine
+    import asyncio
+    result = await asyncio.to_thread(ml_engine.ingest_knowledge_base)
+    return result
+
+@app.post("/api/ml/analyze")
+async def api_ml_analyze(request: Request):
+    from services.ml_engine import ml_engine
+    try:
+        data = await request.json()
+        result = await ml_engine.analyze_trace_with_gbio(data)
+        return {"status": "success", "analysis": result}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 @app.get("/api/darknet/search")
 async def api_darknet_search(q: str = ""):
     from services.trace_engine import mongo_db
@@ -1076,6 +1098,26 @@ class ConfigModel(BaseModel):
     polygonscan_key: str
     max_depth: int
     max_hops: int
+
+class GBEOConfigModel(BaseModel):
+    config: dict
+
+@app.get("/api/admin/gbeo_config")
+async def get_gbeo_config(token: dict = Depends(verify_access_token)):
+    try:
+        with open("gbeo_ontology.json", "r") as f:
+            return json.load(f)
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/api/admin/gbeo_config")
+async def update_gbeo_config(payload: GBEOConfigModel, token: dict = Depends(verify_access_token)):
+    try:
+        with open("gbeo_ontology.json", "w") as f:
+            json.dump(payload.config, f, indent=4)
+        return {"status": "success", "message": "GBEO config updated"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 @app.get("/api/admin/config")
 async def get_config(token: dict = Depends(verify_access_token)):

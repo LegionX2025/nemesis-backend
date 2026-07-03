@@ -33,7 +33,20 @@ from intel.cex_clustering import CEXClusterer
 from services.graph_model import graph_db
 from services.ontology import map_tx_to_ontology
 from services.price_oracle import get_historical_usd_value, get_current_usd_value
+from services.gbeo_parser import GBEOParser
+from services.scraper_engine import AutoScraper
+from services.ml_engine import MachineLearningEngine
 
+# Import ml_clustering script
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+try:
+    from scripts.ml_clustering import run_syndicate_clustering
+except ImportError:
+    run_syndicate_clustering = None
+
+gbeo = GBEOParser()
+ml_engine = MachineLearningEngine()
+auto_scraper = AutoScraper()
 
 logger = logging.getLogger("OmniChainEngine")
 
@@ -385,6 +398,17 @@ async def auto_scrape_label(session, chain, address):
     ok_label = await fetch_oklink_label(session, chain, address)
     if ok_label: return ok_label, "OKLink"
     
+    # Try Playwright fallback
+    try:
+        import asyncio
+        from scripts.oklink_scraper import scrape_oklink_tags
+        res = await asyncio.to_thread(scrape_oklink_tags, chain, address)
+        if res and res.get("attributionTags"):
+            return ", ".join(res["attributionTags"]), "OKLink_Scraper"
+    except Exception as e:
+        logger.error(f"OKLink Scraper error: {e}")
+        pass
+        
     if chain in ["ETHEREUM", "EVM_AUTO", "ETH"]:
         url = f"https://ethplorer.io/search/{address}"
         try:
@@ -432,6 +456,17 @@ async def fetch_wallet_label(session, addr, chain, trace_id=None):
     if label == "Unknown Wallet":
         # 1. Quick regex scan first
         scraped_label, source = await auto_scrape_label(session, chain, addr)
+        
+        # 2. GBEO Deep Scrape fallback
+        if not scraped_label and gbeo.is_auto_ingest(chain):
+            # Try to get it from oklink via AutoScraper
+            try:
+                l, c = await auto_scraper.scrape_oklink(addr, chain)
+                if l:
+                    scraped_label = l
+                    source = "GBEO_AutoScraper"
+            except: pass
+
         if scraped_label:
             label = scraped_label
             if mongo_db is not None:
@@ -506,6 +541,8 @@ def thread_safe_file_write(ledger_data, trace_id, narrative=""):
         except Exception as e:
             logger.error(f"File write failed: {e}")
 
+from services.ml_engine import ml_engine
+
 async def classify_tx_intent(tx: dict) -> dict:
     input_data = tx.get("input", "")
     method = input_data[:10].lower().replace("0x", "") if input_data else ""
@@ -515,25 +552,35 @@ async def classify_tx_intent(tx: dict) -> dict:
     if tx.get("isError") == "0" and not input_data:
         intent["edge_type"] = "INTERNAL_TX"
     
-    if not input_data or input_data == "0x" or len(input_data) < 8: return intent
-
     if method in SIGNATURE_REGISTRY:
         sig_val = SIGNATURE_REGISTRY[method]
-        intent["action"] = sig_val
-        if "DEX" in sig_val or "Swap" in sig_val or "UniswapV3" in sig_val: intent["edge_type"] = "SWAP"; intent["obf_path"] = "DEX_ROUTING"
-        elif "Bridge" in sig_val or "CCTP" in sig_val: intent["edge_type"] = "BRIDGE_HOP"; intent["obf_path"] = "BRIDGE"
-        elif "Mixer" in sig_val or "Railgun" in sig_val: intent["edge_type"] = "MIXER"; intent["obf_path"] = "MIXER"
-        elif "Sweep" in sig_val: intent["edge_type"] = "CEX_DEPOSIT"; intent["obf_path"] = "CUSTODIAL_SETTLEMENT"
-        elif "WETH" in sig_val and "Deposit" in sig_val: intent["edge_type"] = "LOCK"
-        elif "WETH" in sig_val and "Withdraw" in sig_val: intent["edge_type"] = "RELEASE"
-        elif "Mint" in sig_val: intent["edge_type"] = "MINT"
-        elif "Burn" in sig_val: intent["edge_type"] = "BURN"
-        elif "NFT" in sig_val: intent["edge_type"] = "NFT_TRADE"
-        elif "Staking" in sig_val or "Aave" in sig_val or "Compound" in sig_val or "EigenLayer" in sig_val: intent["edge_type"] = "STAKING"; intent["obf_path"] = "YIELD"
-        elif "Transfer" in sig_val: intent["edge_type"] = "TRANSFER"; intent["action"] = "TOKEN_TRANSFER"
+        intent["action"] = sig_val["name"] if isinstance(sig_val, dict) else sig_val
+        if isinstance(sig_val, str):
+            if "DEX" in sig_val or "Swap" in sig_val or "UniswapV3" in sig_val: intent["edge_type"] = "SWAP"; intent["obf_path"] = "DEX_ROUTING"
+            elif "Bridge" in sig_val or "CCTP" in sig_val: intent["edge_type"] = "BRIDGE_HOP"; intent["obf_path"] = "BRIDGE"
+            elif "Mixer" in sig_val or "Railgun" in sig_val: intent["edge_type"] = "MIXER"; intent["obf_path"] = "MIXER"
+            elif "Sweep" in sig_val: intent["edge_type"] = "CEX_DEPOSIT"; intent["obf_path"] = "CUSTODIAL_SETTLEMENT"
+            elif "WETH" in sig_val and "Deposit" in sig_val: intent["edge_type"] = "LOCK"
+            elif "WETH" in sig_val and "Withdraw" in sig_val: intent["edge_type"] = "RELEASE"
+            elif "Mint" in sig_val: intent["edge_type"] = "MINT"
+            elif "Burn" in sig_val: intent["edge_type"] = "BURN"
+            elif "NFT" in sig_val: intent["edge_type"] = "NFT_TRADE"
+            elif "Staking" in sig_val or "Aave" in sig_val or "Compound" in sig_val or "EigenLayer" in sig_val: intent["edge_type"] = "STAKING"; intent["obf_path"] = "YIELD"
+            elif "Transfer" in sig_val: intent["edge_type"] = "TRANSFER"; intent["action"] = "TOKEN_TRANSFER"
     else:
         intent["action"] = "CONTRACT_CALL"
         intent["edge_type"] = "CONTRACT_INTERACTION"
+
+    # Autonomous GBIO v2 ML Analysis
+    ml_scores = await ml_engine.analyze_trace_with_gbio({
+        "from": tx.get("from"),
+        "to": tx.get("to"),
+        "value": tx.get("value"),
+        "input": input_data,
+        "method": method
+    })
+    intent["ml_intelligence"] = ml_scores
+    
     return intent
 
 async def find_bridge_symmetry(tx_hash: str):
@@ -601,7 +648,8 @@ class TraceEngine:
         self.trace_id = trace_id
         self.visited = set()
         self.ledger = []
-        self.cex = CEXClusterer(mongo_db) if mongo_db is not None else CEX()
+        self.cex_clusterer = CEXClusterer(mongo_db) if mongo_db is not None else None
+        self.cex = CEX()
         self.bridge_resolver = BridgeResolver(mongo_db)
         self.abi_decoder = ABIDecoder()
         self.evm_adapter = EVMAdapter()
@@ -1557,32 +1605,48 @@ class TraceEngine:
 
     async def execute_dbscan_clustering(self):
         if len(self.node_stats) < 2: return
-        features = []
-        nodes = list(self.node_stats.keys())
         
-        for n in nodes:
-            stats = self.node_stats[n]
-            features.append([stats["in_amt"], stats["out_amt"], stats["in_count"], stats["out_count"]])
-            
         try:
-            if not features or all(all(v == 0 for v in row) for row in features): return
-            
-            scaler = StandardScaler()
-            scaled_features = scaler.fit_transform(features)
-            db = DBSCAN(eps=0.5, min_samples=2, n_jobs=1).fit(scaled_features)
-            
             updates = []
-            for idx, cluster_label in enumerate(db.labels_):
-                n = nodes[idx]
-                stats = self.node_stats[n]
-                is_holding = stats["in_count"] > 0 and stats["out_count"] == 0 and n not in self.seeds
+            
+            # Use the advanced ml_clustering logic if available
+            if run_syndicate_clustering is not None and len(self.ledger) >= 3:
+                # Run in executor to prevent event loop blocking
+                loop = asyncio.get_event_loop()
+                clusters = await loop.run_in_executor(IO_POOL, run_syndicate_clustering, list(self.ledger))
                 
-                c_id = f"Threat Actor Syndicate Alpha-{cluster_label}" if cluster_label != -1 else "Unclustered"
-                updates.append({"node": n, "cluster_id": c_id, "is_holding": is_holding})
+                for node, cluster_id in clusters.items():
+                    if node in self.node_stats:
+                        stats = self.node_stats[node]
+                        is_holding = stats["in_count"] > 0 and stats["out_count"] == 0 and node not in self.seeds
+                        updates.append({"node": node, "cluster_id": cluster_id, "is_holding": is_holding})
+            else:
+                # Fallback basic DBScan clustering
+                features = []
+                nodes = list(self.node_stats.keys())
+                for n in nodes:
+                    stats = self.node_stats[n]
+                    features.append([stats["in_amt"], stats["out_amt"], stats["in_count"], stats["out_count"]])
+                    
+                if not features or all(all(v == 0 for v in row) for row in features): return
                 
-            for ws in list(self.clients):
-                try: await ws.send_json({"type": "DBSCAN_UPDATE", "data": updates})
-                except: pass
+                scaler = StandardScaler()
+                scaled_features = scaler.fit_transform(features)
+                db = DBSCAN(eps=0.5, min_samples=2, n_jobs=1).fit(scaled_features)
+                
+                for idx, cluster_label in enumerate(db.labels_):
+                    n = nodes[idx]
+                    stats = self.node_stats[n]
+                    is_holding = stats["in_count"] > 0 and stats["out_count"] == 0 and n not in self.seeds
+                    
+                    # Tag with AUTO_ID prefix as requested
+                    c_id = f"AUTO_ID_{str(cluster_label).zfill(4)}" if cluster_label != -1 else "Unclustered"
+                    updates.append({"node": n, "cluster_id": c_id, "is_holding": is_holding})
+                    
+            if updates:
+                for ws in list(self.clients):
+                    try: await ws.send_json({"type": "DBSCAN_UPDATE", "data": updates})
+                    except: pass
         except Exception as e:
             logger.error(f"Clustering failed: {e}")
 
@@ -1660,6 +1724,15 @@ class TraceEngine:
                 for w in workers: w.cancel()
                 
                 await self.execute_dbscan_clustering()
+                
+                # Apply GBEO Machine Learning Analysis
+                try:
+                    ml_intelligence = await ml_engine.analyze_trace_with_gbio(self.ledger)
+                    # Broadcast the ML intelligence back to clients to update the Dashboard
+                    for ws in list(self.clients):
+                        asyncio.create_task(ws.send_json({"type": "ML_INTELLIGENCE", "data": ml_intelligence}))
+                except Exception as ml_err:
+                    logger.error(f"GBEO ML Engine Analysis failed: {ml_err}")
                 
                 # AI Recombination Narrative Generation
                 narrative = "No recombination narrative could be generated."
