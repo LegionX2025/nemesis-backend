@@ -3806,7 +3806,7 @@ NEMESIS_ROOT/
                     window.autoComputeTarget = !amount;
                     window.autoComputedAmount = 0.0;
                     
-                    document.getElementById("status").innerHTML = `<span class="text-blue-600 font-bold">Tracing Active... (Hybrid Parallel Fetching)</span>`;
+                    document.getElementById("status").innerHTML = `<span class="text-blue-600 font-bold"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Tracing Active... (Hybrid Parallel Fetching)</span>`;
                     const backendUrl = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') ? '' : 'https://nemesis-local.onrender.com';
                     const response = await fetch(`${backendUrl}/api/start_trace`, {
                         method: 'POST', headers: {'Content-Type': 'application/json'},

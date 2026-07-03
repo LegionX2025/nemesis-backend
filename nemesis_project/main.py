@@ -197,6 +197,7 @@ app.add_middleware(
         "http://localhost:3001",
         "http://127.0.0.1:3000"
     ],
+    allow_origin_regex=r"https://.*\.pages\.dev",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -204,8 +205,10 @@ app.add_middleware(
 
 @app.middleware("http")
 async def validate_edge_signature(request: Request, call_next):
-    # Only protect /api/ routes
     if request.url.path.startswith("/api/"):
+        if request.method == "OPTIONS":
+            return await call_next(request)
+            
         secret = os.getenv("NEMESIS_EDGE_SECRET", "default_dev_secret_override")
         sig = request.headers.get("X-Nemesis-Signature")
         
@@ -820,9 +823,13 @@ async def nemesis_id_profile(address: str):
                         profile["total_received"] = f"${funded * 60000:,.2f}"
                         profile["total_sent"] = f"${spent * 60000:,.2f}"
                         profile["tx_count"] = stats.get("tx_count", 0)
-            elif chain in EVM_DOMAINS or chain == "EVM":
-                # Fallback to ETH if exact EVM chain is not determined for balance
-                domain = EVM_DOMAINS.get(chain, EVM_DOMAINS["ETH"])
+            elif chain in EVM_DOMAINS or chain in ("EVM", "EVM_AUTO"):
+                evm_apis = {
+                    "ETHEREUM": "api.etherscan.io", "BSC": "api.bscscan.com", 
+                    "POLYGON": "api.polygonscan.com", "BASE": "api.basescan.org", 
+                    "ARBITRUM": "api.arbiscan.io", "OPTIMISM": "api-optimistic.etherscan.io"
+                }
+                domain = evm_apis.get(chain, "api.etherscan.io")
                 api_key = CONFIG.get("ETHERSCAN_API_KEY", "")
                 url = f"https://{domain}/api?module=account&action=balance&address={address}&tag=latest&apikey={api_key}"
                 async with session.get(url, timeout=10) as r:
@@ -830,7 +837,7 @@ async def nemesis_id_profile(address: str):
                         data = await r.json()
                         if data.get("status") == "1":
                             bal_eth = int(data.get("result", 0)) / 1e18
-                            profile["native_value"] = f"{bal_eth:.4f} {chain if chain != 'EVM' else 'ETH'}"
+                            profile["native_value"] = f"{bal_eth:.4f} {chain if chain not in ('EVM', 'EVM_AUTO') else 'ETH'}"
                             profile["balance"] = f"${bal_eth * 3000:,.2f}" # rough mock price
     except Exception as e:
         logger.error(f"Error fetching real balance for {address}: {e}")

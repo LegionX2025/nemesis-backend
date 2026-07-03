@@ -99,11 +99,11 @@ class IdentityEngine:
         Cross-references the entity against the Global Threat Intel Engine Database.
         """
         try:
-            from services.database_connector import db_engine
-            if not db_engine.db:
+            from services.database_connector import db_connector
+            if not db_connector.mongo_db:
                 return {"found": False}
                 
-            intel = await db_engine.db.threat_intel.find_one({"crypto_address": address.lower()})
+            intel = await db_connector.mongo_db.threat_intel.find_one({"crypto_address": address.lower()})
             if intel:
                 return {
                     "found": True,
