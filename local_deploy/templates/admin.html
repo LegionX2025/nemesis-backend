@@ -56,8 +56,14 @@
             <a href="#" onclick="switchTab('parsers')" id="tab-parsers" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-[#00ff88] hover:bg-[#00ff88]/5 rounded-lg transition border border-transparent">
                 Blockchain Parsers
             </a>
+            <a href="#" onclick="switchTab('darknet')" id="tab-darknet" class="flex items-center gap-3 px-4 py-3 text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 rounded-lg transition border border-transparent font-black shadow-[0_0_10px_rgba(168,85,247,0.2)]">
+                DARKNET STREAM
+            </a>
             
             <div class="text-[9px] text-gray-500 mb-2 mt-6 px-2">Advanced Modules</div>
+            <a href="#" onclick="switchTab('godmode')" id="tab-godmode" class="flex items-center gap-3 px-4 py-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition border border-transparent font-black shadow-[0_0_10px_rgba(255,0,0,0.2)]">
+                GODMODE DEPLOYER
+            </a>
             <a href="#" onclick="switchTab('cloudflare')" id="tab-cloudflare" class="flex items-center gap-3 px-4 py-3 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 rounded-lg transition border border-transparent">
                 Cloudflare Edge
             </a>
@@ -66,6 +72,9 @@
             </a>
             <a href="#" onclick="switchTab('benchmark')" id="tab-benchmark" class="flex items-center gap-3 px-4 py-3 text-[#00b8ff] hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition border border-transparent">
                 System Benchmark
+            </a>
+            <a href="#" onclick="switchTab('nemesis-ml')" id="tab-nemesis-ml" class="flex items-center gap-3 px-4 py-3 text-pink-400 hover:text-pink-300 hover:bg-pink-500/10 rounded-lg transition border border-transparent font-black shadow-[0_0_10px_rgba(236,72,153,0.2)]">
+                NEMESIS ML INTELLIGENCE
             </a>
             <a href="#" onclick="switchTab('engine')" id="tab-engine" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-[#00ff88] hover:bg-[#00ff88]/5 rounded-lg transition border border-transparent">
                 Engine Controls
@@ -114,6 +123,53 @@
                 </div>
             </div>
 
+            <!-- Godmode Deployer View -->
+            <div id="view-godmode" class="hidden space-y-6">
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="bg-[rgba(20,10,10,0.8)] border border-red-500/30 p-6 rounded-xl">
+                        <h3 class="text-red-400 text-sm uppercase tracking-widest font-bold mb-4 border-b border-red-500/20 pb-2 flex justify-between">
+                            <span>Autonomous Healing</span>
+                            <span class="animate-pulse">ACTIVE</span>
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center bg-black/50 p-3 rounded border border-gray-800">
+                                <span class="text-xs text-gray-400 uppercase tracking-wider">Gemini LLM Link</span>
+                                <span class="text-xs text-[#00ff88] font-mono">CONNECTED</span>
+                            </div>
+                            <div class="flex justify-between items-center bg-black/50 p-3 rounded border border-gray-800">
+                                <span class="text-xs text-gray-400 uppercase tracking-wider">Self-Healing Protocols</span>
+                                <span class="text-xs text-[#00ff88] font-mono">ENGAGED</span>
+                            </div>
+                            <div class="flex justify-between items-center bg-black/50 p-3 rounded border border-gray-800">
+                                <span class="text-xs text-gray-400 uppercase tracking-wider">Auto-Backup Engine</span>
+                                <span class="text-xs text-[#00ff88] font-mono">STANDBY</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-[rgba(20,10,10,0.8)] border border-red-500/30 p-6 rounded-xl">
+                        <h3 class="text-red-400 text-sm uppercase tracking-widest font-bold mb-4 border-b border-red-500/20 pb-2">Deployer Operations</h3>
+                        <div class="space-y-4">
+                            <button onclick="alert('Triggering Godmode Omni-Deploy (auto_deploy.py)...')" class="w-full py-3 bg-red-500/10 text-red-400 border border-red-500/30 rounded text-xs font-bold uppercase tracking-widest hover:bg-red-500/20 transition flex justify-between px-4">
+                                <span>Execute Omni-Deploy</span> <span>🚀</span>
+                            </button>
+                            <button onclick="alert('Triggering NPM Audit & Fix...')" class="w-full py-3 bg-red-500/10 text-red-400 border border-red-500/30 rounded text-xs font-bold uppercase tracking-widest hover:bg-red-500/20 transition flex justify-between px-4">
+                                <span>Force NPM Audit Fix</span> <span>🛠️</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-black border border-red-500/30 rounded-lg h-[40vh] overflow-hidden flex flex-col shadow-[0_0_30px_rgba(255,0,0,0.05)] relative">
+                    <div class="bg-red-500/10 px-4 py-2 border-b border-red-500/30 text-[10px] text-red-400 uppercase tracking-widest font-bold">
+                        <span>Godmode Intervention Log</span>
+                    </div>
+                    <div class="flex-1 p-4 overflow-y-auto font-mono text-xs text-gray-300 leading-relaxed break-all cyber-scrollbar">
+                        <span class="text-red-400">[GODMODE] System awaiting deployment execution...</span><br>
+                    </div>
+                </div>
+            </div>
+
             <!-- Cloudflare Edge View -->
             <div id="view-cloudflare" class="hidden space-y-6">
                 <div class="grid grid-cols-2 gap-6">
@@ -152,6 +208,40 @@
                                 <span>View Wrangler Logs</span> <span>📋</span>
                             </button>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NEMESIS ML View -->
+            <div id="view-nemesis-ml" class="hidden space-y-6">
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="bg-[rgba(30,10,20,0.8)] border border-pink-500/30 p-6 rounded-xl relative overflow-hidden">
+                        <div class="absolute -right-10 -top-10 w-40 h-40 bg-pink-600/20 rounded-full blur-3xl pointer-events-none"></div>
+                        <h3 class="text-pink-400 text-sm uppercase tracking-widest font-bold mb-4 border-b border-pink-500/20 pb-2">ML Knowledge Base Ingestion</h3>
+                        <div class="space-y-4">
+                            <div class="text-xs text-gray-300">Auto-learn from URL or Library Import.</div>
+                            <input type="text" id="ml-ingest-url" class="w-full bg-black border border-pink-500/30 rounded p-3 text-sm text-white focus:outline-none focus:border-pink-500" placeholder="https://raw.githubusercontent.com/.../dataset.csv">
+                            <button onclick="ingestMLDataset()" class="w-full py-3 bg-pink-600 hover:bg-pink-500 text-white font-bold rounded uppercase tracking-widest text-xs transition">Ingest & Train Model</button>
+                            <div class="text-[10px] text-pink-300 font-mono mt-2" id="ml-ingest-status"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-[rgba(30,10,20,0.8)] border border-pink-500/30 p-6 rounded-xl">
+                        <h3 class="text-pink-400 text-sm uppercase tracking-widest font-bold mb-4 border-b border-pink-500/20 pb-2">GBIO v2 Ontology State</h3>
+                        <div class="space-y-2 font-mono text-[10px] text-gray-400 h-32 overflow-y-auto cyber-scrollbar" id="ontology-viewer">
+                            Loading Ontology Library...
+                        </div>
+                        <button onclick="alert('Generating Synthetic Training Scenario via Gemini...')" class="w-full py-2 mt-4 bg-pink-500/20 hover:bg-pink-500/40 border border-pink-500/50 text-pink-300 font-bold rounded uppercase tracking-widest text-[10px] transition">Generate Training Scenario</button>
+                    </div>
+                </div>
+                
+                <div class="bg-black border border-pink-500/30 rounded-lg h-[45vh] overflow-hidden flex flex-col shadow-[0_0_30px_rgba(236,72,153,0.05)] relative">
+                    <div class="bg-pink-500/10 px-4 py-2 border-b border-pink-500/30 text-[10px] text-pink-400 uppercase tracking-widest font-bold flex justify-between">
+                        <span>Real-Time Intelligence Classification Stream</span>
+                        <span class="animate-pulse">🔴 LIVE</span>
+                    </div>
+                    <div id="ml-stream-console" class="flex-1 p-4 overflow-y-auto font-mono text-[10px] text-gray-300 leading-relaxed break-all cyber-scrollbar space-y-2">
+                        <div class="text-pink-500">[NEMESIS ML] Awaiting omni-chain trace telemetry...</div>
                     </div>
                 </div>
             </div>
@@ -402,14 +492,32 @@
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Max Hops</label>
-                            <input type="number" id="engine-hops" class="w-full bg-black border border-[#00ff88]/30 rounded p-2 text-white text-sm" value="50">
+                                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Max Trace Depth</label>
+                                    <input type="number" id="engine-depth" class="w-full bg-black border border-[#00ff88]/30 rounded p-2 text-white text-sm" value="3">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Max Hops</label>
+                                    <input type="number" id="engine-hops" class="w-full bg-black border border-[#00ff88]/30 rounded p-2 text-white text-sm" value="50">
+                                </div>
+                                <button onclick="saveEngineConfig()" class="mt-4 px-4 py-2 bg-[#00ff88]/10 text-[#00ff88] border border-[#00ff88]/50 rounded text-xs font-bold uppercase tracking-widest hover:bg-[#00ff88]/20 transition">Apply Changes</button>
+                            </div>
                         </div>
-                        <button onclick="saveEngineConfig()" class="mt-4 px-4 py-2 bg-[#00ff88]/10 text-[#00ff88] border border-[#00ff88]/50 rounded text-xs font-bold uppercase tracking-widest hover:bg-[#00ff88]/20 transition">Apply Changes</button>
+                    </div>
+            <!-- 11. Darknet Terminal View -->
+            <div id="view-darknet" class="hidden h-[75vh] flex-col gap-4">
+                <div class="flex-1 bg-[#050505] border border-purple-500/30 rounded shadow-[inset_0_0_20px_rgba(168,85,247,0.1)] flex flex-col overflow-hidden">
+                    <div class="bg-black/80 px-4 py-2 border-b border-purple-500/30 flex justify-between items-center">
+                        <span class="text-xs font-bold text-purple-400 tracking-widest uppercase">Darknet Crawler Stream <span class="animate-pulse text-green-400 ml-2">● LIVE</span></span>
+                        <button onclick="document.getElementById('darknet-terminal').innerHTML=''" class="text-[10px] text-gray-500 hover:text-white transition">CLEAR</button>
+                    </div>
+                    <div id="darknet-terminal" class="flex-1 p-4 font-mono text-[11px] space-y-1 overflow-y-auto cyber-scrollbar">
+                        <div class="text-gray-500 italic">Connecting to Darknet Engine...</div>
                     </div>
                 </div>
             </div>
-        </div>
-    </main>
+            
+        </main>
+    </div>
 
     <script>
         // Auth Check (Bypassed slightly for static view, normally requires token)
@@ -433,7 +541,7 @@
 
         // Tab Switching Logic
         function switchTab(tabId) {
-            const tabs = ['logs', 'cases', 'database', 'config', 'parsers', 'engine', 'cloudflare', 'antigravity', 'benchmark'];
+            const tabs = ['logs', 'cases', 'database', 'config', 'parsers', 'engine', 'cloudflare', 'antigravity', 'benchmark', 'nemesis-ml', 'godmode', 'darknet'];
             const titles = {
                 'logs': 'Live Console Logs',
                 'cases': 'Case Management',
@@ -443,7 +551,10 @@
                 'engine': 'Engine Controls',
                 'cloudflare': 'Cloudflare Edge Settings',
                 'antigravity': 'Anti-Gravity Intelligence Module',
-                'benchmark': 'System Diagnostic & Benchmark'
+                'benchmark': 'System Diagnostic & Benchmark',
+                'nemesis-ml': 'NEMESIS ML INTELLIGENCE',
+                'godmode': 'GODMODE DEPLOYER',
+                'darknet': 'DARKNET INTELLIGENCE STREAM'
             };
 
             tabs.forEach(t => {
@@ -457,14 +568,17 @@
                     if(t === 'cloudflare') btn.className = "flex items-center gap-3 px-4 py-3 bg-orange-500/20 text-orange-400 border border-orange-500/50 rounded-lg transition";
                     else if(t === 'antigravity') btn.className = "flex items-center gap-3 px-4 py-3 bg-purple-500/20 text-purple-400 border border-purple-500/50 rounded-lg transition";
                     else if(t === 'benchmark') btn.className = "flex items-center gap-3 px-4 py-3 bg-blue-500/20 text-[#00b8ff] border border-blue-500/50 rounded-lg transition";
+                    else if(t === 'nemesis-ml') btn.className = "flex items-center gap-3 px-4 py-3 bg-pink-500/20 text-pink-400 border border-pink-500/50 rounded-lg transition font-black";
+                    else if(t === 'godmode') btn.className = "flex items-center gap-3 px-4 py-3 bg-red-500/20 text-red-400 border border-red-500/50 rounded-lg transition font-black";
+                    else if(t === 'darknet') btn.className = "flex items-center gap-3 px-4 py-3 bg-purple-500/20 text-purple-400 border border-purple-500/50 rounded-lg transition";
                     else btn.className = "flex items-center gap-3 px-4 py-3 bg-[#00ff88]/10 text-[#00ff88] border border-[#00ff88]/50 rounded-lg transition";
                     
                     view.classList.remove('hidden');
                     view.classList.add('block');
                 } else {
                     // Reset to default inactive styles
-                    if(['cloudflare', 'antigravity', 'benchmark'].includes(t)) {
-                        let col = t==='cloudflare'?'orange':t==='antigravity'?'purple':'blue';
+                    if(['cloudflare', 'antigravity', 'benchmark', 'darknet'].includes(t)) {
+                        let col = t==='cloudflare'?'orange':t==='antigravity'?'purple':t==='benchmark'?'blue':'purple';
                         btn.className = `flex items-center gap-3 px-4 py-3 text-${col}-400 hover:text-${col}-300 hover:bg-${col}-500/10 rounded-lg transition border border-transparent`;
                     } else {
                         btn.className = "flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-[#00ff88] hover:bg-[#00ff88]/5 rounded-lg transition border border-transparent";
@@ -479,6 +593,10 @@
             if (tabId === 'database') fetchDbStats();
             if (tabId === 'config') fetchConfig();
             if (tabId === 'benchmark') initChart();
+            if (tabId === 'nemesis-ml') {
+                fetchMLOntology();
+                if(!mlWs || mlWs.readyState !== WebSocket.OPEN) initMLStream();
+            }
         }
 
         // Module: Multi-Stream Logs
@@ -677,7 +795,103 @@
             alert("Edge Engine config updated securely via Durable Objects.");
         }
 
+        // Module: NEMESIS ML
+        function ingestMLDataset() {
+            const url = document.getElementById('ml-ingest-url').value;
+            const status = document.getElementById('ml-ingest-status');
+            status.innerText = "Ingesting... Please wait.";
+            fetch(`${baseUrl}/api/ml/ingest`, {
+                method: 'POST',
+                headers: authHeaders,
+                body: JSON.stringify({ url: url, source: 'Admin UI' })
+            }).then(res => res.json()).then(data => {
+                status.innerText = data.message;
+            }).catch(e => {
+                status.innerText = "Failed to reach backend API. Check if Edge Worker is running.";
+            });
+        }
+
+        async function fetchMLOntology() {
+            const viewer = document.getElementById('ontology-viewer');
+            try {
+                const res = await fetch(`${baseUrl}/api/ml/ontology`);
+                const data = await res.json();
+                if(data && data.data) {
+                    viewer.innerHTML = `<pre>${JSON.stringify(data.data, null, 2)}</pre>`;
+                } else {
+                    viewer.innerHTML = "Ontology Library empty or corrupted.";
+                }
+            } catch (e) {
+                viewer.innerHTML = "Failed to load ontology. Check backend connection.";
+            }
+        }
+
+        let mlWs;
+        function initMLStream() {
+            if(mlWs) mlWs.close();
+            mlWs = new WebSocket(`${wsUrl}/ws/ml_stream`);
+            mlWs.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                if (data.type === 'ML_CLASSIFICATION') {
+                    const consoleDiv = document.getElementById('ml-stream-console');
+                    const span = document.createElement('div');
+                    span.className = "text-[#00b8ff] border-l-2 border-pink-500 pl-2 py-1 mb-2 bg-pink-500/5";
+                    span.innerHTML = `<span class="text-[9px] text-gray-500">[${data.data.timestamp}] NODE: ${data.data.node_id}</span><br>CLASS: <span class="text-pink-400 font-bold">${data.data.classifications.entity_type}</span> | PATTERN: <span class="text-pink-400 font-bold">${data.data.classifications.transfer_pattern}</span><br><span class="text-[9px] text-gray-500">SCORES: ${JSON.stringify(data.data.intelligence_scores)}</span>`;
+                    consoleDiv.prepend(span);
+                    
+                    // Keep log bounded
+                    if (consoleDiv.children.length > 50) {
+                        consoleDiv.removeChild(consoleDiv.lastChild);
+                    }
+                }
+            };
+            mlWs.onclose = function() {
+                setTimeout(initMLStream, 5000);
+            };
+        }
+
         // Initialize
+        setInterval(fetchStats, 10000);
+
+        // DARKNET SSE LISTENER
+        document.addEventListener("DOMContentLoaded", () => {
+            const evtSource = new EventSource("http://127.0.0.1:3001/api/stream"); // Assumes darknet runs on port 3001 locally if not handled by proxy
+            const terminal = document.getElementById("darknet-terminal");
+            
+            evtSource.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    const el = document.createElement("div");
+                    let added = false;
+                    
+                    if (data.message) {
+                        let colorClass = "text-gray-300";
+                        if (data.style === "red" || data.style === "bold red") colorClass = "text-red-400 font-bold";
+                        if (data.style === "green" || data.style === "bold green") colorClass = "text-green-400";
+                        if (data.style === "yellow" || data.style === "bold yellow") colorClass = "text-yellow-400";
+                        if (data.style === "dim" || data.style === "dim white") colorClass = "text-gray-500";
+                        
+                        el.className = colorClass;
+                        el.innerHTML = `<span class="text-purple-500/50 mr-2">[${data.ts}]</span> ${data.message.replace(/</g, "&lt;").replace(/>/g, "&gt;")}`;
+                        added = true;
+                    } else if (data.type) {
+                        el.className = "text-cyan-400 font-bold border-l border-cyan-500/30 pl-3 ml-2 my-2 bg-cyan-900/10 py-1.5 rounded-r";
+                        el.innerHTML = `<span class="text-cyan-600 mr-2">[ENTITY]</span> <span class="text-purple-300">${data.type}</span>: <span class="text-white">${data.val}</span> <span class="text-gray-500 font-normal text-[9px] truncate block mt-1"><i class="fa-solid fa-link"></i> ${data.src}</span>`;
+                        added = true;
+                    }
+                    
+                    if(added) {
+                        if(terminal.children.length === 1 && terminal.children[0].classList.contains("italic")) {
+                            terminal.innerHTML = "";
+                        }
+                        terminal.appendChild(el);
+                        if(terminal.children.length > 200) terminal.removeChild(terminal.firstChild);
+                        terminal.scrollTop = terminal.scrollHeight;
+                    }
+                } catch(e) {}
+            };
+        });
+
         initLogsWS();
     </script>
 </body>

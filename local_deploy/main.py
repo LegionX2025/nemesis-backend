@@ -136,19 +136,24 @@ async def lifespan(app: FastAPI):
         try:
             import sys
             import os
-            # Add darknet folder to sys.path so it can be imported
-            darknet_path = os.path.join(os.path.dirname(__file__), "darknet")
-            if darknet_path not in sys.path:
-                sys.path.append(darknet_path)
-            from darknetv2 import start_headless_crawler
+            import subprocess
+            
             use_tor = os.getenv("VITE_TOR_AUTO_START", "false").lower() == "true" # Defaulted to false for separate terminal
             if use_tor:
-                start_headless_crawler()
-                logger.info("    [OK] Darknet headless crawler initialized.")
+                darknet_script = os.path.join(os.path.dirname(__file__), "darknet", "darknetv2.py")
+                
+                # Check if running on Windows to use CREATE_NEW_CONSOLE
+                if os.name == 'nt':
+                    subprocess.Popen([sys.executable, darknet_script], creationflags=subprocess.CREATE_NEW_CONSOLE)
+                else:
+                    # Fallback for Linux/Mac - though user is on Windows
+                    subprocess.Popen([sys.executable, darknet_script])
+                    
+                logger.info("    [OK] Darknet crawler launched in a separate terminal window.")
             else:
                 logger.info("    [SKIP] Darknet crawler disabled via VITE_TOR_AUTO_START=false. Run darknetv2.py in a separate console.")
         except Exception as e:
-            logger.error(f"    [FAIL] Failed to initialize Darknet crawler: {e}")
+            logger.error(f"    [FAIL] Failed to launch Darknet crawler: {e}")
         
     asyncio.create_task(init_background())
     
@@ -188,6 +193,49 @@ class TraceRequest(BaseModel):
     max_depth: int = 12
     max_hops: int = 1000
     tracing_method: str = "tracer"
+
+from services.godmode_ml import load_ontology, register_ml_listener, remove_ml_listener, ingest_dataset, get_datasets
+
+@app.get("/api/ml/ontology")
+async def api_ml_ontology():
+    ont = load_ontology()
+    return {"status": "success", "data": ont}
+
+@app.get("/api/ml/datasets")
+async def api_ml_datasets():
+    datasets = get_datasets()
+    return {"status": "success", "data": datasets}
+
+class MLIngestRequest(BaseModel):
+    url: str = ""
+    source: str = ""
+    content: str = ""
+
+@app.post("/api/ml/ingest")
+async def api_ml_ingest(req: MLIngestRequest):
+    logger.info(f"Ingesting ML Dataset from {req.source or req.url}")
+    try:
+        source_data = req.content if req.content else req.url
+        source_type = "content" if req.content else "url"
+        entry = await ingest_dataset(source_data, source_type)
+        return {"status": "success", "message": "Dataset ingested successfully into ML Knowledge Base.", "data": entry}
+    except Exception as e:
+        logger.error(f"Error ingesting ML dataset: {e}")
+        return {"status": "error", "message": str(e)}
+
+@app.websocket("/ws/ml_stream")
+async def ws_ml_stream(websocket: WebSocket):
+    await websocket.accept()
+    q = asyncio.Queue()
+    register_ml_listener(q)
+    try:
+        while True:
+            event = await q.get()
+            await websocket.send_json(event)
+    except Exception:
+        pass
+    finally:
+        remove_ml_listener(q)
 
 @app.get("/")
 async def dashboard(request: Request):
@@ -323,21 +371,36 @@ async def api_start_trace(req: TraceRequest, request: Request):
                 
         if not seeds_list: return {"error": "No valid seeds provided"}
         
-        calc_amt = float(req.target_amount) if req.target_amount else 0.0
+        tx_seeds = [t for t in seeds_list if (len(t) == 66 and t.startswith("0x")) or (len(t) == 64 and not t.startswith("0x"))]
+        wallet_seeds = [t for t in seeds_list if t not in tx_seeds]
         
-        if calc_amt <= 0:
+        calc_amt = float(req.target_amount) if req.target_amount else 0.0
+        computed_cur = req.target_currency
+        
+        if tx_seeds:
+            logger.info("TX hashes detected in seeds. Extracting target wallets...")
+            computed_amt_str, cur, extracted = await auto_compute_loss_amount(tx_seeds, req.chain_override)
+            if calc_amt <= 0:
+                calc_amt = float(computed_amt_str)
+                computed_cur = cur
+            for es in extracted:
+                es_lower = es.lower()
+                if es_lower not in wallet_seeds:
+                    wallet_seeds.append(es_lower)
+        elif calc_amt <= 0:
             logger.info("Target amount not provided. Attempting to auto-compute loss from seeds...")
-            computed_amt_str, computed_cur, extracted_seeds = await auto_compute_loss_amount(seeds_list, req.chain_override)
+            computed_amt_str, cur, extracted = await auto_compute_loss_amount(wallet_seeds, req.chain_override)
             calc_amt = float(computed_amt_str)
-            if calc_amt > 0:
-                logger.info(f"Auto-computed loss amount: {calc_amt} {computed_cur}")
-                req.target_currency = computed_cur
-                for es in extracted_seeds:
-                    es_lower = es.lower()
-                    if es_lower not in seeds_list:
-                        seeds_list.append(es_lower)
-            else:
-                logger.info("Auto-compute could not find a target amount. Proceeding with 0 amount limit.")
+            computed_cur = cur
+            for es in extracted:
+                es_lower = es.lower()
+                if es_lower not in wallet_seeds:
+                    wallet_seeds.append(es_lower)
+                    
+        req.target_currency = computed_cur
+        seeds_list = wallet_seeds
+        
+        if not seeds_list: return {"error": "No valid wallet addresses found or extracted"}
 
         trace_id = str(uuid.uuid4())[:8]
         
@@ -505,10 +568,10 @@ async def wallet_profile(address: str, chain: str = "AUTO"):
     return {"address": address, "chain": chain_res, "balances": balances}
 
 @app.get("/api/deep_scrape/{address}")
-async def deep_scrape(address: str, max_pages: int = 5):
+async def deep_scrape(address: str, chain: str = "ETHEREUM", max_pages: int = 5):
     from services.scraper_engine import scraper_instance
     try:
-        res = await scraper_instance.deep_scrape_etherscan(address, max_pages)
+        res = await scraper_instance.deep_scrape_etherscan(address, chain=chain, max_pages=max_pages)
         return res if res else {"error": "Scrape failed"}
     except Exception as e:
         logger.error(f"Error in deep scrape endpoint: {e}")
@@ -751,6 +814,47 @@ async def update_config(config: ConfigModel, token: dict = Depends(verify_access
 
 
 # ==========================================
+# GODMODE ML ENDPOINTS (NEW)
+# ==========================================
+from services.godmode_ml import get_datasets, ingest_dataset, load_ontology, register_ml_listener, remove_ml_listener
+import asyncio
+
+class MLIngestRequest(BaseModel):
+    url: str
+    source: str
+
+@app.get("/api/ml/datasets")
+async def api_ml_datasets(token: dict = Depends(verify_access_token)):
+    return {"datasets": get_datasets()}
+
+@app.post("/api/ml/ingest")
+async def api_ml_ingest(req: MLIngestRequest, token: dict = Depends(verify_access_token)):
+    res = await ingest_dataset(req.url, req.source)
+    return {"status": "success", "message": f"Ingested 1 new intelligence vector from {req.source}", "data": res}
+
+@app.get("/api/ml/ontology")
+async def api_ml_ontology():
+    return {"data": load_ontology()}
+
+@app.websocket("/ws/ml_stream")
+async def ws_ml_stream(websocket: WebSocket):
+    await websocket.accept()
+    q = asyncio.Queue()
+    register_ml_listener(q)
+    try:
+        while True:
+            event = await q.get()
+            await websocket.send_json(event)
+    except Exception:
+        pass
+    finally:
+        remove_ml_listener(q)
+        try:
+            await websocket.close()
+        except:
+            pass
+
+# ==========================================
 # NEMESIS ID ENDPOINTS (NEW)
 # ==========================================
 
@@ -931,13 +1035,45 @@ async def get_nemesis_aml(address: str):
 
 @app.get("/api/nemesis_id/intel/{address}")
 async def get_nemesis_intel(address: str):
-    from services.trace_engine import mongo_db
     txs = await fetch_real_txs(address)
     
     darknet_mentions = 0
-    if mongo_db is not None:
-        count = await mongo_db.darknet_data.count_documents({"uie_entities.value": address})
-        darknet_mentions = count
+    arkham_entity = None
+    vasp_entity = None
+    osint_entity = None
+    
+    try:
+        from pymongo import MongoClient
+        import os
+        mongo_uri = os.environ.get("MONGO_URI", "mongodb+srv://nemesis:nemesis2026@nemesisdb.vir5vg2.mongodb.net/?appName=nemesisdb")
+        client = MongoClient(mongo_uri, serverSelectionTimeoutMS=2000)
+        db = client.get_database("nemesis_intel")
+        
+        # Check global_entities
+        global_doc = db.global_entities.find_one({"_id": address})
+        if global_doc:
+            osint_entity = global_doc.get("entity")
+            
+        # Check arkham_intel
+        ark_doc = db.arkham_intel.find_one({"_id": address})
+        if ark_doc:
+            arkham_entity = ark_doc.get("entity") or ark_doc.get("name")
+            
+        # Check vasp_directory
+        vasp_doc = db.vasp_directory.find_one({"_id": address})
+        if vasp_doc:
+            vasp_entity = vasp_doc.get("entity")
+            
+        # Check OSINT profiles
+        osint_doc = db.osint_profiles.find_one({"address": address})
+        if osint_doc:
+            osint_entity = osint_entity or osint_doc.get("identities", {}).get("domains", [None])[0]
+        
+        # Darknet mock or actual query (if we had a darknet collection)
+        # darknet_mentions = db.darknet_data.count_documents({"uie_entities.value": address})
+        client.close()
+    except Exception as e:
+        logger.error(f"MongoDB intel fetch error: {e}")
         
     top_interacted = list(set([t["sender"] if t["type"] == "Receive" else t["receiver"] for t in txs[:5]]))
     custodial_entry = "Unknown"
@@ -948,8 +1084,11 @@ async def get_nemesis_intel(address: str):
         "top_interacted": top_interacted[:3],
         "custodial_entry": custodial_entry,
         "is_malicious": darknet_mentions > 0,
-        "social_media": "None Found",
-        "darknet_mentions": f"{darknet_mentions} Mentions"
+        "social_media": osint_entity or "None Found",
+        "darknet_mentions": f"{darknet_mentions} Mentions",
+        "arkham_intel": arkham_entity,
+        "vasp_intel": vasp_entity,
+        "osint_intel": osint_entity
     }
 
 @app.get("/api/nemesis_id/tx_history/{address}")

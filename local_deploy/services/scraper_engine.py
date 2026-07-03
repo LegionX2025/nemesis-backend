@@ -3,6 +3,7 @@ os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "0"
 import asyncio
 import re
 import logging
+import json
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
 
@@ -17,6 +18,14 @@ BEHAVIOR_KEYWORDS = {
     "BRIDGE": ["bridge", "portal", "wormhole", "multichain", "layerzero", "hop", "stargate", "wrapped", "wrap", "unwrap"],
     "DARKNET": ["darknet", "silk road", "hydra", "black market", "sanctioned", "ofac", "blacklisted", "scam", "phishing", "hack", "exploiter"],
 }
+
+GBEO_ONTOLOGY = None
+try:
+    with open(os.path.join("NEMESIS_KNOWLEDGE_BASE_LIBRARY", "gbeo_v4_ontology.json"), "r", encoding="utf-8") as f:
+        GBEO_ONTOLOGY = json.load(f)
+    logger.info("GBEO v4 Ontology loaded successfully.")
+except Exception as e:
+    logger.warning(f"Could not load GBEO Ontology: {e}")
 
 class AutoScraper:
     def __init__(self):
@@ -48,29 +57,36 @@ class AutoScraper:
         if not text:
             return None, None
             
-        text = text.lower()
+        text_lower = text.lower()
         found_cluster = None
         found_label = None
         
         # Look for explicit names if we can extract them, otherwise just classify
         for cluster, keywords in BEHAVIOR_KEYWORDS.items():
             for kw in keywords:
-                if kw in text:
+                if kw in text_lower:
                     found_cluster = cluster
                     # Attempt to find a capitalized word near the keyword as the label
                     # Simplified: just use the keyword as a starting point
                     found_label = kw.title() + " " + cluster
                     # Specific overrides for well-known exchanges
-                    if "binance" in text: found_label = "Binance"
-                    if "coinbase" in text: found_label = "Coinbase"
-                    if "kraken" in text: found_label = "Kraken"
-                    if "tornado" in text: found_label = "Tornado Cash"
+                    if "binance" in text_lower: found_label = "Binance"
+                    if "coinbase" in text_lower: found_label = "Coinbase"
+                    if "kraken" in text_lower: found_label = "Kraken"
+                    if "tornado" in text_lower: found_label = "Tornado Cash"
                     break
             if found_cluster:
                 break
                 
+        # Supplement with GBEO Ontology entity tags
+        if not found_label and GBEO_ONTOLOGY and "entity_tags" in GBEO_ONTOLOGY:
+            for tag in GBEO_ONTOLOGY["entity_tags"]:
+                if tag.lower() in text_lower:
+                    found_label = tag
+                    found_cluster = "UNKNOWN_CLUSTER"
+                    break
+                    
         return found_label, found_cluster
-
     async def scrape_ethplorer(self, address: str) -> tuple:
         """Scrape Ethplorer for Ethereum addresses."""
         if not self.context: return None, None
@@ -93,6 +109,54 @@ class AutoScraper:
             return self._classify_text(text_blob)
         except Exception as e:
             logger.error(f"Ethplorer scrape failed for {address}: {e}")
+            return None, None
+        finally:
+            await page.close()
+
+    EXPLORER_URLS = {
+        "ETHEREUM": "https://etherscan.io",
+        "BASE": "https://basescan.org",
+        "ARBITRUM": "https://arbiscan.io",
+        "OPTIMISM": "https://optimistic.etherscan.io",
+        "POLYGON": "https://polygonscan.com",
+        "BSC": "https://bscscan.com",
+        "AVALANCHE": "https://snowtrace.io",
+        "FANTOM": "https://ftmscan.com",
+        "SONIC": "https://sonicscan.org",
+        "SCROLL": "https://scrollscan.com",
+        "LINEA": "https://lineascan.build",
+        "BLAST": "https://blastscan.io",
+        "MANTLE": "https://mantlescan.xyz",
+        "CRONOS": "https://cronoscan.com",
+        "GNOSIS": "https://gnosisscan.io",
+        "HARMONY": "https://explorer.harmony.one",
+    }
+
+    async def scrape_evm_explorer(self, address: str, chain: str, tab: str = "") -> tuple:
+        """Scrape Etherscan-like or Blockscout-like explorers for deep DOM tags."""
+        if not self.context: return None, None
+        base_url = self.EXPLORER_URLS.get(chain.upper())
+        
+        if not base_url:
+            # Fallback to blockscout if it's an unmapped chain
+            base_url = f"https://{chain.lower()}.blockscout.com"
+            
+        page = await self.context.new_page()
+        try:
+            # Address + Tab (e.g. #tokentxns or #analytics)
+            url = f"{base_url}/address/{address}{tab}"
+            await page.goto(url, wait_until="domcontentloaded", timeout=15000)
+            await page.wait_for_timeout(3000) # Let React/NextJS render
+            
+            # Deep DOM Extraction for badges, labels, tooltips and contract tags
+            text_blob = await page.evaluate('''() => {
+                const elements = Array.from(document.querySelectorAll('.badge, .label, .btn, [data-bs-title], .tooltip, a[href*="labelcloud"]'));
+                return elements.map(e => e.textContent.trim()).join(" | ") + " " + document.body.innerText;
+            }''')
+            
+            return self._classify_text(text_blob)
+        except Exception as e:
+            logger.error(f"{chain} explorer scrape failed for {address}: {e}")
             return None, None
         finally:
             await page.close()
@@ -328,12 +392,13 @@ class AutoScraper:
             return result
         return None
 
-    async def deep_scrape_etherscan(self, address: str, max_pages: int = 5) -> dict:
-        """Deep scrape of Etherscan for granular parsing of Txs, Internal, ERC-20, EIP-7702, and Assets."""
+    async def deep_scrape_etherscan(self, address: str, chain: str = "ETHEREUM", max_pages: int = 5) -> dict:
+        """Deep scrape of EVM explorers for granular parsing of Txs, Internal, ERC-20, EIP-7702, and Assets."""
         if not self.context: return {"error": "Scraper not initialized"}
         
         result = {
             "address": address.lower(),
+            "chain": chain,
             "assets": [],
             "analytics": {},
             "transactions": [],
@@ -344,9 +409,21 @@ class AutoScraper:
             "cards": []
         }
         
+        base_url = "https://etherscan.io"
+        if GBEO_ONTOLOGY and "explorers" in GBEO_ONTOLOGY:
+            chain_map = {
+                "ETHEREUM": "Ethereum", "ETH": "Ethereum", 
+                "BASE": "Base", "ARBITRUM": "Arbitrum", 
+                "OPTIMISM": "Optimism", "POLYGON": "Polygon", 
+                "BSC": "BSC"
+            }
+            mapped_chain = chain_map.get(chain, "Ethereum")
+            if mapped_chain in GBEO_ONTOLOGY["explorers"]:
+                base_url = GBEO_ONTOLOGY["explorers"][mapped_chain]["base_url"]
+                
         page = await self.context.new_page()
         try:
-            url = f"https://etherscan.io/address/{address}"
+            url = f"{base_url}/address/{address}"
             logger.info(f"[DEEP SCRAPE] Loading {url}")
             await page.goto(url, wait_until="domcontentloaded", timeout=25000)
             await page.wait_for_timeout(4000) # Wait for Cloudflare/React

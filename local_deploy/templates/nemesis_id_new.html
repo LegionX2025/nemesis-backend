@@ -296,68 +296,89 @@
                     </p>
                     
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono text-[10px] mb-6">
-                        <div class="bg-slate-900 p-3 rounded border border-slate-700">
-                            <span class="text-slate-400 block mb-1">Wallet Type (LLM)</span><span class="text-white font-bold text-xs block">EOA / Smart Contract</span>
+                        <div class="bg-slate-900 p-3 rounded border border-slate-700 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-16 h-16 bg-blue-500/10 rounded-full blur-xl"></div>
+                            <span class="text-slate-400 block mb-1"><i class="fa-solid fa-robot text-blue-500 mr-1"></i> Entity Type (ML)</span><span class="text-white font-bold text-xs block" id="ml-entity-type">Whale Wallet / EOA</span>
                         </div>
-                        <div class="bg-slate-900 p-3 rounded border border-slate-700">
-                            <span class="text-slate-400 block mb-1">Classification</span><span class="text-red-600 font-bold text-xs block">Mixer / Exchange Exposed</span>
+                        <div class="bg-slate-900 p-3 rounded border border-slate-700 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-16 h-16 bg-purple-500/10 rounded-full blur-xl"></div>
+                            <span class="text-slate-400 block mb-1"><i class="fa-solid fa-route text-purple-500 mr-1"></i> Transfer Pattern</span><span class="text-purple-400 font-bold text-xs block" id="ml-transfer-pattern">High-Velocity Routing</span>
                         </div>
-                        <div class="bg-slate-900 p-3 rounded border border-slate-700">
-                            <span class="text-slate-400 block mb-1">ENS</span><span class="text-white font-bold text-xs block">lazarus-proxy.eth</span>
+                        <div class="bg-slate-900 p-3 rounded border border-slate-700 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-16 h-16 bg-amber-500/10 rounded-full blur-xl"></div>
+                            <span class="text-slate-400 block mb-1"><i class="fa-solid fa-gas-pump text-amber-500 mr-1"></i> Gas Pattern</span><span class="text-amber-400 font-bold text-xs block" id="ml-gas-pattern">Programmatic Sweeps</span>
                         </div>
-                        <div class="bg-slate-900 p-3 rounded border border-slate-700">
-                            <span class="text-slate-400 block mb-1">Malicious Tag</span><span class="bg-red-600 text-white px-2 py-0.5 rounded inline-block mt-1">YES</span>
+                        <div class="bg-slate-900 p-3 rounded border border-slate-700 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-16 h-16 bg-red-500/10 rounded-full blur-xl"></div>
+                            <span class="text-slate-400 block mb-1"><i class="fa-solid fa-shield-virus text-red-500 mr-1"></i> Threat Score</span><span class="text-red-500 font-bold text-xs block" id="ml-threat-score">98.4% (CRITICAL)</span>
                         </div>
                     </div>
 
-                    <!-- Chronological Fund Flow (Flip Cards) -->
-                    <h3 class="font-mono text-xs font-bold text-slate-300 uppercase mb-3">Chronological Fund Flow (Advanced Asset Lifecycle)</h3>
-                    <div class="flex flex-col md:flex-row items-center justify-between gap-4 font-mono text-[10px]">
-                        <div class="flip-card cursor-pointer" onclick="openDossier('intel', 'INGRESS')">
-                            <div class="flip-card-inner">
-                                <div class="flip-card-front bg-emerald-50 border-emerald-200">
-                                    <span class="bg-emerald-600 text-white px-2 py-0.5 rounded text-[8px] mb-2 font-bold">INBOUND</span>
-                                    <i class="fa-solid fa-mask text-2xl text-emerald-700 mb-1"></i>
-                                    <span class="font-bold text-emerald-900">Tornado Cash Router</span>
+                    <!-- OSINT Entity Resolution Graph (Hyper-Node) -->
+                    <h3 class="font-mono text-xs font-bold text-slate-300 uppercase mb-3 border-b border-slate-700 pb-2"><i class="fa-solid fa-globe text-blue-400 mr-2"></i> Global Identity Resolution</h3>
+                    <div class="bg-slate-900 rounded p-4 border border-slate-700 mb-6 flex flex-col md:flex-row items-center justify-between gap-4 font-mono text-[10px]">
+                        <!-- Hyper Node Visualization -->
+                        <div class="flex items-center gap-2">
+                            <div class="text-center">
+                                <div class="w-12 h-12 rounded-full bg-blue-600/20 border border-blue-500 flex items-center justify-center mx-auto mb-1">
+                                    <i class="fa-brands fa-github text-xl text-blue-400"></i>
                                 </div>
-                                <div class="flip-card-back">
-                                    <strong class="text-blue-600 text-xs block mb-1">Obfuscation Entry</strong>
-                                    <span>Type: Internal</span>
-                                    <span>100 ETH deposited to break tracing heuristics.</span>
+                                <span class="text-slate-400">@vbuterin</span>
+                            </div>
+                            <i class="fa-solid fa-link text-slate-600"></i>
+                            <div class="text-center">
+                                <div class="w-12 h-12 rounded-full bg-emerald-600/20 border border-emerald-500 flex items-center justify-center mx-auto mb-1">
+                                    <i class="fa-solid fa-wallet text-xl text-emerald-400"></i>
                                 </div>
+                                <span class="text-emerald-400 font-bold">Wallet</span>
+                            </div>
+                            <i class="fa-solid fa-link text-slate-600"></i>
+                            <div class="text-center">
+                                <div class="w-12 h-12 rounded-full bg-purple-600/20 border border-purple-500 flex items-center justify-center mx-auto mb-1">
+                                    <i class="fa-brands fa-twitter text-xl text-purple-400"></i>
+                                </div>
+                                <span class="text-slate-400">@VitalikButerin</span>
+                            </div>
+                            <i class="fa-solid fa-link text-slate-600"></i>
+                            <div class="text-center">
+                                <div class="w-12 h-12 rounded-full bg-amber-600/20 border border-amber-500 flex items-center justify-center mx-auto mb-1">
+                                    <i class="fa-solid fa-globe text-xl text-amber-400"></i>
+                                </div>
+                                <span class="text-slate-400">vitalik.eth</span>
                             </div>
                         </div>
-                        <i class="fa-solid fa-arrow-right-long text-blue-400 text-2xl animate-pulse"></i>
                         
-                        <div class="flip-card cursor-pointer" onclick="openDossier('intel', 'SUBJECT')">
-                            <div class="flip-card-inner">
-                                <div class="flip-card-front bg-blue-50 border-blue-200">
-                                    <span class="bg-blue-600 text-white px-2 py-0.5 rounded text-[8px] mb-2 font-bold">SUBJECT WALLET</span>
-                                    <i class="fa-solid fa-wallet text-2xl text-blue-700 mb-1"></i>
-                                    <span class="font-bold text-blue-900">0x742d...44e (ETH)</span>
-                                </div>
-                                <div class="flip-card-back">
-                                    <strong class="text-blue-600 text-xs block mb-1">Consolidation</strong>
-                                    <span>Type: Normal</span>
-                                    <span>Automated programmatic aggregation of mixer funds.</span>
-                                </div>
-                            </div>
+                        <!-- Attribution Confidence -->
+                        <div class="bg-slate-800 p-3 rounded border border-slate-600 text-right">
+                            <span class="text-slate-400 block mb-1">Attribution Confidence</span>
+                            <span class="text-2xl font-black text-emerald-500">99.5%</span>
+                            <span class="text-[8px] text-slate-500 block mt-1">Based on 3 Verified Evidence Vectors</span>
                         </div>
-                        <i class="fa-solid fa-arrow-right-long text-red-400 text-2xl animate-pulse"></i>
-                        
-                        <div class="flip-card cursor-pointer" onclick="openDossier('intel', 'EGRESS')">
-                            <div class="flip-card-inner">
-                                <div class="flip-card-front bg-red-50 border-red-200">
-                                    <span class="bg-red-600 text-white px-2 py-0.5 rounded text-[8px] mb-2 font-bold">OUTBOUND</span>
-                                    <i class="fa-solid fa-building-columns text-2xl text-red-700 mb-1"></i>
-                                    <span class="font-bold text-red-900">Binance Hot 14</span>
-                                </div>
-                                <div class="flip-card-back">
-                                    <strong class="text-red-600 text-xs block mb-1">Terminal CEX</strong>
-                                    <span>Type: Token Transfer</span>
-                                    <span>Depositing funds into KYC exchange for fiat off-ramp.</span>
-                                </div>
-                            </div>
+                    </div>
+
+                    <!-- Timeline Intelligence -->
+                    <h3 class="font-mono text-xs font-bold text-slate-300 uppercase mb-3 border-b border-slate-700 pb-2"><i class="fa-solid fa-clock text-emerald-400 mr-2"></i> Timeline Intelligence</h3>
+                    <div class="space-y-3 font-mono text-[10px] mb-6 border-l-2 border-slate-700 pl-4 ml-2 relative">
+                        <!-- Timeline items -->
+                        <div class="relative">
+                            <div class="absolute -left-[21px] top-1 w-2 h-2 rounded-full bg-emerald-500 border border-slate-900"></div>
+                            <span class="text-emerald-400 font-bold mr-2">2015-07-30</span>
+                            <span class="text-white">Wallet Address Created (Ethereum Genesis)</span>
+                        </div>
+                        <div class="relative">
+                            <div class="absolute -left-[21px] top-1 w-2 h-2 rounded-full bg-blue-500 border border-slate-900"></div>
+                            <span class="text-blue-400 font-bold mr-2">2018-10-14</span>
+                            <span class="text-white">GitHub Commit <a href="#" class="text-slate-400 hover:text-blue-300 underline">(ethereum/EIPs)</a> signing txs from this wallet.</span>
+                        </div>
+                        <div class="relative">
+                            <div class="absolute -left-[21px] top-1 w-2 h-2 rounded-full bg-purple-500 border border-slate-900"></div>
+                            <span class="text-purple-400 font-bold mr-2">2021-08-01</span>
+                            <span class="text-white">Twitter Profile update mentioning wallet public key.</span>
+                        </div>
+                        <div class="relative">
+                            <div class="absolute -left-[21px] top-1 w-2 h-2 rounded-full bg-amber-500 border border-slate-900"></div>
+                            <span class="text-amber-400 font-bold mr-2">2023-01-15</span>
+                            <span class="text-white">ENS Name `vitalik.eth` mapped to this address.</span>
                         </div>
                     </div>
                 </div>
@@ -794,35 +815,68 @@
                 <h2 class="text-sm font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2"><i class="fa-solid fa-user-secret text-white"></i> OSINT & Reconnaissance Summary</h2>
                 
                 <div class="bg-amber-50 border border-amber-200 p-4 rounded mb-6 font-mono text-xs text-amber-900">
-                    <strong>Custodial Wallet Entry:</strong> Binance Deposit Address 0x28c6c06298d514db089934071355e5743bf21d60
+                    <strong>Custodial Wallet Entry:</strong> <span id="intel-id-custodial">Loading...</span>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 font-mono text-xs">
                     <div class="bg-slate-900 p-4 rounded border border-slate-700">
-                        <span class="text-slate-400 font-bold block mb-1">Social Media</span>
-                        <span class="text-blue-600 font-bold block">Telegram: @laundromat_rx</span>
-                        <span class="text-slate-300 block mt-1">Twitter/X: Unverified mentions</span>
+                        <span class="text-slate-400 font-bold block mb-1">Social Media & OSINT</span>
+                        <span id="intel-id-osint" class="text-blue-400 font-bold block">Loading...</span>
                     </div>
                     <div class="bg-slate-900 p-4 rounded border border-slate-700">
-                        <span class="text-slate-400 font-bold block mb-1">Darknet</span>
-                        <span class="text-red-600 font-bold block">XSS.is / Exploit.in</span>
-                        <span class="text-slate-300 block mt-1">Wallet advertised in escrow listing.</span>
+                        <span class="text-slate-400 font-bold block mb-1">Darknet Mentions</span>
+                        <span id="intel-id-darknet" class="text-red-400 font-bold block">Loading...</span>
                     </div>
                     <div class="bg-slate-900 p-4 rounded border border-slate-700">
-                        <span class="text-slate-400 font-bold block mb-1">Archived / Websites</span>
-                        <span class="text-white font-bold block">Common-Crawl Hits</span>
-                        <span class="text-slate-300 block mt-1">Found in 2 pastebin dumps.</span>
+                        <span class="text-slate-400 font-bold block mb-1">Arkham Intelligence</span>
+                        <span id="intel-id-arkham" class="text-emerald-400 font-bold block">Loading...</span>
                     </div>
                     <div class="bg-slate-900 p-4 rounded border border-slate-700">
-                        <span class="text-slate-400 font-bold block mb-1">Sanctions / Known APTs / Ransomware</span>
-                        <span class="text-red-600 font-bold block">OFAC Match / Lazarus Group / Conti Links</span>
+                        <span class="text-slate-400 font-bold block mb-1">VASP Directory Alias</span>
+                        <span id="intel-id-vasp" class="text-emerald-400 font-bold block">Loading...</span>
                     </div>
                     <div class="bg-slate-900 p-4 rounded border border-slate-700 md:col-span-2">
                         <span class="text-slate-400 font-bold block mb-1">Threat Exposure & Interacted Entities</span>
-                        <span class="text-white block">Correlated with: emails, usernames, domains, IPs, devices. Tagged as Malicious: <strong class="bg-red-600 text-white px-2 py-0.5 rounded ml-1">YES</strong></span>
+                        <span class="text-white block">Tagged as Malicious: <strong id="intel-id-malicious" class="bg-slate-600 text-white px-2 py-0.5 rounded ml-1">Loading...</strong></span>
                     </div>
                 </div>
             </div>
+            
+            <script>
+                async function fetchLiveIdIntel() {
+                    const address = '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'; // Example address for nemesis_id_new
+                    try {
+                        let res = await fetch(`http://127.0.0.1:8088/api/nemesis_id/intel/${address}`);
+                        let data = await res.json();
+                        
+                        document.getElementById('intel-id-custodial').innerText = data.custodial_entry || 'Unknown';
+                        document.getElementById('intel-id-osint').innerText = data.osint_intel || data.social_media || 'None Found';
+                        document.getElementById('intel-id-darknet').innerText = data.darknet_mentions || '0 Mentions';
+                        document.getElementById('intel-id-arkham').innerText = data.arkham_intel || 'Not Found';
+                        document.getElementById('intel-id-vasp').innerText = data.vasp_intel || 'Not Found';
+                        
+                        let malEl = document.getElementById('intel-id-malicious');
+                        if (data.is_malicious) {
+                            malEl.innerText = "YES";
+                            malEl.className = "bg-red-600 text-white px-2 py-0.5 rounded ml-1 font-bold";
+                        } else {
+                            malEl.innerText = "NO";
+                            malEl.className = "bg-emerald-600 text-white px-2 py-0.5 rounded ml-1 font-bold";
+                        }
+                    } catch (e) {
+                        console.error('Failed to load intel', e);
+                    }
+                }
+                
+                // Fetch when tab switches
+                const origSwitchTab = window.switchTab;
+                window.switchTab = function(tabId) {
+                    if(origSwitchTab) origSwitchTab(tabId);
+                    if(tabId === 'tab-intelligence') {
+                        fetchLiveIdIntel();
+                    }
+                };
+            </script>
         </div>
 
         <!-- =====================================

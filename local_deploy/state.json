@@ -1,12 +1,14 @@
 {
   "queued": [
-    "https://pastebin.com",
-    "https://darknetlive.com",
-    "http://ahmia.fi",
     "https://news.ycombinator.com",
+    "https://pastebin.com",
+    "http://ahmia.fi",
+    "https://reddit.com/r/darknet",
+    "https://darknetlive.com"
+  ],
+  "processed": [
     "https://reddit.com/r/darknet"
   ],
-  "processed": [],
   "keywords": [
     "bitcoin",
     "ethereum",

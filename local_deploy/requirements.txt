@@ -25,3 +25,5 @@ PySocks
 flask
 flask-cors
 web3
+pymongo>=4.4.0
+neo4j>=5.10.0

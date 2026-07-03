@@ -20,6 +20,7 @@ import numpy as np
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
 from oklink_scraper import OKLinkScraper
+from .godmode_ml import autonomous_classify_node
 
 logger = logging.getLogger("OmniChainEngine")
 
@@ -227,11 +228,13 @@ def get_active_traces(active_sessions):
     ]
 
 def detect_chain(val: str, override: str = "AUTO") -> str:
-    if override and override != "AUTO": return override.upper()
     val = val.strip()
     if val.startswith("0x") and len(val) == 66: return "EVM_TX"
     elif len(val) == 64 and not val.startswith("0x"): return "BTC_TX"
-    elif val.startswith("bc1") or val.startswith("1") or val.startswith("3"): return "BITCOIN"
+    
+    if override and override != "AUTO": return override.upper()
+    
+    if val.startswith("bc1") or val.startswith("1") or val.startswith("3"): return "BITCOIN"
     elif val.startswith("T") and len(val) == 34: return "TRON"
     elif val.startswith("0x") and len(val) == 42: return "EVM_AUTO"
     elif val.startswith("r") and 25 <= len(val) <= 35: return "RIPPLE"
@@ -268,6 +271,10 @@ async def auto_compute_loss_amount(seeds_list, default_chain="AUTO"):
                     tasks.append( (seed, net_upper, url, "tx") )
                     tasks.append( (seed, net_upper, url_receipt, "tx_receipt") )
             
+            elif chain == "BTC_TX" or (chain != "INVALID" and len(seed) == 64 and not seed.startswith("0x")):
+                url = f"https://mempool.space/api/tx/{seed}"
+                tasks.append( (seed, "BITCOIN", url, "btc_tx") )
+                
             elif chain in EVM_DOMAINS or chain == "EVM_AUTO":
                 networks = EVM_DOMAINS.keys() if chain == "EVM_AUTO" else [chain]
                 for net in networks:
@@ -335,6 +342,18 @@ async def auto_compute_loss_amount(seeds_list, default_chain="AUTO"):
                                 if total_usd > 0:
                                     return ("tx", total_usd, main_receiver)
 
+                        elif req_type == "btc_tx":
+                            if isinstance(data, dict):
+                                total_btc = 0.0
+                                main_receiver = None
+                                vouts = data.get("vout", [])
+                                if vouts:
+                                    for v in vouts:
+                                        total_btc += v.get("value", 0) / 1e8
+                                        if not main_receiver and v.get("scriptpubkey_address"):
+                                            main_receiver = v.get("scriptpubkey_address")
+                                return ("tx", total_btc * USD_RATES.get("BITCOIN", 65000.0), main_receiver)
+                        
                         else:
                             txs = data.get("result", [])
                             total = 0.0
@@ -1475,6 +1494,14 @@ class TraceEngine:
             
         # Mongo removed
 
+        # -----------------------------------------------------
+        # [GODMODE ML] Ingest the newly resolved edge/node into the ML classifier
+        # -----------------------------------------------------
+        try:
+            await autonomous_classify_node(node)
+        except Exception as e:
+            logger.error(f"[GODMODE ML] Autonomous classification failed for node {txid}: {e}")
+
         for ws in list(self.clients):
             try: await ws.send_json(node)
             except: self.clients.discard(ws)
@@ -1537,6 +1564,36 @@ class TraceEngine:
                 actual_chain = res.get("actual_chain", chain)
                 
                 logger.info(f"[{actual_chain}] Fetched {len(txs)} txs for {addr}")
+                
+                # Trigger Autonomous ML Classification & Swarm Fallback (Non-blocking)
+                try:
+                    from .godmode_ml import autonomous_classify_node
+                    from .swarm_fetcher import swarm_instance
+                    
+                    stats = self.node_stats.get(addr, {})
+                    node_data = {
+                        "id": addr,
+                        "chain": actual_chain,
+                        "amount": stats.get("out_amt", 0) + stats.get("in_amt", 0),
+                        "tx_count": len(txs)
+                    }
+                    
+                    async def fetch_and_classify():
+                        try:
+                            # 1. Swarm fetching of deeply nested DOM tags/APIs
+                            swarm_label, swarm_cluster = await swarm_instance.fetch_chain_data(addr, actual_chain)
+                            
+                            dom_tags = []
+                            if swarm_label: dom_tags.append(swarm_label)
+                            
+                            # 2. Trigger auto-cluster and Neo4j DB Save via Godmode ML
+                            await autonomous_classify_node(node_data, dom_tags=dom_tags, cluster=swarm_cluster)
+                        except Exception as inner_e:
+                            logger.error(f"Swarm fetch/classify failed for {addr}: {inner_e}")
+                            
+                    asyncio.create_task(fetch_and_classify())
+                except Exception as e:
+                    logger.error(f"Godmode ML trigger failed: {e}")
                 
                 if txs:
                     if len(txs) > MAX_EDGES_PER_NODE:
