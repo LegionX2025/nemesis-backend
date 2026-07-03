@@ -77,7 +77,7 @@
             try {
                 // Ensure this URL points to the backend /api/darknet/search endpoint
                 // Assuming it's running on the same host or has CORS enabled
-                const response = await fetch(window.BACKEND_URL + \'/api/darknet/search?q=' + encodeURIComponent(query));
+                const response = await fetch(window.BACKEND_URL + '/api/darknet/search?q=' + encodeURIComponent(query));
                 const data = await response.json();
 
                 if (data.error || data.status === 'error') {

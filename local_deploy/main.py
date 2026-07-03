@@ -141,12 +141,12 @@ async def lifespan(app: FastAPI):
             if darknet_path not in sys.path:
                 sys.path.append(darknet_path)
             from darknetv2 import start_headless_crawler
-            use_tor = os.getenv("VITE_TOR_AUTO_START", "true").lower() == "true"
+            use_tor = os.getenv("VITE_TOR_AUTO_START", "false").lower() == "true" # Defaulted to false for separate terminal
             if use_tor:
                 start_headless_crawler()
                 logger.info("    [OK] Darknet headless crawler initialized.")
             else:
-                logger.info("    [SKIP] Darknet crawler disabled via VITE_TOR_AUTO_START=false.")
+                logger.info("    [SKIP] Darknet crawler disabled via VITE_TOR_AUTO_START=false. Run darknetv2.py in a separate console.")
         except Exception as e:
             logger.error(f"    [FAIL] Failed to initialize Darknet crawler: {e}")
         

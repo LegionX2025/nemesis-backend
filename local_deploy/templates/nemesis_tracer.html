@@ -118,7 +118,7 @@
             .content-body li { margin-bottom: 0.5rem; }
         </style>
     </head>
-    <body class="flex flex-col h-screen">
+    <body class="flex h-screen bg-[#f8fafc] text-slate-800 font-sans overflow-hidden w-full">
     
         <!-- LANDING PAGE OVERLAY -->
         <div id="landing-page">
@@ -272,7 +272,62 @@
             </div>
         </div>
 
-        <!-- Global Navigation Bar -->
+        <!-- APP LAYOUT START -->
+        <!-- LEFT SIDEBAR -->
+        <aside id="sidebar-left" class="w-64 bg-white border-r border-slate-200 flex flex-col transition-all duration-300 z-30 shrink-0">
+            <div class="h-16 flex items-center px-4 border-b border-slate-200 gap-3 cursor-pointer" onclick="toggleSidebar('sidebar-left')">
+                <img src="/static/logo_nemesis.jpeg" alt="Nemesis Logo" class="h-8 w-8 rounded border border-slate-200 shadow-sm">
+                <h1 class="text-sm font-black uppercase tracking-widest text-slate-800">Lionsgate</h1>
+                <i class="fa-solid fa-chevron-left ml-auto text-slate-400 text-xs" id="sidebar-left-icon"></i>
+            </div>
+            <nav class="flex-1 overflow-y-auto py-4">
+                <div class="px-4 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Main Menu</div>
+                <a href="#" class="flex items-center gap-3 px-6 py-2.5 bg-blue-50 text-blue-700 border-r-2 border-blue-600 font-bold text-xs"><i class="fa-solid fa-house w-4 text-center"></i> Dashboard</a>
+                <a href="#" class="flex items-center gap-3 px-6 py-2.5 text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-semibold text-xs transition"><i class="fa-solid fa-magnifying-glass w-4 text-center"></i> Investigations</a>
+                <a href="/nemesis_id" class="flex items-center gap-3 px-6 py-2.5 text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-semibold text-xs transition"><i class="fa-solid fa-id-card w-4 text-center text-fuchsia-500"></i> Nemesis ID</a>
+                <a href="#" class="flex items-center gap-3 px-6 py-2.5 text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-semibold text-xs transition"><i class="fa-solid fa-diagram-project w-4 text-center text-blue-500"></i> Graph Explorer</a>
+                <a href="#" class="flex items-center gap-3 px-6 py-2.5 text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-semibold text-xs transition"><i class="fa-solid fa-bell w-4 text-center text-red-500"></i> Alerts</a>
+                
+                <div class="px-4 mt-6 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Entity Data</div>
+                <a href="#" class="flex items-center gap-3 px-6 py-2.5 text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-semibold text-xs transition"><i class="fa-solid fa-wallet w-4 text-center"></i> Wallets</a>
+                <a href="#" class="flex items-center gap-3 px-6 py-2.5 text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-semibold text-xs transition"><i class="fa-solid fa-building-columns w-4 text-center"></i> Exchanges</a>
+                <a href="#" class="flex items-center gap-3 px-6 py-2.5 text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-semibold text-xs transition"><i class="fa-solid fa-bridge-water w-4 text-center"></i> Bridges</a>
+            </nav>
+        </aside>
+
+        <!-- MAIN CONTENT WRAPPER -->
+        <div class="flex-1 flex flex-col min-w-0 h-full relative">
+            <!-- TOP HEADER -->
+            <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 z-20">
+                <div class="flex items-center gap-4 flex-1">
+                    <div class="relative w-96">
+                        <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input type="text" id="globalSearch" placeholder="Search by Address, Txn Hash, Entity..." class="w-full text-xs border border-slate-300 rounded-md pl-9 pr-3 py-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition" onkeyup="if(event.key==='Enter') executeSearch()">
+                    </div>
+                    <button onclick="executeSearch()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold rounded shadow-sm transition">Search</button>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded border border-slate-200 shadow-inner">
+                        <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Loss Traced:</span>
+                        <span id="total-traced-widget" class="text-xs text-emerald-600 font-mono font-black">$0.00</span>
+                    </div>
+                    <div id="trace-id-display" class="hidden items-center bg-blue-50 border border-blue-100 text-blue-800 font-bold px-3 py-1.5 rounded text-[10px] tracking-widest">
+                        NID: <span id="trace-id-val" class="ml-1 font-mono text-xs"></span>
+                    </div>
+                    <div class="h-6 w-px bg-slate-200 mx-2"></div>
+                    <button onclick="toggleLogModal()" class="text-slate-500 hover:text-blue-600 transition text-lg" title="Evidence Logs"><i class="fa-solid fa-list"></i></button>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto overflow-x-hidden p-6 flex flex-col gap-6 bg-[#f8fafc]">
+                
+                <!-- OLD HEADER CODE HIDDEN TO PRESERVE JS IDS -->
+                <div style="display:none;">
         <header class="bg-slate-900 text-white border-b border-slate-800 flex flex-col z-20 shrink-0 shadow-md">
             <div class="px-6 py-3 flex justify-between items-center w-full">
                 <div class="flex items-center gap-4">
@@ -347,11 +402,16 @@
                 <a onclick="openContentPage('architecture')" class="hover:text-rose-400 cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-sitemap text-rose-500"></i> Architecture</a>
                 <a onclick="openContentPage('tracing_engine')" class="hover:text-lime-400 cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-microchip text-lime-500"></i> Tracing Engine</a>
             </div>
-        </header>
+                </div>
 
-        <!-- Trace Control Panel (Sub-header) -->
-        <div class="bg-white border-b border-slate-200 p-4 shadow-sm z-10 shrink-0 flex flex-col gap-3">
-            <div class="flex gap-4 items-stretch">
+                <!-- TRACE CONTROL PANEL (Collapsible) -->
+                <div id="trace-controls-container" class="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col transition-all duration-300 overflow-hidden shrink-0">
+                    <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center cursor-pointer hover:bg-slate-100 transition" onclick="toggleTraceControls()">
+                        <h2 class="text-xs font-black text-slate-700 uppercase tracking-widest flex items-center gap-2"><i class="fa-solid fa-sliders text-blue-500"></i> Trace Configuration</h2>
+                        <i id="trace-toggle-icon" class="fa-solid fa-chevron-up text-slate-400 text-xs"></i>
+                    </div>
+                    <div id="trace-controls-body" class="p-4 flex flex-col gap-4">
+                        <div class="flex gap-4 items-stretch flex-wrap">
                 <!-- Seed Input -->
                 <div class="flex-grow relative bg-slate-50 border border-slate-200 rounded-lg p-3 shadow-inner">
                     <label class="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
@@ -438,7 +498,41 @@
             </div>
         </div>
 
-        <!-- Graph Workspace Toolbar -->
+                <!-- KPI METRICS ROW -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
+                    <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center gap-4">
+                        <div class="h-10 w-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg"><i class="fa-solid fa-money-bill-transfer"></i></div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Trace Volume</div>
+                            <div class="text-lg font-black text-slate-800 font-mono" id="flip-total-volume">$0.00</div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center gap-4">
+                        <div class="h-10 w-10 rounded-lg bg-red-50 text-red-600 flex items-center justify-center text-lg"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Risk Score / CEX</div>
+                            <div class="text-lg font-black text-slate-800 font-mono" id="flip-risk-score">0 / 0</div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex items-center gap-4">
+                        <div class="h-10 w-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-lg"><i class="fa-solid fa-diagram-project"></i></div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nodes Discovered</div>
+                            <div class="text-lg font-black text-slate-800 font-mono" id="flip-node-count">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SCENARIO ROW (Graph + Sidebar) -->
+                <div id="scenario-container" class="flex-1 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-h-[500px]">
+                    <div class="px-4 py-3 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0 cursor-pointer" onclick="toggleScenarioFullscreen()">
+                        <h2 class="text-xs font-black text-slate-700 uppercase tracking-widest flex items-center gap-2"><i class="fa-solid fa-network-wired text-blue-500"></i> Scenario</h2>
+                        <i id="scenario-toggle-icon" class="fa-solid fa-expand text-slate-400 text-xs"></i>
+                    </div>
+                    <div id="scenario-body" class="relative flex-1 w-full bg-slate-50/30 overflow-hidden flex flex-row">
+                        
+                        <div style="display:none;">
+                            <!-- HIDDEN GRAPH WORKSPACE TOOLBAR -->
         <nav id="graphTabs" class="bg-slate-100 border-b border-slate-200 px-6 py-2.5 flex justify-between items-center w-full shadow-sm z-10 shrink-0">
             <div class="flex gap-2 items-center overflow-x-auto pr-4">
                 <button id="tab-btn-all" onclick="switchGraphTab('all')" class="px-4 py-1.5 bg-white border border-slate-300 text-slate-800 hover:bg-slate-50 font-bold rounded-md shadow-sm text-xs whitespace-nowrap transition flex items-center gap-2">
@@ -488,12 +582,14 @@
 
         </nav>
 
+                        </div><!-- END HIDDEN GRAPH WORKSPACE TOOLBAR -->
+
         <!-- Main Graph Area -->
-        <div class="relative flex-grow bg-white">
+        <div class="relative flex-grow bg-transparent w-full">
             <div id="graph" class="absolute inset-0"></div>
             
-            <!-- Floating Flipcards Dashboard Area -->
-            <div class="absolute top-4 left-4 z-20 flex gap-4 pointer-events-none">
+            <!-- Floating Flipcards Dashboard Area (HIDDEN IN NEW LAYOUT) -->
+            <div class="absolute top-4 left-4 z-20 gap-4 pointer-events-none" style="display:none;">
                 
                 <!-- Card 1: Asset Flow (Flipcard) -->
                 <div class="perspective card-flip-container h-28 w-64 pointer-events-auto cursor-pointer">
@@ -782,6 +878,11 @@
                     <!-- Terminals Appended Here dynamically -->
                 </div>
             </div>
+                    </div><!-- END SCENARIO BODY -->
+                </div><!-- END SCENARIO CONTAINER -->
+            </main>
+        </div><!-- END MAIN CONTENT WRAPPER -->
+        
         <!-- Nemesis ID: Multi-Domain Intelligence Reconstruction Engine -->
         <div id="nemesisIdModal" class="fixed inset-y-0 right-0 w-[1000px] max-w-full bg-white shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out z-[60] flex flex-col border-l border-slate-200 text-slate-800">
             <div class="bg-slate-100 text-slate-900 px-6 py-4 flex justify-between items-center shadow-sm border-b border-slate-300">
@@ -2224,7 +2325,7 @@
                 btn.innerText = "LOADING...";
                 
                 try {
-                    let response = await fetch(window.BACKEND_URL + \'/api/nemesis_id/search?query=' + encodeURIComponent(traceId));
+                    let response = await fetch(window.BACKEND_URL + '/api/nemesis_id/search?query=' + encodeURIComponent(traceId));
                     let data = await response.json();
                     
                     if(data.error) {
@@ -3510,7 +3611,7 @@ NEMESIS_ROOT/
                     window.autoComputedAmount = 0.0;
                     
                     document.getElementById("status").innerHTML = `<span class="text-blue-600 font-bold">Tracing Active... (Hybrid Parallel Fetching)</span>`;
-                    const response = await fetch(window.BACKEND_URL + \'/api/start_trace', {
+                    const response = await fetch(window.BACKEND_URL + '/api/start_trace', {
                         method: 'POST', headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({ 
                             seeds: seeds, 
@@ -4054,7 +4155,7 @@ NEMESIS_ROOT/
                 }
                 
                 // Open the new report template
-                const reportWin = window.open(window.BACKEND_URL + \'/static/templates/report_template.html', '_blank');
+                const reportWin = window.open(window.BACKEND_URL + '/static/templates/report_template.html', '_blank');
                 
                 if (!reportWin) {
                     alert("Please allow popups to generate the report.");
@@ -4579,7 +4680,7 @@ NEMESIS_ROOT/
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
                 
-                fetch(window.BACKEND_URL + \'/api/deep_evidence', {
+                fetch(window.BACKEND_URL + '/api/deep_evidence', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -5096,6 +5197,59 @@ NEMESIS_ROOT/
                 
                 if (typeof openNemesisModal === 'function') openNemesisModal(window.activeCtxNode, family);
                 document.getElementById('custom-context-menu').classList.add('hidden');
+            }
+            function toggleSidebar(sidebarId) {
+                const sidebar = document.getElementById(sidebarId);
+                const icon = document.getElementById(sidebarId + '-icon');
+                if (sidebar.classList.contains('w-64')) {
+                    sidebar.classList.replace('w-64', 'w-16');
+                    icon.classList.replace('fa-chevron-left', 'fa-chevron-right');
+                    // Hide text elements
+                    sidebar.querySelectorAll('span, h1, .px-4').forEach(el => {
+                        if(!el.classList.contains('fa-solid') && !el.tagName.toLowerCase().includes('i')) {
+                            el.style.display = 'none';
+                        }
+                    });
+                } else {
+                    sidebar.classList.replace('w-16', 'w-64');
+                    icon.classList.replace('fa-chevron-right', 'fa-chevron-left');
+                    // Show text elements
+                    sidebar.querySelectorAll('span, h1, .px-4').forEach(el => {
+                        if(!el.classList.contains('fa-solid') && !el.tagName.toLowerCase().includes('i')) {
+                            el.style.display = '';
+                        }
+                    });
+                }
+            }
+
+            function toggleTraceControls() {
+                const body = document.getElementById('trace-controls-body');
+                const icon = document.getElementById('trace-toggle-icon');
+                if (body.style.display === 'none') {
+                    body.style.display = 'flex';
+                    icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+                } else {
+                    body.style.display = 'none';
+                    icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+                }
+            }
+
+            function toggleScenarioFullscreen() {
+                const container = document.getElementById('scenario-container');
+                const icon = document.getElementById('scenario-toggle-icon');
+                if (container.classList.contains('fixed')) {
+                    // Restore
+                    container.classList.remove('fixed', 'inset-0', 'z-[100]', 'rounded-none');
+                    container.classList.add('rounded-xl', 'min-h-[500px]');
+                    icon.classList.replace('fa-compress', 'fa-expand');
+                } else {
+                    // Fullscreen
+                    container.classList.add('fixed', 'inset-0', 'z-[100]', 'rounded-none');
+                    container.classList.remove('rounded-xl', 'min-h-[500px]');
+                    icon.classList.replace('fa-expand', 'fa-compress');
+                }
+                // Trigger resize for vis.js
+                setTimeout(() => { if(window.network) window.network.fit(); }, 300);
             }
         </script>
     </body>

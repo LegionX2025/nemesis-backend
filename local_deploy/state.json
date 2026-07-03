@@ -1,10 +1,10 @@
 {
   "queued": [
     "https://darknetlive.com",
-    "http://ahmia.fi",
-    "https://news.ycombinator.com",
     "https://pastebin.com",
-    "https://reddit.com/r/darknet"
+    "http://ahmia.fi",
+    "https://reddit.com/r/darknet",
+    "https://news.ycombinator.com"
   ],
   "processed": [],
   "keywords": [

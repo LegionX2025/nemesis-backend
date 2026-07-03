@@ -244,14 +244,13 @@ async def auto_compute_loss_amount(seeds_list, default_chain="AUTO"):
     extracted_seeds = []
     
     async with aiohttp.ClientSession() as session:
+        tasks = []
         for seed in seeds_list:
             chain = detect_chain(seed, default_chain)
             
             if chain == "EVM_TX" or (chain != "INVALID" and len(seed) == 66 and seed.startswith("0x")):
                 networks = EVM_DOMAINS.keys() if default_chain == "AUTO" else [default_chain]
-                tx_found = False
                 for net in networks:
-                    if tx_found: break
                     net_upper = net.upper()
                     if net_upper == "ETHEREUM": base_url = "https://api.etherscan.io/api"
                     elif net_upper == "BSC": base_url = "https://api.bscscan.com/api"
@@ -262,25 +261,10 @@ async def auto_compute_loss_amount(seeds_list, default_chain="AUTO"):
                     else: base_url = "https://api.etherscan.io/api"
                     
                     key_var = f"{net_upper}SCAN_API_KEY" if net_upper != "ETHEREUM" else "ETHERSCAN_API_KEY"
-                    api_key = CONFIG.get(key_var, CONFIG.get("ETHERSCAN_API_KEY"))
+                    api_key = CONFIG.get(key_var, CONFIG.get("ETHERSCAN_API_KEY", ""))
                     
                     url = f"{base_url}?module=proxy&action=eth_getTransactionByHash&txhash={seed}&apikey={api_key}"
-                    try:
-                        async with session.get(url, timeout=5) as r:
-                            if r.status == 200:
-                                data = await r.json()
-                                res = data.get("result")
-                                if res and isinstance(res, dict):
-                                    val_hex = res.get("value", "0x0")
-                                    val_eth = int(val_hex, 16) / 10**18
-                                    computed_amt += val_eth * USD_RATES.get(net_upper, 3000.0)
-                                    
-                                    to_addr = res.get("to")
-                                    if to_addr and to_addr not in extracted_seeds:
-                                        extracted_seeds.append(to_addr)
-                                    tx_found = True
-                    except Exception as e:
-                        logger.error(f"Auto-compute TX failed for {seed} on {net_upper}: {e}")
+                    tasks.append( (seed, net_upper, url, "tx") )
             
             elif chain in EVM_DOMAINS or chain == "EVM_AUTO":
                 networks = EVM_DOMAINS.keys() if chain == "EVM_AUTO" else [chain]
@@ -295,28 +279,59 @@ async def auto_compute_loss_amount(seeds_list, default_chain="AUTO"):
                     else: base_url = "https://api.etherscan.io/api"
                     
                     key_var = f"{net_upper}SCAN_API_KEY" if net_upper != "ETHEREUM" else "ETHERSCAN_API_KEY"
-                    api_key = CONFIG.get(key_var, CONFIG.get("ETHERSCAN_API_KEY"))
+                    api_key = CONFIG.get(key_var, CONFIG.get("ETHERSCAN_API_KEY", ""))
                     
                     url = f"{base_url}?module=account&action=txlist&address={seed}&startblock=0&endblock=99999999&page=1&offset=50&sort=desc&apikey={api_key}"
-                    try:
-                        async with session.get(url, timeout=5) as r:
-                            if r.status == 200:
-                                data = await r.json()
-                                txs = data.get("result", [])
-                                if isinstance(txs, list):
-                                    for tx in txs:
-                                        if tx.get("from", "").lower() == seed.lower():
-                                            val_eth = float(tx.get("value", "0")) / 10**18
-                                            computed_amt += val_eth * USD_RATES.get(net_upper, 3000.0)
-                    except Exception as e:
-                        logger.error(f"Auto-compute Address failed for {seed} on {net_upper}: {e}")
+                    tasks.append( (seed, net_upper, url, "address") )
                 
                 if seed not in extracted_seeds:
                     extracted_seeds.append(seed)
             else:
                 if seed not in extracted_seeds:
                     extracted_seeds.append(seed)
-                    
+
+        # Execute all HTTP requests concurrently
+        async def fetch_task(seed, net_upper, url, req_type):
+            try:
+                async with session.get(url, timeout=3) as r:
+                    if r.status == 200:
+                        try:
+                            data = await r.json(content_type=None)
+                        except Exception:
+                            return None
+                        
+                        if req_type == "tx":
+                            res = data.get("result")
+                            if res and isinstance(res, dict):
+                                val_hex = res.get("value", "0x0")
+                                val_eth = int(val_hex, 16) / 10**18
+                                to_addr = res.get("to")
+                                return ("tx", val_eth * USD_RATES.get(net_upper, 3000.0), to_addr)
+                        else:
+                            txs = data.get("result", [])
+                            total = 0.0
+                            if isinstance(txs, list):
+                                for tx in txs:
+                                    if tx.get("from", "").lower() == seed.lower():
+                                        val_eth = float(tx.get("value", "0")) / 10**18
+                                        total += val_eth * USD_RATES.get(net_upper, 3000.0)
+                            if total > 0:
+                                return ("address", total, None)
+            except Exception as e:
+                pass
+            return None
+
+        # Gather results (limit concurrent tasks if there are too many)
+        if tasks:
+            import asyncio
+            results = await asyncio.gather(*(fetch_task(*t) for t in tasks), return_exceptions=True)
+            for res in results:
+                if isinstance(res, tuple):
+                    req_type, amount, addr = res
+                    computed_amt += amount
+                    if req_type == "tx" and addr and addr not in extracted_seeds:
+                        extracted_seeds.append(addr)
+
     return str(computed_amt) if computed_amt > 0 else "0", "USD", extracted_seeds
 
 def get_asset_ticker(chain: str) -> str:
