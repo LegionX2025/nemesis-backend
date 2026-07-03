@@ -1302,6 +1302,19 @@ class TraceEngine:
         receiver_nemesis_id = await get_or_create_nemesis_id(to)
         sender_nemesis_id = await get_or_create_nemesis_id(addr)
         
+        # Threat Intel Lookups
+        threat_intel_sender = None
+        threat_intel_receiver = None
+        try:
+            from services.database_connector import db_engine
+            if db_engine.db is not None:
+                threat_intel_sender = await db_engine.db.threat_intel.find_one({"crypto_address": addr.lower()})
+                threat_intel_receiver = await db_engine.db.threat_intel.find_one({"crypto_address": to.lower()})
+                
+                if threat_intel_sender: sender_entity_lbl = f"[{threat_intel_sender.get('source')}] {threat_intel_sender.get('entity_name')}"
+                if threat_intel_receiver: receiver_entity_lbl = f"[{threat_intel_receiver.get('source')}] {threat_intel_receiver.get('entity_name')}"
+        except: pass
+        
         ticker = ticker_override if ticker_override else get_asset_ticker(chain)
         
         entity_class, score = self.cex.classify(to, receiver_entity_lbl)
@@ -1349,6 +1362,10 @@ class TraceEngine:
             is_threshold_hit = (active_target > 0 and usd_value < active_target)
 
         is_terminal = (entity_class == "EXCHANGE_CUSTODIAL" or score >= 90)
+        if threat_intel_receiver:
+            is_terminal = True
+            entity_class = "SANCTIONED_OR_KNOWN_IOC"
+            
         if is_threshold_hit:
             is_terminal = True
             entity_class = "DUST_THRESHOLD_REACHED"
@@ -1358,8 +1375,8 @@ class TraceEngine:
         else: confidence_level = "High-Confidence Analytical Assessment"
         
         # --- GLOBAL OSINT PIPELINE TRIGGER ---
-        # Trigger deep OSINT on high-value, terminal, or highly-consolidated nodes
-        if (is_terminal or is_consolidation or active_target > 1000) and osint_engine and identity_engine:
+        # Trigger deep OSINT on high-value, terminal, highly-consolidated, or sanctioned nodes
+        if (is_terminal or is_consolidation or active_target > 1000 or threat_intel_receiver) and osint_engine and identity_engine:
             async def trigger_osint():
                 try:
                     logger.info(f"[OSINT TRIGGER] Initiating Global OSINT sweep for {to}")

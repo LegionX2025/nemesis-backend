@@ -2,365 +2,119 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lionsgate NEMESIS | Darknet Intelligence Search</title>
+    <title>Lionsgate Darknet Search Engine</title>
     {% include 'includes/head_assets.html' %}
     <style>
+        .cyber-bg {
+            background-color: #0f172a;
+            background-image: 
+                radial-gradient(circle at 50% -50%, #1e293b 0%, transparent 60%),
+                linear-gradient(to bottom, transparent, rgba(16, 185, 129, 0.05));
+        }
         .neon-border {
-            box-shadow: 0 0 10px rgba(168, 85, 247, 0.2), inset 0 0 10px rgba(168, 85, 247, 0.1);
-            border: 1px solid rgba(168, 85, 247, 0.4);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.1);
         }
-        .search-input:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
-        }
-        /* Sliding Sidebar for Live Stream */
-        #live-stream-panel {
-            position: fixed;
-            right: -500px;
-            top: 110px; /* Below global nav */
-            bottom: 60px; /* Above footer */
-            width: 480px;
-            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 40;
-            display: flex;
-            flex-direction: column;
-        }
-        #live-stream-panel.active {
-            right: 0;
-        }
-        
-        .stream-table-container {
-            overflow-y: auto;
-            flex: 1;
-        }
-        .stream-table th {
-            position: sticky;
-            top: 0;
-            background: rgba(241, 245, 249, 0.95);
-            backdrop-filter: blur(4px);
+        .glow-text {
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
         }
     </style>
 </head>
-<body>
-    
+<body class="cyber-bg text-slate-300 min-h-screen font-sans flex flex-col">
     {% include 'includes/global_nav.html' %}
 
-    <!-- Main Content Area -->
-    <div class="flex-1 flex flex-col relative w-full items-center py-12 px-4 sm:px-6 lg:px-8 z-10 overflow-x-hidden">
-        
-        <!-- Toggle Stream Button -->
-        <button onclick="toggleStreamPanel()" class="absolute right-8 top-4 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-bold text-[11px] uppercase tracking-widest shadow-lg flex items-center gap-2 transition z-50 neon-border">
-            <i class="fa-solid fa-satellite-dish animate-pulse text-purple-200"></i> Live Console
-        </button>
+    <main class="flex-1 flex flex-col items-center justify-center p-8 relative z-10">
+        <div class="max-w-4xl w-full text-center space-y-8">
+            <h1 class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-600 tracking-tighter glow-text">
+                NEMESIS <span class="font-light">DARKNET</span>
+            </h1>
+            <p class="text-slate-400 max-w-2xl mx-auto text-lg">
+                Query deep web forums, ransomware leak sites, and illicit marketplaces. Live telemetry powered by Lionsgate Tor2Web autonomous crawlers.
+            </p>
 
-        <div class="w-full max-w-5xl space-y-8">
-            <div class="text-center">
-                <div class="glass-text-container mb-3">
-                    <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 tracking-tight">NEMESIS DARKNET INDEX</h1>
+            <form id="search-form" class="relative group mt-12" onsubmit="executeSearch(event)">
+                <div class="absolute inset-y-0 left-6 flex items-center pointer-events-none">
+                    <i class="fa-solid fa-spider text-emerald-500 group-focus-within:text-emerald-400 transition"></i>
                 </div>
-                <br>
-                <div class="glass-text-container">
-                    <p class="text-lg text-slate-700 font-semibold">Query the autonomous deep-web intelligence database.</p>
-                </div>
-            </div>
-
-            <div class="glass-panel p-6">
-                <div class="flex gap-4">
-                    <input type="text" id="searchInput" placeholder="Enter keyword, wallet address, or onion URL..." class="flex-1 bg-white/70 border border-slate-300 text-slate-800 rounded-lg px-4 py-3 search-input transition-all duration-300 font-mono">
-                    <button onclick="performSearch()" class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors duration-200 shadow-md">SEARCH</button>
-                </div>
-                
-                <div id="loading" class="hidden mt-6 text-center text-blue-600 font-bold">
-                    <svg class="animate-spin h-8 w-8 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <p class="mt-2 text-sm uppercase tracking-widest">Querying Darknet Database...</p>
-                </div>
-            </div>
-
-            <div id="resultsContainer" class="space-y-6 hidden">
-                <!-- Results will be injected here -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Live Stream Panel -->
-    <div id="live-stream-panel" class="glass-panel rounded-r-none border-r-0 shadow-2xl">
-        <div class="bg-purple-900 text-white p-3 flex justify-between items-center rounded-tl-12 border-b border-purple-800">
-            <h3 class="font-bold text-sm tracking-widest uppercase flex items-center gap-2">
-                <i class="fa-solid fa-satellite-dish text-purple-400"></i> Darknet Live Intercept
-            </h3>
-            <div class="flex items-center gap-3">
-                <div id="stream-status" class="flex items-center gap-1 text-[10px] uppercase font-bold text-red-400">
-                    <span class="w-2 h-2 rounded-full bg-red-500"></span> Disconnected
-                </div>
-                <button onclick="toggleStreamPanel()" class="text-white hover:text-purple-200 transition">
-                    <i class="fa-solid fa-times"></i>
+                <input 
+                    type="text" 
+                    id="search-query"
+                    class="w-full bg-slate-900/80 border-2 border-slate-700 focus:border-emerald-500 rounded-full py-5 pl-14 pr-32 text-lg text-white shadow-xl focus:shadow-[0_0_30px_rgba(16,185,129,0.2)] outline-none transition-all placeholder-slate-500 backdrop-blur-md"
+                    placeholder="Search IPs, BTC Addresses, Threat Actors..."
+                    required
+                >
+                <button type="submit" class="absolute inset-y-2 right-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold px-8 rounded-full shadow-lg transition transform active:scale-95">
+                    SEARCH
                 </button>
+            </form>
+            
+            <div class="flex gap-4 justify-center text-xs font-mono text-slate-500 mt-6">
+                <span class="bg-slate-900/50 px-3 py-1 rounded-full border border-slate-800"><i class="fa-solid fa-server text-emerald-500"></i> Tor2Web Relays Active</span>
+                <span class="bg-slate-900/50 px-3 py-1 rounded-full border border-slate-800" id="stat-crawled"><i class="fa-solid fa-database text-blue-500"></i> Fetching Stats...</span>
             </div>
         </div>
-        <div class="stream-table-container bg-white/50">
-            <table class="w-full text-left border-collapse text-[10px] stream-table">
-                <thead>
-                    <tr class="text-slate-500 uppercase tracking-wider border-b border-slate-200">
-                        <th class="p-2 font-bold w-1/4">Time</th>
-                        <th class="p-2 font-bold w-1/4">URL</th>
-                        <th class="p-2 font-bold w-1/2">Title/Intel</th>
-                    </tr>
-                </thead>
-                <tbody id="stream-body" class="text-slate-700 font-mono">
-                    <!-- Stream rows go here -->
-                </tbody>
-            </table>
+
+        <div id="results-container" class="max-w-6xl w-full mt-16 space-y-4 hidden">
+            <h2 class="text-xl font-bold text-white mb-6 border-b border-slate-800 pb-2">Search Results</h2>
+            <div id="results-list" class="space-y-4">
+                <!-- Results injected here -->
+            </div>
         </div>
-        <div class="p-2 bg-slate-100 text-slate-500 text-[9px] uppercase font-bold text-center border-t border-slate-200 rounded-bl-12">
-            Auto-scrolling: Active
-        </div>
-    </div>
+    </main>
 
     {% include 'includes/footer.html' %}
 
     <script>
-        // --- SEARCH FUNCTIONALITY ---
-        async function performSearch() {
-            const query = document.getElementById('searchInput').value.trim();
-            if (!query) return;
-
-            const loading = document.getElementById('loading');
-            const resultsContainer = document.getElementById('resultsContainer');
-            
-            loading.classList.remove('hidden');
-            resultsContainer.classList.add('hidden');
-            resultsContainer.innerHTML = '';
-
+        document.addEventListener("DOMContentLoaded", async () => {
+            // Fetch live crawler stats
             try {
-                const response = await fetch('/api/darknet/search?q=' + encodeURIComponent(query));
-                const data = await response.json();
-
-                if (data.error || data.status === 'error') {
-                    resultsContainer.innerHTML = `<div class="glass-panel p-6 text-red-600 font-bold">Error: ${data.message || data.error}</div>`;
-                } else if (data.results && data.results.length > 0) {
-                    let html = `<div class="glass-text-container mb-4"><h2 class="text-xl font-bold text-slate-800">Found ${data.results.length} Intel Records</h2></div>`;
-                    
-                    data.results.forEach((doc, index) => {
-                        const web = doc.web_info || {};
-                        const title = web.title || 'Untitled Onion Site';
-                        const url = web.url || 'Unknown URL';
-                        const content = web.content || '';
-                        const shortContent = content.substring(0, 300) + (content.length > 300 ? '...' : '');
-                        
-                        const sanitizeHtml = (str) => {
-                            const temp = document.createElement('div');
-                            temp.textContent = str;
-                            return temp.innerHTML;
-                        };
-                        const fullContentHtml = sanitizeHtml(content).replace(/\n/g, '<br>');
-                        
-                        let entitiesHtml = '';
-                        let fullEntitiesHtml = '';
-                        if (doc.uie_entities && doc.uie_entities.length > 0) {
-                            const uniqueEntities = [...new Set(doc.uie_entities.map(e => e.value))].slice(0, 5);
-                            entitiesHtml = `<div class="mt-3 flex flex-wrap gap-2">
-                                ${uniqueEntities.map(e => `<span class="px-2 py-1 bg-emerald-100 text-emerald-700 border border-emerald-300 rounded text-[10px] uppercase font-bold tracking-wider">${sanitizeHtml(e)}</span>`).join('')}
-                            </div>`;
-                            
-                            const allEntitiesHtml = doc.uie_entities.map(e => `
-                                <div class="flex justify-between items-center bg-slate-50 border border-slate-200 p-3 rounded text-xs">
-                                    <span class="text-slate-500 font-bold uppercase tracking-widest text-[10px]">${sanitizeHtml(e.label || 'ENTITY')}</span>
-                                    <span class="text-blue-600 font-mono font-bold">${sanitizeHtml(e.value)}</span>
-                                </div>
-                            `).join('');
-                            fullEntitiesHtml = `<div class="mt-6"><h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 border-b border-slate-200 pb-2 flex items-center gap-2"><i class="fa-solid fa-list-check text-blue-500"></i> Extracted Entities</h4><div class="grid grid-cols-1 md:grid-cols-2 gap-3">${allEntitiesHtml}</div></div>`;
-                        }
-                        
-                        let keywordsHtml = '';
-                        if (doc.keywords_detected && doc.keywords_detected.length > 0) {
-                             keywordsHtml = `<div class="mt-6"><h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 border-b border-slate-200 pb-2 flex items-center gap-2"><i class="fa-solid fa-tags text-purple-500"></i> Target Keywords</h4>
-                             <div class="flex flex-wrap gap-2">
-                                ${doc.keywords_detected.map(k => `<span class="px-2 py-1 bg-purple-100 text-purple-700 border border-purple-300 rounded text-xs font-mono">${sanitizeHtml(k)}</span>`).join('')}
-                             </div></div>`;
-                        }
-
-                        html += `
-                        <div class="glass-panel transition-all duration-300 hover:border-blue-300 mb-6 overflow-hidden">
-                            <!-- Collapsed View / Header -->
-                            <div class="p-6 cursor-pointer flex flex-col hover:bg-slate-50/50 transition-colors relative group" onclick="toggleExpand('result-${index}')">
-                                <div class="absolute right-6 top-6 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <span class="text-[10px] font-bold text-blue-600 uppercase tracking-widest border border-blue-300 rounded px-2 py-1 flex items-center gap-1 bg-blue-50">
-                                        Click to Expand <i class="fa-solid fa-chevron-down"></i>
-                                    </span>
-                                </div>
-                                
-                                <div class="flex justify-between items-start mb-3 pr-32">
-                                    <h3 class="text-xl font-black text-slate-900 truncate">${sanitizeHtml(title)}</h3>
-                                </div>
-                                <div class="text-sm text-purple-600 mb-4 block truncate font-mono flex items-center gap-2">
-                                    <i class="fa-solid fa-link text-slate-400"></i>
-                                    ${sanitizeHtml(url)}
-                                </div>
-                                <div class="flex justify-between items-end">
-                                    <div class="flex-1">
-                                        <p id="short-content-${index}" class="text-slate-600 text-sm leading-relaxed border-l-2 border-slate-300 pl-3 italic">${sanitizeHtml(shortContent)}</p>
-                                        <div id="short-entities-${index}">
-                                            ${entitiesHtml}
-                                        </div>
-                                    </div>
-                                    <span class="text-[10px] font-mono text-slate-500 whitespace-nowrap bg-slate-100 px-3 py-1.5 rounded border border-slate-200 ml-4">${sanitizeHtml(doc.crawled_at) || 'Recent'}</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Expanded View -->
-                            <div id="result-${index}" class="hidden border-t border-slate-200 bg-white/80 p-6">
-                                <h4 class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-3 border-b border-slate-200 pb-2 flex items-center gap-2">
-                                    <i class="fa-solid fa-file-lines"></i> Raw Intercepted Content
-                                </h4>
-                                <div class="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap font-mono bg-slate-50 p-5 rounded border border-slate-200 max-h-96 overflow-y-auto mb-6 shadow-inner">
-${fullContentHtml}
-                                </div>
-                                
-                                ${fullEntitiesHtml}
-                                ${keywordsHtml}
-                                
-                                <div class="mt-8 flex justify-between items-center border-t border-slate-200 pt-5">
-                                    <span class="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Database ID: ${sanitizeHtml(doc['hash-ID'] || 'UNKNOWN')}</span>
-                                    <a href="${sanitizeHtml(url)}" target="_blank" class="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2 shadow-md">
-                                        Access Live Node <i class="fa-solid fa-external-link-alt"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        `;
-                    });
-                    resultsContainer.innerHTML = html;
-                } else {
-                    resultsContainer.innerHTML = `<div class="glass-panel p-6 text-slate-600 text-center font-bold">No intel records found matching your query.</div>`;
-                }
-            } catch (err) {
-                resultsContainer.innerHTML = `<div class="glass-panel p-6 text-red-600 font-bold">Network Error: Could not connect to Darknet index.</div>`;
+                const res = await fetch('/api/darknet/stats');
+                const stats = await res.json();
+                document.getElementById('stat-crawled').innerHTML = `<i class="fa-solid fa-database text-blue-500"></i> ${stats.urls_crawled} Domains Indexed`;
+            } catch(e) {
+                console.error(e);
             }
-
-            loading.classList.add('hidden');
-            resultsContainer.classList.remove('hidden');
-        }
-
-        document.getElementById('searchInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') performSearch();
         });
 
-        function toggleExpand(id) {
-            const el = document.getElementById(id);
-            const index = id.split('-')[1];
-            const shortContent = document.getElementById('short-content-' + index);
-            const shortEntities = document.getElementById('short-entities-' + index);
+        async function executeSearch(e) {
+            e.preventDefault();
+            const query = document.getElementById('search-query').value;
+            const container = document.getElementById('results-container');
+            const list = document.getElementById('results-list');
             
-            if (el.classList.contains('hidden')) {
-                el.classList.remove('hidden');
-                shortContent.classList.add('hidden');
-                if (shortEntities) shortEntities.classList.add('hidden');
-            } else {
-                el.classList.add('hidden');
-                shortContent.classList.remove('hidden');
-                if (shortEntities) shortEntities.classList.remove('hidden');
-            }
-        }
+            container.classList.remove('hidden');
+            list.innerHTML = `<div class="flex justify-center p-12 text-emerald-500"><i class="fa-solid fa-circle-notch fa-spin text-4xl"></i></div>`;
 
-        // --- LIVE STREAM WEBSOCKET ---
-        let ws = null;
-        function toggleStreamPanel() {
-            const panel = document.getElementById('live-stream-panel');
-            panel.classList.toggle('active');
-            
-            if (panel.classList.contains('active')) {
-                connectStream();
-            } else {
-                if (ws) {
-                    ws.close();
-                    ws = null;
-                }
-                updateStatus('Disconnected', false);
-            }
-        }
-
-        function updateStatus(text, isConnected) {
-            const statusEl = document.getElementById('stream-status');
-            if (isConnected) {
-                statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> <span class="text-emerald-500">${text}</span>`;
-            } else {
-                statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500"></span> <span class="text-red-500">${text}</span>`;
-            }
-        }
-
-        function connectStream() {
-            if (ws) return;
-            
-            updateStatus('Connecting...', false);
-            
-            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${wsProtocol}//${window.location.host}/ws/darknet/stream`;
-            
             try {
-                ws = new WebSocket(wsUrl);
+                const res = await fetch(`/api/darknet/search?q=${encodeURIComponent(query)}`);
+                const data = await res.json();
                 
-                ws.onopen = () => {
-                    updateStatus('Live', true);
-                };
-                
-                ws.onmessage = (event) => {
-                    try {
-                        const data = JSON.parse(event.data);
-                        appendStreamData(data);
-                    } catch (e) {
-                        console.error('Failed to parse stream data:', e);
-                    }
-                };
-                
-                ws.onclose = () => {
-                    ws = null;
-                    const panel = document.getElementById('live-stream-panel');
-                    if (panel.classList.contains('active')) {
-                        updateStatus('Reconnecting...', false);
-                        setTimeout(connectStream, 3000);
-                    }
-                };
-                
-                ws.onerror = (err) => {
-                    console.error("Stream error:", err);
-                    ws.close();
-                };
+                if (data.results && data.results.length > 0) {
+                    list.innerHTML = data.results.map(doc => `
+                        <div class="bg-slate-900/80 border border-slate-700 p-6 rounded-lg hover:border-emerald-500/50 transition">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-bold text-emerald-400">${doc.web_info.title || 'Untitled Onion'}</h3>
+                                <span class="text-[10px] text-slate-500 bg-slate-800 px-2 py-1 rounded">${doc.crawled_at ? new Date(doc.crawled_at).toLocaleString() : 'Archive'}</span>
+                            </div>
+                            <p class="text-xs text-blue-400 font-mono mb-4 break-all">${doc.web_info.url}</p>
+                            <p class="text-sm text-slate-400 line-clamp-3 mb-4">${doc.web_info.content.substring(0, 300)}...</p>
+                            
+                            <div class="flex gap-2 flex-wrap">
+                                ${(doc.uie_entities || []).map(ent => `
+                                    <span class="text-[10px] border border-slate-600 text-slate-300 px-2 py-1 rounded-sm bg-slate-800 flex items-center gap-1">
+                                        <i class="fa-solid fa-tag text-emerald-500"></i> ${ent.value}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    list.innerHTML = `<div class="p-8 text-center text-slate-500 font-mono">No traces found for '${query}' in the darknet intelligence index.</div>`;
+                }
             } catch (err) {
-                console.error("Failed to connect WebSocket", err);
-                updateStatus('Error', false);
-            }
-        }
-
-        function appendStreamData(data) {
-            const tbody = document.getElementById('stream-body');
-            const tr = document.createElement('tr');
-            tr.className = "border-b border-slate-100 hover:bg-slate-50 transition";
-            
-            const time = new Date().toLocaleTimeString();
-            
-            // Limit title/url length
-            const url = data.url ? data.url.substring(0, 30) + '...' : 'N/A';
-            const title = data.title ? data.title.substring(0, 50) + (data.title.length > 50 ? '...' : '') : 'Discovered Node';
-            
-            tr.innerHTML = `
-                <td class="p-2 text-slate-500">${time}</td>
-                <td class="p-2 text-blue-600 truncate max-w-[100px]" title="${data.url || ''}">${url}</td>
-                <td class="p-2 text-slate-800 font-bold truncate max-w-[150px]">${title}</td>
-            `;
-            
-            tbody.insertBefore(tr, tbody.firstChild);
-            
-            // Keep only last 100 entries to prevent memory leak
-            if (tbody.children.length > 100) {
-                tbody.removeChild(tbody.lastChild);
+                list.innerHTML = `<div class="p-8 text-center text-red-500 font-mono">Crawler query failed.</div>`;
             }
         }
     </script>
-    {% include 'includes/footer.html' %}
 </body>
 </html>

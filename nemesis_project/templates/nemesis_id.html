@@ -452,12 +452,12 @@
                 <div class="data-card border-t-4 border-t-emerald-500 bg-white/90 backdrop-blur-md">
                     <h2 class="text-xs font-black text-slate-800 uppercase tracking-widest mb-4 border-b border-slate-200 pb-2">Profile Metadata</h2>
                     <div class="space-y-4 font-mono text-[10px] text-slate-600">
-                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-500">First Activity</span><span class="text-slate-900 font-bold">2023-04-12 14:02 UTC</span></div>
-                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-500">Last Activity</span><span class="text-slate-900 font-bold">2026-05-27 08:14 UTC</span></div>
-                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-500">Total Transactions</span><span class="text-slate-900 font-black">14,205</span></div>
-                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-500">Total Inbound</span><span class="text-emerald-600 font-bold usd-value">$84,500,000</span><span class="text-emerald-600 font-bold native-value">26,500 ETH</span></div>
-                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-500">Total Outbound</span><span class="text-red-600 font-bold usd-value">$83,047,109</span><span class="text-red-600 font-bold native-value">26,047 ETH</span></div>
-                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-500">Current Balance</span><span class="text-blue-600 font-bold usd-value">$1,452,890</span><span class="text-blue-600 font-bold native-value">453 ETH</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-500">First Activity</span><span class="text-slate-900 font-bold" id="val-first-activity">...</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-500">Last Activity</span><span class="text-slate-900 font-bold" id="val-last-activity">...</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-500">Total Transactions</span><span class="text-slate-900 font-black" id="val-total-tx">...</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-500">Total Inbound</span><span class="text-emerald-600 font-bold" id="val-total-inbound">...</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-500">Total Outbound</span><span class="text-red-600 font-bold" id="val-total-outbound">...</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-500">Current Balance</span><span class="text-blue-600 font-bold" id="val-net-balance">...</span></div>
                         <div class="flex justify-between pt-2">
                             <span class="text-slate-500">Funded By:</span>
                             <div class="text-right">
@@ -518,7 +518,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div class="data-card border-t-4 border-t-emerald-500 bg-white/90 backdrop-blur-md">
                     <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Total Inbound Volume</p>
-                    <p class="font-mono text-3xl font-black text-emerald-600 val-usd">$84,500,000</p>
+                    <p class="font-mono text-3xl font-black text-emerald-600" id="val-large-usd">...</p>
                     <p class="font-mono text-3xl font-black text-emerald-600 val-native">26,500 ETH</p>
                 </div>
                 <div class="data-card border-t-4 border-t-red-500 bg-white/90 backdrop-blur-md">
@@ -930,10 +930,14 @@
             triggerLoader("Reconstructing Profile & Gathering Intel...");
             
             try {
-                const response = await fetch(`/api/nemesis_id/${address}`);
+                const backendUrl = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') ? '' : 'https://nemesis-local.onrender.com';
+                const response = await fetch(`${backendUrl}/api/nemesis_id/profile/${address}`);
                 if (!response.ok) throw new Error("Backend connection failed");
                 const result = await response.json();
                 const data = result.data || result;
+                
+                // Store globally for Side Panel Dossier generator
+                window.profileData = data;
                 
                 document.getElementById('id-landing').classList.add('hidden');
                 let dash = document.getElementById('id-dashboard');
@@ -947,12 +951,14 @@
                 }
                 
                 // Set USD/Native Values
-                let usdNodes = document.querySelectorAll(".usd-value, .val-usd");
-                usdNodes.forEach(n => {
-                    if(n.innerText.includes("84,500,000")) n.innerText = "$" + (data.total_inbound || 0).toLocaleString();
-                    if(n.innerText.includes("83,047,109")) n.innerText = "$" + (data.total_outbound || 0).toLocaleString();
-                    if(n.innerText.includes("1,452,890")) n.innerText = "$" + (data.balance || 0).toLocaleString();
-                });
+                if(document.getElementById("val-total-inbound")) document.getElementById("val-total-inbound").innerText = "$" + (data.total_inbound || 0).toLocaleString();
+                if(document.getElementById("val-total-outbound")) document.getElementById("val-total-outbound").innerText = "$" + (data.total_outbound || 0).toLocaleString();
+                if(document.getElementById("val-net-balance")) document.getElementById("val-net-balance").innerText = "$" + (data.balance || 0).toLocaleString();
+                if(document.getElementById("val-large-usd")) document.getElementById("val-large-usd").innerText = "$" + (data.total_inbound || 0).toLocaleString();
+                
+                if(document.getElementById("val-total-tx")) document.getElementById("val-total-tx").innerText = (data.total_transactions || "0");
+                if(document.getElementById("val-first-activity")) document.getElementById("val-first-activity").innerText = (data.first_activity || "N/A");
+                if(document.getElementById("val-last-activity")) document.getElementById("val-last-activity").innerText = (data.last_activity || "N/A");
                 
                 // Set AI Insights & Headers
                 let aiSummaryNodes = document.querySelectorAll(".text-justify");
@@ -1077,27 +1083,27 @@
             // Mock dynamic data based on context
             let risk = "HIGH RISK";
             let riskClass = "bg-red-50 text-red-600 border-red-300";
-            let volume = "$1,245,600.50";
+            let volume = "N/A";
             let chain = "ETHEREUM";
             let labels = ["Seed Wallet", "Launderer"];
             let entityType = "Externally Owned Account";
             
             if (context.includes('Mixer') || context.includes('Tornado')) {
                 risk = "CRITICAL";
-                volume = "$10,000,000.00";
+                volume = "N/A";
                 labels = ["Mixer", "Sanctioned"];
                 entityType = "Smart Contract";
             } else if (context.includes('Bridge')) {
                 risk = "MEDIUM";
                 riskClass = "bg-yellow-50 text-yellow-600 border-yellow-300";
-                volume = "$45,000,000.00";
+                volume = "N/A";
                 chain = "CROSS-CHAIN";
                 labels = ["Infrastructure", "Bridge"];
                 entityType = "Smart Contract";
             } else if (context.includes('Binance')) {
                 risk = "LOW";
                 riskClass = "bg-green-50 text-green-600 border-green-300";
-                volume = "$84,500,000.00";
+                volume = "N/A";
                 labels = ["CEX", "Custodial", "KYC Required"];
                 entityType = "Exchange Hot Wallet";
             }
@@ -1127,6 +1133,31 @@
                         <div class="flex justify-between py-2 border-b border-slate-200/60"><span class="text-slate-500 font-bold text-xs uppercase">Total Volume (USD)</span><span class="font-mono font-black text-xs text-slate-900">${volume}</span></div>
                         <div class="flex justify-between py-2"><span class="text-slate-500 font-bold text-xs uppercase">Last Active</span><span class="font-mono text-xs font-bold text-slate-900">2026-07-03</span></div>
                     </div>
+                    
+                    ${profileData.threat_intel ? `
+                    <div class="bg-red-50/80 backdrop-blur-sm rounded-lg p-4 border border-red-200 mb-6 shadow-sm">
+                        <h3 class="text-xs font-black text-red-800 uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Global Sanctions & Threat Intel
+                        </h3>
+                        <div class="flex flex-col gap-2 font-mono text-[10px] text-slate-700">
+                            <div class="flex justify-between border-b border-red-100 pb-1">
+                                <span class="font-bold uppercase text-red-600">Source Database</span>
+                                <span class="font-black bg-red-100 text-red-800 px-2 rounded">${profileData.threat_intel.source}</span>
+                            </div>
+                            <div class="flex justify-between border-b border-red-100 pb-1">
+                                <span class="font-bold uppercase text-red-600">Registered Entity</span>
+                                <span class="font-black text-slate-900">${profileData.threat_intel.entity_name}</span>
+                            </div>
+                            <div class="flex justify-between border-b border-red-100 pb-1">
+                                <span class="font-bold uppercase text-red-600">Severity</span>
+                                <span class="font-black text-red-600">${profileData.threat_intel.severity}</span>
+                            </div>
+                            <div class="mt-1 text-red-700 text-[9px] italic border-l-2 border-red-400 pl-2">
+                                "${profileData.threat_intel.description}"
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
                     
                     <h3 class="text-[10px] font-black text-slate-800 mb-3 uppercase tracking-widest border-b border-slate-200 pb-1">Identified Labels</h3>
                     <div class="flex flex-wrap gap-2 mb-8">

@@ -137,7 +137,29 @@ async def lifespan(app: FastAPI):
         await scraper_instance.start()
         
         # Darknet crawler will be run independently by the user in a separate terminal.
-        
+        # Run Threat Intel Ingestion
+        try:
+            from services.threat_intel_engine import threat_intel_engine
+            
+            # Start APScheduler for every 24 hours
+            from apscheduler.schedulers.asyncio import AsyncIOScheduler
+            app.state.scheduler = AsyncIOScheduler()
+            app.state.scheduler.add_job(threat_intel_engine.run_ingestion_cycle, 'interval', hours=24)
+            
+            from services.darknet_crawler import darknet_crawler_engine
+            app.state.scheduler.add_job(darknet_crawler_engine.run_crawler_cycle, 'interval', hours=6)
+            
+            app.state.scheduler.start()
+            logger.info("    [OK] APScheduler started: Threat Intel (24h), Darknet Crawler (6h).")
+            
+            # Check if DB is empty to run initial fetch immediately
+            count = await db_engine.db.threat_intel.count_documents({})
+            if count == 0:
+                logger.info("    [INFO] Threat Intel DB is empty. Running initial ingestion...")
+                asyncio.create_task(threat_intel_engine.run_ingestion_cycle())
+        except Exception as e:
+            logger.error(f"    [FAIL] Failed to initialize Threat Intel Engine: {e}")
+            
     asyncio.create_task(init_background())
     
     yield
@@ -587,6 +609,20 @@ async def api_darknet_search(q: str = ""):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+@app.get("/api/darknet/stats")
+async def api_darknet_stats():
+    from services.darknet_crawler import darknet_crawler_engine
+    return darknet_crawler_engine.stats
+
+@app.post("/api/darknet/start_crawler")
+async def api_darknet_start_crawler():
+    import asyncio
+    from services.darknet_crawler import darknet_crawler_engine
+    if darknet_crawler_engine.stats["status"] == "running":
+        return {"status": "error", "message": "Crawler is already running"}
+    asyncio.create_task(darknet_crawler_engine.run_crawler_cycle())
+    return {"status": "success", "message": "Crawler started"}
+
 @app.get("/admin/health")
 async def get_health():
     traces = get_active_traces(active_sessions)
@@ -818,6 +854,12 @@ async def nemesis_id_profile(address: str):
                 if l.get("from", "").lower() == address.lower() or l.get("to", "").lower() == address.lower():
                     profile["first_activity"] = l.get("timestamp", "N/A")
                     break
+                    
+        # Inject Threat Intelligence
+        from services.identity_engine import identity_engine
+        threat_intel_data = await identity_engine.cross_reference_threat_intel(address)
+        if threat_intel_data.get("found"):
+            profile["threat_intel"] = threat_intel_data
                     
         return profile
     except Exception as e:

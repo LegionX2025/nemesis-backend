@@ -35,3 +35,4 @@ playwright-stealth
 neo4j
 kafka-python
 ijson
+apscheduler

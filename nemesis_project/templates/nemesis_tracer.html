@@ -3807,7 +3807,8 @@ NEMESIS_ROOT/
                     window.autoComputedAmount = 0.0;
                     
                     document.getElementById("status").innerHTML = `<span class="text-blue-600 font-bold">Tracing Active... (Hybrid Parallel Fetching)</span>`;
-                    const response = await fetch('/api/start_trace', {
+                    const backendUrl = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') ? '' : 'https://nemesis-local.onrender.com';
+                    const response = await fetch(`${backendUrl}/api/start_trace`, {
                         method: 'POST', headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({ 
                             seeds: seeds, 
@@ -3822,10 +3823,11 @@ NEMESIS_ROOT/
                     });
                     
                     let data;
+                    const resClone = response.clone();
                     try {
                         data = await response.json();
                     } catch (e) {
-                        const text = await response.text();
+                        const text = await resClone.text();
                         console.error("Non-JSON Response:", text);
                         showToast("API Error: Backend returned an invalid response.");
                         document.getElementById("status").innerHTML = `<span class="text-red-600 font-bold">Error Initiating Trace</span>`;
@@ -4446,7 +4448,7 @@ NEMESIS_ROOT/
             function connectWebSocket(traceId) {
                 if (!traceId) return;
                 let protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
-                ws = new WebSocket("wss://nemesis-backend.onrender.com/ws/" + traceId);
+                ws = new WebSocket("wss://nemesis-local.onrender.com/ws/" + traceId);
                 
                 ws.onopen = () => {
                     wsReconnectDelay = 1000;
@@ -5430,7 +5432,7 @@ NEMESIS_ROOT/
                 
                 try {
                     // Make sure URL points to the backend
-                    let backendUrl = "https://nemesis-backend-rwp4.onrender.com";
+                    let backendUrl = "https://nemesis-local.onrender.com";
                     if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
                         backendUrl = window.location.protocol + "//" + window.location.host;
                     }

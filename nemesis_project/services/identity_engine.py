@@ -94,4 +94,28 @@ class IdentityEngine:
         
         return resolved_node
 
+    async def cross_reference_threat_intel(self, address: str) -> dict:
+        """
+        Cross-references the entity against the Global Threat Intel Engine Database.
+        """
+        try:
+            from services.database_connector import db_engine
+            if not db_engine.db:
+                return {"found": False}
+                
+            intel = await db_engine.db.threat_intel.find_one({"crypto_address": address.lower()})
+            if intel:
+                return {
+                    "found": True,
+                    "source": intel.get("source"),
+                    "entity_name": intel.get("entity_name"),
+                    "severity": intel.get("severity", "HIGH"),
+                    "tags": intel.get("tags", []),
+                    "description": intel.get("description", "Sanctioned or flagged entity.")
+                }
+            return {"found": False}
+        except Exception as e:
+            logger.error(f"[THREAT INTEL] Cross-reference failed: {e}")
+            return {"found": False, "error": str(e)}
+
 identity_engine = IdentityEngine()

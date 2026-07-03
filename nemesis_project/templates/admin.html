@@ -27,37 +27,94 @@
                     <i class="fa-solid fa-xmark text-xl"></i>
                 </button>
             </div>
-            <nav class="flex-1 p-4 space-y-2 font-bold text-xs tracking-widest uppercase overflow-y-auto overflow-x-hidden">
-                <a href="#" onclick="switchTab('logs')" id="tab-logs" class="sidebar-item active flex items-center gap-3 px-4 py-3 rounded-lg transition border whitespace-nowrap">
-                    <i class="fa-solid fa-terminal w-4 text-center"></i> <span>Console Logs</span>
-                </a>
-                <a href="#" onclick="switchTab('cases')" id="tab-cases" class="sidebar-item flex items-center gap-3 px-4 py-3 text-slate-500 rounded-lg transition border whitespace-nowrap">
-                    <i class="fa-solid fa-folder-open w-4 text-center"></i> <span>Case Management</span>
-                </a>
-                <a href="#" onclick="switchTab('database')" id="tab-database" class="sidebar-item flex items-center gap-3 px-4 py-3 text-slate-500 rounded-lg transition border whitespace-nowrap">
-                    <i class="fa-solid fa-database w-4 text-center"></i> <span>Database Stats</span>
-                </a>
-                <a href="#" onclick="switchTab('config')" id="tab-config" class="sidebar-item flex items-center gap-3 px-4 py-3 text-slate-500 rounded-lg transition border whitespace-nowrap">
-                    <i class="fa-solid fa-gear w-4 text-center"></i> <span>API Configuration</span>
-                </a>
-                <a href="#" onclick="switchTab('engine')" id="tab-engine" class="sidebar-item flex items-center gap-3 px-4 py-3 text-slate-500 rounded-lg transition border whitespace-nowrap">
-                    <i class="fa-solid fa-microchip w-4 text-center"></i> <span>Engine Controls</span>
-                </a>
-                <a href="#" onclick="switchTab('parsers')" id="tab-parsers" class="sidebar-item flex items-center gap-3 px-4 py-3 text-slate-500 rounded-lg transition border whitespace-nowrap">
-                    <i class="fa-solid fa-network-wired w-4 text-center"></i> <span>Blockchain Parsers</span>
-                </a>
-                <a href="#" onclick="switchTab('godmode')" id="tab-godmode" class="sidebar-item flex items-center gap-3 px-4 py-3 text-emerald-600 font-black rounded-lg transition border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 whitespace-nowrap">
-                    <i class="fa-solid fa-wand-magic-sparkles w-4 text-center"></i> <span>Godmode Deployer</span>
-                </a>
-                <a href="#" onclick="switchTab('deploy')" id="tab-deploy" class="sidebar-item flex items-center gap-3 px-4 py-3 text-blue-600 font-bold rounded-lg transition border border-blue-200 bg-blue-50 hover:bg-blue-100 mt-2 whitespace-nowrap">
-                    <i class="fa-solid fa-cloud-arrow-up w-4 text-center"></i> <span>Omni-Deploy Config</span>
-                </a>
-                <a href="#" onclick="switchTab('clustering')" id="tab-clustering" class="sidebar-item flex items-center gap-3 px-4 py-3 text-purple-600 font-bold rounded-lg transition border border-purple-200 bg-purple-50 hover:bg-purple-100 mt-2 whitespace-nowrap">
-                    <i class="fa-solid fa-brain w-4 text-center"></i> <span>ML Clustering Engine</span>
-                </a>
-                <a href="#" onclick="switchTab('knowledge')" id="tab-knowledge" class="sidebar-item flex items-center gap-3 px-4 py-3 text-indigo-600 font-bold rounded-lg transition border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 mt-2 whitespace-nowrap">
-                    <i class="fa-solid fa-book-journal-whills w-4 text-center"></i> <span>NEMESIS Knowledge</span>
-                </a>
+            <nav class="flex-1 p-4 space-y-1 font-bold text-xs tracking-widest uppercase overflow-y-auto overflow-x-hidden">
+                <!-- System Diagnostics Submenu -->
+                <div class="mb-2 border border-slate-200 rounded-lg bg-slate-50 overflow-hidden">
+                    <button onclick="toggleSubMenu('submenu-sys')" class="w-full flex justify-between items-center px-4 py-3 text-slate-700 hover:bg-slate-100 transition border-b border-transparent">
+                        <span class="flex items-center gap-3"><i class="fa-solid fa-server w-4 text-center"></i> System Operations</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform" id="icon-submenu-sys"></i>
+                    </button>
+                    <div id="submenu-sys" class="hidden flex-col bg-white border-t border-slate-100">
+                        <a href="#" onclick="switchTab('logs')" id="tab-logs" class="sidebar-item active px-10 py-2.5 text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition whitespace-nowrap">Console Logs</a>
+                        <a href="#" onclick="switchTab('database')" id="tab-database" class="px-10 py-2.5 text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition whitespace-nowrap">Database Management</a>
+                        <a href="#" onclick="switchTab('network')" id="tab-network" class="px-10 py-2.5 text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition whitespace-nowrap">Network Topologies</a>
+                        <a href="#" onclick="switchTab('config')" id="tab-config" class="px-10 py-2.5 text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition whitespace-nowrap">API & Environment Vars</a>
+                    </div>
+                </div>
+
+                <!-- Core Engines Submenu -->
+                <div class="mb-2 border border-slate-200 rounded-lg bg-slate-50 overflow-hidden">
+                    <button onclick="toggleSubMenu('submenu-engines')" class="w-full flex justify-between items-center px-4 py-3 text-amber-600 hover:bg-amber-50 transition border-b border-transparent">
+                        <span class="flex items-center gap-3"><i class="fa-solid fa-microchip w-4 text-center"></i> Core Engines</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform" id="icon-submenu-engines"></i>
+                    </button>
+                    <div id="submenu-engines" class="hidden flex-col bg-white border-t border-slate-100">
+                        <a href="#" onclick="switchTab('engine')" id="tab-engine" class="px-10 py-2.5 text-slate-500 hover:text-amber-600 hover:bg-slate-50 transition whitespace-nowrap">Engine Controls</a>
+                        <a href="#" onclick="switchTab('parsers')" id="tab-parsers" class="px-10 py-2.5 text-slate-500 hover:text-amber-600 hover:bg-slate-50 transition whitespace-nowrap">Blockchain Parsers</a>
+                    </div>
+                </div>
+
+                <!-- NEMESIS ID Submenu -->
+                <div class="mb-2 border border-slate-200 rounded-lg bg-slate-50 overflow-hidden">
+                    <button onclick="toggleSubMenu('submenu-id')" class="w-full flex justify-between items-center px-4 py-3 text-blue-600 hover:bg-blue-50 transition border-b border-transparent">
+                        <span class="flex items-center gap-3"><i class="fa-solid fa-fingerprint w-4 text-center"></i> NEMESIS ID</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform" id="icon-submenu-id"></i>
+                    </button>
+                    <div id="submenu-id" class="hidden flex-col bg-white border-t border-slate-100">
+                        <a href="/nemesis_id" target="_blank" class="px-10 py-2.5 text-slate-500 hover:text-blue-600 hover:bg-slate-50 transition whitespace-nowrap flex items-center gap-2"><i class="fa-solid fa-external-link text-[10px]"></i> Launch UI</a>
+                        <a href="#" onclick="switchTab('cases')" id="tab-cases" class="px-10 py-2.5 text-slate-500 hover:text-blue-600 hover:bg-slate-50 transition whitespace-nowrap">Case Management</a>
+                    </div>
+                </div>
+
+                <!-- NEMESIS Tracer Submenu -->
+                <div class="mb-2 border border-slate-200 rounded-lg bg-slate-50 overflow-hidden">
+                    <button onclick="toggleSubMenu('submenu-tracer')" class="w-full flex justify-between items-center px-4 py-3 text-indigo-600 hover:bg-indigo-50 transition border-b border-transparent">
+                        <span class="flex items-center gap-3"><i class="fa-solid fa-project-diagram w-4 text-center"></i> NEMESIS Tracer</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform" id="icon-submenu-tracer"></i>
+                    </button>
+                    <div id="submenu-tracer" class="hidden flex-col bg-white border-t border-slate-100">
+                        <a href="/nemesis_tracer.html" target="_blank" class="px-10 py-2.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition whitespace-nowrap flex items-center gap-2"><i class="fa-solid fa-external-link text-[10px]"></i> Launch UI</a>
+                    </div>
+                </div>
+
+                <!-- Darknet Submenu -->
+                <div class="mb-2 border border-slate-200 rounded-lg bg-slate-50 overflow-hidden">
+                    <button onclick="toggleSubMenu('submenu-darknet')" class="w-full flex justify-between items-center px-4 py-3 text-emerald-600 hover:bg-emerald-50 transition border-b border-transparent">
+                        <span class="flex items-center gap-3"><i class="fa-solid fa-spider w-4 text-center"></i> Darknet Intel</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform" id="icon-submenu-darknet"></i>
+                    </button>
+                    <div id="submenu-darknet" class="hidden flex-col bg-white border-t border-slate-100">
+                        <a href="/darknet_search" target="_blank" class="px-10 py-2.5 text-slate-500 hover:text-emerald-600 hover:bg-slate-50 transition whitespace-nowrap flex items-center gap-2"><i class="fa-solid fa-external-link text-[10px]"></i> Search Engine UI</a>
+                        <a href="#" onclick="switchTab('darknet_dash')" id="tab-darknet_dash" class="px-10 py-2.5 text-slate-500 hover:text-emerald-600 hover:bg-slate-50 transition whitespace-nowrap">Crawler Dashboard</a>
+                    </div>
+                </div>
+
+                <!-- Machine Learning Submenu -->
+                <div class="mb-2 border border-slate-200 rounded-lg bg-slate-50 overflow-hidden">
+                    <button onclick="toggleSubMenu('submenu-ml')" class="w-full flex justify-between items-center px-4 py-3 text-purple-600 hover:bg-purple-50 transition border-b border-transparent">
+                        <span class="flex items-center gap-3"><i class="fa-solid fa-brain w-4 text-center"></i> Machine Learning</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform" id="icon-submenu-ml"></i>
+                    </button>
+                    <div id="submenu-ml" class="hidden flex-col bg-white border-t border-slate-100">
+                        <a href="#" onclick="switchTab('clustering')" id="tab-clustering" class="px-10 py-2.5 text-slate-500 hover:text-purple-600 hover:bg-slate-50 transition whitespace-nowrap">Clustering Engine</a>
+                        <a href="#" onclick="switchTab('knowledge')" id="tab-knowledge" class="px-10 py-2.5 text-slate-500 hover:text-purple-600 hover:bg-slate-50 transition whitespace-nowrap">NEMESIS Knowledge</a>
+                        <a href="#" onclick="switchTab('ml_config')" id="tab-ml_config" class="px-10 py-2.5 text-slate-500 hover:text-purple-600 hover:bg-slate-50 transition whitespace-nowrap">ML Configurations</a>
+                        <a href="#" onclick="switchTab('ml_data')" id="tab-ml_data" class="px-10 py-2.5 text-slate-500 hover:text-purple-600 hover:bg-slate-50 transition whitespace-nowrap">Training Data</a>
+                    </div>
+                </div>
+
+                <!-- Godmode Engine Submenu -->
+                <div class="mb-4 border border-slate-200 rounded-lg bg-red-50 overflow-hidden">
+                    <button onclick="toggleSubMenu('submenu-godmode')" class="w-full flex justify-between items-center px-4 py-3 text-red-600 hover:bg-red-100 transition border-b border-transparent font-black">
+                        <span class="flex items-center gap-3"><i class="fa-solid fa-wand-magic-sparkles w-4 text-center"></i> Godmode Auto-Pilot</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform" id="icon-submenu-godmode"></i>
+                    </button>
+                    <div id="submenu-godmode" class="hidden flex-col bg-white border-t border-slate-100">
+                        <a href="#" onclick="switchTab('godmode')" id="tab-godmode" class="px-10 py-2.5 text-slate-500 hover:text-red-600 hover:bg-slate-50 transition whitespace-nowrap">Deployer & Auto-Pilot</a>
+                        <a href="#" onclick="switchTab('godmode_self')" id="tab-godmode_self" class="px-10 py-2.5 text-slate-500 hover:text-red-600 hover:bg-slate-50 transition whitespace-nowrap">Self-Healing Modules</a>
+                        <a href="#" onclick="switchTab('deploy')" id="tab-deploy" class="px-10 py-2.5 text-slate-500 hover:text-red-600 hover:bg-slate-50 transition whitespace-nowrap">Omni-Deploy Config</a>
+                    </div>
+                </div>
             </nav>
             <div class="p-4 border-t border-slate-200">
                 <button onclick="logout()" class="w-full py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded border border-red-200 text-xs font-bold transition uppercase tracking-wider flex justify-center items-center gap-2 overflow-hidden whitespace-nowrap">
@@ -366,7 +423,50 @@
                     </div>
                 </div>
             </div>
+            </div>
             
+
+            <!-- Network View -->
+            <div id="view-network" class="hidden space-y-6">
+                <div class="glass-panel p-8 rounded-xl border border-slate-200">
+                    <h3 class="text-slate-700 text-lg uppercase tracking-widest font-black mb-4">Network Topologies</h3>
+                    <p class="text-xs text-slate-500">View and manage network routing, Tor proxy integrations, and IP load balancing here.</p>
+                </div>
+            </div>
+
+            <!-- Darknet Dashboard View -->
+            <div id="view-darknet_dash" class="hidden space-y-6">
+                <div class="glass-panel p-8 rounded-xl border border-emerald-200 shadow-emerald-500/10">
+                    <h3 class="text-emerald-600 text-lg uppercase tracking-widest font-black mb-4">Darknet Crawler Dashboard</h3>
+                    <p class="text-xs text-slate-500 mb-4">Monitor real-time Tor2Web proxy scraping.</p>
+                    <button class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded font-bold text-xs" onclick="fetch('/api/darknet/start_crawler', {method: 'POST'})">Force Crawl Cycle</button>
+                </div>
+            </div>
+
+            <!-- ML Config View -->
+            <div id="view-ml_config" class="hidden space-y-6">
+                <div class="glass-panel p-8 rounded-xl border border-purple-200 shadow-purple-500/10">
+                    <h3 class="text-purple-600 text-lg uppercase tracking-widest font-black mb-4">ML Configurations</h3>
+                    <p class="text-xs text-slate-500">Manage vectorizer parameters (TF-IDF, embeddings), KMeans k-values, and DBSCAN epsilon limits.</p>
+                </div>
+            </div>
+
+            <!-- ML Data View -->
+            <div id="view-ml_data" class="hidden space-y-6">
+                <div class="glass-panel p-8 rounded-xl border border-purple-200 shadow-purple-500/10">
+                    <h3 class="text-purple-600 text-lg uppercase tracking-widest font-black mb-4">Training Data</h3>
+                    <p class="text-xs text-slate-500">Upload or review historical scenario JSON files used for anomaly detection baselines.</p>
+                </div>
+            </div>
+
+            <!-- Godmode Self View -->
+            <div id="view-godmode_self" class="hidden space-y-6">
+                <div class="glass-panel p-8 rounded-xl border border-red-200 shadow-red-500/10">
+                    <h3 class="text-red-600 text-lg uppercase tracking-widest font-black mb-4">Self-Healing Modules</h3>
+                    <p class="text-xs text-slate-500">Enable/disable autonomous self-modification routines for the primary backend API.</p>
+                </div>
+            </div>
+
             <div class="mt-auto">
                 {% include 'includes/footer.html' %}
             </div>
@@ -394,18 +494,23 @@
 
         // Tab Switching
         function switchTab(tabId) {
-            const tabs = ['logs', 'cases', 'database', 'config', 'engine', 'parsers', 'godmode', 'clustering', 'knowledge', 'deploy'];
+            const tabs = ['logs', 'cases', 'database', 'config', 'engine', 'parsers', 'godmode', 'clustering', 'knowledge', 'deploy', 'network', 'darknet_dash', 'ml_config', 'ml_data', 'godmode_self'];
             const titles = {
                 'logs': 'Live Console Logs',
                 'cases': 'Case Management',
-                'database': 'Database Statistics',
-                'config': 'API Configuration',
+                'database': 'Database Statistics & Management',
+                'config': 'API Configuration & Environments',
                 'engine': 'Engine Controls',
                 'parsers': 'Blockchain Parsers Configuration',
-                'godmode': 'Omni-Healing Godmode Deployer',
+                'godmode': 'Godmode Deployer & Auto-Pilot',
                 'clustering': 'ML Clustering Engine',
                 'knowledge': 'NEMESIS Knowledge Indexer',
-                'deploy': 'Cloud Configurations & Omni-Deploy'
+                'deploy': 'Cloud Configurations & Omni-Deploy',
+                'network': 'Network Topologies',
+                'darknet_dash': 'Darknet Crawler Dashboard',
+                'ml_config': 'Machine Learning Configurations',
+                'ml_data': 'ML Training Data',
+                'godmode_self': 'Self-Healing Modules'
             };
 
             tabs.forEach(t => {
@@ -452,6 +557,20 @@
                 sidebar.querySelector('h1').classList.remove('hidden');
                 sidebar.querySelector('p').classList.remove('hidden');
                 texts.forEach(t => t.classList.remove('hidden'));
+            }
+        }
+
+        function toggleSubMenu(id) {
+            const el = document.getElementById(id);
+            const icon = document.getElementById(`icon-${id}`);
+            if (el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+                el.classList.add('flex');
+                if (icon) icon.style.transform = 'rotate(180deg)';
+            } else {
+                el.classList.add('hidden');
+                el.classList.remove('flex');
+                if (icon) icon.style.transform = 'rotate(0deg)';
             }
         }
 

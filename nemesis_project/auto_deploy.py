@@ -289,7 +289,7 @@ def main():
             shutil.copy2(s, d)
             
     # Create _redirects file to proxy API requests to Render backend
-    redirects_content = "/api/*  https://nemesis-backend.onrender.com/api/:splat  200\n/admin/api/*  https://nemesis-backend.onrender.com/admin/api/:splat  200\n"
+    redirects_content = "/api/*  https://nemesis-local.onrender.com/api/:splat  200\n/admin/api/*  https://nemesis-local.onrender.com/admin/api/:splat  200\n"
     with open(os.path.join(build_dir, "_redirects"), "w", encoding="utf-8") as f:
         f.write(redirects_content)
         
