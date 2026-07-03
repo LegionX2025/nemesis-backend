@@ -194,13 +194,57 @@ class TraceRequest(BaseModel):
     max_hops: int = 1000
     tracing_method: str = "tracer"
 
+class KnowledgeRequest(BaseModel):
+    url: str
+
 from services.godmode_ml import load_ontology, register_ml_listener, remove_ml_listener, ingest_dataset, get_datasets
 
 @app.get("/api/ml/ontology")
 async def api_ml_ontology():
-    ont = load_ontology()
-    return {"status": "success", "data": ont}
+    from services.godmode_ml import load_ontology
+    try:
+        data = load_ontology()
+        return {"data": data}
+    except Exception as e:
+        return {"error": str(e)}
 
+import requests
+from bs4 import BeautifulSoup
+
+@app.post("/api/knowledge/index")
+async def api_knowledge_index(req: KnowledgeRequest):
+    try:
+        url = req.url
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        soup = BeautifulSoup(response.text, 'html.parser')
+        for script in soup(["script", "style"]):
+            script.decompose()
+            
+        text = soup.get_text(separator='\n')
+        lines = (line.strip() for line in text.splitlines())
+        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+        text = '\n'.join(chunk for chunk in chunks if chunk)
+        
+        provider = "unknown"
+        if "cloudflare" in url.lower(): provider = "cloudflare"
+        elif "render" in url.lower(): provider = "render"
+        elif "github" in url.lower() or "git" in url.lower(): provider = "git"
+        
+        # Ensure dir exists
+        kb_dir = os.path.join(os.path.dirname(__file__), "NEMESIS_KNOWLEDGE_BASE_LIBRARY")
+        os.makedirs(kb_dir, exist_ok=True)
+        
+        file_path = os.path.join(kb_dir, f"{provider}_docs.txt")
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(f"URL: {url}\n\n{text}")
+            
+        tokens = len(text.split())
+        return {"status": "success", "file": f"{provider}_docs.txt", "tokens": tokens}
+    except Exception as e:
+        return Response(content=json.dumps({"error": str(e)}), status_code=500, media_type="application/json")
 @app.get("/api/ml/datasets")
 async def api_ml_datasets():
     datasets = get_datasets()

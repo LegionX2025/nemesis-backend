@@ -22,6 +22,11 @@ def get_env_var(key, default=""):
                     return line.strip().split("=", 1)[1].strip('"').strip("'")
     return os.environ.get(key, default)
 
+# Fix for Cloudflare Wrangler Edge Case (code 9109/OAuth Block)
+if "CLOUDFLARE_API_TOKEN" in os.environ:
+    print("🧹 Cleaning stale CLOUDFLARE_API_TOKEN from environment to allow OAuth login...")
+    del os.environ["CLOUDFLARE_API_TOKEN"]
+
 GEMINI_API_KEYS = get_env_var("GEMINI_API_KEYS", "")
 if GEMINI_API_KEYS:
     # Use the first key
@@ -39,10 +44,24 @@ def apply_ai_fix(error_log, cwd):
     if not MODEL:
         print("⚠️ Gemini API not configured. Cannot attempt AI auto-fix.")
         return False
+        
+    knowledge_context = ""
+    kb_dir = Path(__file__).parent / "NEMESIS_KNOWLEDGE_BASE_LIBRARY"
+    if kb_dir.exists():
+        for file in kb_dir.glob("*_docs.txt"):
+            try:
+                content = file.read_text(encoding="utf-8")
+                # Truncate to first 4000 characters to save tokens
+                knowledge_context += f"\n--- {file.name} ---\n{content[:4000]}\n"
+            except Exception:
+                pass
     
     prompt = f"""
     You are an autonomous AI coding agent. The following deployment command failed with this error:
     {error_log}
+    
+    Here is the official documentation context that may contain the fix:
+    {knowledge_context}
     
     Provide a JSON response to fix this error. You can either issue a terminal command to run, or edit a specific file.
     Format your response EXACTLY as valid JSON. Do not include markdown blocks or any other text.
@@ -193,7 +212,16 @@ def main():
     print_header("NEMESIS OMNI-DEPLOYER (GODMODE & SELF-HEALING)")
     current_dir = os.getcwd()
     
-    print("\n>>> [1/4] NPM Audits & Updates")
+    print("\n>>> [1/5] Running Pre-Flight Tests...")
+    test_script = os.path.join(current_dir, "test_all.ps1")
+    if os.path.exists(test_script):
+        # Run tests directly using current Python executable
+        run_command(f"{sys.executable} -m pytest tests/", cwd=current_dir, exit_on_error=True, allow_healing=False)
+        run_command(f"{sys.executable} test_trace.py", cwd=current_dir, exit_on_error=True, allow_healing=False)
+    else:
+        print("    -> [SKIP] No test_all.ps1 found.")
+
+    print("\n>>> [2/5] NPM Audits & Updates")
     worker_dir = os.path.join(current_dir, "nemesis-global-worker")
     if os.path.exists(worker_dir) and os.path.exists(os.path.join(worker_dir, "package.json")):
         print("    -> Running NPM operations...")
@@ -201,7 +229,7 @@ def main():
         # Attempt audit fix automatically
         run_command("npm audit fix", cwd=worker_dir, exit_on_error=False, allow_healing=False)
     
-    print("\n>>> [2/4] Syncing to Global Repository (Render Backend)")
+    print("\n>>> [3/5] Syncing to Global Repository (Render Backend)")
     run_command("git add .", cwd=current_dir, allow_healing=False)
     run_command('git commit -m "Auto-Deploy from Godmode"', cwd=current_dir, exit_on_error=False, allow_healing=False)
     run_command("git push origin main", cwd=current_dir, exit_on_error=False, allow_healing=True)
@@ -212,7 +240,7 @@ def main():
     except Exception as e:
         print(f"    -> [WARNING] Render trigger failed: {e}")
 
-    print("\n>>> [3/4] Deploying Edge Architecture (Cloudflare Worker)")
+    print("\n>>> [4/5] Deploying Edge Architecture (Cloudflare Worker)")
     if os.path.exists(worker_dir):
         # Update wrangler.toml with tunnel url if godmode tunneling is active
         # Not strictly required for standard deployment but part of Godmode
@@ -220,7 +248,7 @@ def main():
     else:
         print(f"    -> [WARNING] Worker dir not found.")
 
-    print("\n>>> [4/4] Deploying Main Frontend (Cloudflare Pages)")
+    print("\n>>> [5/5] Deploying Main Frontend (Cloudflare Pages)")
     frontend_dir = os.path.join(current_dir, "templates")
     if os.path.exists(frontend_dir):
         run_command("npx wrangler pages deploy . --project-name nemesis-id-frontend", cwd=frontend_dir)

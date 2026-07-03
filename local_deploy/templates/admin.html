@@ -79,6 +79,9 @@
             <a href="#" onclick="switchTab('engine')" id="tab-engine" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-[#00ff88] hover:bg-[#00ff88]/5 rounded-lg transition border border-transparent">
                 Engine Controls
             </a>
+            <a href="#" onclick="switchTab('knowledge')" id="tab-knowledge" class="flex items-center gap-3 px-4 py-3 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 rounded-lg transition border border-transparent font-black shadow-[0_0_10px_rgba(6,182,212,0.2)]">
+                NEMESIS KNOWLEDGE
+            </a>
         </nav>
         <div class="p-4 border-t border-[#00ff88]/20">
             <button onclick="logout()" class="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded border border-red-500/30 text-xs font-bold transition uppercase tracking-wider">
@@ -166,6 +169,43 @@
                     </div>
                     <div class="flex-1 p-4 overflow-y-auto font-mono text-xs text-gray-300 leading-relaxed break-all cyber-scrollbar">
                         <span class="text-red-400">[GODMODE] System awaiting deployment execution...</span><br>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Knowledge Base View -->
+            <div id="view-knowledge" class="hidden space-y-6">
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="bg-[rgba(20,20,25,0.8)] border border-cyan-500/30 p-6 rounded-xl">
+                        <h3 class="text-cyan-400 text-sm uppercase tracking-widest font-bold mb-4 border-b border-cyan-500/20 pb-2">Auto-Dynamic Indexer</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs text-gray-400 uppercase tracking-wider mb-2 block">API Documentation URL</label>
+                                <input type="text" id="knowledge-url" placeholder="https://developers.cloudflare.com/..." class="w-full bg-black border border-gray-800 text-[#00ff88] px-4 py-2 rounded text-xs font-mono focus:border-cyan-500/50 outline-none">
+                            </div>
+                            <button onclick="indexKnowledge()" class="w-full py-3 bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 rounded text-xs font-bold uppercase tracking-widest hover:bg-cyan-500/20 transition flex justify-between px-4">
+                                <span>Trigger Auto-Index</span> <span>🧠</span>
+                            </button>
+                            <div id="index-status" class="hidden text-xs font-mono p-3 bg-black border border-gray-800 rounded mt-4 whitespace-pre-wrap"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-[rgba(20,20,25,0.8)] border border-cyan-500/30 p-6 rounded-xl">
+                        <h3 class="text-cyan-400 text-sm uppercase tracking-widest font-bold mb-4 border-b border-cyan-500/20 pb-2">Indexed Providers</h3>
+                        <div class="space-y-4" id="knowledge-list">
+                            <div class="flex justify-between items-center bg-black/50 p-3 rounded border border-gray-800" id="prov-cloudflare">
+                                <span class="text-xs text-gray-400 uppercase tracking-wider">Cloudflare Edge API</span>
+                                <span class="text-xs text-yellow-400 font-mono status-badge">PENDING</span>
+                            </div>
+                            <div class="flex justify-between items-center bg-black/50 p-3 rounded border border-gray-800" id="prov-render">
+                                <span class="text-xs text-gray-400 uppercase tracking-wider">Render Deployment API</span>
+                                <span class="text-xs text-yellow-400 font-mono status-badge">PENDING</span>
+                            </div>
+                            <div class="flex justify-between items-center bg-black/50 p-3 rounded border border-gray-800" id="prov-git">
+                                <span class="text-xs text-gray-400 uppercase tracking-wider">Git Providers API</span>
+                                <span class="text-xs text-yellow-400 font-mono status-badge">PENDING</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -535,13 +575,208 @@
         };
 
         function logout() {
+                            <thead class="text-xs text-gray-500 uppercase tracking-wider border-b border-[#00ff88]/10">
+                                <tr>
+                                    <th class="pb-3">Case ID</th>
+                                    <th class="pb-3">Name</th>
+                                    <th class="pb-3">Status</th>
+                                    <th class="pb-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cases-table" class="divide-y divide-[#00ff88]/10">
+                                <tr><td colspan="4" class="py-4 text-center text-gray-500 italic">No cases found</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Database View -->
+            <div id="view-database" class="hidden space-y-6">
+                <div class="grid grid-cols-3 gap-6">
+                    <div class="bg-[rgba(20,20,25,0.8)] border border-[#00b8ff]/20 p-6 rounded-xl text-center">
+                        <h4 class="text-gray-500 text-[10px] uppercase tracking-widest mb-2">Stored Traces</h4>
+                        <div id="stat-traces" class="text-4xl font-black text-[#00b8ff]">0</div>
+                    </div>
+                    <div class="bg-[rgba(20,20,25,0.8)] border border-[#00ff88]/20 p-6 rounded-xl text-center">
+                        <h4 class="text-gray-500 text-[10px] uppercase tracking-widest mb-2">Wallet Labels</h4>
+                        <div id="stat-wallets" class="text-4xl font-black text-[#00ff88]">0</div>
+                    </div>
+                    <div class="bg-[rgba(20,20,25,0.8)] border border-purple-500/20 p-6 rounded-xl text-center">
+                        <h4 class="text-gray-500 text-[10px] uppercase tracking-widest mb-2">Case Files</h4>
+                        <div id="stat-cases" class="text-4xl font-black text-purple-400">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Config View -->
+            <div id="view-config" class="hidden space-y-6">
+                <div class="bg-[rgba(20,20,25,0.8)] border border-[#00ff88]/20 p-6 rounded-xl">
+                    <h3 class="text-[#00ff88] text-sm uppercase tracking-widest font-bold mb-4 border-b border-[#00ff88]/20 pb-2">API Configuration</h3>
+                    <div id="config-form" class="space-y-4">
+                        <p class="text-gray-500 text-xs italic">Loading configuration...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Blockchain Parsers View -->
+            <div id="view-parsers" class="hidden space-y-6">
+                <div class="bg-[rgba(20,20,25,0.8)] border border-[#00b8ff]/20 p-6 rounded-xl relative overflow-hidden">
+                    <div class="flex justify-between items-center border-b border-[#00b8ff]/20 pb-4 mb-6">
+                        <h3 class="text-[#00b8ff] text-sm uppercase tracking-widest font-bold">Universal Blockchain Parser Configuration</h3>
+                        <button onclick="alert('Adding new parser endpoint...')" class="bg-[#00b8ff]/20 hover:bg-[#00b8ff]/40 text-[#00b8ff] px-4 py-2 rounded text-xs font-bold uppercase tracking-widest transition">
+                            + Add Endpoint
+                        </button>
+                    </div>
+                    
+                    <p class="text-gray-400 text-xs mb-6">Configure canonical explorer URLs to be used globally for auto-ingestion, scraping, pagination, and UX deep-links.</p>
+
+                    <!-- Parsers List -->
+                    <div class="space-y-4 max-h-[60vh] overflow-y-auto cyber-scrollbar pr-2">
+                        
+                        <!-- Etherscan Parser -->
+                        <div class="bg-black/40 border border-gray-800 p-4 rounded-lg flex flex-col gap-3 hover:border-[#00b8ff]/30 transition">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-[#00ff88] animate-pulse"></div>
+                                    <h4 class="text-white text-sm font-bold tracking-wider">Etherscan (Ethereum)</h4>
+                                </div>
+                                <div class="flex gap-2">
+                                    <label class="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-widest cursor-pointer">
+                                        <input type="checkbox" checked class="accent-[#00ff88]"> Auto-Update
+                                    </label>
+                                    <label class="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-widest cursor-pointer">
+                                        <input type="checkbox" checked class="accent-[#00ff88]"> Auto-Ingest
+                                    </label>
+                                    <button class="text-blue-400 hover:text-blue-300 ml-2">✏️</button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 text-xs font-mono text-gray-400 bg-black/60 p-3 rounded">
+                                <div><span class="text-gray-600">Base:</span> https://etherscan.io</div>
+                                <div><span class="text-gray-600">Wallet:</span> /address/{address}</div>
+                                <div><span class="text-gray-600">Tx:</span> /tx/{txhash}</div>
+                                <div><span class="text-gray-600">Token:</span> /token/{token}</div>
+                                <div><span class="text-gray-600">Pagination:</span> ?p={page}</div>
+                            </div>
+                        </div>
+
+                        <!-- Basescan Parser -->
+                        <div class="bg-black/40 border border-gray-800 p-4 rounded-lg flex flex-col gap-3 hover:border-[#00b8ff]/30 transition">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-[#00ff88]"></div>
+                                    <h4 class="text-white text-sm font-bold tracking-wider">Basescan (Base)</h4>
+                                </div>
+                                <div class="flex gap-2">
+                                    <label class="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-widest cursor-pointer">
+                                        <input type="checkbox" checked class="accent-[#00ff88]"> Auto-Update
+                                    </label>
+                                    <label class="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-widest cursor-pointer">
+                                        <input type="checkbox" checked class="accent-[#00ff88]"> Auto-Ingest
+                                    </label>
+                                    <button class="text-blue-400 hover:text-blue-300 ml-2">✏️</button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 text-xs font-mono text-gray-400 bg-black/60 p-3 rounded">
+                                <div><span class="text-gray-600">Base:</span> https://basescan.org</div>
+                                <div><span class="text-gray-600">Wallet:</span> /address/{address}</div>
+                                <div><span class="text-gray-600">Tx:</span> /tx/{txhash}</div>
+                                <div><span class="text-gray-600">Token:</span> /token/{token}</div>
+                                <div><span class="text-gray-600">Pagination:</span> ?p={page}</div>
+                            </div>
+                        </div>
+
+                        <!-- Polygonscan Parser -->
+                        <div class="bg-black/40 border border-gray-800 p-4 rounded-lg flex flex-col gap-3 hover:border-[#00b8ff]/30 transition">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-[#00ff88]"></div>
+                                    <h4 class="text-white text-sm font-bold tracking-wider">Polygonscan (Polygon)</h4>
+                                </div>
+                                <div class="flex gap-2">
+                                    <label class="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-widest cursor-pointer">
+                                        <input type="checkbox" checked class="accent-[#00ff88]"> Auto-Update
+                                    </label>
+                                    <label class="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-widest cursor-pointer">
+                                        <input type="checkbox" class="accent-[#00ff88]"> Auto-Ingest
+                                    </label>
+                                    <button class="text-blue-400 hover:text-blue-300 ml-2">✏️</button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 text-xs font-mono text-gray-400 bg-black/60 p-3 rounded">
+                                <div><span class="text-gray-600">Base:</span> https://polygonscan.com</div>
+                                <div><span class="text-gray-600">Wallet:</span> /address/{address}</div>
+                                <div><span class="text-gray-600">Tx:</span> /tx/{txhash}</div>
+                                <div><span class="text-gray-600">Token:</span> /token/{token}</div>
+                                <div><span class="text-gray-600">Pagination:</span> ?p={page}</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Engine View -->
+            <div id="view-engine" class="hidden space-y-6">
+                <div class="bg-[rgba(20,20,25,0.8)] border border-[#00ff88]/20 p-6 rounded-xl">
+                    <h3 class="text-[#00ff88] text-sm uppercase tracking-widest font-bold mb-4 border-b border-[#00ff88]/20 pb-2">Engine Thresholds</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Max Trace Depth</label>
+                            <input type="number" id="engine-depth" class="w-full bg-black border border-[#00ff88]/30 rounded p-2 text-white text-sm" value="3">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Max Hops</label>
+                                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Max Trace Depth</label>
+                                    <input type="number" id="engine-depth" class="w-full bg-black border border-[#00ff88]/30 rounded p-2 text-white text-sm" value="3">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Max Hops</label>
+                                    <input type="number" id="engine-hops" class="w-full bg-black border border-[#00ff88]/30 rounded p-2 text-white text-sm" value="50">
+                                </div>
+                                <button onclick="saveEngineConfig()" class="mt-4 px-4 py-2 bg-[#00ff88]/10 text-[#00ff88] border border-[#00ff88]/50 rounded text-xs font-bold uppercase tracking-widest hover:bg-[#00ff88]/20 transition">Apply Changes</button>
+                            </div>
+                        </div>
+                    </div>
+            <!-- 11. Darknet Terminal View -->
+            <div id="view-darknet" class="hidden h-[75vh] flex-col gap-4">
+                <div class="flex-1 bg-[#050505] border border-purple-500/30 rounded shadow-[inset_0_0_20px_rgba(168,85,247,0.1)] flex flex-col overflow-hidden">
+                    <div class="bg-black/80 px-4 py-2 border-b border-purple-500/30 flex justify-between items-center">
+                        <span class="text-xs font-bold text-purple-400 tracking-widest uppercase">Darknet Crawler Stream <span class="animate-pulse text-green-400 ml-2">● LIVE</span></span>
+                        <button onclick="document.getElementById('darknet-terminal').innerHTML=''" class="text-[10px] text-gray-500 hover:text-white transition">CLEAR</button>
+                    </div>
+                    <div id="darknet-terminal" class="flex-1 p-4 font-mono text-[11px] space-y-1 overflow-y-auto cyber-scrollbar">
+                        <div class="text-gray-500 italic">Connecting to Darknet Engine...</div>
+                    </div>
+                </div>
+            </div>
+            
+        </main>
+    </div>
+
+    <script>
+        // Auth Check (Bypassed slightly for static view, normally requires token)
+        const token = localStorage.getItem('nemesis_admin_token') || 'demo_token';
+        
+        // Environment Detection
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        // Connect directly to the worker edge backend for production
+        const baseUrl = isLocal ? 'http://127.0.0.1:3001' : 'https://nemesis-api.legionxgaming2021.workers.dev';
+        const wsUrl = isLocal ? 'ws://127.0.0.1:3001' : 'wss://nemesis-api.legionxgaming2021.workers.dev';
+
+        const authHeaders = {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+
+        function logout() {
             localStorage.removeItem('nemesis_admin_token');
             window.location.href = 'login.html';
         }
 
         // Tab Switching Logic
         function switchTab(tabId) {
-            const tabs = ['logs', 'cases', 'database', 'config', 'parsers', 'engine', 'cloudflare', 'antigravity', 'benchmark', 'nemesis-ml', 'godmode', 'darknet'];
+            const tabs = ['logs', 'cases', 'database', 'config', 'parsers', 'engine', 'cloudflare', 'antigravity', 'benchmark', 'nemesis-ml', 'godmode', 'darknet', 'knowledge'];
             const titles = {
                 'logs': 'Live Console Logs',
                 'cases': 'Case Management',
@@ -554,7 +789,8 @@
                 'benchmark': 'System Diagnostic & Benchmark',
                 'nemesis-ml': 'NEMESIS ML INTELLIGENCE',
                 'godmode': 'GODMODE DEPLOYER',
-                'darknet': 'DARKNET INTELLIGENCE STREAM'
+                'darknet': 'DARKNET INTELLIGENCE STREAM',
+                'knowledge': 'NEMESIS KNOWLEDGE BASE'
             };
 
             tabs.forEach(t => {
@@ -577,8 +813,8 @@
                     view.classList.add('block');
                 } else {
                     // Reset to default inactive styles
-                    if(['cloudflare', 'antigravity', 'benchmark', 'darknet'].includes(t)) {
-                        let col = t==='cloudflare'?'orange':t==='antigravity'?'purple':t==='benchmark'?'blue':'purple';
+                    if(['cloudflare', 'antigravity', 'benchmark', 'darknet', 'knowledge'].includes(t)) {
+                        let col = t==='cloudflare'?'orange':t==='antigravity'?'purple':t==='benchmark'?'blue':t==='knowledge'?'cyan':'purple';
                         btn.className = `flex items-center gap-3 px-4 py-3 text-${col}-400 hover:text-${col}-300 hover:bg-${col}-500/10 rounded-lg transition border border-transparent`;
                     } else {
                         btn.className = "flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-[#00ff88] hover:bg-[#00ff88]/5 rounded-lg transition border border-transparent";
@@ -893,6 +1129,50 @@
         });
 
         initLogsWS();
+
+        // NEMESIS KNOWLEDGE AUTO-INDEXER
+        async function indexKnowledge() {
+            const url = document.getElementById('knowledge-url').value;
+            const statusDiv = document.getElementById('index-status');
+            
+            if (!url) {
+                alert("Please enter an API Documentation URL.");
+                return;
+            }
+            
+            statusDiv.classList.remove('hidden');
+            statusDiv.innerHTML = "Initializing Quantum Scraper...<br>Fetching documentation from " + url;
+            
+            try {
+                const res = await fetch(`${baseUrl}/api/knowledge/index`, {
+                    method: 'POST',
+                    headers: authHeaders,
+                    body: JSON.stringify({ url: url })
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    statusDiv.innerHTML += `<br><span class="text-[#00ff88]">Success: Indexed ${data.tokens} tokens. Saved to ${data.file}.</span>`;
+                    
+                    // Update Provider Status Badges
+                    if (url.includes('cloudflare')) {
+                        document.querySelector('#prov-cloudflare .status-badge').innerText = "INDEXED";
+                        document.querySelector('#prov-cloudflare .status-badge').className = "text-xs text-[#00ff88] font-mono status-badge";
+                    } else if (url.includes('render')) {
+                        document.querySelector('#prov-render .status-badge').innerText = "INDEXED";
+                        document.querySelector('#prov-render .status-badge').className = "text-xs text-[#00ff88] font-mono status-badge";
+                    } else if (url.includes('git')) {
+                        document.querySelector('#prov-git .status-badge').innerText = "INDEXED";
+                        document.querySelector('#prov-git .status-badge').className = "text-xs text-[#00ff88] font-mono status-badge";
+                    }
+                } else {
+                    statusDiv.innerHTML += `<br><span class="text-red-500">Error: ${data.error}</span>`;
+                }
+            } catch (err) {
+                statusDiv.innerHTML += `<br><span class="text-red-500">Critical Error: ${err.message}</span>`;
+            }
+        }
     </script>
 </body>
 </html>

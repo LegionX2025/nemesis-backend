@@ -110,15 +110,33 @@
                         </div>
                         <select id="target_chain" class="w-full pl-10 pr-4 py-3 rounded-xl transition bg-white/90 border border-slate-300 font-mono text-sm appearance-none" onchange="updateChainIcon()">
                             <option value="AUTO" data-icon="fa-globe">Auto Detect Cross-Chain</option>
-                            <option value="ETHEREUM" data-icon-src="https://cryptologos.cc/logos/ethereum-eth-logo.png">Ethereum (ERC20/ETH)</option>
-                            <option value="BSC" data-icon-src="https://cryptologos.cc/logos/bnb-bnb-logo.png">Binance Smart Chain</option>
-                            <option value="POLYGON" data-icon-src="https://cryptologos.cc/logos/polygon-matic-logo.png">Polygon (MATIC)</option>
-                            <option value="ARBITRUM" data-icon-src="https://cryptologos.cc/logos/arbitrum-arb-logo.png">Arbitrum</option>
-                            <option value="OPTIMISM" data-icon-src="https://cryptologos.cc/logos/optimism-op-logo.png">Optimism</option>
-                            <option value="AVALANCHE" data-icon-src="https://cryptologos.cc/logos/avalanche-avax-logo.png">Avalanche (C-Chain)</option>
-                            <option value="BASE" data-icon-src="https://github.com/base-org/brand-kit/raw/main/logo/symbol/Base_Symbol_Blue.png">Base</option>
-                            <option value="BITCOIN" data-icon-src="https://cryptologos.cc/logos/bitcoin-btc-logo.png">Bitcoin (UTXO)</option>
+                            <option value="BITCOIN" data-icon-src="https://cryptologos.cc/logos/bitcoin-btc-logo.png">Bitcoin (BTC)</option>
+                            <option value="ETHEREUM" data-icon-src="https://cryptologos.cc/logos/ethereum-eth-logo.png">Ethereum (ETH/ERC20)</option>
+                            <option value="BSC" data-icon-src="https://cryptologos.cc/logos/bnb-bnb-logo.png">Binance Smart Chain (BSC)</option>
+                            <option value="SOLANA" data-icon-src="https://cryptologos.cc/logos/solana-sol-logo.png">Solana (SOL)</option>
                             <option value="TRON" data-icon-src="https://cryptologos.cc/logos/tron-trx-logo.png">Tron (TRC20)</option>
+                            <option value="POLYGON" data-icon-src="https://cryptologos.cc/logos/polygon-matic-logo.png">Polygon (MATIC)</option>
+                            <option value="ARBITRUM" data-icon-src="https://cryptologos.cc/logos/arbitrum-arb-logo.png">Arbitrum (ARB)</option>
+                            <option value="OPTIMISM" data-icon-src="https://cryptologos.cc/logos/optimism-op-logo.png">Optimism (OP)</option>
+                            <option value="BASE" data-icon-src="https://github.com/base-org/brand-kit/raw/main/logo/symbol/Base_Symbol_Blue.png">Base</option>
+                            <option value="AVALANCHE" data-icon-src="https://cryptologos.cc/logos/avalanche-avax-logo.png">Avalanche (C-Chain)</option>
+                            <option value="RIPPLE" data-icon-src="https://cryptologos.cc/logos/xrp-xrp-logo.png">XRP Ledger (Ripple)</option>
+                            <option value="CARDANO" data-icon-src="https://cryptologos.cc/logos/cardano-ada-logo.png">Cardano (ADA)</option>
+                            <option value="DOGECOIN" data-icon-src="https://cryptologos.cc/logos/dogecoin-doge-logo.png">Dogecoin (DOGE)</option>
+                            <option value="LITECOIN" data-icon-src="https://cryptologos.cc/logos/litecoin-ltc-logo.png">Litecoin (LTC)</option>
+                            <option value="BITCOIN_CASH" data-icon-src="https://cryptologos.cc/logos/bitcoin-cash-bch-logo.png">Bitcoin Cash (BCH)</option>
+                            <option value="POLKADOT" data-icon-src="https://cryptologos.cc/logos/polkadot-new-dot-logo.png">Polkadot (DOT)</option>
+                            <option value="STELLAR" data-icon-src="https://cryptologos.cc/logos/stellar-xlm-logo.png">Stellar (XLM)</option>
+                            <option value="MONERO" data-icon-src="https://cryptologos.cc/logos/monero-xmr-logo.png">Monero (XMR)</option>
+                            <option value="COSMOS" data-icon-src="https://cryptologos.cc/logos/cosmos-atom-logo.png">Cosmos (ATOM)</option>
+                            <option value="FANTOM" data-icon-src="https://cryptologos.cc/logos/fantom-ftm-logo.png">Fantom (FTM)</option>
+                            <option value="CRONOS" data-icon-src="https://cryptologos.cc/logos/cronos-cro-logo.png">Cronos (CRO)</option>
+                            <option value="NEAR" data-icon-src="https://cryptologos.cc/logos/near-protocol-near-logo.png">Near Protocol (NEAR)</option>
+                            <option value="ALGORAND" data-icon-src="https://cryptologos.cc/logos/algorand-algo-logo.png">Algorand (ALGO)</option>
+                            <option value="TEZOS" data-icon-src="https://cryptologos.cc/logos/tezos-xtz-logo.png">Tezos (XTZ)</option>
+                            <option value="APTOS" data-icon-src="https://cryptologos.cc/logos/aptos-apt-logo.png">Aptos (APT)</option>
+                            <option value="SUI" data-icon-src="https://cryptologos.cc/logos/sui-sui-logo.png">Sui (SUI)</option>
+                            <option value="TON" data-icon-src="https://cryptologos.cc/logos/toncoin-ton-logo.png">TON (The Open Network)</option>
                         </select>
                         <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                             <i class="fa-solid fa-chevron-down text-slate-400 text-xs"></i>
@@ -137,11 +155,39 @@
                                 <i class="fa-solid fa-dollar-sign text-emerald-500"></i>
                             </div>
                             <select id="target_currency" class="w-full pl-8 pr-4 py-3 rounded-xl transition bg-white/90 border border-slate-300 font-mono text-sm appearance-none" onchange="updateCurrencyIcon()">
-                                <option value="USD" data-icon="fa-dollar-sign text-emerald-500">USD</option>
-                                <option value="ETH" data-icon-src="https://cryptologos.cc/logos/ethereum-eth-logo.png">ETH</option>
-                                <option value="BTC" data-icon-src="https://cryptologos.cc/logos/bitcoin-btc-logo.png">BTC</option>
-                                <option value="USDC" data-icon-src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png">USDC</option>
-                                <option value="USDT" data-icon-src="https://cryptologos.cc/logos/tether-usdt-logo.png">USDT</option>
+                                <optgroup label="Fiat Currencies">
+                                    <option value="USD" data-icon="fa-dollar-sign text-emerald-500">USD - US Dollar</option>
+                                    <option value="EUR" data-icon="fa-euro-sign text-blue-600">EUR - Euro</option>
+                                    <option value="GBP" data-icon="fa-sterling-sign text-indigo-600">GBP - British Pound</option>
+                                    <option value="JPY" data-icon="fa-yen-sign text-red-500">JPY - Japanese Yen</option>
+                                    <option value="CAD" data-icon="fa-dollar-sign text-red-600">CAD - Canadian Dollar</option>
+                                    <option value="AUD" data-icon="fa-dollar-sign text-yellow-600">AUD - Australian Dollar</option>
+                                    <option value="CHF" data-icon="fa-money-bill text-slate-600">CHF - Swiss Franc</option>
+                                    <option value="CNY" data-icon="fa-yen-sign text-red-600">CNY - Chinese Yuan</option>
+                                    <option value="HKD" data-icon="fa-dollar-sign text-rose-500">HKD - Hong Kong Dollar</option>
+                                    <option value="SGD" data-icon="fa-dollar-sign text-red-400">SGD - Singapore Dollar</option>
+                                </optgroup>
+                                <optgroup label="Top Cryptocurrencies">
+                                    <option value="BTC" data-icon-src="https://cryptologos.cc/logos/bitcoin-btc-logo.png">BTC - Bitcoin</option>
+                                    <option value="ETH" data-icon-src="https://cryptologos.cc/logos/ethereum-eth-logo.png">ETH - Ethereum</option>
+                                    <option value="USDT" data-icon-src="https://cryptologos.cc/logos/tether-usdt-logo.png">USDT - Tether</option>
+                                    <option value="USDC" data-icon-src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png">USDC - USD Coin</option>
+                                    <option value="BNB" data-icon-src="https://cryptologos.cc/logos/bnb-bnb-logo.png">BNB - Binance Coin</option>
+                                    <option value="XRP" data-icon-src="https://cryptologos.cc/logos/xrp-xrp-logo.png">XRP - Ripple</option>
+                                    <option value="ADA" data-icon-src="https://cryptologos.cc/logos/cardano-ada-logo.png">ADA - Cardano</option>
+                                    <option value="SOL" data-icon-src="https://cryptologos.cc/logos/solana-sol-logo.png">SOL - Solana</option>
+                                    <option value="DOGE" data-icon-src="https://cryptologos.cc/logos/dogecoin-doge-logo.png">DOGE - Dogecoin</option>
+                                    <option value="DOT" data-icon-src="https://cryptologos.cc/logos/polkadot-new-dot-logo.png">DOT - Polkadot</option>
+                                    <option value="MATIC" data-icon-src="https://cryptologos.cc/logos/polygon-matic-logo.png">MATIC - Polygon</option>
+                                    <option value="DAI" data-icon-src="https://cryptologos.cc/logos/multi-collateral-dai-dai-logo.png">DAI - Dai</option>
+                                    <option value="SHIB" data-icon-src="https://cryptologos.cc/logos/shiba-inu-shib-logo.png">SHIB - Shiba Inu</option>
+                                    <option value="TRX" data-icon-src="https://cryptologos.cc/logos/tron-trx-logo.png">TRX - TRON</option>
+                                    <option value="AVAX" data-icon-src="https://cryptologos.cc/logos/avalanche-avax-logo.png">AVAX - Avalanche</option>
+                                    <option value="LINK" data-icon-src="https://cryptologos.cc/logos/chainlink-link-logo.png">LINK - Chainlink</option>
+                                    <option value="UNI" data-icon-src="https://cryptologos.cc/logos/uniswap-uni-logo.png">UNI - Uniswap</option>
+                                    <option value="ATOM" data-icon-src="https://cryptologos.cc/logos/cosmos-atom-logo.png">ATOM - Cosmos</option>
+                                    <option value="LTC" data-icon-src="https://cryptologos.cc/logos/litecoin-ltc-logo.png">LTC - Litecoin</option>
+                                </optgroup>
                             </select>
                             <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                                 <i class="fa-solid fa-chevron-down text-slate-400 text-xs"></i>

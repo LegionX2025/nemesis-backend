@@ -5,4 +5,4 @@ pages_build_output_dir = "."
 # Bind the queue so the Pages Function can push to it
 [[queues.producers]]
 binding = "TRACE_QUEUE"
-queue = "nemesis-trace-queue"
+queue = "wallet-tracing"
