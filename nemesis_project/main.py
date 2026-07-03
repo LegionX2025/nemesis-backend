@@ -645,24 +645,55 @@ async def deep_scrape(address: str, max_pages: int = 5):
 
 @app.get("/api/nemesis_id/profile/{address}")
 async def nemesis_id_profile(address: str):
-    from services.trace_engine import mongo_db
-    if mongo_db is None:
-        return {"error": "Database not connected"}
+    from services.trace_engine import mongo_db, detect_chain, CONFIG, EVM_DOMAINS
+    import aiohttp
+    
+    chain = detect_chain(address)
     
     # Defaults
     profile = {
         "address": address,
-        "network": "AUTO",
-        "entity": "Unknown / Unlabeled",
+        "network": chain,
+        "entity": "Unknown Entity",
         "balance": "0.00",
         "first_activity": "N/A",
         "last_activity": "N/A",
         "total_sent": "0.00",
         "total_received": "0.00",
-        "total_transactions": "0",
+        "tx_count": 0,
+        "native_value": "0.00",
         "clustered_addresses": []
     }
-    
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            if chain == "BITCOIN":
+                async with session.get(f"https://mempool.space/api/address/{address}", timeout=10) as r:
+                    if r.status == 200:
+                        data = await r.json()
+                        stats = data.get("chain_stats", {})
+                        funded = stats.get("funded_txo_sum", 0) / 1e8
+                        spent = stats.get("spent_txo_sum", 0) / 1e8
+                        profile["balance"] = f"${(funded - spent) * 60000:,.2f}" # rough mock price
+                        profile["native_value"] = f"{(funded - spent):.4f} BTC"
+                        profile["total_received"] = f"${funded * 60000:,.2f}"
+                        profile["total_sent"] = f"${spent * 60000:,.2f}"
+                        profile["tx_count"] = stats.get("tx_count", 0)
+            elif chain in EVM_DOMAINS or chain == "EVM":
+                # Fallback to ETH if exact EVM chain is not determined for balance
+                domain = EVM_DOMAINS.get(chain, EVM_DOMAINS["ETH"])
+                api_key = CONFIG.get("ETHERSCAN_API_KEY", "")
+                url = f"https://{domain}/api?module=account&action=balance&address={address}&tag=latest&apikey={api_key}"
+                async with session.get(url, timeout=10) as r:
+                    if r.status == 200:
+                        data = await r.json()
+                        if data.get("status") == "1":
+                            bal_eth = int(data.get("result", 0)) / 1e18
+                            profile["native_value"] = f"{bal_eth:.4f} {chain if chain != 'EVM' else 'ETH'}"
+                            profile["balance"] = f"${bal_eth * 3000:,.2f}" # rough mock price
+    except Exception as e:
+        logger.error(f"Error fetching real balance for {address}: {e}")
+
     try:
         # Check if we have labels
         label_doc = await mongo_db.wallet_labels.find_one({"address": {"$regex": f"^{address}$", "$options": "i"}})
