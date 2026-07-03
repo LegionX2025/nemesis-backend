@@ -111,4 +111,76 @@ class UniversalDatabaseConnector:
         # Placeholder for Cloudflare D1 HTTP API call
         pass
 
+    async def save_identity_graph(self, resolved_node: dict):
+        """
+        Saves the fully resolved OSINT Identity Graph (Hyper-node) to the databases.
+        """
+        tasks = []
+        if self.neo4j_driver is not None:
+            tasks.append(self._save_osint_to_neo4j(resolved_node))
+        if self.mongo_db is not None:
+            tasks.append(self._save_osint_to_mongo(resolved_node))
+            
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
+            
+    async def _save_osint_to_neo4j(self, node: dict):
+        """
+        Constructs the OSINT Hyper-Node in Neo4j.
+        Links Wallet -> Identities (Twitter, Github, ENS, etc).
+        """
+        query = """
+        MERGE (w:Wallet {address: $wallet_address})
+        SET w.confidence_score = $confidence, w.last_osint_update = datetime()
+        
+        // Link Twitter
+        WITH w
+        UNWIND $twitters as tw
+        MERGE (t:TwitterProfile {handle: tw})
+        MERGE (w)-[:OWNS_SOCIAL]->(t)
+        
+        // Link GitHub
+        WITH w
+        UNWIND $githubs as gh
+        MERGE (g:GitHubProfile {username: gh})
+        MERGE (w)-[:OWNS_DEVELOPER_PROFILE]->(g)
+        
+        // Link Domains
+        WITH w
+        UNWIND $domains as d
+        MERGE (dom:Domain {url: d})
+        MERGE (w)-[:ASSOCIATED_WITH_DOMAIN]->(dom)
+        
+        // Link ENS
+        WITH w
+        UNWIND $ens as e
+        MERGE (ensNode:ENS {name: e})
+        MERGE (w)-[:RESOLVES_TO_ENS]->(ensNode)
+        """
+        params = {
+            "wallet_address": node["wallet_address"],
+            "confidence": node["confidence_score"],
+            "twitters": node["identities"].get("TWITTER", []),
+            "githubs": node["identities"].get("GITHUB", []),
+            "domains": node["identities"].get("DOMAIN", []),
+            "ens": node["identities"].get("ENS", [])
+        }
+        
+        try:
+            async with self.neo4j_driver.session() as session:
+                await session.run(query, **params)
+        except Exception as e:
+            logger.error(f"Neo4j OSINT graph save failed: {e}")
+
+    async def _save_osint_to_mongo(self, node: dict):
+        """Saves OSINT data to mongo as a document."""
+        try:
+            await self.mongo_db.osint_identities.update_one(
+                {"wallet_address": node["wallet_address"]},
+                {"$set": node},
+                upsert=True
+            )
+        except Exception as e:
+            logger.error(f"Mongo OSINT save failed: {e}")
+
 db_connector = UniversalDatabaseConnector()
