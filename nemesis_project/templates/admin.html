@@ -251,12 +251,12 @@
                 });
                 const data = await res.json();
                 if (data.status === 'success') {
-                    alert('GBEO Ontology Saved Successfully!');
+                    showToast('GBEO Ontology Saved Successfully!');
                 } else {
-                    alert('Error saving GBEO: ' + data.message);
+                    showToast('Error saving GBEO: ' + data.message);
                 }
             } catch (err) {
-                alert('Invalid JSON Format');
+                showToast('Invalid JSON Format');
             }
         }
 
@@ -355,7 +355,7 @@
                     headers: authHeaders,
                     body: JSON.stringify({ gemini_key: "", etherscan_key: "", polygonscan_key: "", max_depth: depth, max_hops: hops })
                 });
-                if (res.ok) alert("Engine config updated.");
+                if (res.ok) showToast("Engine config updated.");
             } catch(e) {
                 console.error(e);
             }

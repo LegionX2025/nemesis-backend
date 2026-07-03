@@ -52,7 +52,7 @@
                 let viewEdges = new vis.DataSet(window.edges.get().filter(e => filteredEdges.has(e.id)));
                 
                 if(viewNodes.length === 0) {
-                    alert("No paths matched the filter.");
+                    showToast("No paths matched the filter.");
                 } else {
                     window.network.setData({nodes: viewNodes, edges: viewEdges});
                 }
@@ -76,7 +76,7 @@
                 let startDate = startDateEl ? startDateEl.value : "";
                 let endDate = endDateEl ? endDateEl.value : "";
 
-                if (!seed.trim()) return alert("Please enter at least one seed wallet.");
+                if (!seed.trim()) return showToast("Please enter at least one seed wallet.");
                 
                 if (document.getElementById("seed-input")) document.getElementById("seed-input").value = seed;
                 if (document.getElementById("target-amount")) document.getElementById("target-amount").value = amt;
@@ -92,7 +92,7 @@
                 if (typeof submitTrace === 'function') {
                     submitTrace();
                 } else {
-                    alert("System is still loading intelligence modules. Please wait a moment.");
+                    showToast("System is still loading intelligence modules. Please wait a moment.");
                 }
             };
         </script>
@@ -693,7 +693,7 @@
                         <div class="font-mono text-base font-bold text-slate-800 tracking-wider select-all flex items-center gap-2">
                             <span id="nid-network-icon" class="text-xl">🌐</span>
                             <span id="nid-wallet-address">0x...</span>
-                            <button onclick="navigator.clipboard.writeText(document.getElementById('nid-wallet-address').innerText); alert('Copied!');" class="text-blue-600 hover:text-blue-800 transition cursor-pointer shrink-0" title="Copy Address"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2 2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>
+                            <button onclick="navigator.clipboard.writeText(document.getElementById('nid-wallet-address').innerText); showToast('Copied!');" class="text-blue-600 hover:text-blue-800 transition cursor-pointer shrink-0" title="Copy Address"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2 2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button>
                         </div>
                         <div class="text-xs uppercase text-slate-500 font-bold" id="nid-entity-tag">SUBJECT WALLET ENTITY</div>
                     </div>
@@ -1484,7 +1484,7 @@
                                 ${isCEX ? '<span class="bg-red-100 text-red-700 text-[10px] px-2 py-1 rounded border border-red-300 font-bold z-10 relative">CUSTODIAL CEX</span>' : '<span class="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-1 rounded border border-emerald-300 font-bold z-10 relative">PRIVATE WALLET</span>'}
                             </div>
                             <div class="grid grid-cols-2 gap-4 text-xs relative z-10">
-                                <div><span class="text-slate-500 uppercase">Address:</span><div class="font-mono text-slate-800 font-bold text-xs flex items-center gap-2 truncate pr-4">${activeNemesisWallet} <button onclick="navigator.clipboard.writeText('${activeNemesisWallet}'); alert('Copied!');" class="text-blue-600 hover:text-blue-800 shrink-0" title="Copy Address"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button></div></div>
+                                <div><span class="text-slate-500 uppercase">Address:</span><div class="font-mono text-slate-800 font-bold text-xs flex items-center gap-2 truncate pr-4">${activeNemesisWallet} <button onclick="navigator.clipboard.writeText('${activeNemesisWallet}'); showToast('Copied!');" class="text-blue-600 hover:text-blue-800 shrink-0" title="Copy Address"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg></button></div></div>
                                 <div><span class="text-slate-500 uppercase">Nemesis ID:</span><div class="font-mono text-blue-600 font-bold text-xs">${nodeData && nodeData.nemesis_id ? nodeData.nemesis_id : 'PENDING'}</div></div>
                                 <div><span class="text-slate-500 uppercase">Entity Label:</span><div class="font-bold text-slate-800 text-xs">${nodeData ? nodeData.label.replace(/\\n/g, ' ') : 'Unknown'}</div></div>
                                 <div><span class="text-slate-500 uppercase">First Activity:</span><div class="font-bold text-slate-800">${firstAct}</div></div>
@@ -1839,7 +1839,7 @@
             }
 
             function exportLiveLogCSV(traceId = "NEMESIS_TRACE_ID") {
-                if (window.exportedDataRows.length === 0) return alert("No data to export.");
+                if (window.exportedDataRows.length === 0) return showToast("No data to export.");
                 let csvContent = "data:text/csv;charset=utf-8,Date/Time (UTC),Type of Transaction Correlation,TX Hash,From Wallet(Entity),To Wallet(Entity),To Receiver Entity,Amount,Transaction Type,Behavioral Cluster,Clustered address{root}ENTITY,Confidence,Transaction Attributions,Transaction intelligence\n";
                 window.exportedDataRows.forEach(row => {
                     let fields = [
@@ -1866,7 +1866,7 @@
             }
 
             function exportLiveLogJSON(traceId = "NEMESIS_TRACE_ID") {
-                if (window.exportedDataRows.length === 0) return alert("No data to export.");
+                if (window.exportedDataRows.length === 0) return showToast("No data to export.");
                 let unifiedData = window.exportedDataRows.map(row => ({
                     "Date/Time (UTC)": row.timestamp,
                     "Type of Transaction Correlation": row.intent_action || "",
@@ -1909,7 +1909,7 @@
             }
 
             function startCourtReplay() {
-                if (window.exportedDataRows.length === 0) return alert("No transactions to replay.");
+                if (window.exportedDataRows.length === 0) return showToast("No transactions to replay.");
                 let txs = [...window.exportedDataRows].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
                 let edgeUps = [];
                 allEdgesMap.forEach(e => { e.hidden = true; edgeUps.push(e); });
@@ -1918,7 +1918,7 @@
                 let interval = setInterval(() => {
                     if (i >= txs.length) {
                         clearInterval(interval);
-                        alert("Court Replay Complete.");
+                        showToast("Court Replay Complete.");
                         return;
                     }
                     let tx = txs[i];
@@ -2154,7 +2154,7 @@
             
             async function fetchHistoricalTrace() {
                 let traceId = document.getElementById("landing-search-trace").value.trim();
-                if(!traceId) return alert("Please enter a Nemesis Tracing ID");
+                if(!traceId) return showToast("Please enter a Nemesis Tracing ID");
                 
                 let btn = document.querySelector("#landing-search-trace + button");
                 btn.innerText = "LOADING...";
@@ -2164,13 +2164,13 @@
                     let data = await response.json();
                     
                     if(data.error) {
-                        alert("Error: " + data.error);
+                        showToast("Error: " + data.error);
                         btn.innerText = "RETRIEVE";
                         return;
                     }
                     
                     if(!data.ledger || data.ledger.length === 0) {
-                        alert("Trace found but contains no data");
+                        showToast("Trace found but contains no data");
                         btn.innerText = "RETRIEVE";
                         return;
                     }
@@ -2221,7 +2221,7 @@
                     
                 } catch(e) {
                     console.error(e);
-                    alert("Failed to retrieve historical trace");
+                    showToast("Failed to retrieve historical trace");
                 }
                 btn.innerText = "RETRIEVE";
             }
@@ -2251,12 +2251,12 @@
                     if (allNodes.length > 0) {
                         unmappedNodes = allNodes;
                     } else {
-                        alert("No entities found in the graph to resolve.");
+                        showToast("No entities found in the graph to resolve.");
                         return;
                     }
                 }
                 
-                alert(`Starting OSINT batch resolution for ${unmappedNodes.length} entities via Lionsgate Intelligence...`);
+                showToast(`Starting OSINT batch resolution for ${unmappedNodes.length} entities via Lionsgate Intelligence...`);
                 
                 unmappedNodes.forEach(n => {
                     n.color = { background: '#fcd34d', border: '#d97706' };
@@ -2287,7 +2287,7 @@
                 })
                 .catch(err => {
                     console.error("OSINT Resolution failed:", err);
-                    alert("Failed to reach OSINT intelligence database.");
+                    showToast("Failed to reach OSINT intelligence database.");
                     unmappedNodes.forEach(n => {
                         n.label = n.id.substring(0, 10) + "...";
                         n.color = { background: '#ffffff', border: '#cbd5e1' };
@@ -2712,11 +2712,13 @@ NEMESIS_ROOT/
                 },
                 interaction: { hover: true, tooltipDelay: 50, navigationButtons: true },
                 nodes: { 
-                    shape: 'image', 
-                    size: 80, // Size scales the SVG image
-                    font: { size: 0 }, // Disable text labels since they are drawn inside the SVG
-                    margin: 0, borderWidth: 0, 
-                    shadow: { enabled: true, color: 'rgba(0,0,0,0.15)', size: 12, x: 5, y: 5 } 
+                    shape: 'circularImage', 
+                    size: 35,
+                    borderWidth: 3,
+                    color: { border: '#e2e8f0', background: '#ffffff', highlight: { border: '#3b82f6', background: '#f8fafc' } }, 
+                    font: { multi: 'html', color: '#1e40af', size: 12, face: 'monospace', align: 'center', strokeWidth: 0 }, 
+                    margin: 0,
+                    shadow: { enabled: true, color: 'rgba(0,0,0,0.1)', size: 10, x: 0, y: 5 } 
                 },
                 edges: { 
                     arrows: 'to', 
@@ -3073,13 +3075,13 @@ NEMESIS_ROOT/
                 if(!window.activeCtxNode) return;
                 
                 if(action === 'expand') {
-                    alert("Expanding transactions for " + window.activeCtxNode);
+                    showToast("Expanding transactions for " + window.activeCtxNode);
                     // Could dispatch an API call here for dynamic expansion
                 } else if(action === 'trace') {
                     document.getElementById("target-seeds").value = window.activeCtxNode;
                     if(typeof startTrace === 'function') startTrace();
                 } else if(action === 'analyzer') {
-                    alert("Running Smart Contract Analysis on " + window.activeCtxNode);
+                    showToast("Running Smart Contract Analysis on " + window.activeCtxNode);
                 }
             };
 
@@ -3599,7 +3601,7 @@ NEMESIS_ROOT/
 
             async function fetchHistoricalTrace() {
                 const searchVal = document.getElementById("landing-search-trace") ? document.getElementById("landing-search-trace").value : null;
-                if(!searchVal) return alert("Please enter a Nemesis ID or Trace ID.");
+                if(!searchVal) return showToast("Please enter a Nemesis ID or Trace ID.");
                 
                 let lp = document.getElementById('landing-page');
                 let mu = document.getElementById('main-ui');
@@ -3612,7 +3614,7 @@ NEMESIS_ROOT/
                 let searchInput = document.getElementById("search-node-input");
                 if (searchInput) searchInput.value = searchVal;
                 
-                alert("Retrieving Historical Trace: " + searchVal);
+                showToast("Retrieving Historical Trace: " + searchVal);
             }
 
             async function submitTrace() {
@@ -3633,7 +3635,7 @@ NEMESIS_ROOT/
                     const maxDepth = maxDepthEl ? parseInt(maxDepthEl.value) : 12;
                     const maxHops = maxHopsEl ? parseInt(maxHopsEl.value) : 1000;
                     
-                    if (!seeds) return alert("Please enter at least one seed wallet.");
+                    if (!seeds) return showToast("Please enter at least one seed wallet.");
                     GLOBAL_TRACE_SEEDS = seeds;
                     
                     window.autoComputeTarget = !amount;
@@ -3665,9 +3667,9 @@ NEMESIS_ROOT/
                         if(idVal) idVal.innerText = GLOBAL_TRACE_ID;
                         connectWebSocket(GLOBAL_TRACE_ID);
                     } else if (data.error) {
-                        alert("Error: " + data.error);
+                        showToast("Error: " + data.error);
                     }
-                } catch(e) { console.error("SubmitTrace Error:", e); alert("An error occurred starting the trace: " + e.message); }
+                } catch(e) { console.error("SubmitTrace Error:", e); showToast("An error occurred starting the trace: " + e.message); }
             }
 
 
@@ -4177,7 +4179,7 @@ NEMESIS_ROOT/
                 const reportWin = window.open('/static/templates/report_template.html', '_blank');
                 
                 if (!reportWin) {
-                    alert("Please allow popups to generate the report.");
+                    showToast("Please allow popups to generate the report.");
                 }
                 
                 let currentTraceId = GLOBAL_TRACE_ID || "LGN-US-2026-0172";
@@ -4344,7 +4346,9 @@ NEMESIS_ROOT/
                         if (d.sender_nemesis_id) titleHtmlFrom += `\nNemesis ID: ${d.sender_nemesis_id}`;
                         let isSuspectFrom = isSeed || (d.sender_entity || "").includes("SUSPECT");
                         let amt = `$${(d.usd || d.amount).toLocaleString()}`;
-                        let n = { id: d.from, label: '', title: titleHtmlFrom, image: getSafeIconUrl(d.sender_entity, false, false, isSuspectFrom, false, d.chain), shape: 'dot', size: 60, color: 'transparent', font: {color: 'transparent'}, nemesisData: { entityLabel: d.sender_entity, isSuspect: isSuspectFrom, chain: d.chain, address: d.from, amountStr: amt }, chain: d.chain, nemesis_id: d.sender_nemesis_id, outflowUSD: (d.usd || d.amount) };
+                        let entityTag = (d.sender_entity || "UNKNOWN ENTITY").toUpperCase();
+                        let labelHtmlFrom = `<b>${amt}</b>\n<code>${entityTag}</code>`;
+                        let n = { id: d.from, label: labelHtmlFrom, title: titleHtmlFrom, image: getSafeIconUrl(d.sender_entity, false, false, isSuspectFrom, false, d.chain), shape: 'circularImage', nemesisData: { entityLabel: d.sender_entity, isSuspect: isSuspectFrom, chain: d.chain, address: d.from, amountStr: amt }, chain: d.chain, nemesis_id: d.sender_nemesis_id, outflowUSD: (d.usd || d.amount) };
                         allNodesMap.set(d.from, n); window.nodeAddQueue.push(n);
                     }
                     if (!allNodesMap.has(d.to)) {
@@ -4352,7 +4356,9 @@ NEMESIS_ROOT/
                         let titleHtmlTo = `Address: ${d.to}\nEntity: ${d.receiver_entity}\nChain: ${d.chain}`;
                         if (d.receiver_nemesis_id) titleHtmlTo += `\nNemesis ID: ${d.receiver_nemesis_id}`;
                         let isSuspectTo = isSeed || (d.receiver_entity || "").includes("SUSPECT");
-                        let n = { id: d.to, label: '', title: titleHtmlTo, image: getSafeIconUrl(d.receiver_entity, d.edge_type === "MIXER", false, isSuspectTo, false, d.chain), shape: 'dot', size: 60, color: 'transparent', font: {color: 'transparent'}, nemesisData: { entityLabel: d.receiver_entity, isSuspect: isSuspectTo, chain: d.chain, address: d.to, amountStr: '$0' }, is_terminal: d.is_terminal, is_consolidation: d.is_consolidation, chain: d.chain, nemesis_id: d.receiver_nemesis_id, outflowUSD: 0 };
+                        let entityTagTo = (d.receiver_entity || "UNKNOWN ENTITY").toUpperCase();
+                        let labelHtmlTo = `<b>$0.00</b>\n<code>${entityTagTo}</code>`;
+                        let n = { id: d.to, label: labelHtmlTo, title: titleHtmlTo, image: getSafeIconUrl(d.receiver_entity, d.edge_type === "MIXER", false, isSuspectTo, false, d.chain), shape: 'circularImage', nemesisData: { entityLabel: d.receiver_entity, isSuspect: isSuspectTo, chain: d.chain, address: d.to, amountStr: '$0.00' }, is_terminal: d.is_terminal, is_consolidation: d.is_consolidation, chain: d.chain, nemesis_id: d.receiver_nemesis_id, outflowUSD: 0 };
                         allNodesMap.set(d.to, n); window.nodeAddQueue.push(n);
                     } else if (d.is_terminal || d.is_consolidation || d.receiver_entity !== "Unknown Wallet") {
                         let n = allNodesMap.get(d.to);
@@ -4603,7 +4609,7 @@ NEMESIS_ROOT/
                 }
             }
             function autoResolveBatch() {
-                alert("Auto-Resolve Batch Process initiated. Resolving clustered entities...");
+                showToast("Auto-Resolve Batch Process initiated. Resolving clustered entities...");
             }
             
             function toggleLiveTerminals() {
@@ -4968,7 +4974,7 @@ NEMESIS_ROOT/
             
             window.joinTraceById = function(tid) {
                 let idToJoin = tid || document.getElementById('join-trace-id').value.trim();
-                if (!idToJoin) return alert("Please enter a Trace ID");
+                if (!idToJoin) return showToast("Please enter a Trace ID");
                 
                 // Close landing page if open
                 let landing = document.getElementById("landing-page");
@@ -5171,11 +5177,11 @@ NEMESIS_ROOT/
                         document.getElementById('llm-incidents').innerText = (intel.incidents || []).join(", ") || "None";
                         document.getElementById('llm-suspects').innerText = (intel.suspect_wallets || []).join(", ") || "None";
                     } else {
-                        alert("Error analyzing files: " + data.message);
+                        showToast("Error analyzing files: " + data.message);
                     }
                 } catch (err) {
                     console.error("LLM Extraction Error:", err);
-                    alert("Failed to connect to Intelligence API. Ensure backend is running.");
+                    showToast("Failed to connect to Intelligence API. Ensure backend is running.");
                 } finally {
                     statusDiv.classList.add('hidden');
                     statusDiv.classList.remove('flex');

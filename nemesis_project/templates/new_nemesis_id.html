@@ -894,19 +894,54 @@
             triggerLoader("Reconstructing Profile & Gathering Intel...");
             
             try {
+                const response = await fetch(`/api/nemesis_id/${address}`);
+                if (!response.ok) throw new Error("Backend connection failed");
+                const result = await response.json();
+                const data = result.data || result;
+                
+                document.getElementById('id-landing').classList.add('hidden');
+                let dash = document.getElementById('id-dashboard');
+                dash.classList.remove('hidden');
+                dash.classList.add('flex');
+                
+                // Populate Address
+                let addrFields = document.querySelectorAll("h1.font-mono");
+                if(addrFields.length > 0) {
+                    addrFields[0].innerHTML = (data.address || address) + ` <i class="fa-solid fa-copy text-xs text-slate-400"></i>`;
+                }
+                
+                // Set USD/Native Values
+                let usdNodes = document.querySelectorAll(".usd-value, .val-usd");
+                usdNodes.forEach(n => {
+                    if(n.innerText.includes("84,500,000")) n.innerText = "$" + (data.total_inbound || 0).toLocaleString();
+                    if(n.innerText.includes("83,047,109")) n.innerText = "$" + (data.total_outbound || 0).toLocaleString();
+                    if(n.innerText.includes("1,452,890")) n.innerText = "$" + (data.balance || 0).toLocaleString();
+                });
+                
+                // Set AI Insights & Headers
+                let aiSummaryNodes = document.querySelectorAll(".text-justify");
+                if(aiSummaryNodes.length > 0 && data.ai_summary) {
+                    aiSummaryNodes[0].innerHTML = `<strong>Summary:</strong> ${data.ai_summary}`;
+                }
+                
+                // Update Graph if available
+                if (data.graph && data.graph.nodes) {
+                    window.NEMESIS_GRAPH_DATA = data.graph;
+                }
+                
+            } catch (err) {
+                console.error(err);
+                alert("Failed to load dossier from backend. Showing offline profile.");
                 setTimeout(() => {
                     document.getElementById('id-landing').classList.add('hidden');
                     let dash = document.getElementById('id-dashboard');
                     dash.classList.remove('hidden');
                     dash.classList.add('flex');
-                    
                     let addrFields = document.querySelectorAll("h1.font-mono");
                     if(addrFields.length > 0) {
                         addrFields[0].innerHTML = address + ` <i class="fa-solid fa-copy text-xs text-slate-400"></i>`;
                     }
                 }, 800);
-            } catch (err) {
-                console.error(err);
             }
         }
 

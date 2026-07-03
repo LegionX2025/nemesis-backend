@@ -1015,7 +1015,7 @@
 
         // Utilities
         function verifyOnExplorer(address) { window.open(`https://etherscan.io/address/${address}`, '_blank'); }
-        function copyToClipboard(text) { navigator.clipboard.writeText(text); alert("Address copied to secure clipboard."); }
+        function copyToClipboard(text) { navigator.clipboard.writeText(text); showToast("Address copied to secure clipboard."); }
         function updateZipCode() {
             const val = document.getElementById('zip-code').value;
             document.getElementById('display-zip').innerText = val || "Not Entered";
