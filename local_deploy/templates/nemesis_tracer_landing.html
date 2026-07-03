@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEMESIS Tracer | Omni-Chain Forensics</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        body { 
+            background-color: #f1f5f9 !important; 
+            background-image: radial-gradient(circle at top right, #f8fafc, #e2e8f0);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+        
+        /* Glassmorphism Input Card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(226, 232, 240, 0.9) !important;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            box-shadow: 0 15px 50px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Input styling */
+        input, textarea {
+            background: rgba(255, 255, 255, 0.9) !important;
+            border: 1px solid rgba(203, 213, 225, 0.8) !important;
+            color: #0f172a !important;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 1px;
+        }
+        input:focus, textarea:focus {
+            outline: none !important;
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+        }
+
+        /* Global Loader */
+        #global-loader { 
+            position: fixed; inset: 0; background: rgba(248, 250, 252, 0.98); 
+            z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            transition: opacity 0.4s ease; 
+        }
+        .cyber-ring { 
+            width: 120px; height: 120px; border: 3px solid transparent; 
+            border-top-color: #3b82f6; border-right-color: #3b82f6; border-radius: 50%; 
+            animation: spin 1s linear infinite; box-shadow: 0 0 30px rgba(37, 99, 235, 0.1); position: relative; 
+        }
+        .cyber-ring::before { 
+            content:''; position:absolute; inset: 10px; border: 3px solid transparent; 
+            border-left-color: #10b981; border-bottom-color: #10b981; border-radius: 50%; 
+            animation: spin 2s linear infinite reverse; 
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="h-screen flex items-center justify-center p-4 relative">
+
+    <!-- Active Loader Overlay -->
+    <div id="global-loader" style="display: none;">
+        <div class="cyber-ring mb-8"></div>
+        <h2 class="text-[#0f172a] font-black text-2xl tracking-widest uppercase" id="loader-title">Igniting Core Engines</h2>
+        <p class="text-blue-600 font-mono text-xs uppercase tracking-widest mt-3" id="loader-text">Configuring Pathfinding Targets...</p>
+    </div>
+
+    <!-- Main Input Card -->
+    <div class="glass-card rounded-2xl w-full max-w-2xl p-8 md:p-12 relative overflow-hidden" id="input-container">
+        <!-- Decoration -->
+        <div class="absolute -top-10 -right-10 w-40 h-40 bg-blue-100 rounded-full blur-3xl opacity-50"></div>
+        <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-emerald-100 rounded-full blur-3xl opacity-50"></div>
+
+        <div class="relative z-10">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 border border-blue-100 shadow-sm mb-4">
+                    <i class="fa-solid fa-network-wired text-blue-600 text-3xl"></i>
+                </div>
+                <h1 class="text-3xl font-black text-slate-800 tracking-tight mb-2">NEMESIS TRACER</h1>
+                <p class="text-slate-500 font-mono text-xs uppercase tracking-widest">Autonomous Omni-Chain Forensic Graph</p>
+            </div>
+
+            <form id="traceForm" onsubmit="event.preventDefault(); startTrace();">
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono">Trace Seeds (Wallets or TX Hashes)</label>
+                    <textarea id="trace_seeds" rows="3" class="w-full p-4 rounded-xl transition text-sm resize-none" placeholder="0xabc...&#10;0xdef..." required></textarea>
+                </div>
+                
+                <div class="mb-8">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono flex justify-between">
+                        <span>Target Amount to Trace (Optional)</span>
+                        <span class="text-blue-500 font-normal">Leave blank for auto-computation</span>
+                    </label>
+                    <div class="relative flex items-center">
+                        <div class="absolute left-4 text-slate-400 font-bold">$</div>
+                        <input type="number" id="trace_amount" class="w-full pl-8 pr-4 py-3 rounded-xl transition" placeholder="0.00">
+                    </div>
+                </div>
+                
+                <div class="flex justify-center">
+                    <button type="button" onclick="startTrace()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-mono font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-blue-600/20 transition text-sm uppercase tracking-widest flex items-center justify-center gap-3">
+                        <i class="fa-solid fa-play"></i> Initialize Core Trace
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        async function startTrace() {
+            const seeds = document.getElementById('trace_seeds').value.trim();
+            const amount = document.getElementById('trace_amount').value.trim();
+            
+            if (!seeds) {
+                alert("Please provide at least one seed address or transaction hash.");
+                return;
+            }
+
+            // Show Loader
+            document.getElementById('input-container').style.display = 'none';
+            document.getElementById('global-loader').style.display = 'flex';
+            
+            // Cycle loader text
+            const texts = [
+                "Auto-Computing Trace Thresholds...",
+                "Bypassing Sub-Graph Limitations...",
+                "Generating Transaction Vectors...",
+                "Deploying Autonomous Trace..."
+            ];
+            let i = 0;
+            const textEl = document.getElementById('loader-text');
+            const interval = setInterval(() => {
+                if (i < texts.length) {
+                    textEl.innerText = texts[i];
+                    i++;
+                }
+            }, 1000);
+
+            try {
+                // Post to our backend
+                const response = await fetch("/api/start_trace", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        seeds: seeds,
+                        target_amount: amount ? parseFloat(amount) : 0,
+                        target_currency: "USD",
+                        max_depth: 10,
+                        max_hops: 15
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.trace_id) {
+                    clearInterval(interval);
+                    document.getElementById('loader-title').innerText = "Trace Established";
+                    document.getElementById('loader-text').innerText = `Redirecting to Session ${data.trace_id}...`;
+                    
+                    setTimeout(() => {
+                        window.location.href = `/?trace_id=${data.trace_id}`;
+                    }, 1000);
+                } else {
+                    throw new Error(data.error || "Unknown Error");
+                }
+            } catch (err) {
+                clearInterval(interval);
+                alert("Trace Initialization Failed: " + err.message);
+                document.getElementById('input-container').style.display = 'block';
+                document.getElementById('global-loader').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

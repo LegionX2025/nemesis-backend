@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEMESIS - Cloudflare Operations</title>
+    <!-- Tailwind CSS (CDN for rapid prototyping) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap');
+        
+        body {
+            background-color: #050510;
+            color: #e0e0ff;
+            font-family: 'Rajdhani', sans-serif;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(20, 20, 50, 0.4), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(10, 30, 40, 0.4), transparent 25%);
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        h1, h2, h3, .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .glass-panel {
+            background: rgba(15, 15, 30, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(80, 80, 255, 0.2);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(80, 80, 255, 0.05);
+            border-radius: 12px;
+        }
+
+        .cyber-border {
+            position: relative;
+        }
+        .cyber-border::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border: 1px solid #0ff;
+            opacity: 0.5;
+            pointer-events: none;
+            border-radius: inherit;
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+        }
+
+        .log-container {
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', Courier, monospace;
+            scrollbar-width: thin;
+            scrollbar-color: #0ff #050510;
+        }
+        
+        .log-entry {
+            border-left: 2px solid #0ff;
+            padding-left: 10px;
+            margin-bottom: 8px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-live { background-color: #0f0; box-shadow: 0 0 10px #0f0; }
+        .status-dead { background-color: #f00; box-shadow: 0 0 10px #f00; }
+    </style>
+</head>
+<body class="p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="flex justify-between items-center mb-10">
+            <div>
+                <h1 class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 tracking-wider">OMNI-ARCHITECTURE</h1>
+                <p class="text-cyan-500 mt-2">Cloudflare Global Edge Operations Center</p>
+            </div>
+            <div class="glass-panel px-6 py-3 flex items-center gap-4">
+                <span class="text-sm uppercase tracking-widest text-gray-400">WebSocket Link</span>
+                <div class="flex items-center gap-2">
+                    <span id="ws-status-dot" class="status-dot status-dead"></span>
+                    <span id="ws-status-text" class="font-orbitron font-bold text-red-500">OFFLINE</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left Column: Stats & Controls -->
+            <div class="space-y-8">
+                <!-- System Status -->
+                <div class="glass-panel p-6 cyber-border">
+                    <h2 class="text-xl text-cyan-400 mb-6 border-b border-cyan-900 pb-2">Global Infrastructure</h2>
+                    
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-300">Edge Worker</span>
+                            <span class="text-green-400 font-bold">ACTIVE</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-300">D1 Database</span>
+                            <span class="text-green-400 font-bold">CONNECTED</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-300">R2 Storage</span>
+                            <span class="text-green-400 font-bold">READY</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-300">Workers KV</span>
+                            <span class="text-green-400 font-bold">WARM</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-300">Workflows Queue</span>
+                            <span class="text-blue-400 font-bold" id="queue-count">0 PENDING</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Test Workflow -->
+                <div class="glass-panel p-6">
+                    <h2 class="text-xl text-cyan-400 mb-4 border-b border-cyan-900 pb-2">Inject Trace</h2>
+                    <p class="text-sm text-gray-400 mb-4">Trigger a global Workflow trace directly from the Edge.</p>
+                    <input type="text" id="target-address" placeholder="0xWalletAddress..." class="w-full bg-black border border-cyan-900 rounded p-3 text-cyan-300 mb-4 focus:outline-none focus:border-cyan-400">
+                    <button id="btn-trigger" class="w-full bg-cyan-900 hover:bg-cyan-700 text-white font-bold py-3 px-4 rounded transition-all font-orbitron tracking-widest border border-cyan-500 hover:shadow-[0_0_15px_rgba(0,255,255,0.5)]">
+                        INITIALIZE WORKFLOW
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Column: Live Telemetry -->
+            <div class="lg:col-span-2">
+                <div class="glass-panel p-6 h-full flex flex-col">
+                    <div class="flex justify-between items-center border-b border-cyan-900 pb-2 mb-4">
+                        <h2 class="text-xl text-cyan-400">Real-Time Workflow Telemetry (Durable Objects)</h2>
+                        <button id="btn-clear" class="text-xs text-gray-500 hover:text-white transition-colors">CLEAR</button>
+                    </div>
+                    
+                    <div id="log-container" class="log-container flex-grow bg-black/40 rounded p-4 border border-blue-900/30">
+                        <div class="text-gray-600 text-sm italic">Waiting for telemetry from Edge...</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const wsStatusDot = document.getElementById('ws-status-dot');
+        const wsStatusText = document.getElementById('ws-status-text');
+        const logContainer = document.getElementById('log-container');
+        const btnTrigger = document.getElementById('btn-trigger');
+        const targetAddress = document.getElementById('target-address');
+        const queueCount = document.getElementById('queue-count');
+
+        let ws = null;
+        let pendingCount = 0;
+
+        function appendLog(message, type = 'info') {
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: "numeric", minute: "numeric", second: "numeric", fractionalSecondDigits: 3 });
+            const colors = {
+                info: 'text-cyan-300',
+                success: 'text-green-400',
+                error: 'text-red-400',
+                system: 'text-gray-400'
+            };
+            const color = colors[type] || colors.info;
+            
+            // Remove placeholder if it exists
+            if (logContainer.innerHTML.includes('Waiting for telemetry')) {
+                logContainer.innerHTML = '';
+            }
+
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${color} text-sm flex gap-4`;
+            logEntry.innerHTML = `<span class="text-gray-500">[${time}]</span> <span>${message}</span>`;
+            
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function connectWebSocket() {
+            appendLog("Attempting to connect to Global Durable Object...", 'system');
+            
+            // Auto-detect protocol based on current origin
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            // In production, this would be the actual Cloudflare Pages domain or backend
+            const wsUrl = `${protocol}//${window.location.host}/ws/operations`;
+            
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                wsStatusDot.className = 'status-dot status-live';
+                wsStatusText.textContent = 'CONNECTED';
+                wsStatusText.className = 'font-orbitron font-bold text-green-500';
+                appendLog("WebSocket connection established with Cloudflare Edge.", 'success');
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'ops_update') {
+                        let logType = 'info';
+                        if (data.message.includes('Complete')) logType = 'success';
+                        if (data.message.includes('Failed')) logType = 'error';
+                        appendLog(`[${data.traceId.substring(0,6)}] ${data.message}`, logType);
+                        
+                        if (data.message.includes('Complete')) {
+                            pendingCount = Math.max(0, pendingCount - 1);
+                            queueCount.textContent = `${pendingCount} PENDING`;
+                        }
+                    } else {
+                        appendLog(event.data, 'info');
+                    }
+                } catch (e) {
+                    appendLog(event.data, 'info');
+                }
+            };
+
+            ws.onclose = () => {
+                wsStatusDot.className = 'status-dot status-dead';
+                wsStatusText.textContent = 'OFFLINE';
+                wsStatusText.className = 'font-orbitron font-bold text-red-500';
+                appendLog("WebSocket disconnected. Retrying in 5 seconds...", 'error');
+                setTimeout(connectWebSocket, 5000);
+            };
+
+            ws.onerror = (err) => {
+                console.error("WebSocket Error:", err);
+            };
+        }
+
+        document.getElementById('btn-clear').addEventListener('click', () => {
+            logContainer.innerHTML = '';
+        });
+
+        btnTrigger.addEventListener('click', async () => {
+            const address = targetAddress.value.trim() || '0x' + Array.from({length: 40}, () => Math.floor(Math.random()*16).toString(16)).join('');
+            const traceId = crypto.randomUUID();
+            
+            appendLog(`Dispatching trace workflow for ${address}...`, 'system');
+            pendingCount++;
+            queueCount.textContent = `${pendingCount} PENDING`;
+
+            try {
+                const res = await fetch('/api/workflow/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ trace_id: traceId, address: address })
+                });
+                
+                const data = await res.json();
+                appendLog(`Workflow accepted by Edge Gateway. ID: ${data.workflow_id}`, 'success');
+            } catch (err) {
+                appendLog(`Failed to trigger workflow: ${err.message}`, 'error');
+                pendingCount = Math.max(0, pendingCount - 1);
+                queueCount.textContent = `${pendingCount} PENDING`;
+            }
+        });
+
+        // Initialize
+        connectWebSocket();
+    </script>
+</body>
+</html>
