@@ -15,7 +15,7 @@ CREATE TABLE cached_traces (
     seed_wallet TEXT NOT NULL,
     chain TEXT NOT NULL,
     trace_data JSON,
-    cached_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    cached_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_audit_logs_event ON audit_logs(event_type);

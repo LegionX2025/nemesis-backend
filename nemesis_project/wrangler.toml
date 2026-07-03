@@ -20,7 +20,7 @@ binding = "NEMESIS_STORAGE"
 bucket_name = "nemesis-assets"
 
 [vars]
-BACKEND_API_URL = "https://nemesis-backend.onrender.com"
+BACKEND_API_URL = "https://nemesis-local.onrender.com"
 
 [[hyperdrive]]
 binding = "HYPERDRIVE"
