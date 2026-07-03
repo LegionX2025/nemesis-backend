@@ -7,13 +7,13 @@ enabled = true
 
 [[kv_namespaces]]
 binding = "NEMESIS_KV"
-id = "WAITING_FOR_DEPLOYMENT"
-preview_id = "WAITING_FOR_DEPLOYMENT"
+id = "556aa273aeac4b009b559bb215346ce3"
+preview_id = "556aa273aeac4b009b559bb215346ce3"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "nemesis_audit_db"
-database_id = "WAITING_FOR_DEPLOYMENT"
+database_id = "556aa273aeac4b009b559bb215346ce3"
 
 [[r2_buckets]]
 binding = "NEMESIS_STORAGE"

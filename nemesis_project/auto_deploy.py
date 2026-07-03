@@ -8,8 +8,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def run_cmd(cmd, cwd=None, exit_on_error=True, max_retries=3):
-    print(f"\n[EXEC] {cmd}" + (f" (in {cwd})" if cwd else ""))
+def run_cmd(cmd, cwd=".", exit_on_error=True, max_retries=3):
+    print(f"\n[EXEC] {cmd} (in {cwd})")
     
     attempt = 1
     while attempt <= max_retries:
@@ -26,13 +26,22 @@ def run_cmd(cmd, cwd=None, exit_on_error=True, max_retries=3):
             process.wait()
             if process.returncode == 0:
                 return True, output_log
+            
+            # Benign error check
+            if "already exists" in output_log.lower():
+                print(f"[GODMODE] Resource already exists. Skipping recreation.")
+                return True, output_log
                 
             print(f"[ERROR] Command failed with exit code {process.returncode} on attempt {attempt}")
+            
+            if not exit_on_error:
+                print(f"[GODMODE] exit_on_error=False. Bypassing Self-Repair.")
+                return False, output_log
             
             # --- GODMODE INLINE SELF-HEALING ---
             print("[GODMODE] Engaging Inline Self-Repair Protocol...")
             import godmode
-            trimmed_log = "\n".join(output_log.split("\n")[-100:])
+            trimmed_log = "\n".join(output_log.split("\n")[-50:]) # Reduced lines to prevent 400 Bad Request
             fix_script = godmode.query_gemini_to_heal(f"Command '{cmd}' failed.\n{trimmed_log}")
             
             if fix_script:
@@ -61,7 +70,7 @@ def run_cmd(cmd, cwd=None, exit_on_error=True, max_retries=3):
             
     if exit_on_error:
         print("[GODMODE] Max retries reached. Terminating.")
-        sys.exit(process.returncode if 'process' in locals() else 1)
+        sys.exit(1)
     return False, output_log
 
 def main():
