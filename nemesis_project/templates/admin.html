@@ -49,6 +49,9 @@
                 <a href="#" onclick="switchTab('clustering')" id="tab-clustering" class="sidebar-item flex items-center gap-3 px-4 py-3 text-purple-600 font-bold rounded-lg transition border border-purple-200 bg-purple-50 hover:bg-purple-100 mt-2">
                     <i class="fa-solid fa-brain w-4"></i> ML Clustering Engine
                 </a>
+                <a href="#" onclick="switchTab('knowledge')" id="tab-knowledge" class="sidebar-item flex items-center gap-3 px-4 py-3 text-indigo-600 font-bold rounded-lg transition border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 mt-2">
+                    <i class="fa-solid fa-book-journal-whills w-4"></i> NEMESIS Knowledge
+                </a>
             </nav>
             <div class="p-4 border-t border-slate-200">
                 <button onclick="logout()" class="w-full py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded border border-red-200 text-xs font-bold transition uppercase tracking-wider flex justify-center items-center gap-2">
@@ -254,6 +257,29 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Knowledge View -->
+            <div id="view-knowledge" class="hidden space-y-6">
+                <div class="glass-panel p-8 rounded-xl border border-indigo-200 shadow-indigo-500/10">
+                    <h3 class="text-indigo-600 text-lg uppercase tracking-widest font-black mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-book-journal-whills"></i> NEMESIS Knowledge
+                    </h3>
+                    <p class="text-xs text-slate-600 mb-6 max-w-2xl">
+                        Auto-Dynamic Indexer. Crawls and indexes API documentation (Cloudflare, Render, Git, etc.) to enhance the LLM's Godmode context for auto-fixes and integrations.
+                    </p>
+                    <div class="bg-white p-6 rounded-lg mb-6 shadow-sm border border-slate-200">
+                        <div class="flex items-center gap-4 mb-4 pb-4 border-b border-slate-200">
+                            <input type="text" id="indexer-url" placeholder="Enter documentation URL (e.g. https://developers.cloudflare.com/)" class="flex-1 px-4 py-2 text-sm border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
+                            <button id="btn-trigger-indexer" onclick="triggerIndexer()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black tracking-widest text-xs uppercase rounded shadow-[0_0_15px_rgba(79,70,229,0.4)] transition transform active:scale-95 flex items-center gap-2">
+                                <i class="fa-solid fa-spider"></i> Index Docs
+                            </button>
+                        </div>
+                        <div class="h-64 overflow-y-auto font-mono text-[10px] text-slate-700 leading-relaxed bg-slate-50 p-4 rounded border border-slate-200" id="indexer-logs">
+                            > WAITING FOR INDEXER COMMAND...<br>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <div class="mt-auto">
                 {% include 'includes/footer.html' %}
@@ -282,7 +308,7 @@
 
         // Tab Switching
         function switchTab(tabId) {
-            const tabs = ['logs', 'cases', 'database', 'config', 'engine', 'parsers', 'godmode'];
+            const tabs = ['logs', 'cases', 'database', 'config', 'engine', 'parsers', 'godmode', 'clustering', 'knowledge'];
             const titles = {
                 'logs': 'Live Console Logs',
                 'cases': 'Case Management',
@@ -290,31 +316,55 @@
                 'config': 'API Configuration',
                 'engine': 'Engine Controls',
                 'parsers': 'Blockchain Parsers Configuration',
-                'godmode': 'Omni-Healing Godmode Deployer'
+                'godmode': 'Omni-Healing Godmode Deployer',
+                'clustering': 'ML Clustering Engine',
+                'knowledge': 'NEMESIS Knowledge Indexer'
             };
 
             tabs.forEach(t => {
                 const btn = document.getElementById(`tab-${t}`);
-                const view = document.getElementById(`view-${t}`);
+                if (btn) btn.classList.remove('active', 'bg-blue-50');
                 
-                if (t === tabId) {
-                    btn.classList.add('active');
-                    btn.classList.remove('text-slate-500');
-                    view.classList.remove('hidden');
-                    view.classList.add('block');
-                } else {
-                    btn.classList.remove('active');
-                    btn.classList.add('text-slate-500');
-                    view.classList.add('hidden');
+                const view = document.getElementById(`view-${t}`);
+                if (view) {
                     view.classList.remove('block');
+                    view.classList.add('hidden');
                 }
             });
+
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            if (activeBtn) activeBtn.classList.add('active', 'bg-blue-50');
+            
+            const activeView = document.getElementById(`view-${tabId}`);
+            if (activeView) {
+                activeView.classList.remove('hidden');
+                activeView.classList.add('block');
+            }
+            
             document.getElementById('header-title').innerText = titles[tabId];
 
             if (tabId === 'cases') fetchCases();
             if (tabId === 'database') fetchDbStats();
             if (tabId === 'config') fetchConfig();
             if (tabId === 'parsers') fetchGBEO();
+        }
+
+        async function triggerIndexer() {
+            const urlInput = document.getElementById('indexer-url').value;
+            const logDiv = document.getElementById('indexer-logs');
+            logDiv.innerHTML += `\n<span class="text-indigo-500">> STARTING INDEXING JOB FOR: ${urlInput || 'ALL Default Docs'}</span><br>`;
+            
+            try {
+                const res = await fetch('/api/admin/index_docs', {
+                    method: 'POST',
+                    headers: authHeaders,
+                    body: JSON.stringify({ url: urlInput })
+                });
+                const data = await res.json();
+                logDiv.innerHTML += `\n<span class="text-emerald-500">> DONE: ${data.message}</span><br>`;
+            } catch (err) {
+                logDiv.innerHTML += `\n<span class="text-red-500">> ERROR: ${err.message}</span><br>`;
+            }
         }
 
         async function fetchGBEO() {

@@ -1193,6 +1193,19 @@ async def trigger_godmode(token: dict = Depends(verify_access_token)):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+from pydantic import BaseModel
+class IndexerRequest(BaseModel):
+    url: str = None
+
+@app.post("/api/admin/index_docs")
+async def trigger_index_docs(req: IndexerRequest, token: dict = Depends(verify_access_token)):
+    try:
+        from services.auto_indexer import indexer
+        result = await indexer.fetch_and_index(req.url)
+        return result
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 # --- CLUSTERING ENGINE ROUTES ---
 from services.clustering_engine import clustering_engine
 import shutil

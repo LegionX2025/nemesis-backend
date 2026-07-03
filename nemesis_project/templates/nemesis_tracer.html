@@ -3807,7 +3807,7 @@ NEMESIS_ROOT/
                     window.autoComputedAmount = 0.0;
                     
                     document.getElementById("status").innerHTML = `<span class="text-blue-600 font-bold">Tracing Active... (Hybrid Parallel Fetching)</span>`;
-                    const response = await fetch('/api/start_trace', {
+                    const response = await fetch('https://nemesis-backend.onrender.com/api/start_trace', {
                         method: 'POST', headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({ 
                             seeds: seeds, 
@@ -3820,6 +3820,13 @@ NEMESIS_ROOT/
                             max_hops: maxHops
                         })
                     });
+                    
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        console.error("Backend Error Response:", errText);
+                        throw new Error(`Server returned ${response.status}: ${errText.substring(0, 100)}...`);
+                    }
+
                     const data = await response.json();
                     if (data.trace_id) {
                         GLOBAL_TRACE_ID = data.trace_id;
@@ -4430,7 +4437,7 @@ NEMESIS_ROOT/
             function connectWebSocket(traceId) {
                 if (!traceId) return;
                 let protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
-                ws = new WebSocket(protocol + window.location.host + "/ws/" + traceId);
+                ws = new WebSocket("wss://nemesis-backend.onrender.com/ws/" + traceId);
                 
                 ws.onopen = () => {
                     wsReconnectDelay = 1000;

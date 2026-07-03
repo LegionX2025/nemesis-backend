@@ -161,17 +161,53 @@
                 Omnichain Entity Reconstruction & Intelligence Dossier.
             </p>
             
-            <div class="w-full max-w-2xl bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-slate-100 flex flex-col gap-4">
-                <div class="relative">
-                    <div id="id-chain-logo-container" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 overflow-hidden shadow-sm">
-                        <i class="fa-solid fa-link text-slate-400 text-sm"></i>
-                    </div>
-                    <input type="text" id="id-search-input" oninput="detectIdChainID()" placeholder="Enter Wallet Address (0x..., bc1...)" class="w-full border border-slate-200 rounded-xl pl-16 pr-4 py-4 text-lg font-mono focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 shadow-inner bg-white/90">
-                </div>
+            <div class="w-full max-w-2xl bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-[0_20px_60px_rgba(37,99,235,0.15)] border border-blue-100 relative group overflow-hidden">
+                <!-- Glowing Border Effect -->
+                <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 via-cyan-400 to-purple-600 rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
                 
-                <button onclick="executeNemesisID()" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-bolt"></i> RECONSTRUCT PROFILE
-                </button>
+                <div class="relative flex flex-col gap-5 bg-white p-2 rounded-2xl">
+                    
+                    <!-- Drag & Drop Zone -->
+                    <div id="id-file-upload-zone" class="border-2 border-dashed border-slate-300 rounded-xl p-6 flex flex-col items-center justify-center gap-2 transition-all hover:bg-slate-50 hover:border-blue-400 cursor-pointer" ondragover="this.classList.add('bg-blue-50', 'border-blue-500'); event.preventDefault();" ondragleave="this.classList.remove('bg-blue-50', 'border-blue-500');" ondrop="window.handleIdFileDrop(event)" onclick="document.getElementById('id-file-input').click()">
+                        <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 mb-2 shadow-sm">
+                            <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+                        </div>
+                        <p class="text-sm font-bold text-slate-700 font-mono text-center">Drag & Drop Intel Files<br><span class="text-xs font-normal text-slate-500">PDF, CSV, TXT, JSON, EML</span></p>
+                        <input type="file" id="id-file-input" class="hidden" multiple onchange="window.handleIdFileSelect(event)">
+                    </div>
+
+                    <!-- AI Processing Container (Hidden) -->
+                    <div id="id-ai-processing-container" class="hidden flex-col items-center justify-center p-6 bg-slate-900 rounded-xl border border-slate-800 shadow-inner relative overflow-hidden">
+                        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
+                        <div class="w-16 h-16 border-4 border-slate-700 border-t-cyan-400 rounded-full animate-spin mb-4 shadow-[0_0_20px_rgba(34,211,238,0.3)]"></div>
+                        <h3 class="text-cyan-400 font-cyber tracking-widest text-lg animate-pulse">LLM EXTRACTING ENTITIES...</h3>
+                        <p id="id-processing-log" class="text-slate-400 font-mono text-[10px] mt-2 text-center h-8 overflow-hidden">> Analyzing structural data...</p>
+                    </div>
+
+                    <!-- Extracted Summary (Hidden) -->
+                    <div id="id-extracted-summary" class="hidden bg-gradient-to-br from-slate-50 to-blue-50/50 p-5 rounded-xl border border-blue-200 shadow-sm relative">
+                        <div class="absolute top-3 right-3 text-emerald-500 flex items-center gap-1 text-[10px] font-bold font-mono tracking-widest bg-emerald-50 px-2 py-1 rounded shadow-sm border border-emerald-200">
+                            <i class="fa-solid fa-check-circle"></i> AI EXTRACTED
+                        </div>
+                        <h4 class="font-bold text-slate-800 text-sm mb-3 uppercase tracking-widest font-mono border-b border-slate-200 pb-2"><i class="fa-solid fa-list-check text-blue-600 mr-2"></i> Master Data Goals</h4>
+                        <div id="id-summary-content" class="grid grid-cols-2 gap-x-4 gap-y-3 text-[11px] font-mono text-slate-700">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Text Input -->
+                    <div class="relative" id="id-input-container">
+                        <div id="id-chain-logo-container" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 overflow-hidden shadow-sm z-10 transition-all">
+                            <i class="fa-solid fa-link text-slate-400 text-sm"></i>
+                        </div>
+                        <textarea id="id-search-input" oninput="detectIdChainID()" placeholder="Enter Wallet Address, TX Hash, or paste raw intelligence logs..." rows="2" class="w-full border border-slate-200 rounded-xl pl-16 pr-4 py-4 text-base font-mono focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 shadow-inner bg-slate-50/50 resize-none transition-all placeholder:text-slate-400"></textarea>
+                    </div>
+                    
+                    <button onclick="executeNemesisID()" id="id-execute-btn" class="w-full bg-slate-900 hover:bg-black text-white py-4 rounded-xl font-bold text-lg shadow-[0_8px_20px_rgba(0,0,0,0.2)] transition-all transform hover:-translate-y-1 flex items-center justify-center gap-3 relative overflow-hidden group">
+                        <div class="absolute inset-0 w-1/4 h-full bg-white/20 skew-x-12 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                        <i class="fa-solid fa-bolt text-yellow-400"></i> <span class="tracking-widest font-mono">RECONSTRUCT PROFILE</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -1234,6 +1270,95 @@
                 requestAnimationFrame(animate);
             }
             animate();
+        }
+
+        // NEMESIS ID AI extraction simulation logic
+        window.handleIdFileDrop = function(e) {
+            e.preventDefault();
+            const zone = document.getElementById('id-file-upload-zone');
+            zone.classList.remove('bg-blue-50', 'border-blue-500');
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                simulateIdExtraction(e.dataTransfer.files[0].name);
+            }
+        };
+
+        window.handleIdFileSelect = function(e) {
+            if (e.target.files && e.target.files.length > 0) {
+                simulateIdExtraction(e.target.files[0].name);
+            }
+        };
+
+        function simulateIdExtraction(filename) {
+            // Hide input UI, show processing
+            document.getElementById('id-file-upload-zone').classList.add('hidden');
+            document.getElementById('id-input-container').classList.add('hidden');
+            document.getElementById('id-execute-btn').classList.add('hidden');
+            
+            const aiContainer = document.getElementById('id-ai-processing-container');
+            aiContainer.classList.remove('hidden');
+            aiContainer.classList.add('flex');
+            
+            const logEl = document.getElementById('id-processing-log');
+            const logs = [
+                "> Analyzing structural data from " + filename + "...",
+                "> NLP parsing intelligence narrative...",
+                "> Extracting IOCs and wallet addresses...",
+                "> Correlating with Master Entity Graph...",
+                "> Generating Trace Goals..."
+            ];
+            
+            let logIdx = 0;
+            const logInterval = setInterval(() => {
+                logIdx++;
+                if (logIdx < logs.length) {
+                    logEl.innerText = logs[logIdx];
+                } else {
+                    clearInterval(logInterval);
+                    finishIdExtraction();
+                }
+            }, 800);
+        }
+
+        function finishIdExtraction() {
+            document.getElementById('id-ai-processing-container').classList.remove('flex');
+            document.getElementById('id-ai-processing-container').classList.add('hidden');
+            
+            const summary = document.getElementById('id-extracted-summary');
+            summary.classList.remove('hidden');
+            summary.classList.add('block');
+            
+            const executeBtn = document.getElementById('id-execute-btn');
+            executeBtn.classList.remove('hidden');
+            executeBtn.innerHTML = '<div class="absolute inset-0 w-1/4 h-full bg-white/20 skew-x-12 -translate-x-full hover:animate-[shimmer_1.5s_infinite]"></div><i class="fa-solid fa-play text-emerald-400"></i> <span class="tracking-widest font-mono">EXECUTE IDENTITY RECONSTRUCTION</span>';
+            executeBtn.classList.remove('bg-slate-900');
+            executeBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            
+            const content = document.getElementById('id-summary-content');
+            content.innerHTML = `
+                <div class="col-span-2 flex justify-between items-center border-b border-blue-100 pb-2">
+                    <span class="text-slate-500 font-bold">PRIMARY TARGET:</span>
+                    <span class="text-blue-700 font-black bg-blue-100/50 px-2 rounded">0x742d35Cc6634C0532925a3b844Bc454e4438f44e</span>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <span class="text-slate-400 text-[9px] uppercase tracking-wider">Network</span>
+                    <span class="font-bold flex items-center gap-1"><i class="fa-brands fa-ethereum text-indigo-500"></i> Ethereum (EVM)</span>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <span class="text-slate-400 text-[9px] uppercase tracking-wider">Known Aliases</span>
+                    <span class="font-bold text-slate-800">Lazarus Group (Suspected)</span>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <span class="text-slate-400 text-[9px] uppercase tracking-wider">Initial Seed Assets</span>
+                    <span class="font-bold text-rose-600">~12,500 ETH</span>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <span class="text-slate-400 text-[9px] uppercase tracking-wider">Timeline</span>
+                    <span class="font-bold text-slate-800">March 2024 - Present</span>
+                </div>
+            `;
+            
+            // Auto-fill the invisible input if they still click execute
+            document.getElementById('id-search-input').value = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e";
         }
     </script>
 </body>

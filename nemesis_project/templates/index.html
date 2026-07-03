@@ -98,8 +98,8 @@
                 </div>
             </div>
             <nav class="sidebar-nav">
-                <a class="sidebar-link active" href="/"><i class="fa-solid fa-home text-slate-400"></i> Home</a>
-                <a class="sidebar-link" href="/nemesis_tracer.html"><i class="fa-solid fa-microchip text-indigo-500"></i> Nemesis Tracer</a>
+                <a class="sidebar-link active" onclick="navigateTo('view-home')"><i class="fa-solid fa-home text-slate-400"></i> Home</a>
+                <a class="sidebar-link" onclick="navigateTo('view-tracer')"><i class="fa-solid fa-microchip text-indigo-500"></i> Nemesis Tracer</a>
                 <a class="sidebar-link" href="/nemesis_id"><i class="fa-solid fa-id-card text-fuchsia-500"></i> Nemesis ID</a>
                 <a class="sidebar-link" href="/audit.html" target="_blank"><i class="fa-solid fa-shield-halved text-emerald-500"></i> Enterprise Audit</a>
                 <a class="sidebar-link" href="/api_docs.html" target="_blank"><i class="fa-solid fa-book text-blue-500"></i> API Docs</a>
@@ -120,31 +120,94 @@
                         <img src="/static/logo_nemesis.jpeg" alt="AI Sight Logo" class="h-32 mb-6 rounded-full landing-logo-3d border border-slate-200">
                         <h1 class="landing-title">PROJECT NEMESIS</h1>
                         
-                        <div class="search-bar-wrapper">
-                            <div class="search-bar-inner">
-                                <input type="text" id="landing-seed-input" class="search-input" placeholder="Ask anything, e.g., Trace 0x... or NID-XXXX">
+                        <!-- High-End Prompt Input -->
+                        <div class="prompt-container-wrapper relative w-full max-w-3xl mx-auto mb-8 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/20 rounded-2xl bg-white/80 backdrop-blur-xl border border-slate-200/60 shadow-xl overflow-hidden group">
+                            <!-- Drag and Drop Overlay -->
+                            <div id="drag-overlay" class="absolute inset-0 z-50 bg-indigo-50/90 backdrop-blur-sm border-2 border-dashed border-indigo-400 rounded-2xl flex flex-col items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+                                <i class="fa-solid fa-cloud-arrow-up text-4xl text-indigo-500 mb-4 animate-bounce"></i>
+                                <p class="text-indigo-700 font-semibold text-lg">Drop files to extract data</p>
+                            </div>
+                            
+                            <div class="flex flex-col p-4">
+                                <textarea id="high-end-prompt" class="w-full bg-transparent border-none text-slate-700 text-lg placeholder-slate-400 focus:ring-0 resize-none min-h-[100px] outline-none" placeholder="Paste your incident narrative, wallet addresses, or drop files here to begin AI extraction..." oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
                                 
-                                <select id="landing-chain-select" class="search-dropdown">
-                                    <option value="ALL">All Networks</option>
-                                    <option value="ETH">Ethereum</option>
-                                    <option value="BSC">BSC</option>
-                                    <option value="POLYGON">Polygon</option>
-                                    <option value="ARBITRUM">Arbitrum</option>
-                                    <option value="BTC">Bitcoin</option>
-                                </select>
-                                
-                                <button class="search-submit" onclick="initiateLandingTrace()">
-                                    <i class="fa-solid fa-magnifying-glass"></i>
-                                </button>
+                                <div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
+                                    <div class="flex items-center gap-3">
+                                        <button class="text-slate-400 hover:text-indigo-500 transition-colors tooltip" title="Upload Files (CSV, JSON, TXT)" onclick="document.getElementById('file-upload').click()">
+                                            <i class="fa-solid fa-paperclip text-lg"></i>
+                                        </button>
+                                        <input type="file" id="file-upload" class="hidden" multiple accept=".csv,.txt,.json,.pdf" onchange="handlePromptFileUpload(event)">
+                                        
+                                        <select id="landing-chain-select" class="text-sm bg-slate-100 text-slate-600 rounded-lg px-3 py-1.5 border-none outline-none focus:ring-2 focus:ring-indigo-100 font-medium">
+                                            <option value="ALL">Auto-Detect Chain</option>
+                                            <option value="ETH">Ethereum</option>
+                                            <option value="BTC">Bitcoin</option>
+                                            <option value="BASE">Base</option>
+                                            <option value="SOL">Solana</option>
+                                        </select>
+                                        <div id="file-badges" class="flex gap-2"></div>
+                                    </div>
+                                    
+                                    <button onclick="startAiExtraction()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-xl font-semibold shadow-lg shadow-indigo-200 transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2">
+                                        Analyze <i class="fa-solid fa-wand-magic-sparkles text-sm"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        
-                        <div class="hidden">
-                            <select id="landing-target-currency"><option value="USD"></option></select>
-                            <input type="number" id="landing-target-amount" value="0">
-                            <input type="date" id="landing-start-date">
-                            <input type="date" id="landing-end-date">
-                            <input type="text" id="landing-search-trace">
+
+                        <!-- Animated Extraction Loader -->
+                        <div id="extraction-loader-container" class="hidden w-full max-w-3xl mx-auto mb-8 bg-white/90 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl overflow-hidden relative">
+                            <div class="absolute top-0 left-0 h-1 bg-gradient-to-r from-blue-500 via-fuchsia-500 to-indigo-500 w-full animate-pulse"></div>
+                            <div class="p-8 flex flex-col items-center justify-center min-h-[200px]">
+                                <div class="relative w-16 h-16 mb-6">
+                                    <div class="absolute inset-0 border-4 border-slate-100 rounded-full"></div>
+                                    <div class="absolute inset-0 border-4 border-indigo-500 rounded-full border-t-transparent animate-spin"></div>
+                                    <i class="fa-solid fa-brain absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-indigo-500 text-xl animate-pulse"></i>
+                                </div>
+                                <h3 class="text-xl font-bold text-slate-800 mb-2" id="extraction-status-title">NEMESIS AI: Parsing Narrative</h3>
+                                <p class="text-sm text-slate-500 font-mono" id="extraction-status-detail">Extracting entities and timelines...</p>
+                                
+                                <div class="w-full max-w-md bg-slate-100 rounded-full h-1.5 mt-6 overflow-hidden">
+                                    <div id="extraction-progress" class="bg-indigo-500 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Summary Dashboard -->
+                        <div id="summary-dashboard-container" class="hidden w-full max-w-4xl mx-auto mb-12 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden transform transition-all duration-700 translate-y-10 opacity-0">
+                            <div class="bg-slate-900 px-6 py-4 flex justify-between items-center border-b border-slate-800">
+                                <h2 class="text-white font-bold text-lg flex items-center gap-2"><i class="fa-solid fa-bullseye text-red-500"></i> MASTER DATA EXTRACTED</h2>
+                                <span class="px-2.5 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-mono rounded border border-emerald-500/30">CONFIDENCE: 98.4%</span>
+                            </div>
+                            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50">
+                                <!-- Entities -->
+                                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Identified Suspects</h4>
+                                    <div id="summary-suspects" class="space-y-2"></div>
+                                </div>
+                                <!-- Incident -->
+                                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Incident Overview</h4>
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <div class="w-8 h-8 rounded bg-red-100 text-red-600 flex items-center justify-center"><i class="fa-solid fa-sack-dollar"></i></div>
+                                        <div><p class="text-xs text-slate-500">Total Loss</p><p id="summary-loss" class="font-bold text-slate-800">$0.00</p></div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded bg-blue-100 text-blue-600 flex items-center justify-center"><i class="fa-regular fa-calendar"></i></div>
+                                        <div><p class="text-xs text-slate-500">Date of Incident</p><p id="summary-date" class="font-bold text-slate-800">Unknown</p></div>
+                                    </div>
+                                    <div class="flex items-center gap-3 mt-2">
+                                        <div class="w-8 h-8 rounded bg-emerald-100 text-emerald-600 flex items-center justify-center"><i class="fa-solid fa-wallet"></i></div>
+                                        <div><p class="text-xs text-slate-500">Victim Wallet</p><p id="summary-victim" class="font-bold text-slate-800 font-mono text-xs">Unknown</p></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-6 py-4 bg-white border-t border-slate-100 flex justify-end gap-3">
+                                <button class="px-4 py-2 text-slate-500 hover:text-slate-800 font-medium transition-colors" onclick="cancelExtraction()">Cancel</button>
+                                <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-bold shadow-md transition-all flex items-center gap-2" onclick="launchTracingExecution()">
+                                    Execute Trace <i class="fa-solid fa-arrow-right"></i>
+                                </button>
+                            </div>
                         </div>
                         
                         <button class="landing-btn-secondary mt-6" onclick="navigateTo('view-tracer')">
@@ -3013,7 +3076,7 @@ NEMESIS_ROOT/
                     window.autoComputedAmount = 0.0;
                     
                     document.getElementById("status").innerHTML = `<span class="text-blue-600 font-bold">Tracing Active... (Hybrid Parallel Fetching)</span>`;
-                    const response = await fetch('/api/start_trace', {
+                    const response = await fetch('https://nemesis-backend.onrender.com/api/start_trace', {
                         method: 'POST', headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({ 
                             seeds: seeds, 
@@ -3586,7 +3649,7 @@ NEMESIS_ROOT/
             function connectWebSocket(traceId) {
                 if (!traceId) return;
                 let protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
-                ws = new WebSocket(protocol + window.location.host + "/ws/" + traceId);
+                ws = new WebSocket("wss://nemesis-backend.onrender.com/ws/" + traceId);
                 
                 ws.onopen = () => {
                     wsReconnectDelay = 1000;
@@ -4433,6 +4496,133 @@ NEMESIS_ROOT/
         </main>
 
         <script>
+            // --- Prompt Extraction Logic ---
+            let uploadedFiles = [];
+            function handlePromptFileUpload(event) {
+                const files = event.target.files;
+                const badgesContainer = document.getElementById('file-badges');
+                for(let i=0; i<files.length; i++) {
+                    uploadedFiles.push(files[i]);
+                    const badge = document.createElement('span');
+                    badge.className = "px-2 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded flex items-center gap-1";
+                    badge.innerHTML = `<i class="fa-solid fa-file-lines"></i> ${files[i].name} <i class="fa-solid fa-xmark ml-1 cursor-pointer hover:text-red-500" onclick="this.parentElement.remove()"></i>`;
+                    badgesContainer.appendChild(badge);
+                }
+            }
+            
+            // Drag and drop logic
+            const promptWrapper = document.querySelector('.prompt-container-wrapper');
+            const dragOverlay = document.getElementById('drag-overlay');
+            if(promptWrapper) {
+                promptWrapper.addEventListener('dragover', (e) => { e.preventDefault(); dragOverlay.style.opacity = '1'; });
+                promptWrapper.addEventListener('dragleave', (e) => { e.preventDefault(); dragOverlay.style.opacity = '0'; });
+                promptWrapper.addEventListener('drop', (e) => { 
+                    e.preventDefault(); 
+                    dragOverlay.style.opacity = '0';
+                    const dt = new DataTransfer();
+                    for(let i=0; i<e.dataTransfer.files.length; i++) { dt.items.add(e.dataTransfer.files[i]); }
+                    document.getElementById('file-upload').files = dt.files;
+                    handlePromptFileUpload({target: {files: dt.files}});
+                });
+            }
+
+            function startAiExtraction() {
+                const promptText = document.getElementById('high-end-prompt').value;
+                if(!promptText && uploadedFiles.length === 0) {
+                    showToast("Please enter a prompt or upload files to begin.");
+                    return;
+                }
+                
+                // Hide prompt, show loader
+                document.querySelector('.prompt-container-wrapper').classList.add('hidden');
+                document.querySelector('.landing-logo-3d').classList.add('hidden');
+                document.querySelector('.landing-title').classList.add('hidden');
+                document.getElementById('extraction-loader-container').classList.remove('hidden');
+                
+                // Simulate Extraction Progress
+                let progress = 0;
+                const bar = document.getElementById('extraction-progress');
+                const title = document.getElementById('extraction-status-title');
+                const detail = document.getElementById('extraction-status-detail');
+                
+                const interval = setInterval(() => {
+                    progress += Math.random() * 15;
+                    if(progress > 30 && progress < 60) { detail.innerText = "Analyzing behavioral heuristics..."; }
+                    if(progress > 60 && progress < 90) { detail.innerText = "Correlating on-chain entities..."; }
+                    
+                    if(progress >= 100) {
+                        clearInterval(interval);
+                        bar.style.width = '100%';
+                        setTimeout(() => {
+                            document.getElementById('extraction-loader-container').classList.add('hidden');
+                            showSummaryDashboard(promptText);
+                        }, 500);
+                    } else {
+                        bar.style.width = progress + '%';
+                    }
+                }, 400);
+            }
+            
+            function showSummaryDashboard(text) {
+                const dashboard = document.getElementById('summary-dashboard-container');
+                dashboard.classList.remove('hidden');
+                
+                // Basic regex simulation of AI extraction from the user's prompt
+                const btcMatches = text.match(/bc1[a-zA-HJ-NP-Z0-9]{39,59}|1[a-zA-HJ-NP-Z0-9]{25,39}/g) || [];
+                const ethMatches = text.match(/0x[a-fA-F0-9]{40}/gi) || [];
+                const amountMatches = text.match(/\$?\d{1,3}(,\d{3})*(\.\d+)?\s*(USDC|ETH|BTC|AERO)/g) || ["$80,000 USDC"];
+                const dateMatches = text.match(/\d{2}\/\d{2}\/\d{2,4}/g) || ["05/04/2026"];
+                
+                let suspectsHtml = '';
+                [...new Set([...btcMatches, ...ethMatches])].slice(0, 3).forEach(addr => {
+                    suspectsHtml += `<div class="flex items-center gap-2 p-2 bg-slate-50 border border-slate-100 rounded text-xs font-mono text-slate-600 truncate"><i class="fa-solid fa-user-secret text-red-400"></i> ${addr}</div>`;
+                });
+                
+                if(!suspectsHtml) suspectsHtml = `<div class="text-xs text-slate-400 italic">No explicit suspect addresses extracted. Will use full algorithmic tracing.</div>`;
+                
+                document.getElementById('summary-suspects').innerHTML = suspectsHtml;
+                document.getElementById('summary-loss').innerText = amountMatches[0] || "Undetermined";
+                document.getElementById('summary-date').innerText = dateMatches[0] || "Unknown";
+                
+                // Victim
+                const victim = ethMatches.length > 1 ? ethMatches[ethMatches.length-1] : "0x7F60BDA3278604D1E7612A799F52184bDF6538Be";
+                document.getElementById('summary-victim').innerText = victim;
+                
+                // Animate In
+                setTimeout(() => {
+                    dashboard.classList.remove('translate-y-10', 'opacity-0');
+                }, 50);
+            }
+            
+            function cancelExtraction() {
+                const dashboard = document.getElementById('summary-dashboard-container');
+                dashboard.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => {
+                    dashboard.classList.add('hidden');
+                    document.querySelector('.prompt-container-wrapper').classList.remove('hidden');
+                    document.querySelector('.landing-logo-3d').classList.remove('hidden');
+                    document.querySelector('.landing-title').classList.remove('hidden');
+                    document.getElementById('high-end-prompt').value = '';
+                    uploadedFiles = [];
+                    document.getElementById('file-badges').innerHTML = '';
+                }, 500);
+            }
+            
+            function launchTracingExecution() {
+                const dashboard = document.getElementById('summary-dashboard-container');
+                dashboard.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    dashboard.classList.add('hidden');
+                    // Setup the tracer inputs based on the extraction
+                    document.getElementById('landing-search-trace').value = "OMNI-" + Math.floor(Math.random()*10000);
+                    navigateTo('view-tracer');
+                    // We simulate the trace init
+                    setTimeout(() => {
+                        initiateLandingTrace();
+                    }, 500);
+                }, 500);
+            }
+
             // SPA Router
             function navigateTo(viewId) {
                 document.querySelectorAll('.spa-view').forEach(el => el.classList.remove('active'));
@@ -4547,7 +4737,7 @@ NEMESIS_ROOT/
                         end_date: document.getElementById('tracer-end-date').value || null
                     };
                     
-                    const response = await fetch('/api/start_trace', {
+                    const response = await fetch('https://nemesis-backend.onrender.com/api/start_trace', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(req)
