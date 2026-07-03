@@ -1,0 +1,23 @@
+name = "nemesis-edge-proxy"
+main = "cloudflare_worker/src/index.ts"
+compatibility_date = "2024-12-01"
+
+[observability]
+enabled = true
+
+[[kv_namespaces]]
+binding = "NEMESIS_KV"
+id = "WAITING_FOR_DEPLOYMENT"
+preview_id = "WAITING_FOR_DEPLOYMENT"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "nemesis_audit_db"
+database_id = "WAITING_FOR_DEPLOYMENT"
+
+[[r2_buckets]]
+binding = "NEMESIS_STORAGE"
+bucket_name = "nemesis-assets"
+
+[vars]
+BACKEND_API_URL = "https://nemesis-backend.onrender.com"
