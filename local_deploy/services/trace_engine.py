@@ -19,6 +19,7 @@ import pandas as pd
 import numpy as np
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
+from oklink_scraper import OKLinkScraper
 
 logger = logging.getLogger("OmniChainEngine")
 
@@ -200,6 +201,12 @@ async def _d1_get(endpoint: str):
 async def save_wallet_label(address: str, label_data: dict):
     label_data["address"] = address.lower()
     label_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    # If using the old endpoint format, ensure the labels are mapped correctly. 
+    # OKLinkScraper handles D1 natively, but we keep this for legacy trace-engine calls.
+    if "clustered_addresses" not in label_data:
+        label_data["clustered_addresses"] = "[]"
+    if "source" not in label_data:
+        label_data["source"] = "trace_engine"
     return await _d1_post("/api/wallet-labels", label_data) is not None
 
 async def get_wallet_label(address: str):
@@ -222,13 +229,95 @@ def get_active_traces(active_sessions):
 def detect_chain(val: str, override: str = "AUTO") -> str:
     if override and override != "AUTO": return override.upper()
     val = val.strip()
-    if val.startswith("bc1") or val.startswith("1") or val.startswith("3"): return "BITCOIN"
+    if val.startswith("0x") and len(val) == 66: return "EVM_TX"
+    elif len(val) == 64 and not val.startswith("0x"): return "BTC_TX"
+    elif val.startswith("bc1") or val.startswith("1") or val.startswith("3"): return "BITCOIN"
     elif val.startswith("T") and len(val) == 34: return "TRON"
     elif val.startswith("0x") and len(val) == 42: return "EVM_AUTO"
     elif val.startswith("r") and 25 <= len(val) <= 35: return "RIPPLE"
     elif val.startswith("G") and len(val) == 56: return "STELLAR"
     elif 32 <= len(val) <= 44 and not val.startswith("0x") and not val.startswith("bc1"): return "SOLANA"
     return "INVALID"
+
+async def auto_compute_loss_amount(seeds_list, default_chain="AUTO"):
+    computed_amt = 0.0
+    extracted_seeds = []
+    
+    async with aiohttp.ClientSession() as session:
+        for seed in seeds_list:
+            chain = detect_chain(seed, default_chain)
+            
+            if chain == "EVM_TX" or (chain != "INVALID" and len(seed) == 66 and seed.startswith("0x")):
+                networks = EVM_DOMAINS.keys() if default_chain == "AUTO" else [default_chain]
+                tx_found = False
+                for net in networks:
+                    if tx_found: break
+                    net_upper = net.upper()
+                    if net_upper == "ETHEREUM": base_url = "https://api.etherscan.io/api"
+                    elif net_upper == "BSC": base_url = "https://api.bscscan.com/api"
+                    elif net_upper == "POLYGON": base_url = "https://api.polygonscan.com/api"
+                    elif net_upper == "BASE": base_url = "https://api.basescan.org/api"
+                    elif net_upper == "ARBITRUM": base_url = "https://api.arbiscan.io/api"
+                    elif net_upper == "OPTIMISM": base_url = "https://api-optimistic.etherscan.io/api"
+                    else: base_url = "https://api.etherscan.io/api"
+                    
+                    key_var = f"{net_upper}SCAN_API_KEY" if net_upper != "ETHEREUM" else "ETHERSCAN_API_KEY"
+                    api_key = CONFIG.get(key_var, CONFIG.get("ETHERSCAN_API_KEY"))
+                    
+                    url = f"{base_url}?module=proxy&action=eth_getTransactionByHash&txhash={seed}&apikey={api_key}"
+                    try:
+                        async with session.get(url, timeout=5) as r:
+                            if r.status == 200:
+                                data = await r.json()
+                                res = data.get("result")
+                                if res and isinstance(res, dict):
+                                    val_hex = res.get("value", "0x0")
+                                    val_eth = int(val_hex, 16) / 10**18
+                                    computed_amt += val_eth * USD_RATES.get(net_upper, 3000.0)
+                                    
+                                    to_addr = res.get("to")
+                                    if to_addr and to_addr not in extracted_seeds:
+                                        extracted_seeds.append(to_addr)
+                                    tx_found = True
+                    except Exception as e:
+                        logger.error(f"Auto-compute TX failed for {seed} on {net_upper}: {e}")
+            
+            elif chain in EVM_DOMAINS or chain == "EVM_AUTO":
+                networks = EVM_DOMAINS.keys() if chain == "EVM_AUTO" else [chain]
+                for net in networks:
+                    net_upper = net.upper()
+                    if net_upper == "ETHEREUM": base_url = "https://api.etherscan.io/api"
+                    elif net_upper == "BSC": base_url = "https://api.bscscan.com/api"
+                    elif net_upper == "POLYGON": base_url = "https://api.polygonscan.com/api"
+                    elif net_upper == "BASE": base_url = "https://api.basescan.org/api"
+                    elif net_upper == "ARBITRUM": base_url = "https://api.arbiscan.io/api"
+                    elif net_upper == "OPTIMISM": base_url = "https://api-optimistic.etherscan.io/api"
+                    else: base_url = "https://api.etherscan.io/api"
+                    
+                    key_var = f"{net_upper}SCAN_API_KEY" if net_upper != "ETHEREUM" else "ETHERSCAN_API_KEY"
+                    api_key = CONFIG.get(key_var, CONFIG.get("ETHERSCAN_API_KEY"))
+                    
+                    url = f"{base_url}?module=account&action=txlist&address={seed}&startblock=0&endblock=99999999&page=1&offset=50&sort=desc&apikey={api_key}"
+                    try:
+                        async with session.get(url, timeout=5) as r:
+                            if r.status == 200:
+                                data = await r.json()
+                                txs = data.get("result", [])
+                                if isinstance(txs, list):
+                                    for tx in txs:
+                                        if tx.get("from", "").lower() == seed.lower():
+                                            val_eth = float(tx.get("value", "0")) / 10**18
+                                            computed_amt += val_eth * USD_RATES.get(net_upper, 3000.0)
+                    except Exception as e:
+                        logger.error(f"Auto-compute Address failed for {seed} on {net_upper}: {e}")
+                
+                if seed not in extracted_seeds:
+                    extracted_seeds.append(seed)
+            else:
+                if seed not in extracted_seeds:
+                    extracted_seeds.append(seed)
+                    
+    return str(computed_amt) if computed_amt > 0 else "0", "USD", extracted_seeds
 
 def get_asset_ticker(chain: str) -> str:
     if chain == "BITCOIN": return "BTC"
@@ -324,9 +413,15 @@ async def fetch_wallet_label(session, addr, chain, trace_id=None):
         # 1. Quick regex scan first
         scraped_label, source = await auto_scrape_label(session, chain, addr)
         if scraped_label:
-            label = scraped_label
-            await save_wallet_label(addr_lower, {"label": label, "source": source})
+            entity_name = scraped_label
+            # Known entity, no need to scrape
+            label_data = {"labels": [entity_name]}
+            await save_wallet_label(addr_lower, label_data)
         else:
+            # Trigger OKLinkScraper asynchronously (fire-and-forget)
+            scraper = OKLinkScraper()
+            asyncio.create_task(scraper.crawl_and_cluster(addr_lower, chain, max_depth=1))
+            
             # 2. Fire the deep DOM Playwright Scraper asynchronously so we don't block
             from services.scraper_engine import scraper_instance
             try:

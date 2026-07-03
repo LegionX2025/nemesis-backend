@@ -31,6 +31,8 @@ CREATE TABLE IF NOT EXISTS entities (
     chain TEXT NOT NULL,
     type TEXT DEFAULT 'wallet',
     labels TEXT,
+    clustered_addresses TEXT,
+    source TEXT DEFAULT 'oklink',
     last_seen DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

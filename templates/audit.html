@@ -9,92 +9,57 @@
             if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) return;
             originalWarn.apply(console, args);
         };
-    </script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
+    {% include 'includes/head_assets.html' %}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
-        body { font-family: 'Inter', sans-serif; margin: 0; background-color: #020617; color: #f8fafc; overflow-x: hidden; }
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
-        
-        #vanta-bg { position: fixed; inset: 0; z-index: -1; opacity: 0.4; }
-        
         .glass-card {
-            background: rgba(15, 23, 42, 0.6);
+            background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(148, 163, 184, 0.1);
+            border: 1px solid rgba(15, 23, 42, 0.1);
             border-radius: 16px;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
         }
         
-        .glow-text {
-            text-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
-        }
-
         .phase-card {
-            transition: transform 0.3s ease, border-color 0.3s ease;
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
         }
         .phase-card:hover {
             transform: translateY(-5px);
-            border-color: rgba(56, 189, 248, 0.4);
+            border-color: rgba(59, 130, 246, 0.4);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
         
-        /* Custom scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #020617; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        /* Overrides for Light Web3GL Theme */
+        main { background: transparent !important; }
     </style>
 </head>
-<body class="antialiased">
-
-    <!-- WebGL Background -->
-    <div id="vanta-bg"></div>
-
-    <!-- Navigation -->
-    <nav class="fixed top-0 w-full z-50 glass-card rounded-none border-b border-slate-800/50 px-8 py-4 flex justify-between items-center">
-        <div class="flex items-center gap-4">
-            <i class="fa-solid fa-shield-halved text-emerald-500 text-2xl"></i>
-            <div>
-                <div class="font-black tracking-widest text-lg">NEMESIS <span class="font-light text-slate-400">AUDIT</span></div>
-                <div class="text-[10px] uppercase font-mono tracking-[0.2em] text-emerald-400">LGN-US-2026-0172</div>
-            </div>
-        </div>
-        <div class="flex gap-6 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-            <a href="/nemesis_id.html" target="_blank" class="hover:text-fuchsia-400 transition"><i class="fa-solid fa-id-card text-fuchsia-500"></i> Nemesis ID</a>
-            <a href="/intelligence" target="_blank" class="hover:text-white transition"><i class="fa-solid fa-brain text-blue-500"></i> Intelligence</a>
-            <a href="/audit" class="hover:text-white transition"><i class="fa-solid fa-shield-halved text-emerald-500"></i> Enterprise Audit</a>
-            <a onclick="openContentPage('about')" class="cursor-pointer hover:text-white transition"><i class="fa-solid fa-circle-info text-blue-500"></i> About</a>
-            <a onclick="openContentPage('capabilities')" class="cursor-pointer hover:text-white transition"><i class="fa-solid fa-bolt text-amber-500"></i> Capability</a>
-            <a onclick="openContentPage('content')" class="cursor-pointer hover:text-white transition"><i class="fa-solid fa-book-open text-red-500"></i> Content / Details</a>
-            <a onclick="openContentPage('workflow')" class="cursor-pointer hover:text-white transition"><i class="fa-solid fa-diagram-project text-cyan-500"></i> Workflow</a>
-            <a onclick="openContentPage('architecture')" class="cursor-pointer hover:text-white transition"><i class="fa-solid fa-sitemap text-rose-500"></i> Architecture</a>
-            <a onclick="openContentPage('tracing_engine')" class="cursor-pointer hover:text-white transition"><i class="fa-solid fa-microchip text-lime-500"></i> Tracing Engine</a>
-        </div>
-    </nav>
+<body class="antialiased overflow-x-hidden">
+    
+    {% include 'includes/global_nav.html' %}
 
     <!-- Main Content -->
     <main class="relative z-10 pt-32 pb-20 px-8 max-w-7xl mx-auto space-y-12">
         
         <!-- Header Section -->
         <section class="text-center space-y-6 mb-16">
-            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs font-bold uppercase tracking-widest mb-4">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-50 text-emerald-600 text-xs font-bold uppercase tracking-widest mb-4">
                 <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
                 Audit Complete
             </div>
-            <h1 class="text-5xl md:text-7xl font-black tracking-tighter glow-text">Master Software <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500">Audit Report</span></h1>
-            <p class="text-lg text-slate-400 max-w-2xl mx-auto font-light">An exhaustive 22-phase enterprise security, architecture, and compliance assessment of the NEMESIS OmniChain Forensics Engine.</p>
+            <div class="glass-text-container">
+                <h1 class="text-5xl md:text-7xl font-black tracking-tighter text-slate-900">Master Software <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Audit Report</span></h1>
+            </div>
+            <div class="glass-text-container mx-auto">
+                <p class="text-lg text-slate-700 max-w-2xl mx-auto font-semibold">An exhaustive 22-phase enterprise security, architecture, and compliance assessment of the NEMESIS OmniChain Forensics Engine.</p>
+            </div>
         </section>
 
         <!-- Executive Summary & Scores -->
         <section id="executive" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="lg:col-span-2 glass-card p-8">
-                <h2 class="text-2xl font-bold mb-6 flex items-center gap-3"><i class="fa-solid fa-file-signature text-blue-400"></i> Executive Summary</h2>
-                <div class="space-y-4 text-slate-300 leading-relaxed font-light">
+                <h2 class="text-2xl font-bold mb-6 flex items-center gap-3 text-slate-900"><i class="fa-solid fa-file-signature text-blue-600"></i> Executive Summary</h2>
+                <div class="space-y-4 text-slate-700 leading-relaxed">
                     <p>The NEMESIS Engine is a high-throughput, horizontally scalable intelligence extraction platform built on FastAPI and asynchronous Python queues. The frontend leverages Vanilla HTML5, Tailwind CSS, and vis-network for interactive graph rendering.</p>
                     <p>This audit evaluates the system against strict enterprise and government readiness standards, examining its internal architecture, API security posture, code quality, horizontal scalability, and forensic capabilities.</p>
                 </div>
@@ -369,5 +334,6 @@
             document.getElementById('content-modal').classList.remove('flex');
         };
     </script>
+    {% include 'includes/footer.html' %}
 </body>
 </html>

@@ -31,3 +31,6 @@ oauth2client
 flask
 flask-cors
 web3
+neo4j
+kafka-python
+ijson

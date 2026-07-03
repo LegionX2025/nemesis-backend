@@ -129,13 +129,19 @@ async def lifespan(app: FastAPI):
         try:
             import sys
             import os
+            import subprocess
             # Add darknet folder to sys.path so it can be imported
             darknet_path = os.path.join(os.path.dirname(__file__), "darknet")
             if darknet_path not in sys.path:
                 sys.path.append(darknet_path)
+                
+            # Open the darknet console in a new terminal
+            bat_path = os.path.join(os.path.dirname(__file__), "start_darknet_ui.bat")
+            subprocess.Popen(f'start cmd /c "{bat_path}"', shell=True)
+            
             from darknetv2 import start_headless_crawler
             start_headless_crawler()
-            logger.info("    [OK] Darknet headless crawler initialized.")
+            logger.info("    [OK] Darknet headless crawler initialized and console spawned.")
         except Exception as e:
             logger.error(f"    [FAIL] Failed to initialize Darknet crawler: {e}")
         
@@ -627,7 +633,56 @@ async def deep_scrape(address: str, max_pages: int = 5):
         return res if res else {"error": "Scrape failed"}
     except Exception as e:
         logger.error(f"Error in deep scrape endpoint: {e}")
+        logger.error(f"Error in deep scrape endpoint: {e}")
         return {"error": str(e)}
+
+@app.get("/api/nemesis_id/profile/{address}")
+async def nemesis_id_profile(address: str):
+    return {
+        "address": address,
+        "network": "Ethereum",
+        "entity": "Unknown / Unlabeled",
+        "balance": "0.00",
+        "first_activity": "N/A",
+        "last_activity": "N/A",
+        "total_sent": "0.00",
+        "total_received": "0.00",
+        "total_transactions": "0",
+        "clustered_addresses": []
+    }
+
+@app.get("/api/nemesis_id/aml/{address}")
+async def nemesis_id_aml(address: str):
+    return {
+        "risk_score": 0,
+        "risk_level": "Unknown",
+        "flags": [],
+        "sanctions": []
+    }
+
+@app.get("/api/nemesis_id/intel/{address}")
+async def nemesis_id_intel(address: str):
+    return {
+        "intel_summary": "No intelligence found.",
+        "tags": [],
+        "sources": []
+    }
+
+@app.get("/api/nemesis_id/tx_history/{address}")
+async def nemesis_id_tx_history(address: str):
+    return {
+        "transactions": []
+    }
+
+class NemesisIDReportRequest(BaseModel):
+    address: str
+    type: str
+
+@app.post("/api/nemesis_id/generate_report")
+async def nemesis_id_generate_report(req: NemesisIDReportRequest):
+    return {
+        "markdown": f"# Automated Report for {req.address}\n\nNo data available to generate a full report."
+    }
 
 @app.get("/api/nemesis_id/search")
 async def search_nemesis_id(query: str):

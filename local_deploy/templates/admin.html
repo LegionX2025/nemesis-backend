@@ -53,6 +53,9 @@
             <a href="#" onclick="switchTab('config')" id="tab-config" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-[#00ff88] hover:bg-[#00ff88]/5 rounded-lg transition border border-transparent">
                 API Configuration
             </a>
+            <a href="#" onclick="switchTab('parsers')" id="tab-parsers" class="flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-[#00ff88] hover:bg-[#00ff88]/5 rounded-lg transition border border-transparent">
+                Blockchain Parsers
+            </a>
             
             <div class="text-[9px] text-gray-500 mb-2 mt-6 px-2">Advanced Modules</div>
             <a href="#" onclick="switchTab('cloudflare')" id="tab-cloudflare" class="flex items-center gap-3 px-4 py-3 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 rounded-lg transition border border-transparent">
@@ -291,6 +294,103 @@
                 </div>
             </div>
 
+            <!-- Blockchain Parsers View -->
+            <div id="view-parsers" class="hidden space-y-6">
+                <div class="bg-[rgba(20,20,25,0.8)] border border-[#00b8ff]/20 p-6 rounded-xl relative overflow-hidden">
+                    <div class="flex justify-between items-center border-b border-[#00b8ff]/20 pb-4 mb-6">
+                        <h3 class="text-[#00b8ff] text-sm uppercase tracking-widest font-bold">Universal Blockchain Parser Configuration</h3>
+                        <button onclick="alert('Adding new parser endpoint...')" class="bg-[#00b8ff]/20 hover:bg-[#00b8ff]/40 text-[#00b8ff] px-4 py-2 rounded text-xs font-bold uppercase tracking-widest transition">
+                            + Add Endpoint
+                        </button>
+                    </div>
+                    
+                    <p class="text-gray-400 text-xs mb-6">Configure canonical explorer URLs to be used globally for auto-ingestion, scraping, pagination, and UX deep-links.</p>
+
+                    <!-- Parsers List -->
+                    <div class="space-y-4 max-h-[60vh] overflow-y-auto cyber-scrollbar pr-2">
+                        
+                        <!-- Etherscan Parser -->
+                        <div class="bg-black/40 border border-gray-800 p-4 rounded-lg flex flex-col gap-3 hover:border-[#00b8ff]/30 transition">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-[#00ff88] animate-pulse"></div>
+                                    <h4 class="text-white text-sm font-bold tracking-wider">Etherscan (Ethereum)</h4>
+                                </div>
+                                <div class="flex gap-2">
+                                    <label class="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-widest cursor-pointer">
+                                        <input type="checkbox" checked class="accent-[#00ff88]"> Auto-Update
+                                    </label>
+                                    <label class="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-widest cursor-pointer">
+                                        <input type="checkbox" checked class="accent-[#00ff88]"> Auto-Ingest
+                                    </label>
+                                    <button class="text-blue-400 hover:text-blue-300 ml-2">✏️</button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 text-xs font-mono text-gray-400 bg-black/60 p-3 rounded">
+                                <div><span class="text-gray-600">Base:</span> https://etherscan.io</div>
+                                <div><span class="text-gray-600">Wallet:</span> /address/{address}</div>
+                                <div><span class="text-gray-600">Tx:</span> /tx/{txhash}</div>
+                                <div><span class="text-gray-600">Token:</span> /token/{token}</div>
+                                <div><span class="text-gray-600">Pagination:</span> ?p={page}</div>
+                            </div>
+                        </div>
+
+                        <!-- Basescan Parser -->
+                        <div class="bg-black/40 border border-gray-800 p-4 rounded-lg flex flex-col gap-3 hover:border-[#00b8ff]/30 transition">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-[#00ff88]"></div>
+                                    <h4 class="text-white text-sm font-bold tracking-wider">Basescan (Base)</h4>
+                                </div>
+                                <div class="flex gap-2">
+                                    <label class="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-widest cursor-pointer">
+                                        <input type="checkbox" checked class="accent-[#00ff88]"> Auto-Update
+                                    </label>
+                                    <label class="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-widest cursor-pointer">
+                                        <input type="checkbox" checked class="accent-[#00ff88]"> Auto-Ingest
+                                    </label>
+                                    <button class="text-blue-400 hover:text-blue-300 ml-2">✏️</button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 text-xs font-mono text-gray-400 bg-black/60 p-3 rounded">
+                                <div><span class="text-gray-600">Base:</span> https://basescan.org</div>
+                                <div><span class="text-gray-600">Wallet:</span> /address/{address}</div>
+                                <div><span class="text-gray-600">Tx:</span> /tx/{txhash}</div>
+                                <div><span class="text-gray-600">Token:</span> /token/{token}</div>
+                                <div><span class="text-gray-600">Pagination:</span> ?p={page}</div>
+                            </div>
+                        </div>
+
+                        <!-- Polygonscan Parser -->
+                        <div class="bg-black/40 border border-gray-800 p-4 rounded-lg flex flex-col gap-3 hover:border-[#00b8ff]/30 transition">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-[#00ff88]"></div>
+                                    <h4 class="text-white text-sm font-bold tracking-wider">Polygonscan (Polygon)</h4>
+                                </div>
+                                <div class="flex gap-2">
+                                    <label class="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-widest cursor-pointer">
+                                        <input type="checkbox" checked class="accent-[#00ff88]"> Auto-Update
+                                    </label>
+                                    <label class="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-widest cursor-pointer">
+                                        <input type="checkbox" class="accent-[#00ff88]"> Auto-Ingest
+                                    </label>
+                                    <button class="text-blue-400 hover:text-blue-300 ml-2">✏️</button>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 text-xs font-mono text-gray-400 bg-black/60 p-3 rounded">
+                                <div><span class="text-gray-600">Base:</span> https://polygonscan.com</div>
+                                <div><span class="text-gray-600">Wallet:</span> /address/{address}</div>
+                                <div><span class="text-gray-600">Tx:</span> /tx/{txhash}</div>
+                                <div><span class="text-gray-600">Token:</span> /token/{token}</div>
+                                <div><span class="text-gray-600">Pagination:</span> ?p={page}</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
             <!-- Engine View -->
             <div id="view-engine" class="hidden space-y-6">
                 <div class="bg-[rgba(20,20,25,0.8)] border border-[#00ff88]/20 p-6 rounded-xl">
@@ -333,12 +433,13 @@
 
         // Tab Switching Logic
         function switchTab(tabId) {
-            const tabs = ['logs', 'cases', 'database', 'config', 'engine', 'cloudflare', 'antigravity', 'benchmark'];
+            const tabs = ['logs', 'cases', 'database', 'config', 'parsers', 'engine', 'cloudflare', 'antigravity', 'benchmark'];
             const titles = {
                 'logs': 'Live Console Logs',
                 'cases': 'Case Management',
                 'database': 'Database Statistics',
                 'config': 'API Configuration',
+                'parsers': 'Blockchain Parsers',
                 'engine': 'Engine Controls',
                 'cloudflare': 'Cloudflare Edge Settings',
                 'antigravity': 'Anti-Gravity Intelligence Module',

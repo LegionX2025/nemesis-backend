@@ -7,6 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.11.1/ethers.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
@@ -31,9 +32,12 @@
                 </div>
             </div>
             <div class="flex items-center gap-3">
-                <input type="text" id="target-address" placeholder="Enter Wallet Address..." class="text-sm border border-slate-300 rounded-md px-4 py-2 w-72 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner font-mono">
-                <button onclick="generateProfile()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow transition text-sm flex items-center gap-2">
+                <input type="text" id="target-address" placeholder="Enter Wallet Address..." class="text-sm border border-slate-300 rounded-md px-4 py-2 w-72 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner font-mono bg-white/70 text-slate-800">
+                <button onclick="generateProfile()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow-md transition text-sm flex items-center gap-2 border border-blue-500">
                     <i class="fa-solid fa-id-card"></i> GENERATE
+                </button>
+                <button onclick="connectWeb3Wallet()" id="web3-connect-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded shadow-md transition text-sm flex items-center gap-2 border border-indigo-500 ml-4">
+                    <i class="fa-brands fa-ethereum"></i> Connect Web3
                 </button>
             </div>
         </div>
@@ -205,6 +209,44 @@
     </main>
 
     <script>
+        // WEB3 & ETHERS.JS INTEGRATION
+        let provider = null;
+        let signer = null;
+        let connectedAddress = null;
+
+        async function connectWeb3Wallet() {
+            if (window.ethereum == null) {
+                alert("MetaMask or Web3 wallet not detected. Please install a Web3 provider.");
+                return;
+            }
+            try {
+                // Initialize ethers provider
+                provider = new ethers.BrowserProvider(window.ethereum);
+                signer = await provider.getSigner();
+                connectedAddress = await signer.getAddress();
+                
+                // Update UI
+                const btn = document.getElementById("web3-connect-btn");
+                btn.innerHTML = `<i class="fa-solid fa-check-circle"></i> ${connectedAddress.substring(0, 6)}...${connectedAddress.substring(connectedAddress.length - 4)}`;
+                btn.classList.replace("bg-indigo-600", "bg-emerald-600");
+                btn.classList.replace("hover:bg-indigo-700", "hover:bg-emerald-700");
+                btn.classList.replace("border-indigo-500", "border-emerald-500");
+                
+                // Set the connected address as the target
+                document.getElementById("target-address").value = connectedAddress;
+                
+                // Optional: Fetch balance directly from blockchain via ethers.js
+                const balanceWei = await provider.getBalance(connectedAddress);
+                const balanceEth = ethers.formatEther(balanceWei);
+                console.log(`[Web3] Direct On-Chain Balance: ${balanceEth} ETH`);
+                
+            } catch (error) {
+                console.error("Web3 Connection Error:", error);
+                alert("Failed to connect Web3 Wallet.");
+            }
+        }
+
+        // TAB LOGIC
         function switchTab(tabId, btnElement) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));

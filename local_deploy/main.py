@@ -71,7 +71,7 @@ async def admin_log_broadcaster():
         await asyncio.sleep(0.5)
 
 
-from services.trace_engine import TraceEngine, init_mongodb, get_asset_ticker, detect_chain, EVM_DOMAINS, get_active_traces, get_mongo_status, fetch_saved_traces
+from services.trace_engine import TraceEngine, init_mongodb, get_asset_ticker, detect_chain, EVM_DOMAINS, get_active_traces, get_mongo_status, fetch_saved_traces, auto_compute_loss_amount
 from services.auth_engine import authenticate_admin, create_access_token, verify_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 from datetime import timedelta
 import asyncio
@@ -91,7 +91,7 @@ async def run_boot_diagnostics():
         "Etherscan": CONFIG.get("ETHERSCAN_API_KEY"),
         "OKLink": "STEALTH_SCRAPER_ONLY",
         "Tatum": CONFIG.get("TATUM_API_KEY"),
-        "Gemini (AI)": "MULTIPLE_KEYS_ROTATION_ENABLED" if CONFIG.get("GEMINI_API_KEYS") else None,
+        "Gemini (AI)": "MULTIPLE_KEYS_ROTATION_ENABLED" if CONFIG.get("GEMINI_API_KEY") else None,
         "Infura": CONFIG.get("INFURA_API_KEY"),
         "Ankr": CONFIG.get("ANKR_API_KEY"),
         "GetBlock (BTC)": CONFIG.get("GETBLOCK_BTC_KEY")
@@ -190,7 +190,7 @@ class TraceRequest(BaseModel):
 
 @app.get("/")
 async def dashboard(request: Request):
-    return templates.TemplateResponse(request=request, name="index.html")
+    return templates.TemplateResponse(request=request, name="nemesis_tracer.html")
 
 @app.get("/favicon.ico")
 async def favicon():
@@ -219,6 +219,14 @@ async def audit_dashboard(request: Request):
 @app.get("/nemesis_id")
 async def nemesis_id_dashboard(request: Request):
     return templates.TemplateResponse(request=request, name="nemesis_id.html")
+
+@app.get("/nemesis")
+async def nemesis_landing(request: Request):
+    return templates.TemplateResponse(request=request, name="nemesis_id_landing.html")
+
+@app.get("/tracer")
+async def tracer_landing(request: Request):
+    return templates.TemplateResponse(request=request, name="nemesis_tracer_landing.html")
 
 @app.get("/darknet_search")
 async def darknet_search_dashboard(request: Request):
@@ -315,6 +323,21 @@ async def api_start_trace(req: TraceRequest, request: Request):
         if not seeds_list: return {"error": "No valid seeds provided"}
         
         calc_amt = float(req.target_amount) if req.target_amount else 0.0
+        
+        if calc_amt <= 0:
+            logger.info("Target amount not provided. Attempting to auto-compute loss from seeds...")
+            computed_amt_str, computed_cur, extracted_seeds = await auto_compute_loss_amount(seeds_list, req.chain_override)
+            calc_amt = float(computed_amt_str)
+            if calc_amt > 0:
+                logger.info(f"Auto-computed loss amount: {calc_amt} {computed_cur}")
+                req.target_currency = computed_cur
+                for es in extracted_seeds:
+                    es_lower = es.lower()
+                    if es_lower not in seeds_list:
+                        seeds_list.append(es_lower)
+            else:
+                logger.info("Auto-compute could not find a target amount. Proceeding with 0 amount limit.")
+
         trace_id = str(uuid.uuid4())[:8]
         
         engine = TraceEngine(trace_id)
@@ -426,6 +449,10 @@ async def ws(websocket: WebSocket, trace_id: str):
     except:
         engine.clients.discard(websocket)
 
+import time
+
+GLOBAL_PRICE_CACHE = {"prices": {}, "last_updated": 0}
+
 @app.get("/api/wallet_profile/{address}")
 async def wallet_profile(address: str, chain: str = "AUTO"):
     from services.trace_engine import detect_chain, CONFIG, EVM_DOMAINS
@@ -447,6 +474,20 @@ async def wallet_profile(address: str, chain: str = "AUTO"):
         
         async with aiohttp.ClientSession(connector=connector) as session:
             try:
+                # Update prices from CoinGecko every 60 seconds
+                if time.time() - GLOBAL_PRICE_CACHE["last_updated"] > 60:
+                    try:
+                        cg_url = "https://api.coingecko.com/api/v3/simple/price?ids=ethereum,binancecoin,matic-network,tron&vs_currencies=usd"
+                        async with session.get(cg_url, timeout=5) as p_res:
+                            if p_res.status == 200:
+                                p_data = await p_res.json()
+                                GLOBAL_PRICE_CACHE["prices"]["ETH"] = p_data.get("ethereum", {}).get("usd", 3000)
+                                GLOBAL_PRICE_CACHE["prices"]["BNB"] = p_data.get("binancecoin", {}).get("usd", 500)
+                                GLOBAL_PRICE_CACHE["prices"]["MATIC"] = p_data.get("matic-network", {}).get("usd", 1)
+                                GLOBAL_PRICE_CACHE["prices"]["TRX"] = p_data.get("tron", {}).get("usd", 0.12)
+                                GLOBAL_PRICE_CACHE["last_updated"] = time.time()
+                    except: pass
+                
                 # Fetch Native Balance using V2 endpoint
                 url_native = f"https://api.etherscan.io/v2/api?chainid={chain_id}&module=account&action=balance&address={address}&tag=latest&apikey={api_key}"
                 async with session.get(url_native, timeout=10) as r:
@@ -456,7 +497,8 @@ async def wallet_profile(address: str, chain: str = "AUTO"):
                             bal = float(data.get("result", 0)) / 1e18
                             if bal > 0:
                                 ticker = "ETH" if actual_chain == "ETHEREUM" else "BNB" if actual_chain == "BSC" else "MATIC" if actual_chain == "POLYGON" else "NATIVE"
-                                balances.append({"token": ticker, "balance": round(bal, 4), "usd_value": round(bal * 3000, 2)}) # Mock USD rate for UI
+                                price = GLOBAL_PRICE_CACHE["prices"].get(ticker, 3000)
+                                balances.append({"token": ticker, "balance": round(bal, 4), "usd_value": round(bal * price, 2)})
             except: pass
             
     return {"address": address, "chain": chain_res, "balances": balances}
@@ -686,6 +728,8 @@ async def update_config(config: ConfigModel, token: dict = Depends(verify_access
 class NemesisReportRequest(BaseModel):
     address: str
     type: str
+    ledger_data: list = []
+    stats: dict = {}
 
 @app.get("/api/nemesis_id/profile/{address}")
 async def get_nemesis_profile(address: str):
@@ -701,8 +745,11 @@ async def get_nemesis_profile(address: str):
             if oklink_label:
                 label = oklink_label
     
+    import hashlib
+    nemesis_id = f"NMS-WALLET-{chain}-{hashlib.md5(address.encode()).hexdigest()[:8].upper()}"
     return {
         "address": address,
+        "nemesis_id": nemesis_id,
         "network": chain,
         "entity": label if label else "Unknown / Unlabeled",
         "balance": "Calculating...",
@@ -714,33 +761,112 @@ async def get_nemesis_profile(address: str):
         "clustered_addresses": []
     }
 
+TX_CACHE = {}
+
+async def fetch_real_txs(address: str):
+    if address in TX_CACHE and time.time() - TX_CACHE[address]["last_fetched"] < 60:
+        return TX_CACHE[address]["txs"]
+    
+    from services.trace_engine import detect_chain, CONFIG, EVM_DOMAINS
+    import aiohttp
+    import ssl
+    import certifi
+    from datetime import datetime
+    
+    chain_res = detect_chain(address, "AUTO")
+    actual_chain = chain_res if chain_res in EVM_DOMAINS else "ETHEREUM"
+    key_var = f"{actual_chain}SCAN_API_KEY" if actual_chain != "ETHEREUM" else "ETHERSCAN_API_KEY"
+    api_key = CONFIG.get(key_var, CONFIG.get("ETHERSCAN_API_KEY", ""))
+    
+    ssl_ctx = ssl.create_default_context(cafile=certifi.where())
+    connector = aiohttp.TCPConnector(ssl=ssl_ctx)
+    
+    txs = []
+    async with aiohttp.ClientSession(connector=connector) as session:
+        try:
+            url = f"https://api.etherscan.io/api?module=account&action=txlist&address={address}&startblock=0&endblock=99999999&page=1&offset=100&sort=desc&apikey={api_key}"
+            async with session.get(url, timeout=10) as r:
+                if r.status == 200:
+                    data = await r.json()
+                    if data.get("status") == "1":
+                        raw_txs = data.get("result", [])
+                        for tx in raw_txs:
+                            val = float(tx.get("value", 0)) / 1e18
+                            if val > 0:
+                                t = "Receive" if tx["to"].lower() == address.lower() else "Send"
+                                ts = datetime.fromtimestamp(int(tx["timeStamp"])).strftime('%Y-%m-%d %H:%M:%S')
+                                txs.append({
+                                    "type": t,
+                                    "timestamp": ts,
+                                    "hash": tx["hash"],
+                                    "sender": tx["from"],
+                                    "receiver": tx["to"],
+                                    "amount": f"{round(val, 4)} ETH",
+                                    "network": actual_chain,
+                                    "raw_val": val
+                                })
+        except Exception as e:
+            pass
+            
+    TX_CACHE[address] = {"txs": txs, "last_fetched": time.time()}
+    return txs
+
 @app.get("/api/nemesis_id/aml/{address}")
 async def get_nemesis_aml(address: str):
-    # Simulated AML scoring for now based on known parameters in DB
+    txs = await fetch_real_txs(address)
+    senders = {}
+    receivers = {}
+    total_vol = 0
+    exposure = 0
+    
+    for tx in txs:
+        val = tx.get("raw_val", 0)
+        total_vol += val
+        if tx["type"] == "Receive":
+            s = tx["sender"]
+            if s not in senders: senders[s] = {"wallet": s, "count": 0, "amount": 0}
+            senders[s]["count"] += 1
+            senders[s]["amount"] += val
+        else:
+            r = tx["receiver"]
+            if r not in receivers: receivers[r] = {"wallet": r, "count": 0, "amount": 0}
+            receivers[r]["count"] += 1
+            receivers[r]["amount"] += val
+            
+    s_list = sorted(senders.values(), key=lambda x: x["amount"], reverse=True)[:5]
+    r_list = sorted(receivers.values(), key=lambda x: x["amount"], reverse=True)[:5]
+    
+    for x in s_list + r_list:
+        x["amount"] = f"${round(x['amount'] * 3000, 2)}" # Defaulting UI display to USD estimate
+        
+    score = min(100, int(len(txs) * 0.5 + len(s_list)*2))
+    if len(txs) == 0: score = 0
+    
     return {
-        "score": 45,
-        "exposure_rate": "12.5%",
-        "receivers": [
-            {"wallet": "0xBinanceHotWallet", "count": 15, "amount": "$45,000"},
-            {"wallet": "0xUnknownMixer", "count": 2, "amount": "$1,200"}
-        ],
-        "senders": [
-            {"wallet": "0xWhaleWalletA", "count": 8, "amount": "$10,000"}
-        ]
+        "aml_score": score,
+        "exposure_rate": f"{round((len(s_list) / max(1, len(txs))) * 100, 1)}%",
+        "receivers": r_list,
+        "senders": s_list
     }
 
 @app.get("/api/nemesis_id/intel/{address}")
 async def get_nemesis_intel(address: str):
-    # Search darknet DB
     from services.trace_engine import mongo_db
+    txs = await fetch_real_txs(address)
+    
     darknet_mentions = 0
     if mongo_db is not None:
         count = await mongo_db.darknet_data.count_documents({"uie_entities.value": address})
         darknet_mentions = count
         
+    top_interacted = list(set([t["sender"] if t["type"] == "Receive" else t["receiver"] for t in txs[:5]]))
+    custodial_entry = "Unknown"
+    if txs and txs[-1]["type"] == "Receive":
+        custodial_entry = txs[-1]["sender"]
+        
     return {
-        "top_interacted": ["0xBinanceHotWallet", "0xTetherTreasury"],
-        "custodial_entry": "Binance 14",
+        "top_interacted": top_interacted[:3],
+        "custodial_entry": custodial_entry,
         "is_malicious": darknet_mentions > 0,
         "social_media": "None Found",
         "darknet_mentions": f"{darknet_mentions} Mentions"
@@ -748,13 +874,8 @@ async def get_nemesis_intel(address: str):
 
 @app.get("/api/nemesis_id/tx_history/{address}")
 async def get_nemesis_tx_history(address: str):
-    # Return placeholder until trace is completed, or fetch directly from Etherscan
-    return {
-        "transactions": [
-            {"type": "Receive", "timestamp": "2024-03-01 14:00:00", "hash": "0xabcdef123...", "sender": "0x123...", "receiver": address, "amount": "100 USDT", "network": "ETHEREUM"},
-            {"type": "Send", "timestamp": "2024-02-28 10:30:00", "hash": "0x987654321...", "sender": address, "receiver": "0x456...", "amount": "50 USDT", "network": "ETHEREUM"}
-        ]
-    }
+    txs = await fetch_real_txs(address)
+    return {"transactions": txs}
 
 @app.post("/api/nemesis_id/generate_report")
 async def nemesis_generate_report(req: NemesisReportRequest):
@@ -770,9 +891,19 @@ async def nemesis_generate_report(req: NemesisReportRequest):
         genai.configure(api_key=keys[0])
         model = genai.GenerativeModel("gemini-2.5-flash")
         
-        prompt = f"Write a comprehensive forensic intelligence report on the cryptocurrency address {req.address}. Include sections for Executive Summary, AML Risk, Known Entities, and Transaction Patterns. Format it entirely in Markdown."
+        import json
+        
+        # Prepare context data
+        context_data = ""
+        if req.ledger_data:
+            # Take up to 50 txs to avoid token limits
+            context_data += f"\n\n### Trace Ledger Data (Sample):\n{json.dumps(req.ledger_data[:50], indent=2)}"
+        if req.stats:
+            context_data += f"\n\n### Node Statistics:\n{json.dumps(req.stats, indent=2)}"
+            
+        prompt = f"Write a comprehensive forensic intelligence report on the cryptocurrency address {req.address}. Include sections for Executive Summary, AML Risk, Known Entities, and Transaction Patterns. Use the following context data if provided: {context_data}. Format it entirely in Markdown."
         if req.type == "insights":
-            prompt = f"Provide a brief 3-paragraph forensic AI insight for the cryptocurrency address {req.address}. Focus on anomalies, risk factors, and cluster behavior. Format it entirely in Markdown."
+            prompt = f"Provide a brief 3-paragraph forensic AI insight for the cryptocurrency address {req.address}. Focus on anomalies, risk factors, and cluster behavior based on the following tracer data: {context_data}. Format it entirely in Markdown."
             
         response = await asyncio.to_thread(model.generate_content, prompt)
         return {"markdown": response.text}

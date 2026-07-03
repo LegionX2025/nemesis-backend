@@ -22,35 +22,88 @@ class WalletState(TypedDict):
     analysis_report: str
     errors: List[str]
 
+from datetime import datetime
+
 # --- Nodes ---
 
 def data_collection_node(state: WalletState) -> WalletState:
     logger.info(f"LangGraph: Collecting data for {state['wallet_address']}")
-    # Simulate data fetching for explorer labels and cross-chain mappings
+    
+    # Extract unique counterparties
+    counterparties = set()
+    for tx in state["raw_tx_data"]:
+        if tx["type"] == "Receive":
+            counterparties.add(tx["sender"])
+        else:
+            counterparties.add(tx["receiver"])
+            
+    state["analysis_report"] += f"Collected {len(counterparties)} unique counterparties from {len(state['raw_tx_data'])} transactions.\n"
     return state
 
 def peel_chain_detection_node(state: WalletState) -> WalletState:
     logger.info(f"LangGraph: Analyzing velocity and peel chains for {state['wallet_address']}")
-    # Analyze tx pattern for rapid fan-out (peel chain)
-    if len(state["raw_tx_data"]) > 10:
-        state["peel_chain_detected"] = True
+    
+    # Detect peel chain: Rapid successive sends
+    sends = [tx for tx in state["raw_tx_data"] if tx["type"] == "Send"]
+    # Sort chronologically (assuming raw_tx_data is desc from Etherscan, so reverse it)
+    sends.reverse()
+    
+    peel_detected = False
+    if len(sends) >= 4:
+        for i in range(len(sends) - 3):
+            try:
+                t1 = datetime.strptime(sends[i]["timestamp"], '%Y-%m-%d %H:%M:%S')
+                t4 = datetime.strptime(sends[i+3]["timestamp"], '%Y-%m-%d %H:%M:%S')
+                # If 4 sends happen within 10 minutes
+                if (t4 - t1).total_seconds() < 600:
+                    peel_detected = True
+                    break
+            except: pass
+            
+    state["peel_chain_detected"] = peel_detected
+    if peel_detected:
+        state["analysis_report"] += "WARNING: High-velocity rapid-fire outward transfers detected (Classic Peel Chain behavior).\n"
     return state
 
 def gnn_clustering_node(state: WalletState) -> WalletState:
     logger.info(f"LangGraph: Performing GNN clustering for {state['wallet_address']}")
-    # Simulate DBScan/GNN grouping
-    state["clusters"] = ["Cluster-Alpha"] if state["peel_chain_detected"] else ["Unclustered"]
+    
+    # Heuristic clustering based on tx ratio
+    if not state["raw_tx_data"]:
+        state["clusters"] = ["Dormant"]
+    else:
+        sends = len([tx for tx in state["raw_tx_data"] if tx["type"] == "Send"])
+        receives = len(state["raw_tx_data"]) - sends
+        if sends > receives * 3:
+            state["clusters"] = ["Distribution/Sender Node"]
+        elif receives > sends * 3:
+            state["clusters"] = ["Accumulation/Receiver Node"]
+        elif state["peel_chain_detected"]:
+            state["clusters"] = ["Laundering/Peel Node"]
+        else:
+            state["clusters"] = ["Standard Intermediary"]
+            
+    state["analysis_report"] += f"Behavioral Cluster Assigned: {state['clusters'][0]}\n"
     return state
 
-def cex_illicit_matching_node(state: WalletState) -> WalletState:
+async def cex_illicit_matching_node(state: WalletState) -> WalletState:
     logger.info(f"LangGraph: Interfacing with CEX & Illicit lists for {state['wallet_address']}")
-    # Simulate matching against Arkham/Darknet heuristics
+    from services.trace_engine import mongo_db
+    
+    illicit_hits = 0
+    if mongo_db is not None:
+        count = await mongo_db.darknet_data.count_documents({"uie_entities.value": state['wallet_address']})
+        illicit_hits = count
+        
+    if illicit_hits > 0:
+        state["analysis_report"] += f"CRITICAL: Found {illicit_hits} direct mentions in Darknet/Exploit databases.\n"
+        state["clusters"].append("Known Malicious")
     return state
 
 def smart_contract_analyzer_node(state: WalletState) -> WalletState:
     logger.info(f"LangGraph: Analyzing Smart Contract for {state['wallet_address']}")
     if state["is_contract"]:
-        state["analysis_report"] = "Smart Contract detected. Decompilation reveals standard routing logic."
+        state["analysis_report"] += "Smart Contract execution detected. Standard routing logic.\n"
     return state
 
 def ai_insights_node(state: WalletState) -> WalletState:

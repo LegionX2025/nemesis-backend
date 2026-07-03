@@ -3,42 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <title>NEMESIS ID | Omni-Chain Identity Profiling</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    {% include 'includes/head_assets.html' %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.11.1/ethers.umd.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; color: #0f172a; margin: 0; }
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
         .tab-btn.active { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: bold; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         /* Loader */
         #ajax-loader { display: none; }
+        
+        /* Overrides for Light Web3GL Theme */
+        main { background: transparent !important; }
     </style>
 </head>
 <body class="flex flex-col h-screen overflow-hidden">
-    <!-- Header -->
-    <header class="bg-white border-b border-slate-200 text-slate-800 flex flex-col z-20 shrink-0 shadow-sm">
+    {% include 'includes/global_nav.html' %}
+    
+    <!-- Nemesis ID Toolbar -->
+    <div class="bg-white/80 backdrop-blur-md border-b border-slate-200 text-slate-800 flex flex-col z-20 shrink-0 shadow-sm relative">
         <div class="px-6 py-4 flex justify-between items-center w-full">
             <div class="flex items-center gap-4">
-                <img src="/static/logo_nemesis.jpeg" alt="Nemesis Logo" class="h-10 w-10 rounded border border-slate-200 shadow-sm">
-                <div>
+                <i class="fa-solid fa-fingerprint text-blue-600 text-3xl"></i>
+                <div class="glass-text-container">
                     <h1 class="text-xl font-black uppercase tracking-widest text-slate-900 leading-tight">NEMESIS ID</h1>
                     <p class="text-[10px] text-blue-600 font-mono font-bold uppercase tracking-widest leading-none mt-1">Identity Profiling</p>
                 </div>
             </div>
             <div class="flex items-center gap-3">
-                <input type="text" id="target-address" placeholder="Enter Wallet Address..." class="text-sm border border-slate-300 rounded-md px-4 py-2 w-72 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner font-mono">
-                <button onclick="generateProfile()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow transition text-sm flex items-center gap-2">
+                <input type="text" id="target-address" placeholder="Enter Wallet Address..." class="text-sm border border-slate-300 rounded-md px-4 py-2 w-72 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner font-mono bg-white/70 text-slate-800">
+                <button onclick="generateProfile()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow-md transition text-sm flex items-center gap-2 border border-blue-500">
                     <i class="fa-solid fa-id-card"></i> GENERATE
+                </button>
+                <button onclick="connectWeb3Wallet()" id="web3-connect-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded shadow-md transition text-sm flex items-center gap-2 border border-indigo-500 ml-4">
+                    <i class="fa-brands fa-ethereum"></i> Connect Web3
                 </button>
             </div>
         </div>
         <!-- Tabs -->
-        <div class="flex border-t border-slate-200 px-6 gap-6 bg-slate-50 text-sm">
+        <div class="flex border-t border-slate-200 px-6 gap-6 bg-slate-50/50 text-sm">
             <button class="tab-btn active py-3 text-slate-600 hover:text-blue-600" onclick="switchTab('tab-profile', this)">Wallet Profile</button>
             <button class="tab-btn py-3 text-slate-600 hover:text-blue-600" onclick="switchTab('tab-aml', this)">AML</button>
             <button class="tab-btn py-3 text-slate-600 hover:text-blue-600" onclick="switchTab('tab-intel', this)">Intelligence</button>
@@ -46,7 +51,7 @@
             <button class="tab-btn py-3 text-slate-600 hover:text-blue-600" onclick="switchTab('tab-insights', this)">Insights Report</button>
             <button class="tab-btn py-3 text-slate-600 hover:text-blue-600" onclick="switchTab('tab-fullreport', this)">Generate Full Report</button>
         </div>
-    </header>
+    </div>
 
     <!-- Main Content -->
     <main class="flex-grow overflow-auto p-8 relative">
@@ -205,6 +210,44 @@
     </main>
 
     <script>
+        // WEB3 & ETHERS.JS INTEGRATION
+        let provider = null;
+        let signer = null;
+        let connectedAddress = null;
+
+        async function connectWeb3Wallet() {
+            if (window.ethereum == null) {
+                alert("MetaMask or Web3 wallet not detected. Please install a Web3 provider.");
+                return;
+            }
+            try {
+                // Initialize ethers provider
+                provider = new ethers.BrowserProvider(window.ethereum);
+                signer = await provider.getSigner();
+                connectedAddress = await signer.getAddress();
+                
+                // Update UI
+                const btn = document.getElementById("web3-connect-btn");
+                btn.innerHTML = `<i class="fa-solid fa-check-circle"></i> ${connectedAddress.substring(0, 6)}...${connectedAddress.substring(connectedAddress.length - 4)}`;
+                btn.classList.replace("bg-indigo-600", "bg-emerald-600");
+                btn.classList.replace("hover:bg-indigo-700", "hover:bg-emerald-700");
+                btn.classList.replace("border-indigo-500", "border-emerald-500");
+                
+                // Set the connected address as the target
+                document.getElementById("target-address").value = connectedAddress;
+                
+                // Optional: Fetch balance directly from blockchain via ethers.js
+                const balanceWei = await provider.getBalance(connectedAddress);
+                const balanceEth = ethers.formatEther(balanceWei);
+                console.log(`[Web3] Direct On-Chain Balance: ${balanceEth} ETH`);
+                
+            } catch (error) {
+                console.error("Web3 Connection Error:", error);
+                alert("Failed to connect Web3 Wallet.");
+            }
+        }
+
+        // TAB LOGIC
         function switchTab(tabId, btnElement) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -223,10 +266,8 @@
             loader.style.display = 'flex';
             dashboard.classList.remove('hidden');
             
-            // Define API base url
-            const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-                ? 'http://127.0.0.1:8000' 
-                : 'https://nemesis-api.legionxgaming2021.workers.dev'; // Using 8000 for local FastAPI
+            // Use relative path for all API calls
+            const baseUrl = '';
 
             try {
                 // 1. Fetch Profile
@@ -358,9 +399,7 @@
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Generating...';
             btn.disabled = true;
             
-            const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-                ? 'http://127.0.0.1:8000' 
-                : 'https://nemesis-api.legionxgaming2021.workers.dev';
+            const baseUrl = '';
 
             try {
                 const aiRes = await fetch(`${baseUrl}/api/nemesis_id/generate_report`, {
@@ -404,5 +443,6 @@
             }
         }
     </script>
+    {% include 'includes/footer.html' %}
 </body>
 </html>
