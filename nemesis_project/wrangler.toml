@@ -13,7 +13,7 @@ preview_id = "556aa273aeac4b009b559bb215346ce3"
 [[d1_databases]]
 binding = "DB"
 database_name = "nemesis_audit_db"
-database_id = "556aa273aeac4b009b559bb215346ce3"
+database_id = "80acedab-33c2-4637-bee7-6b9a1176a463"
 
 [[r2_buckets]]
 binding = "NEMESIS_STORAGE"

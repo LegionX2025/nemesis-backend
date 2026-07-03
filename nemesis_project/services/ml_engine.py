@@ -99,4 +99,29 @@ class MachineLearningEngine:
             "Sanctions_Exposure_Score": 0
         }
 
+    def log_training_error(self, error_log: str, fix_script: str, success: bool):
+        """Logs runtime errors and their Godmode-generated fixes to build the ML training corpus."""
+        try:
+            training_data_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
+            if not os.path.exists(training_data_dir):
+                os.makedirs(training_data_dir)
+                
+            training_file = os.path.join(training_data_dir, "ml_training_errors.jsonl")
+            
+            training_record = {
+                "timestamp": __import__("datetime").datetime.utcnow().isoformat(),
+                "error_trace": error_log,
+                "generated_patch": fix_script,
+                "patch_successful": success
+            }
+            
+            with open(training_file, "a", encoding="utf-8") as f:
+                f.write(json.dumps(training_record) + "\n")
+                
+            logger.info(f"Successfully ingested error patch into ML Training Corpus: {training_file}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to log training error to ML Engine: {e}")
+            return False
+
 ml_engine = MachineLearningEngine()

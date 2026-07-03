@@ -51,8 +51,18 @@ def run_cmd(cmd, cwd=".", exit_on_error=True, max_retries=3):
                 try:
                     subprocess.run([sys.executable, "inline_temp_fix.py"], check=True)
                     print("[GODMODE] Patch applied! Retrying command...")
+                    try:
+                        from services.ml_engine import ml_engine
+                        ml_engine.log_training_error(trimmed_log, fix_script, True)
+                    except Exception:
+                        pass
                 except Exception as fix_e:
                     print(f"[GODMODE] Patch failed: {fix_e}")
+                    try:
+                        from services.ml_engine import ml_engine
+                        ml_engine.log_training_error(trimmed_log, fix_script, False)
+                    except Exception:
+                        pass
                 if os.path.exists("inline_temp_fix.py"):
                     os.remove("inline_temp_fix.py")
             else:
