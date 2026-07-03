@@ -62,6 +62,7 @@ logger = logging.getLogger("OmniChainEngine")
 
 from services.trace_engine import TraceEngine, init_mongodb, get_asset_ticker, detect_chain, EVM_DOMAINS, get_active_traces, get_mongo_status, fetch_saved_traces
 from services.auth_engine import authenticate_admin, create_access_token, verify_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
+from services.godmode_engine import godmode_engine
 from datetime import timedelta
 import asyncio
 import sys
@@ -144,6 +145,27 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Nemesis OmniChain API", description="Lionsgate OmniChain Forensic Engine", lifespan=lifespan)
 
+import traceback
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    error_trace = traceback.format_exc()
+    logger.error(f"Global Error caught: {exc}")
+    
+    # If Godmode is enabled, heal at runtime
+    if godmode_engine.auto_pilot_enabled:
+        healed = await godmode_engine.heal_runtime_error(error_trace)
+        if healed:
+            return JSONResponse(
+                status_code=500,
+                content={"message": "Runtime error occurred, but Godmode Auto-Pilot successfully healed the application. Please retry the request.", "healed": True}
+            )
+            
+    return JSONResponse(
+        status_code=500,
+        content={"message": "Internal Server Error", "details": str(exc), "healed": False}
+    )
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -156,6 +178,27 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 active_sessions = {}
 templates = Jinja2Templates(directory="templates")
+
+# GodMode Routes
+@app.websocket("/api/godmode/stream")
+async def godmode_ws_stream(websocket: WebSocket):
+    await godmode_engine.connect(websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            # Handle incoming commands if necessary
+    except Exception as e:
+        pass
+    finally:
+        godmode_engine.disconnect(websocket)
+
+class GodmodeToggle(BaseModel):
+    enabled: bool
+
+@app.post("/api/godmode/toggle")
+async def toggle_godmode(req: GodmodeToggle):
+    state = godmode_engine.toggle_autopilot(req.enabled)
+    return {"status": "success", "godmode": state}
 
 class AnalyzeInputRequest(BaseModel):
     input: str

@@ -5,30 +5,61 @@ import shutil
 import urllib.request
 import traceback
 
-def run_cmd(cmd, cwd=None, exit_on_error=True):
+def run_cmd(cmd, cwd=None, exit_on_error=True, max_retries=3):
     print(f"\n[EXEC] {cmd}" + (f" (in {cwd})" if cwd else ""))
-    try:
-        process = subprocess.Popen(
-            cmd, shell=True, cwd=cwd,
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
-        )
-        output_log = ""
-        for line in process.stdout:
-            print(line, end="")
-            output_log += line
+    
+    attempt = 1
+    while attempt <= max_retries:
+        try:
+            process = subprocess.Popen(
+                cmd, shell=True, cwd=cwd,
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+            )
+            output_log = ""
+            for line in process.stdout:
+                print(line, end="")
+                output_log += line
+                
+            process.wait()
+            if process.returncode == 0:
+                return True, output_log
+                
+            print(f"[ERROR] Command failed with exit code {process.returncode} on attempt {attempt}")
             
-        process.wait()
-        if process.returncode != 0:
-            print(f"[ERROR] Command failed with exit code {process.returncode}")
-            if exit_on_error:
-                sys.exit(process.returncode)
-            return False, output_log
-        return True, output_log
-    except Exception as e:
-        print(f"[CRITICAL ERROR] {str(e)}")
-        if exit_on_error:
-            sys.exit(1)
-        return False, str(e)
+            # --- GODMODE INLINE SELF-HEALING ---
+            print("[GODMODE] Engaging Inline Self-Repair Protocol...")
+            import godmode
+            trimmed_log = "\n".join(output_log.split("\n")[-100:])
+            fix_script = godmode.query_gemini_to_heal(f"Command '{cmd}' failed.\n{trimmed_log}")
+            
+            if fix_script:
+                print("[GODMODE] Applying Gemini Fix Script...")
+                with open("inline_temp_fix.py", "w", encoding="utf-8") as f:
+                    f.write(fix_script)
+                try:
+                    subprocess.run([sys.executable, "inline_temp_fix.py"], check=True)
+                    print("[GODMODE] Patch applied! Retrying command...")
+                except Exception as fix_e:
+                    print(f"[GODMODE] Patch failed: {fix_e}")
+                if os.path.exists("inline_temp_fix.py"):
+                    os.remove("inline_temp_fix.py")
+            else:
+                print("[GODMODE] No fix provided. Retrying blindly...")
+                
+            attempt += 1
+            import time
+            time.sleep(2)
+            
+        except Exception as e:
+            print(f"[CRITICAL ERROR] {str(e)}")
+            if exit_on_error and attempt == max_retries:
+                sys.exit(1)
+            attempt += 1
+            
+    if exit_on_error:
+        print("[GODMODE] Max retries reached. Terminating.")
+        sys.exit(process.returncode if 'process' in locals() else 1)
+    return False, output_log
 
 def main():
     print("============================================================")
@@ -48,8 +79,10 @@ def main():
     if os.path.exists("cloudflare_worker/package.json"):
         print("    -> Installing Node.js requirements (cloudflare_worker)...")
         run_cmd("npm install", cwd="cloudflare_worker", exit_on_error=False)
-        print("    -> Running npm audit fix...")
-        run_cmd("npm audit fix", cwd="cloudflare_worker", exit_on_error=False)
+        print("    -> Running npm audit fix --force...")
+        run_cmd("npm audit fix --force", cwd="cloudflare_worker", exit_on_error=False)
+        print("    -> Running npm update...")
+        run_cmd("npm update", cwd="cloudflare_worker", exit_on_error=False)
         
     # Ensure .gitignore exists to prevent LFS issues
     gitignore_content = "node_modules/\ncloudflare_worker/node_modules/\ncf_pages_build/\nvenv/\n__pycache__/\n.env\n"
