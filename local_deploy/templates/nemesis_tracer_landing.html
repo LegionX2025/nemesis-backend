@@ -8,6 +8,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        const IS_LOCAL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "";
+        window.BACKEND_URL = IS_LOCAL ? "http://127.0.0.1:8088" : "https://nemesis-api.legionxgaming2021.workers.dev";
+    </script>
 
     <style>
         body { 
@@ -190,8 +194,11 @@
                                 <i class="fa-solid fa-dollar-sign text-emerald-500"></i>
                             </div>
                             <select id="target_currency" class="w-full pl-8 pr-4 py-3 rounded-xl transition bg-white/90 border border-slate-300 font-mono text-sm appearance-none" onchange="updateCurrencyIcon()">
-                                <optgroup label="Fiat Currencies">
+                                <optgroup label="Fiat & Broad Asset Classes">
                                     <option value="USD" data-icon="fa-dollar-sign text-emerald-500">USD - US Dollar</option>
+                                    <option value="ALL_TOKENS" data-icon="fa-coins text-blue-500">ALL Tokens</option>
+                                    <option value="NATIVE" data-icon="fa-cube text-purple-500">Native Chain Assets</option>
+                                    <option value="STABLECOINS" data-icon="fa-money-bill-wave text-emerald-400">Stablecoins</option>
                                     <option value="EUR" data-icon="fa-euro-sign text-blue-600">EUR - Euro</option>
                                     <option value="GBP" data-icon="fa-sterling-sign text-indigo-600">GBP - British Pound</option>
                                     <option value="JPY" data-icon="fa-yen-sign text-red-500">JPY - Japanese Yen</option>
@@ -292,6 +299,7 @@
 
             const lines = val.split('\n').map(l => l.trim()).filter(l => l.length > 0);
             let hasTxHash = false;
+            let detectedChainVal = null;
             
             // Basic heuristic network detection for logos
             const networkMap = [
@@ -310,6 +318,12 @@
                 let match = networkMap.find(n => n.pattern.test(line));
                 if (match) {
                     if (match.isTx) hasTxHash = true;
+                    if (!detectedChainVal) {
+                        if (match.name.includes("BTC")) detectedChainVal = "BITCOIN";
+                        else if (match.name.includes("EVM")) detectedChainVal = "ETHEREUM";
+                        else if (match.name.includes("Tron")) detectedChainVal = "TRON";
+                        else if (match.name.includes("Solana")) detectedChainVal = "SOLANA";
+                    }
                     // Render badge
                     container.innerHTML += `
                         <div class="inline-flex items-center gap-2 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-700 mr-2 mb-2 shadow-sm">
@@ -329,6 +343,14 @@
                     `;
                 }
             });
+
+            if (detectedChainVal) {
+                const chainSelect = document.getElementById('target_chain');
+                if (chainSelect.value === 'AUTO') {
+                    chainSelect.value = detectedChainVal;
+                    updateChainIcon();
+                }
+            }
 
             if (hasTxHash) {
                 helper.classList.remove('hidden');
@@ -374,7 +396,7 @@
             }, 1000);
 
             try {
-                const response = await fetch("/api/start_trace", {
+                const response = await fetch(window.BACKEND_URL + "/api/start_trace", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({

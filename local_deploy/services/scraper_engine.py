@@ -231,12 +231,39 @@ class AutoScraper:
                 multi_url = f"https://www.oklink.com/multi-search#key={address}"
                 try:
                     await page.goto(multi_url, wait_until="domcontentloaded", timeout=10000)
-                    await page.wait_for_timeout(3000)
-                    multi_content = await page.content()
-                    soup = BeautifulSoup(multi_content, 'html.parser')
-                    text_blob += " " + soup.get_text()
-                except Exception:
-                    pass
+                    
+                    # Dynamic Loading: Ensure async search results populate
+                    try:
+                        await page.wait_for_selector('.home-container', timeout=8000)
+                    except Exception:
+                        await page.wait_for_timeout(3000)
+
+                    # Extract entity details from search result items (Addressing Text Truncation)
+                    results = await page.evaluate('''() => {
+                        const items = Array.from(document.querySelectorAll('.home-container a[href*="/address/"], .home-container a[href*="/token/"]'));
+                        return items.map(item => {
+                            // Extract full textContent to bypass CSS ellipsis truncation
+                            const labelEl = item.querySelector('.wrapper-qoNkf, span[class^="tokenName"]');
+                            const fullLabel = labelEl ? labelEl.textContent.trim() : null;
+                            
+                            // Parse innerText for structure
+                            const lines = item.innerText.split('\\n').map(s => s.trim()).filter(Boolean);
+                            return {
+                                label: fullLabel || lines[0],           // e.g., "USD Coin"
+                                symbol: lines.length > 1 ? lines[1] : "", // e.g., "(USDC)"
+                                chain: lines.find(l => !l.startsWith('0x') && !l.includes('$') && l.length < 20) || 'Unknown',
+                                type: item.href.includes('/token/') ? 'Token' : 'Address',
+                                url: item.href
+                            };
+                        });
+                    }''')
+                    
+                    if results:
+                        for r in results:
+                            text_blob += f" | {r.get('label')} {r.get('symbol')} {r.get('type')} on {r.get('chain')}"
+                            
+                except Exception as e:
+                    logger.debug(f"OKLink multi-search extraction skipped/failed: {e}")
             
             label, cluster = self._classify_text(text_blob)
             

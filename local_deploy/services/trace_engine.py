@@ -247,137 +247,100 @@ async def auto_compute_loss_amount(seeds_list, default_chain="AUTO"):
     extracted_seeds = []
     
     async with aiohttp.ClientSession() as session:
-        tasks = []
+        engine = TraceEngine("dummy-compute")
+        
         for seed in seeds_list:
             chain = detect_chain(seed, default_chain)
-            
-            if chain == "EVM_TX" or (chain != "INVALID" and len(seed) == 66 and seed.startswith("0x")):
-                networks = EVM_DOMAINS.keys() if default_chain == "AUTO" else [default_chain]
-                for net in networks:
-                    net_upper = net.upper()
-                    if net_upper == "ETHEREUM": base_url = "https://api.etherscan.io/api"
-                    elif net_upper == "BSC": base_url = "https://api.bscscan.com/api"
-                    elif net_upper == "POLYGON": base_url = "https://api.polygonscan.com/api"
-                    elif net_upper == "BASE": base_url = "https://api.basescan.org/api"
-                    elif net_upper == "ARBITRUM": base_url = "https://api.arbiscan.io/api"
-                    elif net_upper == "OPTIMISM": base_url = "https://api-optimistic.etherscan.io/api"
-                    else: base_url = "https://api.etherscan.io/api"
-                    
-                    key_var = f"{net_upper}SCAN_API_KEY" if net_upper != "ETHEREUM" else "ETHERSCAN_API_KEY"
-                    api_key = CONFIG.get(key_var, CONFIG.get("ETHERSCAN_API_KEY", ""))
-                    
-                    url = f"{base_url}?module=proxy&action=eth_getTransactionByHash&txhash={seed}&apikey={api_key}"
-                    url_receipt = f"{base_url}?module=proxy&action=eth_getTransactionReceipt&txhash={seed}&apikey={api_key}"
-                    tasks.append( (seed, net_upper, url, "tx") )
-                    tasks.append( (seed, net_upper, url_receipt, "tx_receipt") )
-            
-            elif chain == "BTC_TX" or (chain != "INVALID" and len(seed) == 64 and not seed.startswith("0x")):
-                url = f"https://mempool.space/api/tx/{seed}"
-                tasks.append( (seed, "BITCOIN", url, "btc_tx") )
-                
-            elif chain in EVM_DOMAINS or chain == "EVM_AUTO":
-                networks = EVM_DOMAINS.keys() if chain == "EVM_AUTO" else [chain]
-                for net in networks:
-                    net_upper = net.upper()
-                    if net_upper == "ETHEREUM": base_url = "https://api.etherscan.io/api"
-                    elif net_upper == "BSC": base_url = "https://api.bscscan.com/api"
-                    elif net_upper == "POLYGON": base_url = "https://api.polygonscan.com/api"
-                    elif net_upper == "BASE": base_url = "https://api.basescan.org/api"
-                    elif net_upper == "ARBITRUM": base_url = "https://api.arbiscan.io/api"
-                    elif net_upper == "OPTIMISM": base_url = "https://api-optimistic.etherscan.io/api"
-                    else: base_url = "https://api.etherscan.io/api"
-                    
-                    key_var = f"{net_upper}SCAN_API_KEY" if net_upper != "ETHEREUM" else "ETHERSCAN_API_KEY"
-                    api_key = CONFIG.get(key_var, CONFIG.get("ETHERSCAN_API_KEY", ""))
-                    
-                    url = f"{base_url}?module=account&action=txlist&address={seed}&startblock=0&endblock=99999999&page=1&offset=50&sort=desc&apikey={api_key}"
-                    tasks.append( (seed, net_upper, url, "address") )
-                
+            if chain == "INVALID":
                 if seed not in extracted_seeds:
                     extracted_seeds.append(seed)
-            else:
+                continue
+                
+            res = await engine.fetch_txs(session, seed, chain)
+            if not res or not res.get("data"):
                 if seed not in extracted_seeds:
                     extracted_seeds.append(seed)
-
-        # Execute all HTTP requests concurrently
-        async def fetch_task(seed, net_upper, url, req_type):
-            try:
-                async with session.get(url, timeout=3) as r:
-                    if r.status == 200:
-                        try:
-                            data = await r.json(content_type=None)
-                        except Exception:
-                            return None
-                        
-                        if req_type == "tx":
-                            res = data.get("result")
-                            if res and isinstance(res, dict):
-                                val_hex = res.get("value", "0x0")
-                                val_eth = int(val_hex, 16) / 10**18
-                                to_addr = res.get("to")
-                                return ("tx", val_eth * USD_RATES.get(net_upper, 3000.0), to_addr)
-                        
-                        elif req_type == "tx_receipt":
-                            res = data.get("result")
-                            if res and isinstance(res, dict) and res.get("logs"):
-                                total_usd = 0.0
-                                main_receiver = None
-                                transfer_topic = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
-                                for log in res["logs"]:
-                                    topics = log.get("topics", [])
-                                    if len(topics) == 3 and topics[0] == transfer_topic:
-                                        to_hex = topics[2]
-                                        receiver = "0x" + to_hex[-40:]
-                                        val_hex = log.get("data", "0x0")
-                                        val_raw = int(val_hex, 16) if val_hex != "0x" else 0
-                                        
-                                        # Heuristic: if value > 1e12, probably 18 decimals, otherwise 6 decimals (stablecoin)
-                                        if val_raw > 10**14:
-                                            usd = (val_raw / 10**18) * USD_RATES.get(net_upper, 3000.0)
-                                        else:
-                                            usd = val_raw / 10**6 # Assume USDT/USDC equivalent
-                                            
-                                        total_usd += usd
-                                        main_receiver = receiver
-                                if total_usd > 0:
-                                    return ("tx", total_usd, main_receiver)
-
-                        elif req_type == "btc_tx":
-                            if isinstance(data, dict):
-                                total_btc = 0.0
-                                main_receiver = None
-                                vouts = data.get("vout", [])
-                                if vouts:
-                                    for v in vouts:
-                                        total_btc += v.get("value", 0) / 1e8
-                                        if not main_receiver and v.get("scriptpubkey_address"):
-                                            main_receiver = v.get("scriptpubkey_address")
-                                return ("tx", total_btc * USD_RATES.get("BITCOIN", 65000.0), main_receiver)
-                        
+                continue
+                
+            tx_type = res.get("type", "evm")
+            actual_chain = res.get("actual_chain", chain)
+            txs = res["data"]
+            
+            total_usd = 0.0
+            for tx in txs:
+                val = 0.0
+                main_receiver = None
+                try:
+                    if tx_type == "evm":
+                        val_str = tx.get("value", "0")
+                        if isinstance(val_str, str) and val_str.startswith("0x"):
+                            val_raw = int(val_str, 16)
                         else:
-                            txs = data.get("result", [])
-                            total = 0.0
-                            if isinstance(txs, list):
-                                for tx in txs:
-                                    if tx.get("from", "").lower() == seed.lower():
-                                        val_eth = float(tx.get("value", "0")) / 10**18
-                                        total += val_eth * USD_RATES.get(net_upper, 3000.0)
-                            if total > 0:
-                                return ("address", total, None)
-            except Exception as e:
-                pass
-            return None
+                            val_raw = float(val_str)
+                            
+                        decimals = int(tx.get("tokenDecimal", 18))
+                        val = (val_raw / (10**decimals))
+                        main_receiver = tx.get("to")
+                    
+                    elif tx_type == "btc":
+                        main_receiver = None
+                        addr_lower = seed.lower()
+                        is_sender = any(i.get("prevout", {}).get("scriptpubkey_address", "").lower() == addr_lower for i in tx.get("vin", []))
+                        if is_sender:
+                            for o in tx.get("vout", []):
+                                if o.get("scriptpubkey_address", "").lower() != addr_lower:
+                                    val += float(o.get("value", 0)) / 1e8
+                                    main_receiver = o.get("scriptpubkey_address")
+                                    
+                    elif tx_type == "solana":
+                        pre_bals = tx.get("meta", {}).get("preBalances", [])
+                        post_bals = tx.get("meta", {}).get("postBalances", [])
+                        keys = [k.get("pubkey") for k in tx.get("transaction", {}).get("message", {}).get("accountKeys", [])]
+                        if seed in keys:
+                            idx = keys.index(seed)
+                            if idx < len(pre_bals) and idx < len(post_bals):
+                                diff = (post_bals[idx] - pre_bals[idx]) / 1e9
+                                if diff < 0:
+                                    val = abs(diff)
+                                    if len(keys) > 1: main_receiver = keys[1]
+                                    
+                    elif tx_type == "ripple":
+                        t_tx = tx.get("tx", tx)
+                        if t_tx.get("TransactionType") == "Payment" and t_tx.get("Account") == seed:
+                            amt = t_tx.get("Amount", 0)
+                            if isinstance(amt, str): val = float(amt) / 1e6
+                            elif isinstance(amt, dict): val = float(amt.get("value", 0))
+                            main_receiver = t_tx.get("Destination")
+                            
+                    elif tx_type == "tron":
+                        if tx.get("ownerAddress", tx.get("from")) == seed:
+                            amt = tx.get("amount")
+                            if amt:
+                                val = float(amt) / 1e6
+                                main_receiver = tx.get("toAddress", tx.get("to"))
+                                
+                    elif tx_type == "stellar":
+                        if tx.get("from") == seed:
+                            val = float(tx.get("amount", 0))
+                            main_receiver = tx.get("to")
 
-        # Gather results (limit concurrent tasks if there are too many)
-        if tasks:
-            import asyncio
-            results = await asyncio.gather(*(fetch_task(*t) for t in tasks), return_exceptions=True)
-            for res in results:
-                if isinstance(res, tuple):
-                    req_type, amount, addr = res
-                    computed_amt += amount
-                    if req_type == "tx" and addr and addr not in extracted_seeds:
-                        extracted_seeds.append(addr)
+                    # Convert to USD heuristically
+                    usd_val = val * USD_RATES.get(actual_chain, 3000.0 if tx_type == "evm" else 1.0)
+                    if tx_type == "btc": usd_val = val * USD_RATES.get("BITCOIN", 65000.0)
+                    elif tx_type == "solana": usd_val = val * USD_RATES.get("SOLANA", 140.0)
+                    elif tx_type == "ripple": usd_val = val * USD_RATES.get("RIPPLE", 0.5)
+                    elif tx_type == "tron": usd_val = val * USD_RATES.get("TRON", 0.12)
+                    elif tx_type == "stellar": usd_val = val * USD_RATES.get("STELLAR", 0.1)
+
+                    if usd_val > total_usd: # Pick the largest out-tx as the potential loss event
+                        total_usd = usd_val
+                        if main_receiver and main_receiver not in extracted_seeds:
+                            extracted_seeds.append(main_receiver)
+
+                except Exception as e:
+                    pass
+                    
+            computed_amt += total_usd
 
     return str(computed_amt) if computed_amt > 0 else "0", "USD", extracted_seeds
 
@@ -1507,33 +1470,26 @@ class TraceEngine:
             except: self.clients.discard(ws)
 
     async def execute_dbscan_clustering(self):
-        if len(self.node_stats) < 2: return
-        features = []
-        nodes = list(self.node_stats.keys())
-        
-        for n in nodes:
-            stats = self.node_stats[n]
-            features.append([stats["in_amt"], stats["out_amt"], stats["in_count"], stats["out_count"]])
-            
+        if not self.ledger: return
+        import sys
+        import os
+        sys.path.append(os.path.dirname(os.path.dirname(__file__)))
         try:
-            if not features or all(all(v == 0 for v in row) for row in features): return
-            
-            scaler = StandardScaler()
-            scaled_features = scaler.fit_transform(features)
-            db = DBSCAN(eps=0.5, min_samples=2, n_jobs=1).fit(scaled_features)
+            from scripts.ml_clustering import run_syndicate_clustering
+            clusters = run_syndicate_clustering(self.ledger)
             
             updates = []
-            for idx, cluster_label in enumerate(db.labels_):
-                n = nodes[idx]
-                stats = self.node_stats[n]
-                is_holding = stats["in_count"] > 0 and stats["out_count"] == 0 and n not in self.seeds
-                
-                c_id = f"Threat Actor Syndicate Alpha-{cluster_label}" if cluster_label != -1 else "Unclustered"
-                updates.append({"node": n, "cluster_id": c_id, "is_holding": is_holding})
-                
-            for ws in list(self.clients):
-                try: await ws.send_json({"type": "DBSCAN_UPDATE", "data": updates})
-                except: pass
+            for n, c_id in clusters.items():
+                updates.append({"node": n, "cluster_id": c_id})
+                # Update ledger directly
+                for item in self.ledger:
+                    if item["from"] == n or item["to"] == n:
+                        item["cluster"] = c_id
+            
+            if updates:
+                for ws in list(self.clients):
+                    try: await ws.send_json({"type": "DBSCAN_UPDATE", "data": updates})
+                    except: pass
         except Exception as e:
             logger.error(f"Clustering failed: {e}")
 

@@ -100,7 +100,7 @@ deleted_classes = ["TraceSessionDO"]
 [[hyperdrive]]
 binding = "HYPERDRIVE"
 id = "2bf62864eaf64708b5a349169d6efc7e"
-localConnectionString = "postgresql://admin:!Nemesis2026@ep-morning-glitter-adpz0uqn-pooler.c-2.us-east-1.aws.neon.tech:5432/intelligence"
+localConnectionString = "postgresql://admin:nemesis2026@ep-morning-glitter-adpz0uqn-pooler.c-2.us-east-1.aws.neon.tech:5432/intelligence"
 
 # ============================================================================
 # ENVIRONMENT VARIABLES

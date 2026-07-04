@@ -82,10 +82,21 @@ async def run_boot_diagnostics():
     logger.info("   INITIATING LIONSGATE NEMESIS BOOT SEQUENCE     ")
     logger.info("==================================================")
     
-    logger.info(">>> [1/4] Verifying Core Dependencies...")
+    logger.info(">>> [1/6] Verifying Environment Variables & Dependencies...")
+    if os.path.exists(".env"):
+        logger.info("    [OK] .env configuration file loaded.")
+    else:
+        logger.warning("    [WARN] .env file not found. Falling back to system environment variables.")
     logger.info("    [OK] Core dependencies verified via build system.")
+    
+    logger.info(">>> [2/6] Establishing Database Links...")
+    mongo_status = get_mongo_status()
+    if mongo_status:
+        logger.info("    [OK] MongoDB Connection established securely.")
+    else:
+        logger.error("    [FAIL] MongoDB Connection failed. Please check your credentials and network.")
         
-    logger.info(">>> [2/5] Checking Intelligence Providers & API Keys...")
+    logger.info(">>> [3/6] Checking Intelligence Providers & API Keys...")
     from services.trace_engine import CONFIG
     providers = {
         "Etherscan": CONFIG.get("ETHERSCAN_API_KEY"),
@@ -102,13 +113,18 @@ async def run_boot_diagnostics():
         else:
             logger.warning(f"    [WARN] {p} API Key missing or default.")
             
-    logger.info(">>> [3/5] Loading Supported Networks & RPC Fallbacks...")
+    logger.info(">>> [4/6] Loading Supported Networks & RPC Fallbacks...")
     logger.info(f"    [OK] EVM Chains: {', '.join(EVM_DOMAINS.keys())}")
     logger.info("    [OK] Non-EVM Chains: BITCOIN, SOLANA, TRON, RIPPLE, STELLAR")
     
-    logger.info(">>> [4/4] Verifying Tracing Engine & Executions...")
-    logger.info("    [OK] Tracing Engine Ready. Parallel Executions (Max 4 Workers).")
+    logger.info(">>> [5/6] Verifying Tracing Engine & Executions...")
+    logger.info(f"    [OK] Tracing Engine Ready. Parallel Executions (Max {os.environ.get('LOKY_MAX_CPU_COUNT', 4)} Workers).")
     
+    logger.info(">>> [6/6] Initializing Nemesis AI Godmode Integrations...")
+    if CONFIG.get("GEMINI_API_KEY"):
+        logger.info("    [OK] Gemini AI Heuristics Active.")
+    else:
+        logger.warning("    [WARN] Gemini AI key missing. Running without advanced ML heuristics.")
     
     logger.info("==================================================")
     logger.info("   NEMESIS ENGINE READY FOR OMNICHAIN OPERATIONS  ")
@@ -140,7 +156,7 @@ async def lifespan(app: FastAPI):
             
             use_tor = os.getenv("VITE_TOR_AUTO_START", "false").lower() == "true" # Defaulted to false for separate terminal
             if use_tor:
-                darknet_script = os.path.join(os.path.dirname(__file__), "darknet", "darknetv2.py")
+                darknet_script = os.path.join(os.path.dirname(__file__), "osint", "darknet.py")
                 
                 # Check if running on Windows to use CREATE_NEW_CONSOLE
                 if os.name == 'nt':
@@ -207,6 +223,75 @@ async def api_ml_ontology():
         return {"data": data}
     except Exception as e:
         return {"error": str(e)}
+
+from fastapi import BackgroundTasks
+
+class DataIngestionRequest(BaseModel):
+    filename: str
+
+@app.post("/api/admin/ingest_data")
+async def api_admin_ingest_data(req: DataIngestionRequest, background_tasks: BackgroundTasks):
+    from services.data_ingestion_engine import ingest_jsonl, collection_entities, collection_arkham, collection_vasp, ingest_json_array
+    import os
+    
+    file_path = os.path.join(os.path.dirname(__file__), "data", req.filename)
+    if not os.path.exists(file_path):
+        return {"status": "error", "message": f"File {req.filename} not found in data directory."}
+        
+    async def run_ingestion():
+        if req.filename.endswith(".jsonl"):
+            # Determine collection based on filename
+            target_collection = collection_arkham if "arkham" in req.filename.lower() else collection_entities
+            await ingest_jsonl(file_path, target_collection)
+        elif req.filename.endswith(".json"):
+            target_collection = collection_vasp if "vasp" in req.filename.lower() else collection_entities
+            await ingest_json_array(file_path, target_collection)
+            
+    background_tasks.add_task(run_ingestion)
+    return {"status": "success", "message": f"Ingestion for {req.filename} started in the background."}
+
+class GodmodeRequest(BaseModel):
+    action: str
+
+@app.post("/api/admin/godmode/deploy")
+async def api_admin_godmode_deploy(req: GodmodeRequest, background_tasks: BackgroundTasks):
+    import subprocess
+    import sys
+    
+    action = req.action.lower()
+    script_path = None
+    
+    if action == "autonomous_agent":
+        script_path = os.path.join(os.path.dirname(__file__), "scripts", "autonomous_agent.py")
+    elif action == "godmode":
+        script_path = os.path.join(os.path.dirname(__file__), "scripts", "godmode.py")
+    else:
+        return {"status": "error", "message": "Invalid godmode action."}
+        
+    if not os.path.exists(script_path):
+        return {"status": "error", "message": f"Script not found: {script_path}"}
+        
+    def run_script():
+        try:
+            subprocess.Popen([sys.executable, script_path], creationflags=subprocess.CREATE_NEW_CONSOLE if os.name == 'nt' else 0)
+        except Exception as e:
+            logger.error(f"Failed to launch godmode script {script_path}: {e}")
+            
+    background_tasks.add_task(run_script)
+    return {"status": "success", "message": f"Godmode script '{action}' launched."}
+
+@app.get("/api/osint/recon")
+async def api_osint_recon(wallet_address: str):
+    import asyncio
+    try:
+        from osint.nemesis_recon_enterprise import classify_wallet
+        # Run synchronous function in thread pool if needed, or if it's actually sync
+        loop = asyncio.get_event_loop()
+        # Since classify_wallet is decorated with @retry, we assume it's synchronous
+        result = await loop.run_in_executor(None, classify_wallet, wallet_address, None)
+        return {"status": "success", "data": result}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 import requests
 from bs4 import BeautifulSoup
@@ -319,6 +404,10 @@ async def nemesis_landing(request: Request):
 
 @app.get("/tracer")
 async def tracer_landing(request: Request):
+    return templates.TemplateResponse(request=request, name="nemesis_tracer_landing.html")
+
+@app.get("/nemesis_tracer_landing")
+async def nemesis_tracer_landing_route(request: Request):
     return templates.TemplateResponse(request=request, name="nemesis_tracer_landing.html")
 
 @app.get("/darknet_search")
@@ -434,6 +523,43 @@ async def get_health():
 @app.get("/admin/traces")
 async def get_traces():
     return await fetch_saved_traces()
+
+@app.post("/api/admin/automated_maintenance")
+async def api_admin_automated_maintenance(background_tasks: BackgroundTasks):
+    async def run_maintenance():
+        try:
+            logger.info("Starting Godmode Automated Maintenance Sequence...")
+            # We execute the local script
+            process = await asyncio.create_subprocess_shell(
+                f"{sys.executable} scripts/test_all_cases.py",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await process.communicate()
+            
+            report = stdout.decode('utf-8')
+            if stderr:
+                report += f"\n\nERRORS:\n{stderr.decode('utf-8')}"
+                
+            logger.info("Maintenance Sequence Complete.")
+            
+            # Save the report
+            os.makedirs("logs", exist_ok=True)
+            report_path = os.path.join("logs", "latest_maintenance_report.md")
+            with open(report_path, "w") as f:
+                f.write(report)
+                
+            # Broadcast the completion to the UI stream
+            for q in darknet_stream_clients:
+                import datetime
+                now = datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M:%S")
+                await q.put({"message": "Maintenance test suite completed. Report generated.", "style": "green", "ts": now})
+                
+        except Exception as e:
+            logger.error(f"Maintenance failed: {e}")
+            
+    background_tasks.add_task(run_maintenance)
+    return {"status": "success", "message": "Automated maintenance sequence initiated via Godmode."}
 
 @app.post("/api/start_trace")
 async def api_start_trace(req: TraceRequest, request: Request):
@@ -1010,28 +1136,14 @@ async def fetch_real_txs(address: str):
     if address in TX_CACHE and time.time() - TX_CACHE[address]["last_fetched"] < 60:
         return TX_CACHE[address]["txs"]
     
-    from services.trace_engine import detect_chain, CONFIG, EVM_DOMAINS
+    from services.trace_engine import detect_chain, TraceEngine, get_asset_ticker
     import aiohttp
     import ssl
     import certifi
     import asyncio
-    from datetime import datetime
+    from datetime import datetime, timezone
     
     chain_res = detect_chain(address, "AUTO")
-    actual_chain = chain_res if chain_res in EVM_DOMAINS else "ETHEREUM"
-    key_var = f"{actual_chain}SCAN_API_KEY" if actual_chain != "ETHEREUM" else "ETHERSCAN_API_KEY"
-    api_key = CONFIG.get(key_var, CONFIG.get("ETHERSCAN_API_KEY", ""))
-    
-    API_URLS = {
-        "ETHEREUM": "https://api.etherscan.io/api",
-        "BSC": "https://api.bscscan.com/api",
-        "POLYGON": "https://api.polygonscan.com/api",
-        "ARBITRUM": "https://api.arbiscan.io/api",
-        "OPTIMISM": "https://api-optimistic.etherscan.io/api",
-        "BASE": "https://api.basescan.org/api",
-        "AVALANCHE": "https://api.snowtrace.io/api"
-    }
-    base_url = API_URLS.get(actual_chain, "https://api.etherscan.io/api")
     
     ssl_ctx = ssl.create_default_context(cafile=certifi.where())
     connector = aiohttp.TCPConnector(ssl=ssl_ctx)
@@ -1039,43 +1151,127 @@ async def fetch_real_txs(address: str):
     txs_map = {}
     
     async with aiohttp.ClientSession(connector=connector) as session:
-        url_native = f"{base_url}?module=account&action=txlist&address={address}&startblock=0&endblock=99999999&page=1&offset=100&sort=desc&apikey={api_key}"
-        url_token = f"{base_url}?module=account&action=tokentx&address={address}&startblock=0&endblock=99999999&page=1&offset=100&sort=desc&apikey={api_key}"
+        engine = TraceEngine("dummy-fetch")
+        res = await engine.fetch_txs(session, address, chain_res)
         
-        async def fetch_url(url, is_token):
-            try:
-                async with session.get(url, timeout=10) as r:
-                    if r.status == 200:
-                        data = await r.json()
-                        if data.get("status") == "1":
-                            for tx in data.get("result", []):
-                                h = tx["hash"]
-                                decimals = int(tx.get("tokenDecimal", 18)) if is_token else 18
-                                val = float(tx.get("value", 0)) / (10 ** decimals)
-                                if val > 0:
-                                    t = "Receive" if tx["to"].lower() == address.lower() else "Send"
-                                    ts_int = int(tx["timeStamp"])
-                                    ts_str = datetime.fromtimestamp(ts_int).strftime('%Y-%m-%d %H:%M:%S')
-                                    sym = tx.get("tokenSymbol", "ETH" if actual_chain == "ETHEREUM" else "BNB" if actual_chain == "BSC" else "MATIC" if actual_chain == "POLYGON" else "NATIVE")
+        if res and res.get("data"):
+            tx_type = res.get("type", "evm")
+            actual_chain = res.get("actual_chain", chain_res)
+            native_sym = get_asset_ticker(actual_chain)
+            
+            for tx in res["data"]:
+                try:
+                    # EVM Handling
+                    if tx_type == "evm":
+                        h = tx.get("hash", tx.get("transactionHash", ""))
+                        decimals = int(tx.get("tokenDecimal", 18))
+                        val = float(tx.get("value", 0)) / (10 ** decimals)
+                        t = "Receive" if tx.get("to", "").lower() == address.lower() else "Send"
+                        ts_int = int(tx.get("timeStamp", 0))
+                        sym = tx.get("tokenSymbol", native_sym)
+                        
+                    # BTC Handling
+                    elif tx_type == "btc":
+                        h = tx.get("txid", "")
+                        ts_int = int(tx.get("status", {}).get("block_time", 0))
+                        
+                        addr_lower = address.lower()
+                        is_sender = any(i.get("prevout", {}).get("scriptpubkey_address", "").lower() == addr_lower for i in tx.get("vin", []))
+                        
+                        # Calculate total sent or received by this address
+                        val = 0
+                        if is_sender:
+                            t = "Send"
+                            for o in tx.get("vout", []):
+                                if o.get("scriptpubkey_address", "").lower() != addr_lower:
+                                    val += float(o.get("value", 0)) / 1e8
+                        else:
+                            t = "Receive"
+                            for o in tx.get("vout", []):
+                                if o.get("scriptpubkey_address", "").lower() == addr_lower:
+                                    val += float(o.get("value", 0)) / 1e8
                                     
-                                    # If multiple tokens transfer in same TX, distinct them by symbol
-                                    unique_hash = f"{h}_{sym}" 
-                                    txs_map[unique_hash] = {
-                                        "type": t,
-                                        "timestamp": ts_str,
-                                        "ts_int": ts_int,
-                                        "hash": h,
-                                        "sender": tx["from"],
-                                        "receiver": tx["to"],
-                                        "amount": f"{round(val, 4)} {sym}",
-                                        "network": actual_chain,
-                                        "raw_val": val,
-                                        "symbol": sym
-                                    }
-            except Exception as e:
-                pass
-                
-        await asyncio.gather(fetch_url(url_native, False), fetch_url(url_token, True))
+                        sym = "BTC"
+                        
+                    # Solana Handling
+                    elif tx_type == "solana":
+                        h = tx.get("transaction", {}).get("signatures", [""])[0]
+                        ts_int = tx.get("blockTime", 0)
+                        
+                        # Simplified parsing for native SOL transfers
+                        pre_bals = tx.get("meta", {}).get("preBalances", [])
+                        post_bals = tx.get("meta", {}).get("postBalances", [])
+                        keys = [k.get("pubkey") for k in tx.get("transaction", {}).get("message", {}).get("accountKeys", [])]
+                        
+                        val = 0
+                        t = "Unknown"
+                        if address in keys:
+                            idx = keys.index(address)
+                            if idx < len(pre_bals) and idx < len(post_bals):
+                                diff = (post_bals[idx] - pre_bals[idx]) / 1e9
+                                val = abs(diff)
+                                t = "Receive" if diff > 0 else "Send"
+                        sym = "SOL"
+                        
+                    # Ripple Handling
+                    elif tx_type == "ripple":
+                        h = tx.get("hash", "")
+                        ts_int = tx.get("date", 0) + 946684800 # Ripple epoch is Jan 1, 2000
+                        t_tx = tx.get("tx", tx)
+                        
+                        val = 0
+                        t = "Unknown"
+                        if t_tx.get("TransactionType") == "Payment":
+                            amt = t_tx.get("Amount", 0)
+                            if isinstance(amt, str): val = float(amt) / 1e6
+                            elif isinstance(amt, dict): val = float(amt.get("value", 0))
+                            
+                            t = "Send" if t_tx.get("Account") == address else "Receive"
+                        sym = "XRP"
+                        
+                    # Tron Handling
+                    elif tx_type == "tron":
+                        h = tx.get("hash", tx.get("txID", ""))
+                        ts = tx.get("block_timestamp", tx.get("timestamp", 0))
+                        ts_int = int(ts) // 1000 if ts > 1e10 else int(ts)
+                        
+                        t = "Send" if tx.get("ownerAddress", tx.get("from")) == address else "Receive"
+                        
+                        val = 0
+                        if "amount" in tx and tx.get("amount") is not None:
+                            try: val = float(tx.get("amount")) / 1e6
+                            except: val = 0
+                        sym = tx.get("tokenInfo", {}).get("tokenAbbr", "TRX")
+                        
+                    # Stellar Handling
+                    elif tx_type == "stellar":
+                        h = tx.get("transaction_hash", "")
+                        
+                        dt = datetime.strptime(tx.get("created_at", "2000-01-01T00:00:00Z").replace("Z",""), "%Y-%m-%dT%H:%M:%S")
+                        ts_int = int(dt.timestamp())
+                        
+                        t = "Send" if tx.get("from") == address else "Receive"
+                        val = float(tx.get("amount", 0))
+                        sym = tx.get("asset_code", "XLM")
+                    
+                    else:
+                        continue
+                        
+                    if val > 0:
+                        ts_str = datetime.fromtimestamp(ts_int).strftime('%Y-%m-%d %H:%M:%S')
+                        unique_hash = f"{h}_{sym}"
+                        txs_map[unique_hash] = {
+                            "type": t,
+                            "timestamp": ts_str,
+                            "ts_int": ts_int,
+                            "hash": h,
+                            "amount": f"{round(val, 4)} {sym}",
+                            "network": actual_chain,
+                            "raw_val": val,
+                            "symbol": sym
+                        }
+                except Exception as e:
+                    pass
             
     # Sort unified transactions by timestamp descending
     sorted_txs = sorted(list(txs_map.values()), key=lambda x: x["ts_int"], reverse=True)[:150]
