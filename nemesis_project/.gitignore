@@ -1,6 +1,5 @@
 node_modules/
 cloudflare_worker/node_modules/
-cf_pages_build/
 venv/
 __pycache__/
 .env

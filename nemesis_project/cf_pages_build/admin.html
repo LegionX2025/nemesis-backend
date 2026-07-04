@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lionsgate Omni-Chain Admin Dashboard</title>
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lionsgate Omni-Chain Forensics | Case LGN-US-2026-0172</title>
+    <script>
+        if (!window.originalWarn) {
+            window.originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) return;
+                window.originalWarn.apply(console, args);
+            };
+        }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.halo.min.js"></script>
+    <script src="https://unpkg.com/force-graph@1.43.3/dist/force-graph.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc; 
+            color: #0f172a; 
+            margin: 0; 
+            min-height: 100vh; 
+        }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Vanta Background Container */
+        #vanta-bg {
+            position: fixed;
+            z-index: -1;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .nemesis-effect { background: linear-gradient(to right, #3b82f6 20%, #a855f7 50%, #3b82f6 80%); background-size: 200% auto; color: #fff; background-clip: text; text-fill-color: transparent; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shine 5s linear infinite; }
+        @keyframes shine { to { background-position: 200% center; } }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    </style>
+</head>
+<body class="flex bg-slate-50 min-h-screen relative">
+    <!-- Vanta Background -->
+    <div id="vanta-bg"></div>
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.VANTA) {
+                window.vantaEffect = VANTA.HALO({
+                    el: "#vanta-bg",
+                    mouseControls: true,
+                    touchControls: true,
+                    gyroControls: false,
+                    minHeight: 200.00,
+                    minWidth: 200.00,
+                    baseColor: 0xffffff,
+                    backgroundColor: 0xf8fafc,
+                    amplitudeFactor: 1.5,
+                    size: 1.5
+                });
+            }
+        });
+    </script>
+    <style>
+        .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(15,23,42,0.1); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); }
+        .sidebar-item { border-color: transparent; }
+        .sidebar-item:hover { background: rgba(59, 130, 246, 0.05); color: #2563eb; }
+        .sidebar-item.active { background: rgba(59, 130, 246, 0.1); color: #2563eb; border-color: rgba(59, 130, 246, 0.3); font-weight: bold; }
+        main { background: transparent !important; }
+    </style>
+</head>
+<body class="flex flex-row h-screen overflow-hidden text-slate-800 bg-slate-50">
+    
+    <!-- Sidebar Navigation -->
+<aside class="w-72 bg-white/90 backdrop-blur-md border-r border-slate-200 h-screen sticky top-0 flex flex-col py-10 z-50 shrink-0 shadow-lg shadow-slate-200/50">
+    <div class="mb-14 flex flex-col items-center px-4 text-center">
+        <img src="/static/logo_nemesis.jpeg" alt="Nemesis Logo" class="h-16 w-16 rounded-xl border border-slate-200 shadow-[0_8px_16px_rgba(0,0,0,0.15)] mb-4 transition-transform hover:scale-105 duration-300">
+        <h1 class="text-base font-black uppercase tracking-widest text-slate-900 leading-tight">LIONSGATE</h1>
+        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mt-2">INTELLIGENCE NETWORK</p>
+    </div>
+    
+    <style>
+        .nav-link { position: relative; overflow: hidden; }
+        .nav-link::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: linear-gradient(180deg, #3b82f6, #0ea5e9); transform: scaleY(0); transition: transform 0.3s ease; transform-origin: left; }
+        .nav-link:hover::before { transform: scaleY(1); }
+        .nav-link.active::before { transform: scaleY(1); }
+        
+        .icon-3d {
+            display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.4), 0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .nav-link:hover .icon-3d { transform: translateY(-2px) scale(1.05); box-shadow: inset 0 2px 4px rgba(255,255,255,0.6), 0 8px 12px rgba(0,0,0,0.15), 0 3px 6px rgba(0,0,0,0.1); }
+        
+        /* Specific Icon Colors */
+        .icon-home { background: linear-gradient(135deg, #f8fafc, #cbd5e1); color: #334155; }
+        .icon-tracer { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #ffffff; }
+        .icon-id { background: linear-gradient(135deg, #a855f7, #7e22ce); color: #ffffff; }
+        .icon-audit { background: linear-gradient(135deg, #10b981, #047857); color: #ffffff; }
+        .icon-docs { background: linear-gradient(135deg, #f59e0b, #b45309); color: #ffffff; }
+    </style>
+
+    <nav class="flex flex-col w-full gap-2 px-4">
+        <a href="/" class="nav-link px-4 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-4 text-slate-500 hover:bg-slate-50 hover:text-slate-700">
+            <div class="icon-3d icon-home"><i class="fa-solid fa-house"></i></div>
+            HOME
+        </a>
+        
+        <a href="/nemesis_tracer" class="nav-link px-4 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-4 text-slate-500 hover:bg-slate-50 hover:text-slate-700">
+            <div class="icon-3d icon-tracer"><i class="fa-solid fa-network-wired"></i></div>
+            NEMESIS TRACER
+        </a>
+        
+        <a href="/nemesis_id" class="nav-link px-4 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-4 text-slate-500 hover:bg-slate-50 hover:text-slate-700">
+            <div class="icon-3d icon-id"><i class="fa-solid fa-fingerprint"></i></div>
+            NEMESIS ID
+        </a>
+        
+        <a href="/audit" class="nav-link px-4 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-4 text-slate-500 hover:bg-slate-50 hover:text-slate-700">
+            <div class="icon-3d icon-audit"><i class="fa-solid fa-shield-halved"></i></div>
+            ENTERPRISE AUDIT
+        </a>
+        
+        <a href="/darknet_search" class="nav-link px-4 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-4 text-slate-500 hover:bg-slate-50 hover:text-slate-700">
+            <div class="icon-3d" style="background: linear-gradient(135deg, #ef4444, #991b1b); color: #ffffff;"><i class="fa-solid fa-skull"></i></div>
+            DARKNET CRAWLER
+        </a>
+
+        <a href="/docs" class="nav-link px-4 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-4 text-slate-500 hover:bg-slate-50 hover:text-slate-700">
+            <div class="icon-3d icon-docs"><i class="fa-solid fa-book"></i></div>
+            API DOCS
+        </a>
+
+        <a href="/admin" class="nav-link px-4 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-4 text-slate-500 hover:bg-slate-50 hover:text-slate-700">
+            <div class="icon-3d" style="background: linear-gradient(135deg, #1e293b, #0f172a); color: #ffffff;"><i class="fa-solid fa-lock"></i></div>
+            ADMIN SYSTEM
+        </a>
+    </nav>
+    
+    <div class="mt-auto px-4 text-center relative group w-full">
+        <div class="mb-4 bg-slate-900/5 border border-slate-200/50 rounded-xl p-3 shadow-inner">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles text-purple-500 text-xs"></i>
+                    <span class="text-[10px] font-bold text-slate-700 tracking-wider">AUTO-PILOT</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="godmodeToggle" class="sr-only peer">
+                    <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-500 peer-checked:to-emerald-500 shadow-inner"></div>
+                </label>
+            </div>
+        </div>
+
+        <div class="absolute inset-0 bg-emerald-500/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <p class="text-[9px] text-slate-400 font-mono uppercase tracking-widest relative z-10">
+            System Online<br>
+            <span class="text-emerald-500 animate-pulse drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]"><i class="fa-solid fa-circle text-[6px] mr-1 align-middle"></i>Node Secure</span>
+        </p>
+    </div>
+</aside>
+
+    <!-- Main App Container -->
+    <div class="flex-1 flex overflow-hidden w-full relative z-10">
+        <!-- Sidebar -->
+        <aside id="admin-sidebar" class="w-72 bg-white/80 backdrop-blur-xl border-r border-slate-200 flex flex-col shadow-sm transition-all duration-300 transform translate-x-0">
+            <div class="p-6 flex flex-col gap-2 border-b border-slate-200 relative">
+                <h1 class="font-black text-2xl text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 tracking-widest mt-2">NEMESIS</h1>
+                <p class="text-[10px] text-blue-600 font-bold uppercase tracking-widest">Command Center</p>
+                <button onclick="toggleSidebar()" class="absolute right-4 top-6 text-slate-400 hover:text-blue-600 lg:hidden">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <nav class="flex-1 p-4 space-y-1 font-bold text-xs tracking-widest uppercase overflow-y-auto overflow-x-hidden">
+                <!-- System Diagnostics Submenu -->
+                <div class="mb-2 border border-slate-200 rounded-lg bg-slate-50 overflow-hidden">
+                    <button onclick="toggleSubMenu('submenu-sys')" class="w-full flex justify-between items-center px-4 py-3 text-slate-700 hover:bg-slate-100 transition border-b border-transparent">
+                        <span class="flex items-center gap-3"><i class="fa-solid fa-server w-4 text-center"></i> System Operations</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform" id="icon-submenu-sys"></i>
+                    </button>
+                    <div id="submenu-sys" class="hidden flex-col bg-white border-t border-slate-100">
+                        <a href="#" onclick="switchTab('logs')" id="tab-logs" class="sidebar-item active px-10 py-2.5 text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition whitespace-nowrap">Console Logs</a>
+                        <a href="#" onclick="switchTab('database')" id="tab-database" class="px-10 py-2.5 text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition whitespace-nowrap">Database Management</a>
+                        <a href="#" onclick="switchTab('network')" id="tab-network" class="px-10 py-2.5 text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition whitespace-nowrap">Network Topologies</a>
+                        <a href="#" onclick="switchTab('config')" id="tab-config" class="px-10 py-2.5 text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition whitespace-nowrap">API & Environment Vars</a>
+                    </div>
+                </div>
+
+                <!-- Core Engines Submenu -->
+                <div class="mb-2 border border-slate-200 rounded-lg bg-slate-50 overflow-hidden">
+                    <button onclick="toggleSubMenu('submenu-engines')" class="w-full flex justify-between items-center px-4 py-3 text-amber-600 hover:bg-amber-50 transition border-b border-transparent">
+                        <span class="flex items-center gap-3"><i class="fa-solid fa-microchip w-4 text-center"></i> Core Engines</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform" id="icon-submenu-engines"></i>
+                    </button>
+                    <div id="submenu-engines" class="hidden flex-col bg-white border-t border-slate-100">
+                        <a href="#" onclick="switchTab('engine')" id="tab-engine" class="px-10 py-2.5 text-slate-500 hover:text-amber-600 hover:bg-slate-50 transition whitespace-nowrap">Engine Controls</a>
+                        <a href="#" onclick="switchTab('parsers')" id="tab-parsers" class="px-10 py-2.5 text-slate-500 hover:text-amber-600 hover:bg-slate-50 transition whitespace-nowrap">Blockchain Parsers</a>
+                    </div>
+                </div>
+
+                <!-- NEMESIS ID Submenu -->
+                <div class="mb-2 border border-slate-200 rounded-lg bg-slate-50 overflow-hidden">
+                    <button onclick="toggleSubMenu('submenu-id')" class="w-full flex justify-between items-center px-4 py-3 text-blue-600 hover:bg-blue-50 transition border-b border-transparent">
+                        <span class="flex items-center gap-3"><i class="fa-solid fa-fingerprint w-4 text-center"></i> NEMESIS ID</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform" id="icon-submenu-id"></i>
+                    </button>
+                    <div id="submenu-id" class="hidden flex-col bg-white border-t border-slate-100">
+                        <a href="/nemesis_id" target="_blank" class="px-10 py-2.5 text-slate-500 hover:text-blue-600 hover:bg-slate-50 transition whitespace-nowrap flex items-center gap-2"><i class="fa-solid fa-external-link text-[10px]"></i> Launch UI</a>
+                        <a href="#" onclick="switchTab('cases')" id="tab-cases" class="px-10 py-2.5 text-slate-500 hover:text-blue-600 hover:bg-slate-50 transition whitespace-nowrap">Case Management</a>
+                    </div>
+                </div>
+
+                <!-- NEMESIS Tracer Submenu -->
+                <div class="mb-2 border border-slate-200 rounded-lg bg-slate-50 overflow-hidden">
+                    <button onclick="toggleSubMenu('submenu-tracer')" class="w-full flex justify-between items-center px-4 py-3 text-indigo-600 hover:bg-indigo-50 transition border-b border-transparent">
+                        <span class="flex items-center gap-3"><i class="fa-solid fa-project-diagram w-4 text-center"></i> NEMESIS Tracer</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform" id="icon-submenu-tracer"></i>
+                    </button>
+                    <div id="submenu-tracer" class="hidden flex-col bg-white border-t border-slate-100">
+                        <a href="/nemesis_tracer.html" target="_blank" class="px-10 py-2.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition whitespace-nowrap flex items-center gap-2"><i class="fa-solid fa-external-link text-[10px]"></i> Launch UI</a>
+                    </div>
+                </div>
+
+                <!-- Darknet Submenu -->
+                <div class="mb-2 border border-slate-200 rounded-lg bg-slate-50 overflow-hidden">
+                    <button onclick="toggleSubMenu('submenu-darknet')" class="w-full flex justify-between items-center px-4 py-3 text-emerald-600 hover:bg-emerald-50 transition border-b border-transparent">
+                        <span class="flex items-center gap-3"><i class="fa-solid fa-spider w-4 text-center"></i> Darknet Intel</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform" id="icon-submenu-darknet"></i>
+                    </button>
+                    <div id="submenu-darknet" class="hidden flex-col bg-white border-t border-slate-100">
+                        <a href="/darknet_search" target="_blank" class="px-10 py-2.5 text-slate-500 hover:text-emerald-600 hover:bg-slate-50 transition whitespace-nowrap flex items-center gap-2"><i class="fa-solid fa-external-link text-[10px]"></i> Search Engine UI</a>
+                        <a href="#" onclick="switchTab('darknet_dash')" id="tab-darknet_dash" class="px-10 py-2.5 text-slate-500 hover:text-emerald-600 hover:bg-slate-50 transition whitespace-nowrap">Crawler Dashboard</a>
+                    </div>
+                </div>
+
+                <!-- Machine Learning Submenu -->
+                <div class="mb-2 border border-slate-200 rounded-lg bg-slate-50 overflow-hidden">
+                    <button onclick="toggleSubMenu('submenu-ml')" class="w-full flex justify-between items-center px-4 py-3 text-purple-600 hover:bg-purple-50 transition border-b border-transparent">
+                        <span class="flex items-center gap-3"><i class="fa-solid fa-brain w-4 text-center"></i> Machine Learning</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform" id="icon-submenu-ml"></i>
+                    </button>
+                    <div id="submenu-ml" class="hidden flex-col bg-white border-t border-slate-100">
+                        <a href="#" onclick="switchTab('clustering')" id="tab-clustering" class="px-10 py-2.5 text-slate-500 hover:text-purple-600 hover:bg-slate-50 transition whitespace-nowrap">Clustering Engine</a>
+                        <a href="#" onclick="switchTab('knowledge')" id="tab-knowledge" class="px-10 py-2.5 text-slate-500 hover:text-purple-600 hover:bg-slate-50 transition whitespace-nowrap">NEMESIS Knowledge</a>
+                        <a href="#" onclick="switchTab('ml_config')" id="tab-ml_config" class="px-10 py-2.5 text-slate-500 hover:text-purple-600 hover:bg-slate-50 transition whitespace-nowrap">ML Configurations</a>
+                        <a href="#" onclick="switchTab('ml_data')" id="tab-ml_data" class="px-10 py-2.5 text-slate-500 hover:text-purple-600 hover:bg-slate-50 transition whitespace-nowrap">Training Data</a>
+                    </div>
+                </div>
+
+                <!-- Godmode Engine Submenu -->
+                <div class="mb-4 border border-slate-200 rounded-lg bg-red-50 overflow-hidden">
+                    <button onclick="toggleSubMenu('submenu-godmode')" class="w-full flex justify-between items-center px-4 py-3 text-red-600 hover:bg-red-100 transition border-b border-transparent font-black">
+                        <span class="flex items-center gap-3"><i class="fa-solid fa-wand-magic-sparkles w-4 text-center"></i> Godmode Auto-Pilot</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform" id="icon-submenu-godmode"></i>
+                    </button>
+                    <div id="submenu-godmode" class="hidden flex-col bg-white border-t border-slate-100">
+                        <a href="#" onclick="switchTab('godmode')" id="tab-godmode" class="px-10 py-2.5 text-slate-500 hover:text-red-600 hover:bg-slate-50 transition whitespace-nowrap">Deployer & Auto-Pilot</a>
+                        <a href="#" onclick="switchTab('godmode_self')" id="tab-godmode_self" class="px-10 py-2.5 text-slate-500 hover:text-red-600 hover:bg-slate-50 transition whitespace-nowrap">Self-Healing Modules</a>
+                        <a href="#" onclick="switchTab('deploy')" id="tab-deploy" class="px-10 py-2.5 text-slate-500 hover:text-red-600 hover:bg-slate-50 transition whitespace-nowrap">Omni-Deploy Config</a>
+                    </div>
+                </div>
+            </nav>
+            <div class="p-4 border-t border-slate-200">
+                <button onclick="logout()" class="w-full py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded border border-red-200 text-xs font-bold transition uppercase tracking-wider flex justify-center items-center gap-2 overflow-hidden whitespace-nowrap">
+                    <i class="fa-solid fa-power-off"></i> <span class="sidebar-text">Terminate Uplink</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col relative overflow-y-auto">
+            <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 py-6 flex justify-between items-center sticky top-0 z-20">
+                <div class="glass-text-container flex items-center gap-4">
+                    <button onclick="toggleSidebar()" class="text-slate-500 hover:text-blue-600 transition p-2 rounded hover:bg-slate-100">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                    <h2 class="text-xl font-bold text-slate-900 tracking-widest uppercase" id="header-title">Live Console Logs</h2>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center gap-2 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded border border-emerald-200 tracking-widest uppercase">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Uplink Active
+                    </span>
+                </div>
+            </header>
+
+            <div class="p-8">
+                <!-- Logs View -->
+                <div id="view-logs" class="block h-[60vh]">
+                    <div class="bg-slate-900 border border-slate-800 rounded-lg h-full overflow-hidden flex flex-col shadow-xl">
+                        <div class="bg-slate-800 px-4 py-2 border-b border-slate-700 text-[10px] text-slate-300 uppercase tracking-widest font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-file-lines"></i> Tail: logs/nemesis.log
+                        </div>
+                        <div id="log-console" class="flex-1 p-4 overflow-y-auto font-mono text-xs text-slate-300 leading-relaxed break-all">
+                            <span class="text-emerald-400">Initializing Log Stream...</span><br>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cases View -->
+                <div id="view-cases" class="hidden space-y-6">
+                    <div class="glass-panel p-6 rounded-xl">
+                        <h3 class="text-blue-600 text-sm uppercase tracking-widest font-bold mb-4 border-b border-slate-200 pb-2">Active Cases</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="text-xs text-slate-500 uppercase tracking-wider border-b border-slate-200">
+                                    <tr>
+                                        <th class="pb-3">Case ID</th>
+                                        <th class="pb-3">Name</th>
+                                        <th class="pb-3">Status</th>
+                                        <th class="pb-3 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cases-table" class="divide-y divide-slate-100">
+                                    <tr><td colspan="4" class="py-4 text-center text-slate-500 italic">No cases found</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Database View -->
+                <div id="view-database" class="hidden space-y-6">
+                    <div class="grid grid-cols-3 gap-6">
+                        <div class="glass-panel p-6 rounded-xl text-center">
+                            <h4 class="text-slate-500 text-[10px] uppercase tracking-widest mb-2">Stored Traces</h4>
+                            <div id="stat-traces" class="text-4xl font-black text-blue-600">0</div>
+                        </div>
+                        <div class="glass-panel p-6 rounded-xl text-center">
+                            <h4 class="text-slate-500 text-[10px] uppercase tracking-widest mb-2">Monitored Wallets</h4>
+                            <div id="stat-wallets" class="text-4xl font-black text-purple-600">0</div>
+                        </div>
+                        <div class="glass-panel p-6 rounded-xl text-center">
+                            <h4 class="text-slate-500 text-[10px] uppercase tracking-widest mb-2">Active Cases</h4>
+                            <div id="stat-cases" class="text-4xl font-black text-emerald-600">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Config View -->
+                <div id="view-config" class="hidden space-y-6">
+                    <div class="glass-panel p-6 rounded-xl max-w-2xl">
+                        <h3 class="text-blue-600 text-sm uppercase tracking-widest font-bold mb-4 border-b border-slate-200 pb-2">System API Keys</h3>
+                        <div class="space-y-4" id="config-form">
+                            <!-- Populated via JS -->
+                            <div class="text-slate-500 text-sm italic">Loading configuration...</div>
+                        </div>
+                        <p class="text-[10px] text-slate-400 mt-4 uppercase tracking-widest">* API Keys must be modified directly in config.py or environment variables for security.</p>
+                    </div>
+                </div>
+
+                <!-- Engine View -->
+                <div id="view-engine" class="hidden space-y-6">
+                    <div class="glass-panel p-6 rounded-xl max-w-2xl">
+                        <h3 class="text-purple-600 text-sm uppercase tracking-widest font-bold mb-4 border-b border-slate-200 pb-2">Omni-Chain Engine Parameters</h3>
+                        <div class="grid grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Max Recursion Depth</label>
+                                <input type="number" id="engine-depth" value="3" class="w-full bg-slate-50 border border-slate-200 rounded p-2 text-slate-700 text-sm font-mono shadow-inner">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Max Hops (Breadth)</label>
+                                <input type="number" id="engine-hops" value="50" class="w-full bg-slate-50 border border-slate-200 rounded p-2 text-slate-700 text-sm font-mono shadow-inner">
+                            </div>
+                        </div>
+                        <button onclick="saveEngineConfig()" class="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded font-bold transition shadow-md">
+                            UPDATE ENGINE PARAMETERS
+                        </button>
+                    </div>
+
+                    <div class="glass-panel p-6 rounded-xl max-w-2xl border-l-4 border-l-red-500">
+                        <h3 class="text-red-600 text-sm uppercase tracking-widest font-bold mb-2">Emergency Protocols</h3>
+                        <p class="text-xs text-slate-600 mb-4">Warning: Executing this will clear all cached blockchain data in Redis and Postgres.</p>
+                        <button class="py-2 px-4 bg-red-100 hover:bg-red-200 text-red-700 rounded border border-red-300 text-xs font-bold transition uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Purge All Threat Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="view-parsers" class="hidden space-y-6">
+                <div class="glass-panel p-6 rounded-xl">
+                    <div class="flex justify-between items-center mb-4 border-b border-slate-200 pb-2">
+                        <h3 class="text-blue-600 text-sm uppercase tracking-widest font-bold">GBEO Ontology & Configurations</h3>
+                        <button onclick="saveGBEO()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold uppercase rounded shadow">Save Ontology Schema</button>
+                    </div>
+                    <p class="text-xs text-slate-600 mb-4">Edit the raw GBEO v4 Ontology JSON. This controls the active auto-ingest scraper networks and canonical URL resolution.</p>
+                    <textarea id="gbeo-editor" class="w-full h-96 p-4 bg-slate-900 text-emerald-400 font-mono text-xs rounded border border-slate-700 focus:outline-none focus:border-blue-500" spellcheck="false"></textarea>
+                </div>
+            </div>
+            <!-- Clustering Engine View -->
+            <div id="view-clustering" class="hidden space-y-6">
+                <div class="glass-panel p-8 rounded-xl border border-purple-200 shadow-purple-500/10">
+                    <h3 class="text-purple-600 text-lg uppercase tracking-widest font-black mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-brain"></i> Machine Learning Clustering Engine
+                    </h3>
+                    <p class="text-xs text-slate-600 mb-6 max-w-2xl">
+                        Ingest wallet data from URLs or massive files. Auto-cluster entities based on attribution similarity (NLP/TF-IDF) and peel-chain structures (DBSCAN).
+                    </p>
+                    
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <!-- Ingestion Module -->
+                        <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+                            <h4 class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4 border-b pb-2"><i class="fa-solid fa-cloud-arrow-up"></i> Data Ingestion</h4>
+                            
+                            <form id="ingest-form" onsubmit="submitClusteringIngest(event)" class="space-y-4">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Import JSON / JSONL File</label>
+                                    <input type="file" id="ingest-file" class="w-full text-xs text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-bold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 cursor-pointer">
+                                </div>
+                                <div class="text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest">- OR -</div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Scrape via URL</label>
+                                    <input type="text" id="ingest-url" placeholder="https://etherscan.io/address/..." class="w-full text-xs p-2 rounded border border-slate-300 focus:outline-none focus:border-purple-500 bg-slate-50">
+                                </div>
+                                <div class="text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest">- OR -</div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Raw Scenario Training Prompt</label>
+                                    <textarea id="ingest-prompt" placeholder="Paste case narrative or suspect details here for ML Scenario Training..." class="w-full text-xs p-2 rounded border border-slate-300 focus:outline-none focus:border-purple-500 bg-slate-50 h-24 resize-none"></textarea>
+                                </div>
+                                <button type="submit" class="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold uppercase tracking-widest rounded transition flex justify-center items-center gap-2">
+                                    <i class="fa-solid fa-database"></i> Add to Cluster Engine
+                                </button>
+                            </form>
+                            <div id="ingest-status" class="mt-3 text-[10px] font-mono text-emerald-600 hidden"></div>
+                        </div>
+
+                        <!-- Engine Controls -->
+                        <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm flex flex-col justify-center items-center text-center">
+                            <i class="fa-solid fa-network-wired text-4xl text-purple-200 mb-4"></i>
+                            <h4 class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Execute Clustering Suite</h4>
+                            <p class="text-[10px] text-slate-400 mb-6 max-w-xs">Run Scikit-Learn pipelines to group all active identities in the database.</p>
+                            
+                            <button onclick="runClustering()" id="btn-run-cluster" class="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black tracking-widest uppercase rounded shadow-lg transition transform active:scale-95 flex items-center gap-3">
+                                <i class="fa-solid fa-bolt"></i> Initialize Algorithm
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Visualization -->
+                    <div class="bg-slate-900 p-6 rounded-lg shadow-inner border border-slate-700">
+                        <h4 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 flex items-center justify-between">
+                            <span><i class="fa-solid fa-chart-pie"></i> Cluster Mapping Results</span>
+                            <span id="cluster-timestamp" class="text-[9px] font-mono font-normal"></span>
+                        </h4>
+                        <div id="clustering-results" class="h-64 overflow-y-auto font-mono text-[10px] text-purple-300 leading-relaxed break-words whitespace-pre-wrap">
+                            > WAITING FOR CLUSTERING EXECUTION...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Godmode View -->
+            <div id="view-godmode" class="hidden space-y-6">
+                <div class="glass-panel p-8 rounded-xl border border-emerald-200 shadow-emerald-500/10">
+                    <h3 class="text-emerald-600 text-lg uppercase tracking-widest font-black mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Omni-Healing Godmode Deployer
+                    </h3>
+                    <p class="text-xs text-slate-600 mb-6 max-w-2xl">
+                        This module integrates the Gemini API to autonomously monitor the deployment process to Cloudflare and Render. If errors occur, the AI will diagnose the logs, patch the source code, and recursively re-attempt deployment until stabilization is achieved.
+                    </p>
+                    <div class="bg-slate-900 p-6 rounded-lg mb-6 shadow-inner border border-slate-700">
+                        <div class="flex items-center gap-4 mb-4 pb-4 border-b border-slate-700">
+                            <button id="btn-trigger-godmode" onclick="triggerGodmode()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black tracking-widest uppercase rounded shadow-[0_0_15px_rgba(16,185,129,0.4)] transition transform active:scale-95 flex items-center gap-3">
+                                <i class="fa-solid fa-rocket"></i> Initiate Omni-Deployment
+                            </button>
+                            <span id="godmode-status" class="text-slate-400 font-mono text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                                <i class="fa-solid fa-circle-pause"></i> STANDBY
+                            </span>
+                        </div>
+                        <div id="godmode-logs" class="h-64 overflow-y-auto font-mono text-[10px] text-emerald-300 leading-relaxed break-words whitespace-pre-wrap mt-4 bg-slate-950 p-4 rounded border border-slate-800">
+                            > WAITING FOR ENGAGEMENT...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deploy View -->
+            <div id="view-deploy" class="hidden space-y-6">
+                <div class="glass-panel p-8 rounded-xl border border-blue-200 shadow-blue-500/10">
+                    <h3 class="text-blue-600 text-lg uppercase tracking-widest font-black mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Cloud Configurations & Omni-Deploy
+                    </h3>
+                    <p class="text-xs text-slate-600 mb-6 max-w-2xl">
+                        Manage your Cloudflare, Render, and Git environment keys here. Once configured, you can trigger the Autonomous Omni-Deployer to automatically provision databases, buckets, and edge workers without manual intervention.
+                    </p>
+                    
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <!-- Cloudflare Panel -->
+                        <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+                            <h4 class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4 border-b pb-2"><i class="fa-brands fa-cloudflare text-orange-500"></i> Cloudflare</h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">API Token</label>
+                                    <input type="password" id="cf-api-token" placeholder="Enter Cloudflare API Token" class="w-full text-xs p-2 rounded border border-slate-300 focus:outline-none focus:border-blue-500 bg-slate-50">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Account ID</label>
+                                    <input type="text" id="cf-account-id" placeholder="Enter Cloudflare Account ID" class="w-full text-xs p-2 rounded border border-slate-300 focus:outline-none focus:border-blue-500 bg-slate-50">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Render & Git Panel -->
+                        <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+                            <h4 class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4 border-b pb-2"><i class="fa-solid fa-server text-purple-500"></i> Render & Git</h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Render API Key</label>
+                                    <input type="password" id="render-api-key" placeholder="Enter Render API Key" class="w-full text-xs p-2 rounded border border-slate-300 focus:outline-none focus:border-blue-500 bg-slate-50">
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Service ID</label>
+                                        <input type="text" id="render-service-id" placeholder="srv-..." class="w-full text-xs p-2 rounded border border-slate-300 focus:outline-none focus:border-blue-500 bg-slate-50">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Git Branch</label>
+                                        <input type="text" id="git-branch" placeholder="main" class="w-full text-xs p-2 rounded border border-slate-300 focus:outline-none focus:border-blue-500 bg-slate-50">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="saveDeployConfig()" class="w-full mb-6 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold uppercase tracking-widest rounded shadow transition">
+                        Save Configurations
+                    </button>
+
+                    <div class="bg-slate-900 p-6 rounded-lg mb-6 shadow-inner border border-slate-700">
+                        <div class="flex items-center gap-4 mb-4 pb-4 border-b border-slate-700">
+                            <button id="btn-trigger-deploy" onclick="triggerOmniDeploy()" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-black tracking-widest uppercase rounded shadow-[0_0_15px_rgba(59,130,246,0.4)] transition transform active:scale-95 flex items-center gap-3">
+                                <i class="fa-solid fa-bolt"></i> Execute Autonomous Omni-Deploy
+                            </button>
+                            <span id="deploy-status" class="text-slate-400 font-mono text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                                <i class="fa-solid fa-circle-pause"></i> STANDBY
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+                            <span><i class="fa-solid fa-terminal"></i> deploy.log tail</span>
+                            <button onclick="pollDeployLogs()" class="hover:text-blue-400"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+                        </div>
+                        <div id="deploy-logs" class="h-64 overflow-y-auto font-mono text-[10px] text-blue-300 leading-relaxed break-words whitespace-pre-wrap bg-slate-950 p-4 rounded border border-slate-800">
+                            > WAITING FOR ENGAGEMENT...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Knowledge View -->
+            <div id="view-knowledge" class="hidden space-y-6">
+                <div class="glass-panel p-8 rounded-xl border border-indigo-200 shadow-indigo-500/10">
+                    <h3 class="text-indigo-600 text-lg uppercase tracking-widest font-black mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-book-journal-whills"></i> NEMESIS Knowledge
+                    </h3>
+                    <p class="text-xs text-slate-600 mb-6 max-w-2xl">
+                        Auto-Dynamic Indexer. Crawls and indexes API documentation (Cloudflare, Render, Git, etc.) to enhance the LLM's Godmode context for auto-fixes and integrations.
+                    </p>
+                    <div class="bg-white p-6 rounded-lg mb-6 shadow-sm border border-slate-200">
+                        <div class="flex items-center gap-4 mb-4 pb-4 border-b border-slate-200">
+                            <input type="text" id="indexer-url" placeholder="Enter documentation URL (e.g. https://developers.cloudflare.com/)" class="flex-1 px-4 py-2 text-sm border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
+                            <button id="btn-trigger-indexer" onclick="triggerIndexer()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-black tracking-widest text-xs uppercase rounded shadow-[0_0_15px_rgba(79,70,229,0.4)] transition transform active:scale-95 flex items-center gap-2">
+                                <i class="fa-solid fa-spider"></i> Index Docs
+                            </button>
+                        </div>
+                        <div class="h-64 overflow-y-auto font-mono text-[10px] text-slate-700 leading-relaxed bg-slate-50 p-4 rounded border border-slate-200" id="indexer-logs">
+                            > WAITING FOR INDEXER COMMAND...<br>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+            
+
+            <!-- Network View -->
+            <div id="view-network" class="hidden space-y-6">
+                <div class="glass-panel p-8 rounded-xl border border-slate-200">
+                    <h3 class="text-slate-700 text-lg uppercase tracking-widest font-black mb-4">Network Topologies</h3>
+                    <p class="text-xs text-slate-500">View and manage network routing, Tor proxy integrations, and IP load balancing here.</p>
+                </div>
+            </div>
+
+            <!-- Darknet Dashboard View -->
+            <div id="view-darknet_dash" class="hidden space-y-6">
+                <div class="glass-panel p-8 rounded-xl border border-emerald-200 shadow-emerald-500/10">
+                    <h3 class="text-emerald-600 text-lg uppercase tracking-widest font-black mb-4">Darknet Crawler Dashboard</h3>
+                    <p class="text-xs text-slate-500 mb-4">Monitor real-time Tor2Web proxy scraping.</p>
+                    <button class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded font-bold text-xs" onclick="fetch('/api/darknet/start_crawler', {method: 'POST'})">Force Crawl Cycle</button>
+                </div>
+            </div>
+
+            <!-- ML Config View -->
+            <div id="view-ml_config" class="hidden space-y-6">
+                <div class="glass-panel p-8 rounded-xl border border-purple-200 shadow-purple-500/10">
+                    <h3 class="text-purple-600 text-lg uppercase tracking-widest font-black mb-4">ML Configurations</h3>
+                    <p class="text-xs text-slate-500">Manage vectorizer parameters (TF-IDF, embeddings), KMeans k-values, and DBSCAN epsilon limits.</p>
+                </div>
+            </div>
+
+            <!-- ML Data View -->
+            <div id="view-ml_data" class="hidden space-y-6">
+                <div class="glass-panel p-8 rounded-xl border border-purple-200 shadow-purple-500/10">
+                    <h3 class="text-purple-600 text-lg uppercase tracking-widest font-black mb-4">Training Data</h3>
+                    <p class="text-xs text-slate-500">Upload or review historical scenario JSON files used for anomaly detection baselines.</p>
+                </div>
+            </div>
+
+            <!-- Godmode Self View -->
+            <div id="view-godmode_self" class="hidden space-y-6">
+                <div class="glass-panel p-8 rounded-xl border border-red-200 shadow-red-500/10">
+                    <h3 class="text-red-600 text-lg uppercase tracking-widest font-black mb-4">Self-Healing Modules</h3>
+                    <p class="text-xs text-slate-500">Enable/disable autonomous self-modification routines for the primary backend API.</p>
+                </div>
+            </div>
+
+            <div class="mt-auto">
+                    <!-- Global AJAX Loader -->
+    <div id="global-loader" class="hidden fixed inset-0 bg-white/90 backdrop-blur-sm z-[9999] flex-col items-center justify-center transition-opacity">
+        <div class="w-24 h-24 border-4 border-slate-200 border-t-fuchsia-600 rounded-full animate-spin mb-6 shadow-[0_0_30px_rgba(217,70,239,0.3)]"></div>
+        <h2 class="text-slate-800 font-black text-2xl tracking-widest animate-pulse">NEMESIS ENGINE</h2>
+        <p id="loader-text" class="text-fuchsia-600 font-mono text-xs uppercase tracking-widest mt-2">Fusing Blockchain, OSINT & Identity Graphs...</p>
+    </div>
+
+    <!-- Chain Detection Logic (Shared) -->
+    <script>
+        const CHAIN_LOGOS = {
+            'EVM': '<img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-full h-full object-cover">',
+            'BTC': '<img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" class="w-full h-full object-cover">',
+            'SOL': '<img src="https://cryptologos.cc/logos/solana-sol-logo.png" class="w-full h-full object-cover">',
+            'UNKNOWN': '<i class="fa-solid fa-link text-slate-400 text-sm"></i>'
+        };
+
+        function identifyChain(address) {
+            if (/^0x[a-fA-F0-9]{40}$/.test(address)) return 'EVM';
+            if (/^(1|3)[a-zA-HJ-NP-Z0-9]{25,39}$/.test(address) || /^bc1[a-zA-HJ-NP-Z0-9]{39,59}$/.test(address)) return 'BTC';
+            if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address) && !address.startsWith('0x')) return 'SOL';
+            return 'UNKNOWN';
+        }
+
+        function showGlobalLoader(text) {
+            const loader = document.getElementById('global-loader');
+            if (document.getElementById('loader-text')) {
+                document.getElementById('loader-text').innerText = text;
+            }
+            loader.classList.remove('hidden');
+            loader.classList.add('flex');
+        }
+
+        function hideGlobalLoader() {
+            const loader = document.getElementById('global-loader');
+            loader.classList.add('hidden');
+            loader.classList.remove('flex');
+        }
+
+        // GodMode WebSocket & UI Logic
+        const godmodeToggle = document.getElementById('godmodeToggle');
+        const godmodeTerminal = document.getElementById('godmode-terminal');
+        const godmodeContent = document.getElementById('godmode-content');
+        let godmodeWs = null;
+
+        if (godmodeToggle) {
+            godmodeToggle.addEventListener('change', async (e) => {
+                const enabled = e.target.checked;
+                
+                // Toggle server state
+                try {
+                    await fetch('/api/godmode/toggle', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({enabled: enabled})
+                    });
+                } catch(err) {
+                    console.error("Failed to toggle Godmode", err);
+                }
+
+                if (enabled) {
+                    connectGodmode();
+                } else {
+                    if (godmodeWs) godmodeWs.close();
+                    godmodeTerminal.classList.add('translate-y-full', 'opacity-0');
+                    godmodeTerminal.classList.remove('translate-y-0', 'opacity-100');
+                }
+            });
+        }
+
+        function connectGodmode() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            godmodeWs = new WebSocket(`${protocol}//${window.location.host}/api/godmode/stream`);
+            
+            godmodeWs.onopen = () => {
+                godmodeTerminal.classList.remove('translate-y-full', 'opacity-0');
+                godmodeTerminal.classList.add('translate-y-0', 'opacity-100');
+                godmodeContent.innerHTML += `<div class="text-emerald-400">Connected to GodMode Streaming API...</div>`;
+            };
+
+            godmodeWs.onmessage = (event) => {
+                // Ensure terminal is visible
+                godmodeTerminal.classList.remove('translate-y-full', 'opacity-0');
+                godmodeTerminal.classList.add('translate-y-0', 'opacity-100');
+                
+                // Append text with rudimentary markdown/newline formatting
+                let text = event.data;
+                text = text.replace(/\n/g, '<br>');
+                if (text.includes("```python")) {
+                    text = text.replace(/```python/g, '<div class="bg-slate-900/50 p-2 rounded mt-2 border border-slate-700 font-mono text-[10px] text-blue-300">');
+                    text = text.replace(/```/g, '</div>');
+                }
+                
+                godmodeContent.innerHTML += `<div class="mb-1">${text}</div>`;
+                godmodeContent.scrollTop = godmodeContent.scrollHeight;
+            };
+
+            godmodeWs.onclose = () => {
+                godmodeContent.innerHTML += `<div class="text-red-400">Connection lost. Reconnecting...</div>`;
+                if(godmodeToggle && godmodeToggle.checked) {
+                    setTimeout(connectGodmode, 3000);
+                }
+            };
+        }
+    </script>
+
+    <!-- GodMode Floating Terminal Overlay -->
+    <div id="godmode-terminal" class="fixed bottom-4 right-4 w-96 max-w-[90vw] h-80 bg-slate-900/95 backdrop-blur-xl border border-purple-500/30 rounded-xl shadow-[0_10px_40px_-10px_rgba(168,85,247,0.5)] z-[9999] transform translate-y-full opacity-0 transition-all duration-500 flex flex-col overflow-hidden group">
+        <div class="h-8 bg-slate-800/80 border-b border-purple-500/20 flex items-center px-4 justify-between shrink-0">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-wand-magic-sparkles text-purple-400 text-xs"></i>
+                <span class="text-[10px] font-black tracking-widest text-purple-200">GODMODE TERMINAL</span>
+            </div>
+            <div class="flex gap-1.5">
+                <div class="w-2.5 h-2.5 rounded-full bg-slate-600"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-slate-600"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
+            </div>
+        </div>
+        <div id="godmode-content" class="flex-1 overflow-y-auto p-4 text-[11px] font-mono leading-relaxed text-slate-300 scrollbar-thin scrollbar-thumb-purple-500/30 scrollbar-track-transparent">
+            <!-- Messages stream here -->
+        </div>
+    </div>
+</body>
+</html>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Check Authentication First
+        const token = localStorage.getItem('nemesis_token');
+        if (!token) {
+            window.location.href = '/login';
+        }
+
+        const baseUrl = window.location.origin;
+        const wsUrl = window.location.protocol === 'https:' ? `wss://${window.location.host}` : `ws://${window.location.host}`;
+        const authHeaders = {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+
+        function logout() {
+            localStorage.removeItem('nemesis_token');
+            window.location.href = '/login';
+        }
+
+        // Tab Switching
+        function switchTab(tabId) {
+            const tabs = ['logs', 'cases', 'database', 'config', 'engine', 'parsers', 'godmode', 'clustering', 'knowledge', 'deploy', 'network', 'darknet_dash', 'ml_config', 'ml_data', 'godmode_self'];
+            const titles = {
+                'logs': 'Live Console Logs',
+                'cases': 'Case Management',
+                'database': 'Database Statistics & Management',
+                'config': 'API Configuration & Environments',
+                'engine': 'Engine Controls',
+                'parsers': 'Blockchain Parsers Configuration',
+                'godmode': 'Godmode Deployer & Auto-Pilot',
+                'clustering': 'ML Clustering Engine',
+                'knowledge': 'NEMESIS Knowledge Indexer',
+                'deploy': 'Cloud Configurations & Omni-Deploy',
+                'network': 'Network Topologies',
+                'darknet_dash': 'Darknet Crawler Dashboard',
+                'ml_config': 'Machine Learning Configurations',
+                'ml_data': 'ML Training Data',
+                'godmode_self': 'Self-Healing Modules'
+            };
+
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                if (btn) btn.classList.remove('active', 'bg-blue-50');
+                
+                const view = document.getElementById(`view-${t}`);
+                if (view) {
+                    view.classList.remove('block');
+                    view.classList.add('hidden');
+                }
+            });
+
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            if (activeBtn) activeBtn.classList.add('active', 'bg-blue-50');
+            
+            const activeView = document.getElementById(`view-${tabId}`);
+            if (activeView) {
+                activeView.classList.remove('hidden');
+                activeView.classList.add('block');
+            }
+            
+            document.getElementById('header-title').innerText = titles[tabId];
+
+            if (tabId === 'cases') fetchCases();
+            if (tabId === 'database') fetchDbStats();
+            if (tabId === 'config') fetchConfig();
+            if (tabId === 'parsers') fetchGBEO();
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('admin-sidebar');
+            const texts = sidebar.querySelectorAll('span');
+            
+            if (sidebar.classList.contains('w-72')) {
+                sidebar.classList.remove('w-72');
+                sidebar.classList.add('w-16');
+                sidebar.querySelector('h1').classList.add('hidden');
+                sidebar.querySelector('p').classList.add('hidden');
+                texts.forEach(t => t.classList.add('hidden'));
+            } else {
+                sidebar.classList.remove('w-16');
+                sidebar.classList.add('w-72');
+                sidebar.querySelector('h1').classList.remove('hidden');
+                sidebar.querySelector('p').classList.remove('hidden');
+                texts.forEach(t => t.classList.remove('hidden'));
+            }
+        }
+
+        function toggleSubMenu(id) {
+            const el = document.getElementById(id);
+            const icon = document.getElementById(`icon-${id}`);
+            if (el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+                el.classList.add('flex');
+                if (icon) icon.style.transform = 'rotate(180deg)';
+            } else {
+                el.classList.add('hidden');
+                el.classList.remove('flex');
+                if (icon) icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        async function triggerIndexer() {
+            const urlInput = document.getElementById('indexer-url').value;
+            const logDiv = document.getElementById('indexer-logs');
+            logDiv.innerHTML += `\n<span class="text-indigo-500">> STARTING INDEXING JOB FOR: ${urlInput || 'ALL Default Docs'}</span><br>`;
+            
+            try {
+                const res = await fetch('/api/admin/index_docs', {
+                    method: 'POST',
+                    headers: authHeaders,
+                    body: JSON.stringify({ url: urlInput })
+                });
+                const data = await res.json();
+                logDiv.innerHTML += `\n<span class="text-emerald-500">> DONE: ${data.message}</span><br>`;
+            } catch (err) {
+                logDiv.innerHTML += `\n<span class="text-red-500">> ERROR: ${err.message}</span><br>`;
+            }
+        }
+
+        async function fetchGBEO() {
+            try {
+                const res = await fetch(`${baseUrl}/api/admin/gbeo_config`, { headers: authHeaders });
+                const data = await res.json();
+                if (data.networks || Object.keys(data).length > 0) { // The raw JSON doesn't wrap in {status: 'success', data: ...}
+                    document.getElementById('gbeo-editor').value = JSON.stringify(data, null, 2);
+                } else if (data.status === 'success') {
+                    document.getElementById('gbeo-editor').value = JSON.stringify(data.data, null, 2);
+                }
+            } catch (err) {
+                console.error("Error fetching GBEO:", err);
+            }
+        }
+
+        async function saveGBEO() {
+            try {
+                const payload = JSON.parse(document.getElementById('gbeo-editor').value);
+                const res = await fetch(`${baseUrl}/api/admin/gbeo_config`, {
+                    method: 'POST',
+                    headers: authHeaders,
+                    body: JSON.stringify({config: payload})
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    alert('GBEO Ontology updated successfully.');
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (err) {
+                alert('Invalid JSON format.');
+            }
+        }
+
+        async function triggerGodmode() {
+            const btn = document.getElementById('btn-trigger-godmode');
+            const status = document.getElementById('godmode-status');
+            const logs = document.getElementById('godmode-logs');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ENGAGING PROTOCOL...';
+            status.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> SYSTEM ACTIVE';
+            logs.innerHTML += '<br><span class="text-emerald-300">> INITIALIZING OMNI-HEALING ORCHESTRATOR...</span>';
+            
+            try {
+                const res = await fetch(`${baseUrl}/api/admin/godmode/deploy`, {
+                    method: 'POST',
+                    headers: authHeaders
+                });
+                const data = await res.json();
+                
+                if (data.status === 'success') {
+                    logs.innerHTML += `<br><span class="text-blue-400">> ${data.message}</span>`;
+                    logs.innerHTML += '<br><span class="text-emerald-400">> Background Agent spawned. Tailing system logs...</span>';
+                    // We simulate tailing since the websocket would handle real logs
+                } else {
+                    logs.innerHTML += `<br><span class="text-red-500">> SYSTEM FAILURE: ${data.message}</span>`;
+                }
+            } catch (err) {
+                logs.innerHTML += `<br><span class="text-red-500">> CRITICAL ERROR: ${err}</span>`;
+            }
+        }
+
+        // Module: Logs
+        function initLogsWS() {
+            const ws = new WebSocket(`${wsUrl}/ws/admin/logs?token=${token}`);
+            const consoleDiv = document.getElementById('log-console');
+            ws.onmessage = (e) => {
+                const span = document.createElement('div');
+                span.textContent = e.data;
+                // Basic color coding
+                if (e.data.includes('ERROR')) span.className = 'text-red-400';
+                else if (e.data.includes('WARNING')) span.className = 'text-amber-400';
+                else if (e.data.includes('INFO')) span.className = 'text-blue-400';
+                else span.className = 'text-slate-300';
+                
+                consoleDiv.appendChild(span);
+                consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            };
+            ws.onclose = () => {
+                setTimeout(initLogsWS, 5000); // Reconnect
+            };
+            ws.onerror = () => {
+                console.error("Log WebSocket Error");
+            }
+        }
+
+        // Module: Cases
+        async function fetchCases() {
+            try {
+                const res = await fetch(`${baseUrl}/api/admin/cases`, { headers: authHeaders });
+                if (res.status === 401) logout();
+                const data = await res.json();
+                
+                const tbody = document.getElementById('cases-table');
+                if (!data.cases || data.cases.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-slate-500 italic">No cases found</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = data.cases.map(c => `
+                    <tr class="hover:bg-slate-50">
+                        <td class="py-3 px-2 font-mono text-blue-600">${c.case_id}</td>
+                        <td class="py-3 px-2 font-semibold text-slate-700">${c.name}</td>
+                        <td class="py-3 px-2"><span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-[10px] border border-emerald-200 font-bold">${c.status}</span></td>
+                        <td class="py-3 px-2 text-right"><button class="text-xs font-bold text-blue-500 hover:text-blue-700 border border-blue-200 bg-blue-50 px-3 py-1 rounded">View</button></td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // Module: Database
+        async function fetchDbStats() {
+            try {
+                const res = await fetch(`${baseUrl}/api/admin/db_stats`, { headers: authHeaders });
+                const data = await res.json();
+                document.getElementById('stat-traces').innerText = data.traces || 0;
+                document.getElementById('stat-wallets').innerText = data.wallets || 0;
+                document.getElementById('stat-cases').innerText = data.cases || 0;
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // Module: Config
+        async function fetchConfig() {
+            try {
+                const res = await fetch(`${baseUrl}/api/admin/config`, { headers: authHeaders });
+                const data = await res.json();
+                document.getElementById('config-form').innerHTML = `
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Gemini API Key</label>
+                        <input type="text" disabled value="${data.gemini_key || 'Not Set'}" class="w-full bg-slate-50 border border-slate-200 rounded p-2 text-slate-500 text-sm font-mono shadow-inner cursor-not-allowed">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Etherscan API Key</label>
+                        <input type="text" disabled value="${data.etherscan_key || 'Not Set'}" class="w-full bg-slate-50 border border-slate-200 rounded p-2 text-slate-500 text-sm font-mono shadow-inner cursor-not-allowed">
+                    </div>
+                `;
+                document.getElementById('engine-depth').value = data.max_depth || 3;
+                document.getElementById('engine-hops').value = data.max_hops || 50;
+                
+                // Populate deployment configs
+                if (data.cloudflare_api_token) document.getElementById('cf-api-token').placeholder = data.cloudflare_api_token;
+                if (data.cloudflare_account_id) document.getElementById('cf-account-id').placeholder = data.cloudflare_account_id;
+                if (data.render_api_key) document.getElementById('render-api-key').placeholder = data.render_api_key;
+                if (data.render_service_id) document.getElementById('render-service-id').placeholder = data.render_service_id;
+                if (data.git_branch) document.getElementById('git-branch').placeholder = data.git_branch;
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function saveEngineConfig() {
+            const depth = parseInt(document.getElementById('engine-depth').value);
+            const hops = parseInt(document.getElementById('engine-hops').value);
+            
+            try {
+                const res = await fetch(`${baseUrl}/api/admin/config`, {
+                    method: 'POST',
+                    headers: authHeaders,
+                    body: JSON.stringify({ gemini_key: "", etherscan_key: "", polygonscan_key: "", max_depth: depth, max_hops: hops })
+                });
+                if (res.ok) showToast("Engine config updated.");
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        // --- CLUSTERING ENGINE ---
+        async function submitClusteringIngest(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('ingest-file');
+            const urlInput = document.getElementById('ingest-url');
+            const promptInput = document.getElementById('ingest-prompt');
+            const statusDiv = document.getElementById('ingest-status');
+            
+            const formData = new FormData();
+            if (fileInput.files.length > 0) {
+                formData.append('file', fileInput.files[0]);
+            } else if (urlInput.value) {
+                formData.append('url', urlInput.value);
+            } else if (promptInput.value) {
+                formData.append('prompt', promptInput.value);
+            } else {
+                alert("Please provide a file, URL, or Raw Scenario Prompt.");
+                return;
+            }
+
+            statusDiv.classList.remove('hidden');
+            statusDiv.innerText = "> INITIATING INGESTION PROTOCOL...";
+
+            try {
+                const res = await fetch('/admin/api/clustering/ingest', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                const data = await res.json();
+                statusDiv.innerText = `> [${data.status.toUpperCase()}] ${data.message}`;
+                if (data.status === 'success') {
+                    statusDiv.classList.add('text-emerald-500');
+                    statusDiv.classList.remove('text-red-500');
+                } else {
+                    statusDiv.classList.add('text-red-500');
+                    statusDiv.classList.remove('text-emerald-500');
+                }
+            } catch (err) {
+                statusDiv.innerText = `> [ERROR] ${err.message}`;
+            }
+        }
+
+        async function runClustering() {
+            const resultsDiv = document.getElementById('clustering-results');
+            const timeSpan = document.getElementById('cluster-timestamp');
+            const btn = document.getElementById('btn-run-cluster');
+            
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+            resultsDiv.innerText = '> INITIALIZING KMEANS AND DBSCAN PIPELINES...\n> EXTRACTING TF-IDF VECTORS...';
+
+            try {
+                const res = await fetch('/admin/api/clustering/run', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                
+                if (data.status === 'success') {
+                    timeSpan.innerText = `Last Run: ${data.data.timestamp}`;
+                    resultsDiv.innerText = JSON.stringify(data.data, null, 2);
+                } else {
+                    resultsDiv.innerText = `> [ERROR] ${data.message}`;
+                }
+            } catch (err) {
+                resultsDiv.innerText = `> [FATAL] Engine failure: ${err.message}`;
+            } finally {
+                btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Initialize Algorithm';
+            }
+        }
+
+        // Deploy Configuration Management
+        async function saveDeployConfig() {
+            const cfToken = document.getElementById('cf-api-token').value;
+            const cfAccount = document.getElementById('cf-account-id').value;
+            const renderKey = document.getElementById('render-api-key').value;
+            const renderService = document.getElementById('render-service-id').value;
+            const gitBranch = document.getElementById('git-branch').value;
+            
+            try {
+                const res = await fetch(`${baseUrl}/api/admin/config`, {
+                    method: 'POST',
+                    headers: authHeaders,
+                    body: JSON.stringify({ 
+                        gemini_key: "", etherscan_key: "", polygonscan_key: "", max_depth: 0, max_hops: 0,
+                        cloudflare_api_token: cfToken, cloudflare_account_id: cfAccount,
+                        render_api_key: renderKey, render_service_id: renderService, git_branch: gitBranch
+                    })
+                });
+                if (res.ok) {
+                    showToast("Deployment configuration saved.");
+                    document.getElementById('cf-api-token').value = "";
+                    document.getElementById('cf-account-id').value = "";
+                    document.getElementById('render-api-key').value = "";
+                    document.getElementById('render-service-id').value = "";
+                    document.getElementById('git-branch').value = "";
+                    fetchConfig(); // refresh masked placeholders
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        let deployPollInterval = null;
+
+        async function triggerOmniDeploy() {
+            const btn = document.getElementById('btn-trigger-deploy');
+            const status = document.getElementById('deploy-status');
+            const logs = document.getElementById('deploy-logs');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ENGAGING...';
+            status.innerHTML = '<span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span> RUNNING';
+            logs.innerHTML = '> INITIALIZING AUTONOMOUS OMNI-DEPLOYER...';
+            
+            try {
+                const res = await fetch(`${baseUrl}/admin/deploy`, { // Existent endpoint for auto_deploy.py
+                    method: 'POST',
+                    headers: authHeaders
+                });
+                // Not waiting for it to finish fully since we poll logs
+                
+                if (deployPollInterval) clearInterval(deployPollInterval);
+                deployPollInterval = setInterval(pollDeployLogs, 3000);
+            } catch (err) {
+                logs.innerHTML += `\n> CRITICAL ERROR: ${err}`;
+            }
+        }
+
+        async function pollDeployLogs() {
+            try {
+                const res = await fetch(`${baseUrl}/api/admin/deploy/logs`, { headers: authHeaders });
+                const data = await res.json();
+                if (data.status === 'success' && data.logs) {
+                    const logsDiv = document.getElementById('deploy-logs');
+                    logsDiv.innerText = data.logs;
+                    logsDiv.scrollTop = logsDiv.scrollHeight;
+                }
+            } catch (e) {
+                console.error("Log fetch error", e);
+            }
+        }
+
+        // Initialize
+        initLogsWS();
+    </script>
+</body>
+</html>

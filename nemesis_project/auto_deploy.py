@@ -183,8 +183,13 @@ def main():
         print_log("    -> Running npm update...")
         run_cmd("npm update", cwd="cloudflare_worker", exit_on_error=False)
         
+    # Purge Git Cache
+    print_log("    -> Purging git cache to avoid phantom files...")
+    run_cmd("git rm -r --cached .", exit_on_error=False)
+    run_cmd("git rm -rf local_deploy/", exit_on_error=False)
+    
     # Ensure .gitignore exists to prevent LFS issues
-    gitignore_content = "node_modules/\ncloudflare_worker/node_modules/\ncf_pages_build/\nvenv/\n__pycache__/\n.env\n"
+    gitignore_content = "node_modules/\ncloudflare_worker/node_modules/\nvenv/\n__pycache__/\n.env\n"
     if not os.path.exists(".gitignore"):
         with open(".gitignore", "w", encoding="utf-8") as f:
             f.write(gitignore_content)
@@ -194,6 +199,11 @@ def main():
         if "node_modules" not in current_gitignore:
             with open(".gitignore", "a", encoding="utf-8") as f:
                 f.write("\n" + gitignore_content)
+        # Force remove cf_pages_build from gitignore if it exists
+        if "cf_pages_build/" in current_gitignore:
+            new_gitignore = current_gitignore.replace("cf_pages_build/\n", "").replace("cf_pages_build", "")
+            with open(".gitignore", "w", encoding="utf-8") as f:
+                f.write(new_gitignore)
 
     # 1. CLOUDFLARE INFRASTRUCTURE (D1, KV, R2)
     print_log("\n>>> [1/4] Provisioning Cloudflare Edge Resources")
@@ -222,7 +232,7 @@ def main():
     run_cmd("git rm -r --cached .", exit_on_error=False)
     
     core_files = [
-        "local_deploy/", "cloudflare_worker/", 
+        "cloudflare_worker/", "cf_pages_build/",
         "render_backend/", "services/", "templates/", "static/", "scraper_service/", "graph/",
         "database/", "requirements.txt", "render.yaml", "auto_deploy.py", "deploy_all.py", 
         "build_nemesis_id.py", "app.py", "main.py", "Dockerfile", ".gitignore", "wrangler.toml", "vercel.json"
