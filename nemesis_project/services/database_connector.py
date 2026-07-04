@@ -184,3 +184,9 @@ class UniversalDatabaseConnector:
             logger.error(f"Mongo OSINT save failed: {e}")
 
 db_connector = UniversalDatabaseConnector()
+
+# Backwards compatibility for older modules referencing db_engine
+db_engine = db_connector
+db_engine.db = db_connector.mongo_db
+async def _dummy_connect(): pass
+db_engine.connect = _dummy_connect

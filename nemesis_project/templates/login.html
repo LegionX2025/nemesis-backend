@@ -10,8 +10,9 @@
             margin: 0;
             min-height: 100vh;
             display: flex;
-            flex-direction: column;
-            overflow-x: hidden;
+            flex-direction: row;
+            overflow: hidden;
+            background-color: #f8fafc;
         }
 
         .glass-panel {
@@ -58,7 +59,7 @@
 <body>
     {% include 'includes/global_nav.html' %}
     
-    <main class="flex-grow flex flex-col items-center justify-center relative z-10 w-full p-4">
+    <main class="flex-grow flex flex-col items-center justify-center relative z-10 w-full h-screen overflow-hidden p-4">
         <div class="glass-panel p-10 rounded-2xl w-full max-w-md mx-auto shadow-2xl">
             <div class="text-center mb-8 glass-text-container">
                 <i class="fa-solid fa-user-shield text-blue-600 text-4xl mb-4"></i>

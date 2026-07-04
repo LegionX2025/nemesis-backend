@@ -225,7 +225,7 @@ def main():
         "local_deploy/", "cloudflare_worker/", 
         "render_backend/", "services/", "templates/", "static/", "scraper_service/", "graph/",
         "database/", "requirements.txt", "render.yaml", "auto_deploy.py", "deploy_all.py", 
-        "build_nemesis_id.py", "app.py", "main.py", "Dockerfile", ".gitignore", "wrangler.toml"
+        "build_nemesis_id.py", "app.py", "main.py", "Dockerfile", ".gitignore", "wrangler.toml", "vercel.json"
     ]
     for f in core_files:
         if os.path.exists(os.path.join(os.getcwd(), f.strip("/"))):

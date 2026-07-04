@@ -1278,12 +1278,15 @@ class TraceEngine:
                 diffs = []
                 for i, acc in enumerate(accounts):
                     pubkey = acc.get('pubkey') if isinstance(acc, dict) else acc
-                    if i < len(pre_bals) and i < len(post_bals):
+            if i < len(pre_bals) and i < len(post_bals):
                         diffs.append((pubkey, post_bals[i] - pre_bals[i]))
                 if not diffs: continue
                 sender = min(diffs, key=lambda x: x[1])
                 receiver = max(diffs, key=lambda x: x[1])
-                if sender[0] == addr and sender[1] < 0 and receiver[1] > 0:
+                is_outbound = sender[0] == addr and sender[1] < 0 and receiver[1] > 0
+                is_inbound = receiver[0] == addr and receiver[1] > 0 and sender[1] < 0
+                
+                if is_outbound or is_inbound:
                     amt = receiver[1] / 1e9
                     
                     logs = meta.get('logMessages', [])
@@ -1291,9 +1294,12 @@ class TraceEngine:
                     edge_type = 'TRANSFER'
                     for log in logs:
                         if 'Instruction: Swap' in log: action = 'SOL_SWAP'; edge_type = 'SWAP'
-                        
+                    
                     if amt > 0.001:
-                        await self.process_hop(session, addr, receiver[0], amt, tx.get('transaction', {}).get('signatures', [''])[0], timestamp, depth, chain, origin_seed, {'action': action, 'edge_type': edge_type}, 'SOL')
+                        if is_outbound:
+                            await self.process_hop(session, addr, receiver[0], amt, tx.get('transaction', {}).get('signatures', [''])[0], timestamp, depth, chain, origin_seed, {'action': action, 'edge_type': edge_type}, 'SOL')
+                        elif is_inbound:
+                            await self.process_hop(session, sender[0], addr, amt, tx.get('transaction', {}).get('signatures', [''])[0], timestamp, depth, chain, origin_seed, {'action': action, 'edge_type': edge_type}, 'SOL')
             except: pass
 
     async def process_hop(self, session, addr, to, amt, txid, timestamp, depth, chain, origin_seed, intent_data, ticker_override=None):

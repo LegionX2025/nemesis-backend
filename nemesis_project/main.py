@@ -153,6 +153,7 @@ async def lifespan(app: FastAPI):
             logger.info("    [OK] APScheduler started: Threat Intel (24h), Darknet Crawler (6h).")
             
             # Check if DB is empty to run initial fetch immediately
+            from services.database_connector import db_engine
             count = await db_engine.db.threat_intel.count_documents({})
             if count == 0:
                 logger.info("    [INFO] Threat Intel DB is empty. Running initial ingestion...")
@@ -193,9 +194,11 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://nemesis-id-frontend.pages.dev", 
+        "https://nemesis-local.onrender.com",
         "http://localhost:3000",
         "http://localhost:3001",
-        "http://127.0.0.1:3000"
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001"
     ],
     allow_origin_regex=r"https://.*\.pages\.dev",
     allow_credentials=True,

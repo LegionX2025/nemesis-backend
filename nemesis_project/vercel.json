@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "outputDirectory": "cf_pages_build",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://nemesis-local.onrender.com/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/$1"
+    }
+  ]
+}
