@@ -378,107 +378,108 @@ class AutoScraper:
             try:
                 url = f"{base_url}/address/{address}"
                 logger.info(f"[DEEP SCRAPE] Swarm Agent hitting {url}")
-                await page.goto(url, wait_until="domcontentloaded", timeout=25000)
-                await page.wait_for_timeout(4000) # Wait for Cloudflare/React
-            except Exception as e:
-                logger.error(f"[DEEP SCRAPE] Failed to load {url}: {e}")
-                return result
-            
-            # 1. Assets / Portfolio Extraction
-            logger.info(f"[DEEP SCRAPE] Extracting Assets for {address}")
-            try:
-                assets = await page.evaluate('''() => {
-                    let items = document.querySelectorAll('ul#availableBalanceDropdown li, .list-custom-ERC20 a');
-                    return Array.from(items).map(item => item.innerText.replace(/\\n/g, ' ').trim()).filter(x => x && !x.includes('Click to view'));
-                }''')
-                result["assets"] = assets
-            except Exception as e:
-                logger.warning(f"Could not extract assets: {e}")
-
-            # 2. Analytics Tab summary (if we were to click it, but we can grab overview stats)
-            try:
-                stats = await page.evaluate('''() => {
-                    let balance = document.querySelector('#ContentPlaceHolder1_divSummary div:contains("ETH Balance")')?.nextElementSibling?.innerText || '';
-                    let value = document.querySelector('#ContentPlaceHolder1_divSummary div:contains("ETH Value")')?.nextElementSibling?.innerText || '';
-                    return { balance: balance.trim(), value: value.trim() };
-                }''')
-                result["analytics"] = stats
-            except:
-                pass
-
-            # Helper for pagination scraping on tabs
-            async def scrape_tab_table(tab_selector, iframe_id=None, row_selector='tbody tr', max_p=1):
-                data = []
                 try:
-                    # Click tab if needed
-                    if tab_selector:
-                        await page.click(tab_selector)
-                        await page.wait_for_timeout(2000)
-                    
-                    target_frame = page
-                    if iframe_id:
-                        frame_element = await page.query_selector(f"iframe#{iframe_id}")
-                        if frame_element:
-                            target_frame = await frame_element.content_frame()
-                            await target_frame.wait_for_load_state("domcontentloaded")
-                            await page.wait_for_timeout(2000)
-
-                    for p in range(max_p):
-                        rows = await target_frame.evaluate(f'''() => {{
-                            let rs = document.querySelectorAll('{row_selector}');
-                            return Array.from(rs).map(row => {{
-                                let cols = Array.from(row.querySelectorAll('td'));
-                                return cols.map(c => c.innerText.trim());
-                            }}).filter(r => r.length > 0);
-                        }}''')
-                        data.extend(rows)
-                        
-                        # Try to click next
-                        next_btn = await target_frame.query_selector('a:has-text("Next"), button:has-text("Next"), .page-link:has-text("Next")')
-                        if next_btn:
-                            is_disabled = await target_frame.evaluate('(btn) => btn.classList.contains("disabled") || (btn.parentElement && btn.parentElement.classList.contains("disabled")) || btn.hasAttribute("disabled")', next_btn)
-                            if is_disabled: break
-                            try:
-                                await next_btn.click(timeout=5000)
-                                await page.wait_for_timeout(2000)
-                            except:
-                                break
-                        else:
-                            break
+                    await page.goto(url, wait_until="domcontentloaded", timeout=25000)
+                    await page.wait_for_timeout(4000) # Wait for Cloudflare/React
                 except Exception as e:
-                    logger.warning(f"Pagination scrape failed for {tab_selector}: {e}")
-                return data
+                    logger.error(f"[DEEP SCRAPE] Failed to load {url}: {e}")
+                    return result
+            
+                # 1. Assets / Portfolio Extraction
+                logger.info(f"[DEEP SCRAPE] Extracting Assets for {address}")
+                try:
+                    assets = await page.evaluate('''() => {
+                        let items = document.querySelectorAll('ul#availableBalanceDropdown li, .list-custom-ERC20 a');
+                        return Array.from(items).map(item => item.innerText.replace(/\\n/g, ' ').trim()).filter(x => x && !x.includes('Click to view'));
+                    }''')
+                    result["assets"] = assets
+                except Exception as e:
+                    logger.warning(f"Could not extract assets: {e}")
 
-            # 3. Normal Transactions
-            logger.info(f"[DEEP SCRAPE] Extracting Normal Transactions")
-            txs = await scrape_tab_table('#transactions', iframe_id='toxmaintab', max_p=max_pages)
-            result["transactions"] = txs
-            
-            # 4. Internal Transactions
-            logger.info(f"[DEEP SCRAPE] Extracting Internal Transactions")
-            int_txs = await scrape_tab_table('a#internal-txs-tab', iframe_id='toxmaintab', max_p=max_pages)
-            result["internal_transactions"] = int_txs
-            
-            # 5. ERC-20 Token Transfers
-            logger.info(f"[DEEP SCRAPE] Extracting ERC-20 Transfers")
-            erc20 = await scrape_tab_table('a#erc20-tokens-tab', iframe_id='toxmaintab', max_p=max_pages)
-            result["erc20_transfers"] = erc20
+                # 2. Analytics Tab summary
+                try:
+                    stats = await page.evaluate('''() => {
+                        let balance = document.querySelector('#ContentPlaceHolder1_divSummary div:contains("ETH Balance")')?.nextElementSibling?.innerText || '';
+                        let value = document.querySelector('#ContentPlaceHolder1_divSummary div:contains("ETH Value")')?.nextElementSibling?.innerText || '';
+                        return { balance: balance.trim(), value: value.trim() };
+                    }''')
+                    result["analytics"] = stats
+                except:
+                    pass
 
-            # 6. Authorizations (EIP-7702)
-            logger.info(f"[DEEP SCRAPE] Extracting EIP-7702 Authorizations")
-            eip7702 = await scrape_tab_table('a#authorizations-tab', iframe_id='toxmaintab', max_p=1)
-            result["eip7702_authorizations"] = eip7702
+                # Helper for pagination scraping on tabs
+                async def scrape_tab_table(tab_selector, iframe_id=None, row_selector='tbody tr', max_p=1):
+                    data = []
+                    try:
+                        # Click tab if needed
+                        if tab_selector:
+                            await page.click(tab_selector)
+                            await page.wait_for_timeout(2000)
+                    
+                        target_frame = page
+                        if iframe_id:
+                            frame_element = await page.query_selector(f"iframe#{iframe_id}")
+                            if frame_element:
+                                target_frame = await frame_element.content_frame()
+                                await target_frame.wait_for_load_state("domcontentloaded")
+                                await page.wait_for_timeout(2000)
+
+                        for p in range(max_p):
+                            rows = await target_frame.evaluate(f'''() => {{
+                                let rs = document.querySelectorAll('{row_selector}');
+                                return Array.from(rs).map(row => {{
+                                    let cols = Array.from(row.querySelectorAll('td'));
+                                    return cols.map(c => c.innerText.trim());
+                                }}).filter(r => r.length > 0);
+                            }}''')
+                            data.extend(rows)
+                        
+                            # Try to click next
+                            next_btn = await target_frame.query_selector('a:has-text("Next"), button:has-text("Next"), .page-link:has-text("Next")')
+                            if next_btn:
+                                is_disabled = await target_frame.evaluate('(btn) => btn.classList.contains("disabled") || (btn.parentElement && btn.parentElement.classList.contains("disabled")) || btn.hasAttribute("disabled")', next_btn)
+                                if is_disabled: break
+                                try:
+                                    await next_btn.click(timeout=5000)
+                                    await page.wait_for_timeout(2000)
+                                except:
+                                    break
+                            else:
+                                break
+                    except Exception as e:
+                        logger.warning(f"Pagination scrape failed for {tab_selector}: {e}")
+                    return data
+
+                # 3. Normal Transactions
+                logger.info(f"[DEEP SCRAPE] Extracting Normal Transactions")
+                txs = await scrape_tab_table('#transactions', iframe_id='toxmaintab', max_p=max_pages)
+                result["transactions"] = txs
             
-            # 7. Events
-            logger.info(f"[DEEP SCRAPE] Extracting Events")
-            events = await scrape_tab_table('a#events-tab', iframe_id='toxmaintab', max_p=max_pages)
-            result["events"] = events
+                # 4. Internal Transactions
+                logger.info(f"[DEEP SCRAPE] Extracting Internal Transactions")
+                int_txs = await scrape_tab_table('a#internal-txs-tab', iframe_id='toxmaintab', max_p=max_pages)
+                result["internal_transactions"] = int_txs
             
-        except Exception as e:
-            logger.error(f"Deep scrape failed for {address}: {e}")
-            result["error"] = str(e)
-        finally:
-            await page.close()
+                # 5. ERC-20 Token Transfers
+                logger.info(f"[DEEP SCRAPE] Extracting ERC-20 Transfers")
+                erc20 = await scrape_tab_table('a#erc20-tokens-tab', iframe_id='toxmaintab', max_p=max_pages)
+                result["erc20_transfers"] = erc20
+
+                # 6. Authorizations (EIP-7702)
+                logger.info(f"[DEEP SCRAPE] Extracting EIP-7702 Authorizations")
+                eip7702 = await scrape_tab_table('a#authorizations-tab', iframe_id='toxmaintab', max_p=1)
+                result["eip7702_authorizations"] = eip7702
+            
+                # 7. Events
+                logger.info(f"[DEEP SCRAPE] Extracting Events")
+                events = await scrape_tab_table('a#events-tab', iframe_id='toxmaintab', max_p=max_pages)
+                result["events"] = events
+            
+            except Exception as e:
+                logger.error(f"Deep scrape failed for {address}: {e}")
+                result["error"] = str(e)
+            finally:
+                await page.close()
             
         logger.info(f"[DEEP SCRAPE] Completed for {address}")
         return result
