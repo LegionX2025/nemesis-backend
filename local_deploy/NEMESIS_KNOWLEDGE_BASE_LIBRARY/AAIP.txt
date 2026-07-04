@@ -1,0 +1,1397 @@
+This is exactly how commercial platforms like Chainalysis Reactor, TRM, Elliptic, Crystal, and Qlue evolve—but NEMESIS ID can go significantly further by modeling **the entire Asset Intelligence Lifecycle (AIL)** as a directed graph with autonomous reconstruction and probabilistic attribution.
+
+The key shift is:
+
+> **Do not investigate transactions. Investigate assets.**
+
+Every satoshi, wei, token, NFT, LP token, wrapped asset, and derivative should be treated as an object with lineage, provenance, transformations, custody transitions, and ownership probabilities.
+
+---
+
+# NEMESIS ID
+
+# Advanced Asset Intelligence Lifecycle (AAIL)
+
+```
+Asset Creation
+
+↓
+
+Funding Source
+
+↓
+
+Seed Wallet
+
+↓
+
+Activation
+
+↓
+
+Accumulation
+
+↓
+
+Holding
+
+↓
+
+Movement
+
+↓
+
+Transformation
+
+↓
+
+Fragmentation
+
+↓
+
+Aggregation
+
+↓
+
+Obfuscation
+
+↓
+
+Layering
+
+↓
+
+Cross Chain
+
+↓
+
+DeFi Interaction
+
+↓
+
+Derivatives
+
+↓
+
+Lending
+
+↓
+
+Borrowing
+
+↓
+
+Collateralization
+
+↓
+
+Liquidation
+
+↓
+
+Treasury
+
+↓
+
+Institution
+
+↓
+
+Exchange
+
+↓
+
+OTC
+
+↓
+
+Cash Out
+
+↓
+
+Dormancy
+
+↓
+
+Reactivation
+
+↓
+
+Recovery
+
+↓
+
+Forfeiture
+
+↓
+
+Burn
+
+↓
+
+Historical Archive
+```
+
+---
+
+# Every Asset becomes an Intelligence Object
+
+```yaml
+AssetID
+
+Current Owner
+
+Historical Owners
+
+Current Chain
+
+Historical Chains
+
+Current Contract
+
+Historical Contracts
+
+Current Symbol
+
+Historical Symbols
+
+Current Standard
+
+ERC20
+
+ERC721
+
+ERC1155
+
+BRC20
+
+SPL
+
+TRC20
+
+BEP20
+
+Wrapped Version
+
+Underlying Asset
+
+Wrapped History
+
+Bridge History
+
+Swap History
+
+Liquidity History
+
+Risk History
+
+Entity History
+
+Confidence
+
+Evidence
+```
+
+---
+
+# Asset State Machine
+
+Instead of tracking transactions...
+
+Track asset states.
+
+```
+CREATED
+
+↓
+
+FUNDED
+
+↓
+
+ACTIVE
+
+↓
+
+HELD
+
+↓
+
+SWAPPED
+
+↓
+
+WRAPPED
+
+↓
+
+UNWRAPPED
+
+↓
+
+BRIDGED
+
+↓
+
+MIXED
+
+↓
+
+SPLIT
+
+↓
+
+MERGED
+
+↓
+
+LOCKED
+
+↓
+
+STAKED
+
+↓
+
+LENT
+
+↓
+
+BORROWED
+
+↓
+
+LIQUIDATED
+
+↓
+
+DEPOSITED
+
+↓
+
+WITHDRAWN
+
+↓
+
+SOLD
+
+↓
+
+BURNED
+```
+
+Each transition creates an immutable event.
+
+---
+
+# Asset Transformation Graph
+
+Example
+
+```
+BTC
+
+↓
+
+WBTC
+
+↓
+
+Bridge
+
+↓
+
+WBTC.e
+
+↓
+
+Swap
+
+↓
+
+renBTC
+
+↓
+
+Bridge
+
+↓
+
+BTC.b
+
+↓
+
+Bridge
+
+↓
+
+Native BTC
+
+↓
+
+Exchange
+
+↓
+
+Cold Wallet
+
+↓
+
+Institution
+```
+
+Instead of one transaction
+
+NEMESIS stores
+
+```
+Asset Lineage Graph
+```
+
+---
+
+# Advanced Transaction Intelligence
+
+Every transaction receives
+
+```
+Transaction Type
+
+Behavior
+
+Purpose
+
+Confidence
+
+Counterparty
+
+Risk
+
+Pattern
+
+Entity
+
+Lifecycle Stage
+```
+
+---
+
+# 200+ Transaction Types
+
+## Native
+
+```
+TRANSFER
+
+SELF_TRANSFER
+
+INTERNAL_TRANSFER
+
+CHANGE_OUTPUT
+
+UTXO_SPLIT
+
+UTXO_MERGE
+
+DUST
+
+CONSOLIDATION
+
+PEEL_CHAIN
+
+FAN_OUT
+
+FAN_IN
+
+MULTISIG
+
+PAYJOIN
+
+COINJOIN
+
+OP_RETURN
+
+TIMELOCK
+
+ESCROW
+```
+
+---
+
+## Token
+
+```
+APPROVE
+
+TRANSFERFROM
+
+MINT
+
+BURN
+
+WRAP
+
+UNWRAP
+
+STAKE
+
+UNSTAKE
+
+CLAIM
+
+LOCK
+
+UNLOCK
+
+VEST
+
+AIRDROP
+
+REBASE
+
+FREEZE
+
+BLACKLIST
+
+```
+
+---
+
+## DeFi
+
+```
+SWAP
+
+MULTIHOP_SWAP
+
+ROUTER_SWAP
+
+FLASH_SWAP
+
+FLASH_LOAN
+
+BORROW
+
+REPAY
+
+SUPPLY
+
+WITHDRAW
+
+LP_ADD
+
+LP_REMOVE
+
+FARM
+
+HARVEST
+
+VAULT
+
+LIQUIDATE
+
+ROLL_POSITION
+
+```
+
+---
+
+## Bridges
+
+```
+LOCK
+
+MINT
+
+BURN
+
+RELEASE
+
+MESSAGE
+
+FINALIZE
+
+FAST_BRIDGE
+
+NATIVE_BRIDGE
+
+WRAPPED_BRIDGE
+
+```
+
+---
+
+## NFTs
+
+```
+NFT_MINT
+
+NFT_TRANSFER
+
+NFT_SALE
+
+NFT_BURN
+
+NFT_WRAP
+
+NFT_STAKE
+
+NFT_REDEEM
+
+ROYALTY
+
+```
+
+---
+
+## AML
+
+```
+MIXER
+
+LAYERING
+
+SMURFING
+
+PEEL
+
+STRUCTURING
+
+ROUND_TRIP
+
+SELF_LOOP
+
+OBFUSCATION
+
+CHAIN_HOP
+
+EXCHANGE_HOP
+
+DUST_ATTACK
+
+```
+
+---
+
+# Asset Nightmare Scenarios
+
+---
+
+## Scenario 1
+
+BTC
+
+↓
+
+100 wallets
+
+↓
+
+WBTC
+
+↓
+
+Bridge
+
+↓
+
+Arbitrum
+
+↓
+
+1inch
+
+↓
+
+renBTC
+
+↓
+
+Curve
+
+↓
+
+LP
+
+↓
+
+Bridge
+
+↓
+
+Polygon
+
+↓
+
+USDC
+
+↓
+
+Aave
+
+↓
+
+Borrow
+
+↓
+
+Withdraw
+
+↓
+
+Binance
+
+↓
+
+Cold Wallet
+
+---
+
+## Logic
+
+```
+Recursive Graph Traversal
+
++
+
+Cross Chain Correlation
+
++
+
+Asset Transformation Engine
+
++
+
+LP Decoder
+```
+
+---
+
+## Formula
+
+```
+Asset Continuity Score
+
+=
+
+Value Similarity
+
+×
+
+Time Similarity
+
+×
+
+Bridge Confidence
+
+×
+
+Swap Confidence
+
+×
+
+Destination Probability
+```
+
+---
+
+# Scenario 2
+
+```
+BTC
+
+↓
+
+Tornado
+
+↓
+
+ETH
+
+↓
+
+Bridge
+
+↓
+
+Optimism
+
+↓
+
+Swap
+
+↓
+
+USDT
+
+↓
+
+CEX
+
+↓
+
+Withdraw
+
+↓
+
+OTC
+
+↓
+
+Private Wallet
+```
+
+Algorithm
+
+```
+Temporal Correlation
+
++
+
+Value Conservation
+
++
+
+Behavior Matching
+
+```
+
+---
+
+# Scenario 3
+
+```
+BTC
+
+↓
+
+CoinJoin
+
+↓
+
+100 outputs
+
+↓
+
+Exchange
+
+↓
+
+Bridge
+
+↓
+
+NFT
+
+↓
+
+Sell NFT
+
+↓
+
+USDC
+
+↓
+
+Kraken
+```
+
+Need
+
+```
+Entropy Analysis
+
++
+
+Output Similarity
+
++
+
+Exchange Attribution
+
+```
+
+---
+
+# Asset Continuity Formula
+
+Every hop receives
+
+```
+ACS
+
+Asset Continuity Score
+
+=
+
+0.35
+
+Value Similarity
+
++
+
+0.20
+
+Temporal Similarity
+
++
+
+0.15
+
+Gas Similarity
+
++
+
+0.10
+
+Behavior Similarity
+
++
+
+0.10
+
+Counterparty Similarity
+
++
+
+0.10
+
+Chain Correlation
+```
+
+---
+
+# Peel Chain Detection
+
+Indicators
+
+```
+Repeated
+
+90%
+
+↓
+
+keep
+
+10%
+
+↓
+
+forward
+
+repeat
+```
+
+Algorithm
+
+```
+Depth First Search
+
++
+
+Residual Value Analysis
+
++
+
+Sliding Window
+
++
+
+Time Correlation
+```
+
+---
+
+# Layering Detection
+
+```
+Wallet
+
+↓
+
+Bridge
+
+↓
+
+DEX
+
+↓
+
+Bridge
+
+↓
+
+DEX
+
+↓
+
+Mixer
+
+↓
+
+Exchange
+```
+
+Algorithm
+
+```
+Temporal DAG
+
++
+
+Maximum Flow
+
++
+
+Graph Similarity
+
+```
+
+---
+
+# Smurfing
+
+```
+100
+
+↓
+
+small deposits
+
+↓
+
+1 wallet
+```
+
+Algorithm
+
+```
+Fan In Detection
+
++
+
+DBSCAN
+
+```
+
+---
+
+# Fan Out
+
+```
+1
+
+↓
+
+1000 wallets
+```
+
+Algorithm
+
+```
+Breadth First Search
+
++
+
+Graph Expansion
+```
+
+---
+
+# Cross Chain Correlation
+
+Suppose
+
+```
+BTC
+
+↓
+
+WBTC
+
+↓
+
+ETH
+
+↓
+
+Bridge
+
+↓
+
+Avalanche
+
+↓
+
+WBTC.e
+
+↓
+
+Swap
+
+↓
+
+BTC.b
+
+↓
+
+Bridge
+
+↓
+
+Native BTC
+```
+
+Need
+
+```
+Token Mapping
+
++
+
+Bridge Decoder
+
++
+
+Wrapped Asset Database
+
++
+
+Time Correlation
+
++
+
+Value Conservation
+```
+
+---
+
+# Asset Transformation Engine
+
+NEMESIS should know
+
+```
+BTC
+
+↓
+
+WBTC
+
+↓
+
+renBTC
+
+↓
+
+BTC.b
+
+↓
+
+BTC.e
+
+↓
+
+tBTC
+
+↓
+
+sBTC
+
+↓
+
+LBTC
+
+↓
+
+SolvBTC
+
+↓
+
+cbBTC
+
+↓
+
+Synthetic BTC
+```
+
+All are
+
+```
+Underlying
+
+↓
+
+BTC
+```
+
+---
+
+# DEX Black Hole Resolution
+
+Instead of
+
+```
+Wallet
+
+↓
+
+Uniswap
+```
+
+Stop
+
+Resolve
+
+```
+Wallet
+
+↓
+
+Router
+
+↓
+
+Pool
+
+↓
+
+Token A
+
+↓
+
+Token B
+
+↓
+
+LP
+
+↓
+
+Output Wallet
+
+↓
+
+Receiver
+```
+
+Every router call
+
+Must decode
+
+```
+ABI
+
+↓
+
+Events
+
+↓
+
+Swap
+
+↓
+
+Pool
+
+↓
+
+Recipient
+```
+
+---
+
+# LP Intelligence
+
+Track
+
+```
+USDT
+
+↓
+
+ETH
+
+↓
+
+LP
+
+↓
+
+Vault
+
+↓
+
+Bridge
+
+↓
+
+LP
+
+↓
+
+Redeem
+
+↓
+
+USDC
+```
+
+Not
+
+```
+Unknown Contract
+```
+
+---
+
+# Asset Replay Engine
+
+Generate
+
+```
+Seed Wallet
+
+↓
+
+Hop 1
+
+↓
+
+Hop 2
+
+↓
+
+Hop 3
+
+↓
+
+Hop 4
+
+↓
+
+Current Holder
+
+↓
+
+Future Prediction
+```
+
+Replay
+
+Frame
+
+By
+
+Frame
+
+---
+
+# Exchange Attribution Engine
+
+For every deposit, identify:
+
+```
+Deposit Address
+
+↓
+
+Exchange
+
+↓
+
+Custodian
+
+↓
+
+Prime Broker
+
+↓
+
+Sub-account
+
+↓
+
+Deposit Memo
+
+↓
+
+Destination Cluster
+
+↓
+
+KYC Probability
+
+↓
+
+Likely Account Holder
+```
+
+Use:
+
+* Exchange deposit address databases
+* Address clustering
+* Memo/tag correlation (e.g., XRP, XLM, ATOM)
+* Deposit pattern fingerprinting
+* Withdrawal reuse analysis
+* Public proof-of-reserve addresses
+* Exchange hot/cold wallet inventories
+
+---
+
+# Automated Trace Orchestrator
+
+Rather than a single search, orchestrate a graph exploration pipeline:
+
+```
+Seed Wallet
+      │
+      ▼
+Collect all outbound transfers
+      │
+      ▼
+Classify transaction type
+      │
+      ├── Native transfer
+      ├── Swap
+      ├── Bridge
+      ├── Wrap
+      ├── Mint
+      ├── Burn
+      ├── LP
+      ├── Lending
+      ├── NFT
+      └── CEX deposit
+      │
+      ▼
+Decode contract semantics
+      │
+      ▼
+Resolve resulting assets
+      │
+      ▼
+Maintain asset lineage
+      │
+      ▼
+Score continuity probabilities
+      │
+      ▼
+Expand graph recursively
+      │
+      ▼
+Stop only when:
+  • Current holders identified
+  • Funds burned
+  • Funds irrecoverably mixed (confidence threshold)
+  • Assets deposited to identifiable custodians
+```
+
+The output is not merely a transaction graph but an **Asset Provenance Graph** that can answer questions such as:
+
+* **Where did every unit of value ultimately land?**
+* **Which CEXs or custodians received what amounts?**
+* **Which wrapped or derivative assets represent the same underlying funds?**
+* **What is the most probable ownership chain after multiple transformations?**
+* **What percentage of the original assets remains traceable, and with what confidence?**
+
+This architecture elevates NEMESIS ID from wallet analytics to **end-to-end digital asset provenance reconstruction**, capable of following value across chains, protocols, asset transformations, and custodial endpoints while preserving evidentiary lineage for forensic investigations.

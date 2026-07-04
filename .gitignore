@@ -25,3 +25,8 @@ Thumbs.db
 # Large Data Files
 local_deploy/data/*.json
 local_deploy/data/
+local_deploy/NEMESIS_KNOWLEDGE_BASE_LIBRARY/data/
+data/
+*.json
+!package.json
+!tsconfig.json

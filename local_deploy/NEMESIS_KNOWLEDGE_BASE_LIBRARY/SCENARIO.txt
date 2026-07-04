@@ -1,0 +1,981 @@
+This is the correct direction. For forensic-grade blockchain intelligence, every scenario should be modeled as an **Asset Lifecycle Pattern (ALP)** rather than a single transaction. The investigation objective is to preserve **asset continuity** across transformations and identify the eventual custodial endpoints, while acknowledging that some flows (especially through privacy systems) can only be linked probabilistically rather than with certainty.
+
+A robust investigation framework for each scenario should include:
+
+* Asset lifecycle
+* Transaction sequence
+* Detection indicators
+* Intelligence to extract
+* Data to parse
+* Evidence artifacts
+* Continuity scoring
+* Graph orchestration
+* Algorithms
+* Trace continuation logic
+* Expected outputs
+
+For example:
+
+---
+
+# Scenario 001 — Native BTC → Wrapped BTC → Bridge → Wrapped Variant → Swap → Native BTC → Exchange
+
+## Asset Lifecycle
+
+```text
+BTC
+↓
+Wrap
+↓
+WBTC
+↓
+Ethereum
+↓
+Bridge
+↓
+Avalanche
+↓
+WBTC.e
+↓
+Swap
+↓
+renBTC
+↓
+Unwrap
+↓
+BTC
+↓
+Exchange Deposit
+↓
+Exchange Internal Wallet
+↓
+Cold Wallet
+```
+
+---
+
+## Transaction Types
+
+```text
+TRANSFER
+
+WRAP
+
+TOKEN_TRANSFER
+
+BRIDGE_LOCK
+
+BRIDGE_MINT
+
+DEX_SWAP
+
+UNWRAP
+
+BTC_TRANSFER
+
+CEX_DEPOSIT
+
+CEX_INTERNAL_TRANSFER
+```
+
+---
+
+## Objects
+
+```text
+Wallet
+
+Smart Contract
+
+WBTC Contract
+
+Bridge Contract
+
+Bridge Validator
+
+DEX Router
+
+Liquidity Pool
+
+Exchange Deposit Wallet
+
+Exchange Hot Wallet
+
+Exchange Cold Wallet
+```
+
+---
+
+## Indicators
+
+```text
+Wrapped asset created
+
+Underlying asset locked
+
+Bridge event emitted
+
+Mint event
+
+Swap router call
+
+Pool interaction
+
+Exchange deposit address
+
+Known hot wallet
+
+Known cold wallet
+```
+
+---
+
+## Data to Parse
+
+```text
+Transaction Hash
+
+Block Height
+
+Timestamp
+
+Sender
+
+Receiver
+
+Bridge Contract
+
+Wrapped Token Contract
+
+Swap Path
+
+Liquidity Pool
+
+Token Amount
+
+Token Decimals
+
+Gas
+
+Nonce
+
+Event Logs
+
+Internal Transactions
+
+Trace Tree
+
+ABI Decoding
+
+Bridge Message ID
+```
+
+---
+
+## Intelligence Produced
+
+```text
+Underlying Asset
+
+Wrapped Asset
+
+Bridge Used
+
+Destination Chain
+
+Swap Route
+
+Final BTC
+
+Exchange
+
+Custodian
+
+Estimated User Account
+
+Risk Score
+
+Confidence
+```
+
+---
+
+## Continuity Formula
+
+```text
+Asset Continuity Score
+
+ACS
+
+=
+
+0.30(Value Preservation)
+
++
+
+0.20(Time Correlation)
+
++
+
+0.15(Bridge Correlation)
+
++
+
+0.15(Token Lineage)
+
++
+
+0.10(Graph Similarity)
+
++
+
+0.10(Counterparty Similarity)
+```
+
+---
+
+## Algorithms
+
+```text
+Recursive Graph Traversal
+
+Temporal Correlation
+
+Token Mapping
+
+Bridge Resolution
+
+Event Correlation
+
+Liquidity Pool Decoding
+
+Exchange Attribution
+```
+
+---
+
+## Trace Continuation Logic
+
+```text
+BTC
+
+↓
+
+Detect Wrap
+
+↓
+
+Resolve Wrapped Asset
+
+↓
+
+Find Bridge Lock
+
+↓
+
+Find Bridge Mint
+
+↓
+
+Resolve Destination Chain
+
+↓
+
+Decode Swap
+
+↓
+
+Resolve Output Token
+
+↓
+
+Find Unwrap
+
+↓
+
+Trace Native BTC
+
+↓
+
+Identify Deposit Wallet
+
+↓
+
+Cluster Exchange
+
+↓
+
+Identify Hot Wallet
+
+↓
+
+Identify Cold Wallet
+
+↓
+
+Estimate User Account
+```
+
+---
+
+## Output
+
+```text
+Original BTC
+
+↓
+
+Current Asset
+
+↓
+
+Current Chain
+
+↓
+
+Current Holder
+
+↓
+
+Current Entity
+
+↓
+
+Exchange
+
+↓
+
+Custodian
+
+↓
+
+Confidence
+```
+
+---
+
+# Scenario 002 — USDT → WETH → WBTC → LP → Bridge → Mint → Swap → Exchange
+
+## Asset Lifecycle
+
+```text
+USDT
+
+↓
+
+Swap
+
+↓
+
+WETH
+
+↓
+
+Swap
+
+↓
+
+WBTC
+
+↓
+
+LP Deposit
+
+↓
+
+LP Token
+
+↓
+
+Bridge
+
+↓
+
+LP Token
+
+↓
+
+Redeem
+
+↓
+
+WBTC
+
+↓
+
+Swap
+
+↓
+
+USDC
+
+↓
+
+Exchange Deposit
+
+↓
+
+Exchange
+```
+
+---
+
+## Nightmare
+
+The investigator only sees
+
+```text
+Wallet
+
+↓
+
+Unknown Contract
+
+↓
+
+Unknown Contract
+
+↓
+
+Unknown Contract
+
+↓
+
+Unknown Contract
+
+↓
+
+Exchange
+```
+
+Most explorers stop here.
+
+NEMESIS should reconstruct
+
+```text
+USDT
+
+↓
+
+Swap
+
+↓
+
+WETH
+
+↓
+
+Swap
+
+↓
+
+WBTC
+
+↓
+
+LP
+
+↓
+
+Bridge
+
+↓
+
+LP
+
+↓
+
+Redeem
+
+↓
+
+WBTC
+
+↓
+
+Swap
+
+↓
+
+USDC
+
+↓
+
+Exchange
+```
+
+---
+
+## Required Intelligence
+
+```text
+Router
+
+Liquidity Pool
+
+Pool Reserves
+
+Pool Tokens
+
+LP Tokens
+
+LP Burn
+
+LP Mint
+
+Vault
+
+Bridge
+
+Wrapped Asset
+
+Underlying Asset
+```
+
+---
+
+## Algorithms
+
+```text
+Router Decoder
+
+Pool Decoder
+
+LP Decoder
+
+Bridge Decoder
+
+Recursive Graph Builder
+
+Liquidity Attribution
+
+Asset Lineage Engine
+```
+
+---
+
+## Formula
+
+```text
+Liquidity Attribution Score
+
+=
+
+LP Token Ownership
+
+×
+
+Pool Share
+
+×
+
+Withdrawal Similarity
+
+×
+
+Redemption Timing
+```
+
+---
+
+# Scenario 003 — Multi-Bridge Chain Hopping
+
+```text
+BTC
+
+↓
+
+WBTC
+
+↓
+
+Ethereum
+
+↓
+
+Bridge
+
+↓
+
+Polygon
+
+↓
+
+WBTC.e
+
+↓
+
+Bridge
+
+↓
+
+Arbitrum
+
+↓
+
+tBTC
+
+↓
+
+Bridge
+
+↓
+
+Optimism
+
+↓
+
+BTC.b
+
+↓
+
+Swap
+
+↓
+
+USDC
+
+↓
+
+Exchange
+```
+
+---
+
+## Nightmare
+
+Four chains
+
+Five wrapped assets
+
+Three bridges
+
+Different symbols
+
+One underlying asset
+
+---
+
+## Required Intelligence
+
+```text
+Underlying Asset
+
+Bridge Metadata
+
+Wrapped Token Registry
+
+Canonical Asset
+
+Bridge Events
+
+Cross-chain Messages
+
+Mint
+
+Burn
+
+Release
+
+Lock
+```
+
+---
+
+## Formula
+
+```text
+Underlying Asset Confidence
+
+=
+
+Canonical Mapping
+
++
+
+Bridge Metadata
+
++
+
+Supply Verification
+
++
+
+Lock Mint Correlation
+```
+
+---
+
+## Algorithms
+
+```text
+Cross-chain Graph Matching
+
+Token Lineage
+
+Bridge State Correlation
+
+Recursive Asset Mapping
+```
+
+---
+
+# Scenario 004 — DEX Black Hole Resolution
+
+## Apparently
+
+```text
+Wallet
+
+↓
+
+Uniswap Router
+```
+
+Investigation stops.
+
+---
+
+## NEMESIS reconstructs
+
+```text
+Wallet
+
+↓
+
+Router
+
+↓
+
+Pool
+
+↓
+
+Token A
+
+↓
+
+Token B
+
+↓
+
+Pool
+
+↓
+
+Recipient
+
+↓
+
+Receiver
+
+↓
+
+Exchange
+```
+
+---
+
+## Required Parsing
+
+```text
+Method Selector
+
+ABI
+
+Events
+
+Transfer Logs
+
+Swap Events
+
+Sync Events
+
+Pool Contract
+
+Router Contract
+
+Recipient
+
+Fee
+
+Slippage
+```
+
+---
+
+## Algorithms
+
+```text
+ABI Decoder
+
+Pool Reconstruction
+
+Swap Route Decoder
+
+Path Resolution
+
+Graph Expansion
+```
+
+---
+
+# Scenario 005 — Exchange Deposit Attribution
+
+```text
+Wallet
+
+↓
+
+Bridge
+
+↓
+
+Swap
+
+↓
+
+USDT
+
+↓
+
+Binance Deposit Wallet
+
+↓
+
+Internal Hot Wallet
+
+↓
+
+Cold Wallet
+```
+
+---
+
+## Parse
+
+```text
+Deposit Wallet
+
+Memo
+
+Destination Cluster
+
+Hot Wallet
+
+Cold Wallet
+
+Exchange Internal Transfer
+```
+
+---
+
+## Intelligence
+
+```text
+Exchange
+
+Custodian
+
+Estimated Customer Deposit
+
+Deposit Time
+
+Asset
+
+Amount
+
+Risk
+```
+
+---
+
+## Formula
+
+```text
+Exchange Attribution Confidence
+
+=
+
+Known Deposit Wallet
+
++
+
+Internal Wallet Match
+
++
+
+Timing Similarity
+
++
+
+Withdrawal Correlation
+
++
+
+Exchange Cluster Membership
+```
+
+---
+
+# Universal Asset Trace Orchestration
+
+```text
+Seed Wallet
+      │
+      ▼
+Collect all outbound transactions
+      │
+      ▼
+Classify transaction type
+      │
+      ├── Native Transfer
+      ├── Internal Transfer
+      ├── Wrap
+      ├── Unwrap
+      ├── Swap
+      ├── Bridge Lock
+      ├── Bridge Mint
+      ├── LP Deposit
+      ├── LP Withdrawal
+      ├── NFT Transfer
+      ├── Staking
+      ├── Lending
+      ├── Borrowing
+      ├── Mixer
+      ├── CEX Deposit
+      └── Custodial Transfer
+      │
+      ▼
+Decode contract semantics
+      │
+      ▼
+Maintain asset lineage graph
+      │
+      ▼
+Compute continuity scores
+      │
+      ▼
+Expand graph recursively
+      │
+      ▼
+Detect custodial clusters
+      │
+      ▼
+Attribute exchange/custodian
+      │
+      ▼
+Summarize current asset locations
+```
+
+---
+
+# Final Investigation Outputs
+
+For every traced seed wallet, generate:
+
+* **Asset Recovery Matrix:** original asset, transformed asset(s), current asset(s), and remaining traceable value.
+* **Wallet Landing Matrix:** every identified recipient wallet, grouped by blockchain, entity, and confidence.
+* **Exchange & Custodian Exposure:** detected deposits into known exchanges, custodians, payment processors, brokers, and institutional wallets, with estimated deposited amounts.
+* **Asset Lineage Graph:** end-to-end provenance showing every transformation, bridge, swap, and custody transition.
+* **Traceability Assessment:** percentage of funds deterministically linked versus probabilistically inferred, with explicit confidence scores and evidence supporting each conclusion. This provides a defensible forensic record while avoiding overstating certainty where the on-chain evidence does not support it.

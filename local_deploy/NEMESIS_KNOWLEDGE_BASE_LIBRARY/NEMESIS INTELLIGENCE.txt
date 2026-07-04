@@ -1,0 +1,936 @@
+# 🧠 NEMESIS INTELLIGENCE OS v3.2
+
+## Universal Entity Taxonomy + Intelligence Profile Framework + Auto-Relationship Engine
+
+This defines how **every entity is represented, enriched, scored, correlated, visualized, traced, and rendered inside NEMESIS.**
+
+---
+
+# 🌍 MASTER ENTITY ONTOLOGY
+
+```text
+ENTITY
+│
+├── PERSON
+├── ORGANIZATION
+├── EMPLOYEE
+├── CRYPTO_WALLET
+├── SMART_CONTRACT
+├── EXCHANGE
+├── TOKEN
+├── NFT
+├── BLOCKCHAIN_NETWORK
+├── BRIDGE
+├── MIXER
+├── DOMAIN
+├── IP_ADDRESS
+├── ASN
+├── WEBSITE
+├── EMAIL
+├── PHONE
+├── USERNAME
+├── SOCIAL_ACCOUNT
+├── DEVICE
+├── IMAGE
+├── LOCATION
+├── VEHICLE
+├── REPOSITORY
+├── API_ENDPOINT
+├── SERVER
+├── CLOUD_ASSET
+├── DARKNET_SERVICE
+├── BREACH_RECORD
+├── SANCTION_ENTITY
+├── REGULATORY_ENTITY
+├── AI_SYSTEM
+├── AI_AGENT
+├── BOT
+├── EVENT
+├── CASE
+├── DOCUMENT
+└── EVIDENCE_ARTIFACT
+```
+
+---
+
+# 💰 CRYPTO WALLET ENTITY
+
+## Type
+
+```text
+CRYPTO_WALLET
+```
+
+## Icon
+
+```text
+💰 fa-wallet
+```
+
+## Subtypes
+
+```text
+EOA
+SMART_CONTRACT_WALLET
+EXCHANGE_WALLET
+CUSTODIAL_WALLET
+TREASURY_WALLET
+BRIDGE_WALLET
+MIXER_WALLET
+BOT_WALLET
+MEV_WALLET
+SANCTIONED_WALLET
+EXPLOITER_WALLET
+GOVERNMENT_WALLET
+OTC_WALLET
+MARKET_MAKER_WALLET
+```
+
+---
+
+## Wallet Intelligence Profile
+
+### Identity
+
+```text
+Address
+Chain
+Network
+ENS
+Domain Alias
+Wallet Name
+```
+
+### Classification
+
+```text
+Wallet Type
+Wallet Category
+Institutional / Retail
+Custodial / Non-Custodial
+```
+
+### Activity
+
+```text
+First Seen
+Last Seen
+Active Days
+Transaction Count
+```
+
+### Financial
+
+```text
+Balance
+Assets
+NFTs
+Net Flow
+Volume
+Profit Loss
+```
+
+### Behavioral
+
+```text
+Trading Frequency
+Holding Pattern
+Bridge Usage
+DEX Usage
+Gas Fingerprint
+Transaction Entropy
+```
+
+### Intelligence
+
+```text
+AML Score
+Risk Score
+Trust Score
+Fraud Score
+Sanctions Exposure
+Mixer Exposure
+```
+
+---
+
+## Auto Relationships
+
+```text
+SENDS → WALLET
+RECEIVES → WALLET
+OWNS → TOKEN
+HOLDS → NFT
+
+INTERACTS_WITH → CONTRACT
+INTERACTS_WITH → DEX
+INTERACTS_WITH → CEX
+
+BRIDGED_TO → CHAIN
+CONNECTED_TO → PERSON
+CONNECTED_TO → ORGANIZATION
+
+DEPOSITS_TO → EXCHANGE
+WITHDRAWS_FROM → EXCHANGE
+
+LINKED_TO → DARKNET
+LINKED_TO → BREACH
+```
+
+---
+
+# 🏦 EXCHANGE ENTITY
+
+## Type
+
+```text
+CUSTODIAL_EXCHANGE
+```
+
+## Icon
+
+```text
+🏦 fa-bank
+```
+
+## Intelligence Profile
+
+### Exchange Data
+
+```text
+Exchange Name
+Jurisdiction
+License Status
+KYC Status
+VASP Registration
+```
+
+### Wallet Intelligence
+
+```text
+Hot Wallets
+Cold Wallets
+Treasury Wallets
+Deposit Wallets
+Withdrawal Wallets
+```
+
+### Regulatory
+
+```text
+SEC Filings
+CFTC Registrations
+FinCEN
+MSB Registration
+OFAC Exposure
+```
+
+### Risk
+
+```text
+AML Rating
+Compliance Score
+Sanctions Risk
+```
+
+---
+
+## Relationships
+
+```text
+RECEIVES_DEPOSIT_FROM → WALLET
+SENDS_WITHDRAWAL_TO → WALLET
+
+OPERATES → DOMAIN
+OWNS → TREASURY_WALLET
+
+REGISTERED_IN → COUNTRY
+LICENSED_BY → REGULATOR
+
+USES → API
+USES → CLOUD_INFRASTRUCTURE
+```
+
+---
+
+# 🌉 BRIDGE ENTITY
+
+## Type
+
+```text
+CROSS_CHAIN_BRIDGE
+```
+
+## Icon
+
+```text
+🌉 fa-exchange-alt
+```
+
+## Intelligence Profile
+
+```text
+Bridge Name
+Supported Chains
+TVL
+Bridge Contracts
+Validators
+Security History
+Exploit History
+```
+
+---
+
+## Relationships
+
+```text
+CONNECTS → CHAIN
+MIGRATES → ASSET
+ROUTES → WALLET
+USES → CONTRACT
+```
+
+---
+
+# 🕳 MIXER ENTITY
+
+## Type
+
+```text
+OBFUSCATION_LAYER
+```
+
+## Intelligence Profile
+
+```text
+Pool Size
+Contract Address
+Anonymity Score
+Historical Volume
+Known Risk Indicators
+```
+
+---
+
+## Relationships
+
+```text
+OBFUSCATES → WALLET
+BREAKS_LINK → TRANSACTION
+
+RECEIVES_FROM → WALLET
+SENDS_TO → WALLET
+```
+
+---
+
+# 🏢 ORGANIZATION ENTITY
+
+## Type
+
+```text
+ORGANIZATION
+```
+
+## Subtypes
+
+```text
+CORPORATION
+DAO
+EXCHANGE
+BANK
+FINTECH
+AI_COMPANY
+TREASURY
+FOUNDATION
+SHELL_COMPANY
+NONPROFIT
+```
+
+---
+
+## Intelligence Profile
+
+### Corporate
+
+```text
+Legal Name
+Registration Number
+Country
+Status
+Industry
+```
+
+### Ownership
+
+```text
+Directors
+Officers
+UBOs
+Subsidiaries
+```
+
+### Infrastructure
+
+```text
+Domains
+IPs
+Cloud Assets
+APIs
+```
+
+### Financial
+
+```text
+Treasury Wallets
+Banking Relationships
+Revenue Signals
+```
+
+### Regulatory
+
+```text
+SEC
+CFTC
+DOJ
+OFAC
+FCA
+MAS
+FINTRAC
+ASIC
+```
+
+---
+
+## Relationships
+
+```text
+OWNS → DOMAIN
+OWNS → WALLET
+OWNS → CONTRACT
+
+EMPLOYS → PERSON
+CONTROLS → ORGANIZATION
+
+OPERATES → EXCHANGE
+OPERATES → API
+
+REGISTERED_WITH → REGULATOR
+```
+
+---
+
+# 👤 PERSON ENTITY
+
+## Type
+
+```text
+PERSON
+```
+
+## Intelligence Profile
+
+### Identity
+
+```text
+Full Name
+Aliases
+DOB
+Nationality
+```
+
+### Digital Identity
+
+```text
+Emails
+Phones
+Usernames
+Social Accounts
+```
+
+### Blockchain
+
+```text
+Linked Wallets
+Exchange Accounts
+Treasury Control
+```
+
+### Corporate
+
+```text
+Directorships
+UBO Positions
+Employment
+```
+
+### Risk
+
+```text
+PEP
+Sanctions
+Fraud Indicators
+Darknet Indicators
+```
+
+---
+
+## Relationships
+
+```text
+OWNS → WALLET
+USES → DEVICE
+
+CONTROLS → ORGANIZATION
+CONTROLS → CONTRACT
+
+REGISTERED_WITH → EMAIL
+USES → PHONE
+
+POSTED → SOCIAL_POST
+```
+
+---
+
+# 🤖 AI SYSTEM ENTITY
+
+## Type
+
+```text
+AI_SYSTEM
+```
+
+## Subtypes
+
+```text
+LLM
+TRADING_AGENT
+AUTONOMOUS_AGENT
+RISK_ENGINE
+ORCHESTRATOR
+```
+
+---
+
+## Intelligence Profile
+
+```text
+Provider
+Model
+Version
+Owner
+Capabilities
+API Endpoints
+```
+
+### Risk
+
+```text
+Autonomy Score
+Financial Authority
+Operational Scope
+```
+
+---
+
+## Relationships
+
+```text
+EXECUTES → TRANSACTION
+CONTROLS → WALLET
+
+OPERATED_BY → ORGANIZATION
+HOSTED_ON → CLOUD
+
+CALLS → API
+USES → MODEL
+```
+
+---
+
+# 🌐 DOMAIN ENTITY
+
+## Intelligence Profile
+
+```text
+Domain
+Registrar
+WHOIS
+DNS
+Subdomains
+SSL
+Hosting
+```
+
+---
+
+## Relationships
+
+```text
+RESOLVES_TO → IP
+REGISTERED_TO → PERSON
+REGISTERED_TO → ORGANIZATION
+
+HOSTS → WEBSITE
+HOSTS → API
+```
+
+---
+
+# 📧 EMAIL ENTITY
+
+## Intelligence Profile
+
+```text
+Address
+Provider
+Breach Count
+PGP Keys
+Avatar Hash
+```
+
+---
+
+## Relationships
+
+```text
+BELONGS_TO → PERSON
+USED_BY → ORGANIZATION
+
+APPEARS_IN → BREACH
+LINKED_TO → USERNAME
+```
+
+---
+
+# 📱 PHONE ENTITY
+
+## Intelligence Profile
+
+```text
+Number
+Carrier
+Country
+Messaging Apps
+```
+
+---
+
+## Relationships
+
+```text
+BELONGS_TO → PERSON
+USED_BY → ORGANIZATION
+```
+
+---
+
+# 🧱 IP ENTITY
+
+## Intelligence Profile
+
+```text
+IP
+ASN
+Geo
+ISP
+Ports
+Services
+```
+
+---
+
+## Relationships
+
+```text
+HOSTS → DOMAIN
+HOSTS → API
+
+ASSIGNED_TO → ORGANIZATION
+LOCATED_IN → LOCATION
+```
+
+---
+
+# 🕸️ DARKNET ENTITY
+
+## Intelligence Profile
+
+```text
+Onion Address
+PGP Keys
+Wallets Mentioned
+Emails Mentioned
+```
+
+---
+
+## Relationships
+
+```text
+MENTIONS → WALLET
+MENTIONS → PERSON
+
+USES → DOMAIN
+USES → EMAIL
+```
+
+---
+
+# 🧬 ENTITY EVOLUTION TRACKING
+
+Every entity maintains:
+
+```text
+Creation Timestamp
+First Seen
+Last Seen
+
+Historical Changes
+Classification Changes
+Ownership Changes
+
+Relationship Changes
+Risk Changes
+Behavior Changes
+```
+
+---
+
+# 🧠 IDENTITY RECONSTRUCTION ENGINE
+
+Not merely clustering.
+
+Objective:
+
+```text
+Wallet
+↓
+Email
+↓
+Username
+↓
+Domain
+↓
+Organization
+↓
+Person
+↓
+UBO
+```
+
+Produces:
+
+```json
+{
+  "nemesis_id": "NEM-ENTITY-001",
+  "confidence": 0.94,
+  "resolved_person": true,
+  "linked_wallets": 15,
+  "linked_companies": 3,
+  "linked_domains": 12,
+  "linked_devices": 5
+}
+```
+
+---
+
+# 🕸️ CROSS-DOMAIN LAUNDERING DETECTION
+
+Correlation paths:
+
+```text
+Wallet
+→ Exchange
+→ Bank
+→ Company
+→ Shell Entity
+→ Person
+
+Wallet
+→ Bridge
+→ Wallet
+→ Mixer
+→ Wallet
+
+Wallet
+→ Darknet
+→ Email
+→ Username
+→ Person
+```
+
+---
+
+# 🖥️ WALLET DOSSIER HEADER (UI SPEC)
+
+```text
+SUBJECT WALLET ENTITY
+──────────────────────────
+
+[ETH][BASE][ARB][OP][POLYGON]
+
+0x1234....abcd
+
+Classification:
+CUSTODIAL_EXCHANGE
+
+Public Tag:
+BINANCE HOT WALLET
+
+Risk:
+LOW
+
+AML:
+15/100
+
+[ ALERTS ]
+[ EXPORT DOSSIER ]
+[ LIVE TRACE ]
+```
+
+---
+
+# 📑 WALLET DOSSIER TABS
+
+### Tab 1 — Wallet Profile
+
+```text
+Summary
+Classification
+ENS
+First Activity
+Last Activity
+
+Inbound Volume
+Outbound Volume
+
+Funding Source
+Activation Source
+
+CEX Analysis
+Behavior Analysis
+Risk Analysis
+```
+
+---
+
+### Tab 2 — Counterparties
+
+```text
+Inbound Counterparties
+Outbound Counterparties
+
+Wallet
+Entity
+Classification
+
+Amount
+Chain
+Date
+Tx Hash
+```
+
+---
+
+### Tab 3 — Assets
+
+```text
+Multi-chain Portfolio
+
+ETH
+BTC
+USDT
+USDC
+DAI
+SOL
+BNB
+
+NFT Holdings
+LP Positions
+Staked Assets
+```
+
+---
+
+### Tab 4 — Chains
+
+```text
+Ethereum
+Base
+Arbitrum
+Optimism
+Polygon
+Avalanche
+BSC
+Solana
+Tron
+Bitcoin
+```
+
+---
+
+### Tab 5 — Transactions
+
+```text
+Normal
+Internal
+Token
+NFT
+Bridge
+Swap
+Staking
+```
+
+Metrics:
+
+```text
+Total Volume
+Largest Transfer
+Average Transfer
+Transaction Velocity
+```
+
+---
+
+### Tab 6 — Balances
+
+```text
+Current Balance
+
+Historical Balance
+
+Portfolio Allocation
+
+Chain Allocation
+
+Asset Allocation
+```
+
+---
+
+# 🔗 UNIVERSAL AUTO-MAPPING RULE
+
+Every entity inserted into NEMESIS automatically triggers:
+
+```text
+Entity Resolution
+Relationship Discovery
+Risk Evaluation
+Behavior Classification
+Dossier Generation
+Graph Update
+Timeline Update
+Alert Evaluation
+```
+
+Result:
+
+```text
+Wallet ↔ Person ↔ Organization ↔ AI System
+Wallet ↔ Exchange ↔ Regulatory Entity
+Wallet ↔ Contract ↔ Protocol
+Wallet ↔ Darknet ↔ Breach ↔ Identity
+
+Everything becomes one continuously evolving intelligence graph.
+```

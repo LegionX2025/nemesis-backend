@@ -3,30 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <title>NEMESIS ID | Omni-Chain Identity Profiling</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    {% include 'includes/head_assets.html' %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.11.1/ethers.umd.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; color: #0f172a; margin: 0; }
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
         .tab-btn.active { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: bold; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         /* Loader */
         #ajax-loader { display: none; }
+        
+        /* Overrides for Light Web3GL Theme */
+        main { background: transparent !important; }
     </style>
 </head>
 <body class="flex flex-col h-screen overflow-hidden">
-    <!-- Header -->
-    <header class="bg-white border-b border-slate-200 text-slate-800 flex flex-col z-20 shrink-0 shadow-sm">
+    {% include 'includes/global_nav.html' %}
+    
+    <!-- Nemesis ID Toolbar -->
+    <div class="bg-white/80 backdrop-blur-md border-b border-slate-200 text-slate-800 flex flex-col z-20 shrink-0 shadow-sm relative">
         <div class="px-6 py-4 flex justify-between items-center w-full">
             <div class="flex items-center gap-4">
-                <div class="h-10 w-10 rounded border border-slate-200 shadow-sm flex items-center justify-center bg-slate-800 text-fuchsia-400 font-black text-xl">N</div>
-                <div>
+                <i class="fa-solid fa-fingerprint text-blue-600 text-3xl"></i>
+                <div class="glass-text-container">
                     <h1 class="text-xl font-black uppercase tracking-widest text-slate-900 leading-tight">NEMESIS ID</h1>
                     <p class="text-[10px] text-blue-600 font-mono font-bold uppercase tracking-widest leading-none mt-1">Identity Profiling</p>
                 </div>
@@ -36,16 +37,13 @@
                 <button onclick="generateProfile()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow-md transition text-sm flex items-center gap-2 border border-blue-500">
                     <i class="fa-solid fa-id-card"></i> GENERATE
                 </button>
-                <button onclick="runAutonomousMode()" class="bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold py-2 px-4 rounded shadow-md transition text-sm flex items-center gap-2 border border-fuchsia-500 ml-2">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> Autonomous Trace
-                </button>
-                <button onclick="connectWeb3Wallet()" id="web3-connect-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded shadow-md transition text-sm flex items-center gap-2 border border-indigo-500 ml-2">
+                <button onclick="connectWeb3Wallet()" id="web3-connect-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded shadow-md transition text-sm flex items-center gap-2 border border-indigo-500 ml-4">
                     <i class="fa-brands fa-ethereum"></i> Connect Web3
                 </button>
             </div>
         </div>
         <!-- Tabs -->
-        <div class="flex border-t border-slate-200 px-6 gap-6 bg-slate-50 text-sm">
+        <div class="flex border-t border-slate-200 px-6 gap-6 bg-slate-50/50 text-sm">
             <button class="tab-btn active py-3 text-slate-600 hover:text-blue-600" onclick="switchTab('tab-profile', this)">Wallet Profile</button>
             <button class="tab-btn py-3 text-slate-600 hover:text-blue-600" onclick="switchTab('tab-aml', this)">AML</button>
             <button class="tab-btn py-3 text-slate-600 hover:text-blue-600" onclick="switchTab('tab-intel', this)">Intelligence</button>
@@ -53,7 +51,7 @@
             <button class="tab-btn py-3 text-slate-600 hover:text-blue-600" onclick="switchTab('tab-insights', this)">Insights Report</button>
             <button class="tab-btn py-3 text-slate-600 hover:text-blue-600" onclick="switchTab('tab-fullreport', this)">Generate Full Report</button>
         </div>
-    </header>
+    </div>
 
     <!-- Main Content -->
     <main class="flex-grow overflow-auto p-8 relative">
@@ -268,10 +266,8 @@
             loader.style.display = 'flex';
             dashboard.classList.remove('hidden');
             
-            // Define API base url
-            const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-                ? 'http://127.0.0.1:8000' 
-                : 'https://nemesis-api.legionxgaming2021.workers.dev';
+            // Use relative path for all API calls
+            const baseUrl = '';
 
             try {
                 // 1. Fetch Profile
@@ -403,9 +399,7 @@
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Generating...';
             btn.disabled = true;
             
-            const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-                ? 'http://127.0.0.1:8000' 
-                : 'https://nemesis-api.legionxgaming2021.workers.dev';
+            const baseUrl = '';
 
             try {
                 const aiRes = await fetch(`${baseUrl}/api/nemesis_id/generate_report`, {
@@ -449,164 +443,6 @@
             }
         }
     </script>
-        async function runAutonomousMode() {
-            // Show the modal
-            const modal = document.getElementById('auto-mode-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            
-            const listContainer = document.getElementById('auto-mode-list');
-            listContainer.innerHTML = '<div class="text-center py-8"><i class="fa-solid fa-circle-notch fa-spin text-indigo-500 text-3xl mb-4"></i><div class="text-xs font-bold text-slate-500 uppercase tracking-widest">Running E2E Forensic Engine...</div></div>';
-            document.getElementById('auto-mode-count').innerText = "Tracing...";
-            
-            try {
-                const targetAddr = document.getElementById('target-address') ? document.getElementById('target-address').value : "";
-                let seeds = targetAddr || "0x";
-
-                const response = await fetch(window.BACKEND_URL + "/api/nemesis/autonomous_trace", {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ seeds: seeds, chain_override: "AUTO" })
-                });
-
-                const result = await response.json();
-                
-                let cexNodes = [];
-                if (result.status === "success" && result.data && result.data.length > 0) {
-                    cexNodes = result.data;
-                }
-                
-                document.getElementById('auto-mode-count').innerText = `${cexNodes.length} Endpoints Found`;
-                listContainer.innerHTML = '';
-                
-                if (cexNodes.length === 0) {
-                    listContainer.innerHTML = '<div class="text-center py-8 text-slate-500">No CEX or Mixer endpoints detected within the tracing threshold.</div>';
-                    return;
-                }
-
-                cexNodes.forEach(node => {
-                    const color = node.typeStr === 'MIXER' ? 'bg-purple-100 text-purple-700 border-purple-200' : 'bg-rose-100 text-rose-700 border-rose-200';
-                    const icon = node.typeStr === 'MIXER' ? 'fa-mask' : 'fa-building-columns';
-                    const el = document.createElement('div');
-                    el.className = 'bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm';
-                    el.innerHTML = `
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-full ${color} flex items-center justify-center text-lg border">
-                                <i class="fa-solid ${icon}"></i>
-                            </div>
-                            <div>
-                                <div class="text-sm font-black text-slate-800">${node.nameStr || node.id.substring(0,12) + '...'}</div>
-                                <div class="text-xs font-mono text-slate-500">${node.id}</div>
-                                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">${node.typeStr}</div>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-sm font-black text-emerald-600">${node.valStr || 'Calculated'}</div>
-                        </div>
-                    `;
-                    listContainer.appendChild(el);
-                });
-            } catch (e) {
-                console.error("Autonomous Trace Error:", e);
-                listContainer.innerHTML = '<div class="text-center py-8 text-red-500 font-bold">Failed to connect to OmniChain Trace Engine.</div>';
-                document.getElementById('auto-mode-count').innerText = "Error";
-            }
-        }
-
-        // CEX Alert Modal Logic
-        function triggerCexAlert(nodeData) {
-            document.getElementById('cex-modal-entity').innerText = nodeData.nameStr || "Unknown CEX/Custodial";
-            document.getElementById('cex-modal-address').innerText = nodeData.id || "0x...";
-            document.getElementById('cex-modal-amount').innerText = nodeData.valStr || "$0.00";
-            document.getElementById('cex-modal-network').innerText = nodeData.chain || "ETH";
-            
-            const modal = document.getElementById('cex-detection-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
-
-        // Hook into generateProfile to demonstrate CEX Alert on ID profiling
-        const originalGenerateProfile = generateProfile;
-        generateProfile = async function() {
-            await originalGenerateProfile();
-            // In a real scenario, evaluate the AI insights or AML score
-            setTimeout(() => {
-                const entityText = document.getElementById('prof-entity').innerText;
-                if(entityText && (entityText.toLowerCase().includes('binance') || entityText.toLowerCase().includes('kraken') || entityText.toLowerCase().includes('exchange'))) {
-                     triggerCexAlert({
-                         nameStr: entityText,
-                         id: document.getElementById('prof-address').innerText,
-                         valStr: document.getElementById('prof-balance').innerText,
-                         chain: document.getElementById('prof-network').innerText
-                     });
-                }
-            }, 1000);
-        };
-
-    </script>
-
-    <!-- CEX Detection Modal -->
-    <div id="cex-detection-modal" class="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center">
-        <div class="bg-white border-2 border-rose-500 rounded-2xl shadow-2xl p-6 w-96 transform scale-95 transition-transform duration-300" id="cex-modal-content">
-            <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-2xl border border-rose-200 shadow-inner">
-                    <i class="fa-solid fa-building-columns"></i>
-                </div>
-                <button onclick="document.getElementById('cex-detection-modal').classList.replace('flex','hidden')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight mb-1 text-rose-600">Endpoint Detected</h3>
-            <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Funds Landed at Exchange/Custodial</p>
-            
-            <div class="bg-slate-50 rounded-lg border border-slate-200 p-4 space-y-3 mb-6">
-                <div>
-                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Entity Name</div>
-                    <div class="text-sm font-black text-slate-800" id="cex-modal-entity">Binance Deposit</div>
-                </div>
-                <div>
-                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Address</div>
-                    <div class="text-xs font-mono text-blue-600 break-all" id="cex-modal-address">0x...</div>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Landed Amount</div>
-                        <div class="text-sm font-black text-emerald-600" id="cex-modal-amount">$0.00</div>
-                    </div>
-                    <div>
-                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Network</div>
-                        <div class="text-xs font-bold text-slate-700" id="cex-modal-network">ETH</div>
-                    </div>
-                </div>
-            </div>
-            <button onclick="document.getElementById('cex-detection-modal').classList.replace('flex','hidden')" class="w-full py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold rounded-lg shadow-md transition-colors">Acknowledge Alert</button>
-        </div>
-    </div>
-
-    <!-- Autonomous Mode Results Modal -->
-    <div id="auto-mode-modal" class="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center">
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[80vh]">
-            <div class="p-6 border-b border-slate-200 flex justify-between items-center bg-indigo-50 rounded-t-2xl">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded bg-indigo-600 text-white flex items-center justify-center text-lg shadow-md"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-                    <div>
-                        <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight text-indigo-900">Autonomous Trace Results</h3>
-                        <p class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">End-to-End Forensics Complete</p>
-                    </div>
-                </div>
-                <button onclick="document.getElementById('auto-mode-modal').classList.replace('flex','hidden')" class="text-slate-400 hover:text-slate-600 text-xl"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="p-6 overflow-y-auto custom-scrollbar flex-1">
-                <div class="flex justify-between items-center mb-4">
-                    <div class="text-xs font-bold text-slate-500 uppercase tracking-widest">Detected Endpoints (CEX/Custodial)</div>
-                    <div class="text-xs font-black bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded" id="auto-mode-count">0 Found</div>
-                </div>
-                <div class="space-y-3" id="auto-mode-list">
-                    <!-- Populated by JS -->
-                </div>
-            </div>
-            <div class="p-4 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex justify-end">
-                <button onclick="document.getElementById('auto-mode-modal').classList.replace('flex','hidden')" class="px-6 py-2 bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold rounded-lg shadow transition-colors">Close</button>
-            </div>
-        </div>
-    </div>
+    {% include 'includes/footer.html' %}
 </body>
 </html>
