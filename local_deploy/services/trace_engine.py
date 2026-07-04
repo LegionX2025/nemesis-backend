@@ -249,14 +249,22 @@ async def auto_compute_loss_amount(seeds_list, default_chain="AUTO"):
     async with aiohttp.ClientSession() as session:
         engine = TraceEngine("dummy-compute")
         
-        for seed in seeds_list:
+        async def fetch_seed_txs(seed):
             chain = detect_chain(seed, default_chain)
             if chain == "INVALID":
-                if seed not in extracted_seeds:
-                    extracted_seeds.append(seed)
+                return seed, None, chain
+            res = await engine.fetch_txs(session, seed, chain)
+            return seed, res, chain
+            
+        tasks = [fetch_seed_txs(seed) for seed in seeds_list]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        for result in results:
+            if isinstance(result, Exception):
                 continue
                 
-            res = await engine.fetch_txs(session, seed, chain)
+            seed, res, chain = result
+            
             if not res or not res.get("data"):
                 if seed not in extracted_seeds:
                     extracted_seeds.append(seed)
@@ -390,8 +398,18 @@ async def auto_scrape_label(session, chain, address):
     # Enforce Stealth OKLink Scraping (No API Keys as requested)
     from services.scraper_engine import scraper_instance
     if scraper_instance and scraper_instance.playwright:
-        ok_label, ok_cluster = await scraper_instance.scrape_oklink(address, chain)
-        if ok_label: return ok_label, "OKLink"
+        res = await scraper_instance.scrape_oklink(address, chain)
+        if res:
+            ok_label = res[0]
+            ok_cluster = res[1]
+            profile_data = res[2] if len(res) == 3 else None
+            
+            # Save to intelligence lake
+            if profile_data:
+                from services.intelligence_lake import intelligence_lake
+                intelligence_lake.upsert_profile(address, profile_data)
+                
+            if ok_label: return ok_label, "OKLink"
     
     if chain in ["ETHEREUM", "EVM_AUTO", "ETH"]:
         url = f"https://ethplorer.io/search/{address}"
@@ -407,6 +425,13 @@ async def auto_scrape_label(session, chain, address):
 async def fetch_wallet_label(session, addr, chain, trace_id=None):
     addr_lower = addr.lower()
     if addr_lower in KNOWN_ENTITIES: return KNOWN_ENTITIES[addr_lower]
+    
+    # NEW: Check Intelligence Lake (GBEO v3 Cache) FIRST
+    from services.intelligence_lake import intelligence_lake
+    cached_profile = intelligence_lake.get_profile(addr_lower)
+    if cached_profile and "resolved_label" in cached_profile:
+        KNOWN_ENTITIES[addr_lower] = cached_profile["resolved_label"]
+        return cached_profile["resolved_label"]
         
     doc = await get_wallet_label(addr_lower)
     if doc and "label" in doc:
@@ -1265,7 +1290,9 @@ class TraceEngine:
 
         is_target_reached = (to.lower() in self.pathfinding_targets)
 
-        is_terminal = (entity_class == "EXCHANGE_CUSTODIAL" or score >= 90)
+        # Stop tracing if we hit a CEX or Mixer, or if the confidence score is very high
+        is_terminal = (entity_class in ["EXCHANGE_CUSTODIAL", "CEX", "MIXER", "CUSTODIAL"] or score >= 90)
+        
         if is_threshold_hit:
             is_terminal = True
             entity_class = "DUST_THRESHOLD_REACHED"

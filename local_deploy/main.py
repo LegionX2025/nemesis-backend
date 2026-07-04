@@ -635,6 +635,60 @@ async def api_start_trace(req: TraceRequest, request: Request):
         logger.error(f"Failed to setup trace: {e}")
         return {"error": str(e)}
 
+@app.post("/api/nemesis/autonomous_trace")
+async def api_autonomous_trace(req: TraceRequest):
+    try:
+        raw_seeds = req.seeds.replace('"', '').replace("'", "")
+        seeds_list = [t.strip().lower() for t in re.split(r'[\s,]+', raw_seeds) if t.strip()]
+        if not seeds_list:
+            return {"error": "No valid seeds provided"}
+            
+        trace_id = "AUTO_" + str(uuid.uuid4())[:8]
+        # Fast configuration: depth 2, max hops 50 for quick autonomous endpoint discovery
+        engine = TraceEngine(trace_id)
+        engine.setup(seeds_list, 0.0, req.chain_override, "", "", "USD", 2, 50, "tracer", [])
+        
+        # Run trace asynchronously (but we await it)
+        import aiohttp
+        import certifi
+        import ssl
+        
+        ssl_ctx = ssl.create_default_context(cafile=certifi.where())
+        connector = aiohttp.TCPConnector(ssl=ssl_ctx)
+        
+        # Manually kick off engine for a fast pass
+        async with aiohttp.ClientSession(connector=connector) as session:
+            workers = [asyncio.create_task(engine.engine_worker(session)) for _ in range(10)]
+            
+            # Allow it to run for max 5 seconds
+            try:
+                await asyncio.wait_for(engine.queue.join(), timeout=5.0)
+            except asyncio.TimeoutError:
+                pass
+            
+            for w in workers: w.cancel()
+            engine.is_running = False
+            
+        # Extract CEX / Mixer endpoints from the ledger
+        cex_nodes = []
+        for node in engine.ledger:
+            t = node.get("typeStr", "UNKNOWN").upper()
+            if t in ["CEX", "MIXER", "CUSTODIAL"]:
+                cex_nodes.append(node)
+                
+        # Deduplicate by ID
+        unique_nodes = {}
+        for n in cex_nodes:
+            unique_nodes[n["id"]] = n
+            
+        return {"status": "success", "data": list(unique_nodes.values())}
+        
+    except Exception as e:
+        logger.error(f"Autonomous Trace failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return {"error": str(e)}
+
 @app.websocket("/ws/darknet/stream")
 async def darknet_ws_stream(websocket: WebSocket):
     await websocket.accept()

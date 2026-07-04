@@ -451,8 +451,8 @@
                     ctx.strokeStyle = '#e2e8f0';
                     ctx.stroke();
 
-                    if (node.isBinance) {
-                        const img = getCachedImage('https://cryptologos.cc/logos/bnb-bnb-logo.png');
+                    if (node.logoUrl) {
+                        const img = getCachedImage(node.logoUrl);
                         if (img && img.complete) {
                             ctx.save();
                             ctx.beginPath();
@@ -460,6 +460,40 @@
                             ctx.clip();
                             ctx.drawImage(img, node.x - R + 4, node.y - R + 4, (R - 4) * 2, (R - 4) * 2);
                             ctx.restore();
+                        } else {
+                            if (node.fallbackLogoUrl) {
+                                const fImg = getCachedImage(node.fallbackLogoUrl);
+                                if (fImg && fImg.complete) {
+                                    ctx.save();
+                                    ctx.beginPath();
+                                    ctx.arc(node.x, node.y, R, 0, 2 * Math.PI);
+                                    ctx.clip();
+                                    ctx.drawImage(fImg, node.x - R, node.y - R, R * 2, R * 2);
+                                    ctx.restore();
+                                } else {
+                                    ctx.font = `900 ${R * 1.1}px "Font Awesome 6 Free"`;
+                                    ctx.fillStyle = node.badgeColor || '#3b82f6';
+                                    ctx.textAlign = 'center';
+                                    ctx.textBaseline = 'middle';
+                                    ctx.fillText('\uf555', node.x, node.y);
+                                }
+                            }
+                        }
+                    } else if (node.fallbackLogoUrl) {
+                        const fImg = getCachedImage(node.fallbackLogoUrl);
+                        if (fImg && fImg.complete) {
+                            ctx.save();
+                            ctx.beginPath();
+                            ctx.arc(node.x, node.y, R, 0, 2 * Math.PI);
+                            ctx.clip();
+                            ctx.drawImage(fImg, node.x - R, node.y - R, R * 2, R * 2);
+                            ctx.restore();
+                        } else {
+                            ctx.font = `900 ${R * 1.1}px "Font Awesome 6 Free"`;
+                            ctx.fillStyle = node.badgeColor || '#3b82f6';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText('\uf555', node.x, node.y);
                         }
                     } else {
                         ctx.font = `900 ${R * 1.1}px "Font Awesome 6 Free"`;
@@ -496,7 +530,7 @@
                     ctx.fillText(node.valStr || "", node.x, node.y + R + 6);
                     
                     ctx.font = `bold ${4}px Inter`;
-                    ctx.fillStyle = node.isBinance ? '#2563eb' : '#3b82f6';
+                    ctx.fillStyle = node.logoUrl ? '#2563eb' : '#3b82f6';
                     ctx.fillText(node.nameStr || "UNKNOWN", node.x, node.y + R + 13);
                     
                     ctx.font = `600 ${3.5}px Inter`;
@@ -568,7 +602,7 @@
                 // Interaction
                 .onNodeClick(node => {
                     document.getElementById('sidebar-id').innerText = node.id;
-                    document.getElementById('sidebar-type').innerText = node.isBinance ? 'CEX' : (node.typeStr || 'EOA');
+                    document.getElementById('sidebar-type').innerText = (node.logoUrl && node.nameStr.toLowerCase().includes('binance')) ? 'CEX' : (node.typeStr || 'EOA');
                     document.getElementById('sidebar-usd').innerText = node.valStr || "$0.00";
                     document.getElementById('sidebar-entity-name').innerText = node.nameStr || "UNKNOWN";
                     
@@ -724,12 +758,62 @@
                 return '#3b82f6'; // Blue default
             };
             
+            const getFallbackLogo = (entity, typeStr) => {
+                let ent = (entity || "").toLowerCase();
+                let typ = (typeStr || "").toLowerCase();
+                
+                if (ent.includes('mixer') || ent.includes('tornado') || typ.includes('mixer')) return '/static/assets/icons/nemesis_mixer_icon.png';
+                if (ent.includes('suspect') || ent.includes('hacker') || ent.includes('stolen') || ent.includes('scam')) return '/static/assets/icons/nemesis_alert_icon.png';
+                if (typ.includes('contract') || typ.includes('dex') || typ.includes('pool')) return '/static/assets/icons/nemesis_contract_icon.png';
+                
+                return '/static/assets/icons/nemesis_wallet_icon.png'; // Default unknown entity
+            };
+
             const getBadgeIcon = (entity) => {
                 let ent = (entity || "").toLowerCase();
                 if(ent.includes('binance') || ent.includes('coinbase')) return '\uf00c'; // Check
                 if(ent.includes('suspect')) return '\uf071'; // Exclamation triangle
                 if(ent.includes('mixer')) return '\uf021'; // Sync/Mix
                 return '\uf3ed'; // Shield
+            };
+            
+            const LOGO_MAP = {
+                'binance': 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
+                'bsc': 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
+                'ethereum': 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
+                'eth': 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
+                'bitcoin': 'https://cryptologos.cc/logos/bitcoin-btc-logo.png',
+                'btc': 'https://cryptologos.cc/logos/bitcoin-btc-logo.png',
+                'solana': 'https://cryptologos.cc/logos/solana-sol-logo.png',
+                'sol': 'https://cryptologos.cc/logos/solana-sol-logo.png',
+                'polygon': 'https://cryptologos.cc/logos/polygon-matic-logo.png',
+                'matic': 'https://cryptologos.cc/logos/polygon-matic-logo.png',
+                'arbitrum': 'https://cryptologos.cc/logos/arbitrum-arb-logo.png',
+                'optimism': 'https://cryptologos.cc/logos/optimism-op-logo.png',
+                'tether': 'https://cryptologos.cc/logos/tether-usdt-logo.png',
+                'usdt': 'https://cryptologos.cc/logos/tether-usdt-logo.png',
+                'usdc': 'https://cryptologos.cc/logos/usd-coin-usdc-logo.png',
+                'avalanche': 'https://cryptologos.cc/logos/avalanche-avax-logo.png',
+                'avax': 'https://cryptologos.cc/logos/avalanche-avax-logo.png',
+                'chainlink': 'https://cryptologos.cc/logos/chainlink-link-logo.png',
+                'uniswap': 'https://cryptologos.cc/logos/uniswap-uni-logo.png',
+                'sushiswap': 'https://cryptologos.cc/logos/sushiswap-sushi-logo.png',
+                'pancakeswap': 'https://cryptologos.cc/logos/pancakeswap-cake-logo.png',
+                'maker': 'https://cryptologos.cc/logos/maker-mkr-logo.png',
+                'aave': 'https://cryptologos.cc/logos/aave-aave-logo.png',
+                'dai': 'https://cryptologos.cc/logos/multi-collateral-dai-dai-logo.png',
+                'tron': 'https://cryptologos.cc/logos/tron-trx-logo.png',
+                'trx': 'https://cryptologos.cc/logos/tron-trx-logo.png'
+            };
+
+            const getLogoUrl = (entity) => {
+                let ent = (entity || "").toLowerCase();
+                for (let key in LOGO_MAP) {
+                    if (ent.includes(key)) {
+                        return LOGO_MAP[key];
+                    }
+                }
+                return null;
             };
 
             let updated = false;
@@ -741,7 +825,8 @@
                     valStr: "$" + amountUsd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}),
                     nameStr: d.sender_entity || 'UNKNOWN',
                     typeStr: 'ENTITY',
-                    isBinance: (d.sender_entity && d.sender_entity.toLowerCase().includes('binance')),
+                    logoUrl: getLogoUrl(d.sender_entity || d.chain || d.ticker),
+                    fallbackLogoUrl: getFallbackLogo(d.sender_entity, d.typeStr || 'ENTITY'),
                     badgeIcon: getBadgeIcon(d.sender_entity),
                     badgeColor: getBadgeColor(d.sender_entity),
                 };
@@ -759,7 +844,8 @@
                     valStr: "$" + amountUsd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}),
                     nameStr: d.receiver_entity || 'UNKNOWN',
                     typeStr: d.is_terminal ? 'TERMINAL NODE' : 'ENTITY',
-                    isBinance: (d.receiver_entity && d.receiver_entity.toLowerCase().includes('binance')),
+                    logoUrl: getLogoUrl(d.receiver_entity || d.chain || d.ticker),
+                    fallbackLogoUrl: getFallbackLogo(d.receiver_entity, d.is_terminal ? 'TERMINAL NODE' : 'ENTITY'),
                     badgeIcon: getBadgeIcon(d.receiver_entity),
                     badgeColor: getBadgeColor(d.receiver_entity),
                 };
@@ -945,21 +1031,37 @@
             listContainer.innerHTML = '<div class="text-center py-8"><i class="fa-solid fa-circle-notch fa-spin text-indigo-500 text-3xl mb-4"></i><div class="text-xs font-bold text-slate-500 uppercase tracking-widest">Running E2E Forensic Engine...</div></div>';
             document.getElementById('auto-mode-count').innerText = "Tracing...";
             
-            // Simulate deep tracing taking a few seconds
-            setTimeout(() => {
-                let cexNodes = window.graphData.nodes.filter(n => n.typeStr === "CEX" || n.typeStr === "CUSTODIAL" || n.typeStr === "MIXER");
-                // Mock some if empty for demo purposes
-                if (cexNodes.length === 0) {
-                    cexNodes = [
-                        { id: "0xMockBinance...", nameStr: "Binance Hot Wallet", typeStr: "CEX", valStr: "$1,450,000", badgeColor: "#eab308" },
-                        { id: "0xMockTornado...", nameStr: "Tornado Cash Router", typeStr: "MIXER", valStr: "$200,000", badgeColor: "#8b5cf6" },
-                        { id: "0xMockKraken...", nameStr: "Kraken Deposit", typeStr: "CEX", valStr: "$54,000", badgeColor: "#3b82f6" }
-                    ];
+            try {
+                // Determine seeds from the graph or use a fallback if empty
+                let seeds = "0x";
+                if (window.graphData && window.graphData.nodes.length > 0) {
+                    seeds = window.graphData.nodes.map(n => n.id).join(",");
+                }
+
+                const response = await fetch(window.BACKEND_URL + "/api/nemesis/autonomous_trace", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ seeds: seeds, chain_override: "AUTO" })
+                });
+
+                const result = await response.json();
+                
+                let cexNodes = [];
+                if (result.status === "success" && result.data && result.data.length > 0) {
+                    cexNodes = result.data;
+                } else if (window.graphData && window.graphData.nodes) {
+                    // Fallback to what's already on the screen if the fast trace finds nothing new
+                    cexNodes = window.graphData.nodes.filter(n => n.typeStr === "CEX" || n.typeStr === "CUSTODIAL" || n.typeStr === "MIXER");
                 }
                 
                 document.getElementById('auto-mode-count').innerText = `${cexNodes.length} Endpoints Found`;
                 listContainer.innerHTML = '';
                 
+                if (cexNodes.length === 0) {
+                    listContainer.innerHTML = '<div class="text-center py-8 text-slate-500">No CEX or Mixer endpoints detected within the tracing threshold.</div>';
+                    return;
+                }
+
                 cexNodes.forEach(node => {
                     const color = node.typeStr === 'MIXER' ? 'bg-purple-100 text-purple-700 border-purple-200' : 'bg-rose-100 text-rose-700 border-rose-200';
                     const icon = node.typeStr === 'MIXER' ? 'fa-mask' : 'fa-building-columns';
@@ -971,19 +1073,23 @@
                                 <i class="fa-solid ${icon}"></i>
                             </div>
                             <div>
-                                <div class="text-sm font-black text-slate-800">${node.nameStr || node.id}</div>
+                                <div class="text-sm font-black text-slate-800">${node.nameStr || node.id.substring(0,12) + '...'}</div>
                                 <div class="text-xs font-mono text-slate-500">${node.id}</div>
                                 <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">${node.typeStr}</div>
                             </div>
                         </div>
                         <div class="text-right">
-                            <div class="text-sm font-black text-emerald-600">${node.valStr || '$0.00'}</div>
-                            <div class="text-xs font-bold text-blue-600 cursor-pointer hover:underline mt-1">View in Graph</div>
+                            <div class="text-sm font-black text-emerald-600">${node.valStr || 'Calculated'}</div>
+                            <div class="text-xs font-bold text-blue-600 cursor-pointer hover:underline mt-1" onclick="document.getElementById('graph-node-search').value='${node.id}'; applyGraphFilters();">Highlight</div>
                         </div>
                     `;
                     listContainer.appendChild(el);
                 });
-            }, 2500);
+            } catch (e) {
+                console.error("Autonomous Trace Error:", e);
+                listContainer.innerHTML = '<div class="text-center py-8 text-red-500 font-bold">Failed to connect to OmniChain Trace Engine.</div>';
+                document.getElementById('auto-mode-count').innerText = "Error";
+            }
         }
 
         function applyGraphFilters() {

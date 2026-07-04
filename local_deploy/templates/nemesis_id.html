@@ -459,16 +459,31 @@
             listContainer.innerHTML = '<div class="text-center py-8"><i class="fa-solid fa-circle-notch fa-spin text-indigo-500 text-3xl mb-4"></i><div class="text-xs font-bold text-slate-500 uppercase tracking-widest">Running E2E Forensic Engine...</div></div>';
             document.getElementById('auto-mode-count').innerText = "Tracing...";
             
-            // Simulate deep tracing taking a few seconds
-            setTimeout(() => {
-                const cexNodes = [
-                    { id: "0xMockBinance...", nameStr: "Binance Hot Wallet", typeStr: "CEX", valStr: "$1,450,000", badgeColor: "#eab308" },
-                    { id: "0xMockKraken...", nameStr: "Kraken Deposit", typeStr: "CEX", valStr: "$54,000", badgeColor: "#3b82f6" }
-                ];
+            try {
+                const targetAddr = document.getElementById('target-address') ? document.getElementById('target-address').value : "";
+                let seeds = targetAddr || "0x";
+
+                const response = await fetch(window.BACKEND_URL + "/api/nemesis/autonomous_trace", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ seeds: seeds, chain_override: "AUTO" })
+                });
+
+                const result = await response.json();
+                
+                let cexNodes = [];
+                if (result.status === "success" && result.data && result.data.length > 0) {
+                    cexNodes = result.data;
+                }
                 
                 document.getElementById('auto-mode-count').innerText = `${cexNodes.length} Endpoints Found`;
                 listContainer.innerHTML = '';
                 
+                if (cexNodes.length === 0) {
+                    listContainer.innerHTML = '<div class="text-center py-8 text-slate-500">No CEX or Mixer endpoints detected within the tracing threshold.</div>';
+                    return;
+                }
+
                 cexNodes.forEach(node => {
                     const color = node.typeStr === 'MIXER' ? 'bg-purple-100 text-purple-700 border-purple-200' : 'bg-rose-100 text-rose-700 border-rose-200';
                     const icon = node.typeStr === 'MIXER' ? 'fa-mask' : 'fa-building-columns';
@@ -480,18 +495,22 @@
                                 <i class="fa-solid ${icon}"></i>
                             </div>
                             <div>
-                                <div class="text-sm font-black text-slate-800">${node.nameStr || node.id}</div>
+                                <div class="text-sm font-black text-slate-800">${node.nameStr || node.id.substring(0,12) + '...'}</div>
                                 <div class="text-xs font-mono text-slate-500">${node.id}</div>
                                 <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">${node.typeStr}</div>
                             </div>
                         </div>
                         <div class="text-right">
-                            <div class="text-sm font-black text-emerald-600">${node.valStr || '$0.00'}</div>
+                            <div class="text-sm font-black text-emerald-600">${node.valStr || 'Calculated'}</div>
                         </div>
                     `;
                     listContainer.appendChild(el);
                 });
-            }, 2500);
+            } catch (e) {
+                console.error("Autonomous Trace Error:", e);
+                listContainer.innerHTML = '<div class="text-center py-8 text-red-500 font-bold">Failed to connect to OmniChain Trace Engine.</div>';
+                document.getElementById('auto-mode-count').innerText = "Error";
+            }
         }
 
         // CEX Alert Modal Logic

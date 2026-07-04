@@ -19,6 +19,32 @@ BEHAVIOR_KEYWORDS = {
     "DARKNET": ["darknet", "silk road", "hydra", "black market", "sanctioned", "ofac", "blacklisted", "scam", "phishing", "hack", "exploiter"],
 }
 
+# GBEO v3 Taxonomy Mapping
+ONTOLOGY_MAP = {
+    'exchange': 'Exchange',
+    'cex': 'Exchange',
+    'dex': 'DEX',
+    'bridge': 'Bridge',
+    'mev': 'MEV Bot',
+    'mixer': 'Privacy Protocol',
+    'phishing': 'Scam',
+    'drainer': 'Wallet Drainer',
+    'multisig': 'Smart Contract',
+    'hot': 'Exchange Hot Wallet',
+    'cold': 'Exchange Cold Wallet',
+    'hacker': 'Exploiter',
+    'stolen': 'Stolen Funds',
+    'sanction': 'Sanctioned Entity'
+}
+
+def normalize_classification(tags, label):
+    combined = [str(t).lower() for t in tags] + [str(label).lower() if label else ""]
+    for key, val in ONTOLOGY_MAP.items():
+        if any(key in c for c in combined):
+            return val
+    return 'Unknown'
+
+
 GBEO_ONTOLOGY = None
 try:
     with open(os.path.join("NEMESIS_KNOWLEDGE_BASE_LIBRARY", "gbeo_v4_ontology.json"), "r", encoding="utf-8") as f:
@@ -185,9 +211,19 @@ class AutoScraper:
             await page.close()
 
     async def scrape_oklink(self, address: str, chain: str) -> tuple:
-        """Scrape OkLink using specific chain URL."""
+        """Scrape OkLink using GBEO v3 Strategy (API Interception & Multi-Search)."""
         if not self.context: return None, None
         page = await self.context.new_page()
+        
+        # Intelligence Profile Template
+        profile = {
+            "@context": "https://nemesis.intelligence/schema",
+            "@type": "IntelligenceProfile",
+            "subject": { "address": address },
+            "attributions": [],
+            "cluster_data": None
+        }
+        
         try:
             chain_map = {
                 "ETHEREUM": "eth", "MULTI-EVM": "eth", "EVM_AUTO": "eth", "ETH": "eth",
@@ -197,86 +233,83 @@ class AutoScraper:
                 "RIPPLE": "xrp", "STELLAR": "xlm"
             }
             ok_chain = chain_map.get(chain, "eth")
+            
+            # 1. Setup API Interception for Cluster Data
+            async def handle_response(response):
+                if 'search/aggregate' in response.url or '/priapi/' in response.url:
+                    try:
+                        data = await response.json()
+                        profile['cluster_data'] = data.get('data') or data
+                    except:
+                        pass
+                        
+            page.on('response', handle_response)
+            
+            # 2. Navigate to Address Page
             url = f"https://www.oklink.com/{ok_chain}/address/{address}"
-            await page.goto(url, wait_until="domcontentloaded", timeout=15000)
+            await page.goto(url, wait_until="networkidle", timeout=15000)
             
-            # Wait for network idle to ensure redirects complete before evaluation
-            try:
-                await page.wait_for_load_state("networkidle", timeout=8000)
-            except:
-                await page.wait_for_timeout(4000)
-                
-            btc_gas_price = None
-            if ok_chain == "btc":
-                try:
-                    # Look for the specific bitcoin gas price tooltip requested by the user
-                    gas_el = await page.query_selector('.text-ellipsis a span:first-of-type')
-                    if gas_el:
-                        btc_gas_price = await gas_el.inner_text()
-                except Exception as e:
-                    logger.warning(f"Could not extract Bitcoin gas price: {e}")
-            
-            # Use Playwright evaluation to grab all deeply nested text elements
-            text_blob = await page.evaluate('''() => {
-                const elements = Array.from(document.querySelectorAll('*'));
-                // Filter elements that have direct text nodes to avoid massive duplication
-                const textNodes = elements.filter(el => {
-                    return Array.from(el.childNodes).some(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0);
-                });
-                return textNodes.map(e => e.textContent.trim()).join(" | ");
+            # 3. Robust DOM Scraping for Labels
+            ui_data = await page.evaluate('''() => {
+                const mainLabel = document.querySelector('h1, .tokenName-XSePS')?.innerText.trim() || '';
+                const tags = Array.from(document.querySelectorAll('.tagsList-MN1-u .text-ellipsis, [class*="tag"], [class*="label"]'))
+                    .map(el => el.innerText.trim());
+                return { mainLabel, tags };
             }''')
             
-            # Try multi-search layout as well
-            if not any(k in text_blob.lower() for k in ["exchange", "mixer", "hot wallet"]):
-                multi_url = f"https://www.oklink.com/multi-search#key={address}"
+            main_label = ui_data.get('mainLabel', '')
+            tags = ui_data.get('tags', [])
+            
+            # 4. Multi-Search Discovery (Optional but powerful)
+            if not main_label and not tags:
                 try:
+                    multi_url = f"https://www.oklink.com/multi-search#key={address}"
                     await page.goto(multi_url, wait_until="domcontentloaded", timeout=10000)
-                    
-                    # Dynamic Loading: Ensure async search results populate
                     try:
                         await page.wait_for_selector('.home-container', timeout=8000)
-                    except Exception:
+                    except:
                         await page.wait_for_timeout(3000)
-
-                    # Extract entity details from search result items (Addressing Text Truncation)
+                        
                     results = await page.evaluate('''() => {
-                        const items = Array.from(document.querySelectorAll('.home-container a[href*="/address/"], .home-container a[href*="/token/"]'));
+                        const items = Array.from(document.querySelectorAll('.home-container a[href*="/address/"]'));
                         return items.map(item => {
-                            // Extract full textContent to bypass CSS ellipsis truncation
-                            const labelEl = item.querySelector('.wrapper-qoNkf, span[class^="tokenName"]');
-                            const fullLabel = labelEl ? labelEl.textContent.trim() : null;
-                            
-                            // Parse innerText for structure
                             const lines = item.innerText.split('\\n').map(s => s.trim()).filter(Boolean);
-                            return {
-                                label: fullLabel || lines[0],           // e.g., "USD Coin"
-                                symbol: lines.length > 1 ? lines[1] : "", // e.g., "(USDC)"
-                                chain: lines.find(l => !l.startsWith('0x') && !l.includes('$') && l.length < 20) || 'Unknown',
-                                type: item.href.includes('/token/') ? 'Token' : 'Address',
-                                url: item.href
-                            };
+                            return { label: lines[0], chain: item.href.split('/')[3] };
                         });
                     }''')
-                    
-                    if results:
-                        for r in results:
-                            text_blob += f" | {r.get('label')} {r.get('symbol')} {r.get('type')} on {r.get('chain')}"
-                            
-                except Exception as e:
-                    logger.debug(f"OKLink multi-search extraction skipped/failed: {e}")
+                    if results and len(results) > 0:
+                        main_label = results[0].get('label', '')
+                except:
+                    pass
             
-            label, cluster = self._classify_text(text_blob)
+            # Normalize to GBEO v3 Classification
+            classification = normalize_classification(tags, main_label)
             
-            # Pack BTC Gas into label if needed
-            if btc_gas_price and label:
-                label += f" (BTC Gas: {btc_gas_price})"
-            elif btc_gas_price and not label:
-                label = f"BTC Gas: {btc_gas_price}"
-                
-            return label, cluster
+            if main_label or tags:
+                profile['attributions'].append({
+                    "source": "OKLink",
+                    "chain": ok_chain,
+                    "label": main_label,
+                    "tags": tags,
+                    "class": classification
+                })
+            
+            # Also use old classifier logic to retain compatibility with graph engine
+            legacy_text_blob = f"{main_label} | " + " | ".join(tags)
+            legacy_label, legacy_cluster = self._classify_text(legacy_text_blob)
+            
+            # If our strict ontology found something, use it, otherwise use legacy
+            final_label = main_label if main_label else legacy_label
+            final_cluster = classification if classification != 'Unknown' else legacy_cluster
+            
+            profile['resolved_label'] = final_label
+            profile['resolved_cluster'] = final_cluster
+            
+            return final_label, final_cluster, profile
+            
         except Exception as e:
             logger.error(f"OkLink scrape failed for {address}: {e}")
-            return None, None
+            return None, None, None
         finally:
             await page.close()
 
@@ -349,30 +382,51 @@ class AutoScraper:
             await page.close()
 
     async def resolve_address(self, address: str, chain: str, trace_id: str = None) -> dict:
-        """Master resolver that tries applicable block explorers."""
+        """Master resolver that tries applicable block explorers concurrently."""
         label, cluster = None, None
         
-        # Try Blockscan for EVM chains first as it's the best multichain label aggregator
+        tasks = []
+        # Add relevant scrapers based on chain
         if chain in ["ETHEREUM", "MULTI-EVM", "EVM_AUTO", "ETH", "BSC", "POLYGON", "ARBITRUM", "OPTIMISM", "BASE"]:
-            label, cluster = await self.scrape_blockscan(address)
+            tasks.append(self.scrape_blockscan(address))
+            if chain in ["ETHEREUM", "MULTI-EVM", "EVM_AUTO", "ETH"]:
+                tasks.append(self.scrape_ethplorer(address))
+        elif chain == "SOLANA":
+            tasks.append(self.scrape_solana(address))
+        elif chain == "RIPPLE":
+            tasks.append(self.scrape_ripple(address))
+        elif chain == "STELLAR":
+            tasks.append(self.scrape_stellar(address))
+            
+        # Always try OKLink as fallback globally
+        tasks.append(self.scrape_oklink(address, chain))
         
-        # Then try Ethplorer for ETH specifically
-        if not label and chain in ["ETHEREUM", "MULTI-EVM", "EVM_AUTO", "ETH"]:
-            label, cluster = await self.scrape_ethplorer(address)
+        # Execute all tasks concurrently
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Find the first successful result
+        for res in results:
+            if isinstance(res, Exception) or res is None:
+                continue
             
-        # Try Alt-Chain specific scrapers
-        if not label:
-            if chain == "SOLANA":
-                label, cluster = await self.scrape_solana(address)
-            elif chain == "RIPPLE":
-                label, cluster = await self.scrape_ripple(address)
-            elif chain == "STELLAR":
-                label, cluster = await self.scrape_stellar(address)
-            
-        # Fallback or global use OkLink
-        if not label:
-            label, cluster = await self.scrape_oklink(address, chain)
-            
+            # Unpack 2 or 3 elements depending on the scraper
+            profile_data = None
+            if len(res) == 3:
+                lbl, cls, profile_data = res
+            else:
+                lbl, cls = res
+                
+            if lbl:
+                label = lbl
+                cluster = cls
+                
+                # Auto-save to Intelligence Lake if profile data exists
+                if profile_data:
+                    from services.intelligence_lake import intelligence_lake
+                    intelligence_lake.upsert_profile(address, profile_data)
+                    
+                break
+                
         if label or cluster:
             result = {
                 "address": address.lower(),
@@ -381,7 +435,7 @@ class AutoScraper:
                 "source": "Playwright Auto-Scraper"
             }
             
-            # Save to MongoDB immediately
+            # Save to MongoDB immediately (Legacy Support)
             from services.trace_engine import mongo_db
             if mongo_db is not None:
                 import datetime
