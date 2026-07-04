@@ -77,6 +77,37 @@
         <p class="text-blue-600 font-mono text-xs uppercase tracking-widest mt-3" id="loader-text">Configuring Pathfinding Targets...</p>
     </div>
 
+    <!-- Global Top Navigation -->
+    <nav class="absolute top-0 left-0 w-full p-6 z-50 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-lion text-slate-800 text-3xl"></i>
+            <div class="flex flex-col">
+                <span class="font-black text-xl tracking-tight leading-none text-slate-900">NEMESIS</span>
+                <span class="text-[9px] text-slate-500 font-bold tracking-widest uppercase mt-0.5">By Lionsgate Network</span>
+            </div>
+        </div>
+        
+        <div class="relative group">
+            <button class="bg-white/80 backdrop-blur border border-slate-200 px-5 py-2.5 rounded-full text-sm font-bold text-slate-700 hover:text-blue-600 hover:border-blue-300 transition-all shadow-sm flex items-center gap-2">
+                <i class="fa-solid fa-grip"></i> NEMESIS APPS <i class="fa-solid fa-chevron-down text-xs ml-1 transition-transform group-hover:rotate-180"></i>
+            </button>
+            <div class="absolute right-0 top-full mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-2 group-hover:translate-y-0 overflow-hidden">
+                <a href="/nemesis_id_landing" class="block px-4 py-3 hover:bg-slate-50 border-b border-slate-100 transition">
+                    <div class="text-sm font-bold text-slate-800 flex items-center gap-2"><i class="fa-solid fa-fingerprint text-blue-500 w-5 text-center"></i> NEMESIS ID</div>
+                    <div class="text-[10px] text-slate-500 ml-7 mt-0.5 uppercase tracking-wider">KYC & Identity Intel</div>
+                </a>
+                <a href="/nemesis_tracer_landing" class="block px-4 py-3 bg-blue-50/50 hover:bg-blue-50 border-b border-slate-100 transition">
+                    <div class="text-sm font-bold text-blue-700 flex items-center gap-2"><i class="fa-solid fa-network-wired text-blue-600 w-5 text-center"></i> NEMESIS TRACER</div>
+                    <div class="text-[10px] text-blue-500 ml-7 mt-0.5 uppercase tracking-wider">Omni-Chain Forensics</div>
+                </a>
+                <a href="/darknet_search" class="block px-4 py-3 hover:bg-slate-50 transition">
+                    <div class="text-sm font-bold text-slate-800 flex items-center gap-2"><i class="fa-solid fa-mask text-purple-500 w-5 text-center"></i> DARKNET</div>
+                    <div class="text-[10px] text-slate-500 ml-7 mt-0.5 uppercase tracking-wider">Deep Web Sweeping</div>
+                </a>
+            </div>
+        </div>
+    </nav>
+
     <!-- Main Input Card -->
     <div class="glass-card rounded-2xl w-full max-w-2xl p-8 md:p-12 relative overflow-hidden" id="input-container">
         <!-- Decoration -->
@@ -96,10 +127,14 @@
                 <div class="mb-4">
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono flex justify-between items-center">
                         <span>Trace Seeds (Wallets or TX Hashes)</span>
-                        <span id="tx-hash-badge" class="hidden bg-blue-100 text-blue-700 text-[10px] px-2 py-1 rounded font-bold"><i class="fa-solid fa-bolt text-yellow-500 mr-1"></i> TX HASH AUTO-EXTRACT</span>
+                        <span class="text-blue-500 font-normal">One per line</span>
                     </label>
-                    <textarea id="trace_seeds" rows="3" class="w-full p-4 rounded-xl transition text-sm resize-none" placeholder="0xabc...&#10;0xdef..." required oninput="checkTxHash()"></textarea>
-                    <p id="tx-hash-helper" class="text-[10px] text-slate-400 mt-1 hidden">TX Hash Detected: Backend will auto-extract total outflow amount and receiver wallet as trace seed.</p>
+                    <textarea id="trace_seeds" rows="3" class="w-full p-4 rounded-xl transition text-sm resize-none font-mono" placeholder="0xabc...&#10;0xdef..." required oninput="checkTxHash()"></textarea>
+                    
+                    <!-- Dynamic TX Hash Feedback Container -->
+                    <div id="tx-feedback-container" class="mt-2 space-y-1"></div>
+                    
+                    <p id="tx-hash-helper" class="text-[10px] text-slate-400 mt-2 hidden"><i class="fa-solid fa-circle-info mr-1"></i>TX Hash Detected: Backend will auto-extract total outflow amount and receiver wallet as trace seed.</p>
                 </div>
                 
                 <div class="mb-4">
@@ -144,7 +179,7 @@
                     </div>
                 </div>
 
-                <div class="mb-8">
+                <div class="mb-6">
                     <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono flex justify-between">
                         <span>Total Loss Amount to Trace (Optional)</span>
                         <span class="text-blue-500 font-normal">Leave blank for auto-computation</span>
@@ -193,7 +228,21 @@
                                 <i class="fa-solid fa-chevron-down text-slate-400 text-xs"></i>
                             </div>
                         </div>
-                        <input type="number" step="any" id="trace_amount" class="w-2/3 pl-4 pr-4 py-3 rounded-xl transition" placeholder="0.00">
+                        <input type="number" step="any" id="trace_amount" class="w-2/3 pl-4 pr-4 py-3 rounded-xl transition bg-white/90 border border-slate-300 font-mono text-sm" placeholder="0.00">
+                    </div>
+                </div>
+
+                <div class="mb-8">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono">Date Range (Optional)</label>
+                    <div class="flex gap-4">
+                        <div class="w-1/2">
+                            <label class="block text-[9px] text-slate-400 uppercase mb-1">Start Date</label>
+                            <input type="date" id="start_date" class="w-full px-4 py-3 rounded-xl transition bg-white/90 border border-slate-300 font-mono text-sm text-slate-600">
+                        </div>
+                        <div class="w-1/2">
+                            <label class="block text-[9px] text-slate-400 uppercase mb-1">End Date</label>
+                            <input type="date" id="end_date" class="w-full px-4 py-3 rounded-xl transition bg-white/90 border border-slate-300 font-mono text-sm text-slate-600">
+                        </div>
                     </div>
                 </div>
                 
@@ -230,61 +279,111 @@
         }
         
         function checkTxHash() {
-            const seeds = document.getElementById('trace_seeds').value.trim();
-            const badge = document.getElementById('tx-hash-badge');
+            const val = document.getElementById('trace_seeds').value.trim();
             const helper = document.getElementById('tx-hash-helper');
+            const container = document.getElementById('tx-feedback-container');
             
-            // Check for EVM or Bitcoin tx hash patterns (64-66 hex chars)
-            if (/^(0x)?[a-fA-F0-9]{64}$/i.test(seeds)) {
-                badge.classList.remove('hidden');
+            container.innerHTML = ''; // Clear existing
+            
+            if (!val) {
+                helper.classList.add('hidden');
+                return;
+            }
+
+            const lines = val.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            let hasTxHash = false;
+            
+            // Basic heuristic network detection for logos
+            const networkMap = [
+                { pattern: /^(0x)?[0-9a-fA-F]{64}$/, name: "EVM TX", logo: "https://cryptologos.cc/logos/ethereum-eth-logo.png", isTx: true },
+                { pattern: /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/, name: "BTC Wallet", logo: "https://cryptologos.cc/logos/bitcoin-btc-logo.png", isTx: false },
+                { pattern: /^bc1[a-zA-HJ-NP-Z0-9]{39,59}$/, name: "BTC Wallet (SegWit)", logo: "https://cryptologos.cc/logos/bitcoin-btc-logo.png", isTx: false },
+                { pattern: /^[a-fA-F0-9]{64}$/, name: "BTC TX", logo: "https://cryptologos.cc/logos/bitcoin-btc-logo.png", isTx: true },
+                { pattern: /^T[A-Za-z1-9]{33}$/, name: "Tron Wallet", logo: "https://cryptologos.cc/logos/tron-trx-logo.png", isTx: false },
+                { pattern: /^[0-9a-fA-F]{64}$/, name: "Tron TX", logo: "https://cryptologos.cc/logos/tron-trx-logo.png", isTx: true },
+                { pattern: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/, name: "Solana Address", logo: "https://cryptologos.cc/logos/solana-sol-logo.png", isTx: false },
+                { pattern: /^[1-9A-HJ-NP-Za-km-z]{87,88}$/, name: "Solana TX", logo: "https://cryptologos.cc/logos/solana-sol-logo.png", isTx: true },
+                { pattern: /^0x[a-fA-F0-9]{40}$/, name: "EVM Wallet", logo: "https://cryptologos.cc/logos/ethereum-eth-logo.png", isTx: false }
+            ];
+
+            lines.forEach(line => {
+                let match = networkMap.find(n => n.pattern.test(line));
+                if (match) {
+                    if (match.isTx) hasTxHash = true;
+                    // Render badge
+                    container.innerHTML += `
+                        <div class="inline-flex items-center gap-2 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-700 mr-2 mb-2 shadow-sm">
+                            <img src="${match.logo}" alt="${match.name}" class="w-4 h-4 rounded-full">
+                            <span class="truncate max-w-[120px]">${line}</span>
+                            <span class="text-[10px] text-slate-400 ml-1 font-bold">[${match.name}]</span>
+                        </div>
+                    `;
+                } else {
+                    // Unknown format
+                    container.innerHTML += `
+                        <div class="inline-flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 mr-2 mb-2 shadow-sm">
+                            <i class="fa-solid fa-circle-question text-slate-400"></i>
+                            <span class="truncate max-w-[120px]">${line}</span>
+                            <span class="text-[10px] text-slate-400 ml-1 font-bold">[Unknown]</span>
+                        </div>
+                    `;
+                }
+            });
+
+            if (hasTxHash) {
                 helper.classList.remove('hidden');
             } else {
-                badge.classList.add('hidden');
                 helper.classList.add('hidden');
             }
         }
 
         async function startTrace() {
             const seeds = document.getElementById('trace_seeds').value.trim();
-            const amount = document.getElementById('trace_amount').value.trim();
-            const currency = document.getElementById('target_currency').value;
             const chain = document.getElementById('target_chain').value;
+            const amount = document.getElementById('trace_amount').value;
+            const currency = document.getElementById('target_currency').value;
+            const startDate = document.getElementById('start_date').value;
+            const endDate = document.getElementById('end_date').value;
             
-            if (!seeds) {
-                alert("Please provide at least one seed address or transaction hash.");
+            if(!seeds) {
+                alert("Please input at least one Trace Seed.");
                 return;
             }
 
-            // Show Loader
+            const seedArray = seeds.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+
             document.getElementById('input-container').style.display = 'none';
             document.getElementById('global-loader').style.display = 'flex';
             
-            // Cycle loader text
-            const texts = [
-                "Auto-Computing Trace Thresholds...",
-                "Decoding Omni-Chain Ledger Events...",
-                "Generating Transaction Vectors...",
-                "Deploying Autonomous Cross-Chain Trace..."
-            ];
-            let i = 0;
+            let progress = 0;
             const textEl = document.getElementById('loader-text');
+            
+            const stages = [
+                "Initializing Secure Connection...",
+                "Loading Omni-Chain Graph Protocols...",
+                "Bypassing Cloudflare Protections...",
+                "Authenticating with PostgreSQL Edge DB...",
+                "Establishing Distributed Trace Network..."
+            ];
+
             const interval = setInterval(() => {
-                if (i < texts.length) {
-                    textEl.innerText = texts[i];
-                    i++;
+                if (progress < stages.length) {
+                    textEl.innerText = stages[progress];
+                    progress++;
                 }
             }, 1000);
 
             try {
-                // Post to our backend
                 const response = await fetch("/api/start_trace", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        seeds: seeds,
+                        seeds: seedArray.join(','),
                         target_amount: amount ? parseFloat(amount) : 0,
                         target_currency: currency,
                         chain_override: chain,
+                        start_date: startDate,
+                        end_date: endDate,
                         max_depth: 10,
                         max_hops: 15
                     })
@@ -298,14 +397,13 @@
                     document.getElementById('loader-text').innerText = `Redirecting to Session ${data.trace_id}...`;
                     
                     setTimeout(() => {
-                        window.location.href = `/?trace_id=${data.trace_id}`;
-                    }, 1000);
+                        window.location.href = `nemesis_tracer.html?trace_id=${data.trace_id}`;
+                    }, 1500);
                 } else {
-                    throw new Error(data.error || "Unknown Error");
+                    throw new Error("Failed to get Trace ID from backend");
                 }
-            } catch (err) {
+            } catch (e) {
                 clearInterval(interval);
-                alert("Trace Initialization Failed: " + err.message);
                 document.getElementById('input-container').style.display = 'block';
                 document.getElementById('global-loader').style.display = 'none';
             }

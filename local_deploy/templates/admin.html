@@ -748,6 +748,47 @@
                     <div id="darknet-terminal" class="flex-1 p-4 font-mono text-[11px] space-y-1 overflow-y-auto cyber-scrollbar">
                         <div class="text-gray-500 italic">Connecting to Darknet Engine...</div>
                     </div>
+                    <div class="p-2 border-t border-purple-500/30 bg-black/50">
+                        <input type="text" id="darknet-input" class="w-full bg-transparent border-none text-purple-400 font-mono text-xs focus:outline-none placeholder-purple-800" placeholder="> root@darknet:~$ Enter command..." onkeypress="handleDarknetCommand(event)">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 12. NEMESIS KNOWLEDGE View -->
+            <div id="view-knowledge" class="hidden h-[75vh] flex-col gap-4">
+                <div class="bg-[rgba(20,20,25,0.8)] border border-cyan-500/20 p-6 rounded-xl flex-1 shadow-[inset_0_0_20px_rgba(6,182,212,0.05)]">
+                    <h3 class="text-cyan-400 text-sm uppercase tracking-widest font-bold mb-4 border-b border-cyan-500/20 pb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-book-journal-whills"></i> NEMESIS AUTO-DYNAMIC INDEXER
+                    </h3>
+                    
+                    <div class="mb-6">
+                        <p class="text-xs text-gray-400 mb-4">Ingest external API documentations directly into the NEMESIS AI Knowledge Base. Enter the URL of the documentation below.</p>
+                        <div class="flex gap-2">
+                            <input type="text" id="knowledge-url" class="flex-1 bg-black border border-cyan-500/30 rounded p-2 text-white text-sm" placeholder="https://developers.cloudflare.com/fundamentals/api/get-started/">
+                            <button onclick="indexKnowledge()" class="px-6 py-2 bg-cyan-500/10 text-cyan-400 border border-cyan-500/50 rounded text-xs font-bold uppercase tracking-widest hover:bg-cyan-500/20 transition whitespace-nowrap">
+                                Index Documentation
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="index-status" class="hidden mb-6 p-4 bg-black/60 border border-cyan-500/20 rounded font-mono text-xs text-gray-300">
+                        Initializing...
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div id="prov-cloudflare" class="p-4 border border-cyan-500/10 bg-cyan-900/10 rounded flex flex-col items-center justify-center">
+                            <span class="font-bold text-gray-300 mb-2">Cloudflare Docs</span>
+                            <span class="text-xs text-yellow-500 font-mono status-badge">PENDING</span>
+                        </div>
+                        <div id="prov-render" class="p-4 border border-cyan-500/10 bg-cyan-900/10 rounded flex flex-col items-center justify-center">
+                            <span class="font-bold text-gray-300 mb-2">Render Docs</span>
+                            <span class="text-xs text-yellow-500 font-mono status-badge">PENDING</span>
+                        </div>
+                        <div id="prov-git" class="p-4 border border-cyan-500/10 bg-cyan-900/10 rounded flex flex-col items-center justify-center">
+                            <span class="font-bold text-gray-300 mb-2">Git Integration</span>
+                            <span class="text-xs text-yellow-500 font-mono status-badge">PENDING</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -1129,6 +1170,36 @@
         });
 
         initLogsWS();
+
+        async function handleDarknetCommand(e) {
+            if (e.key === 'Enter') {
+                const input = document.getElementById('darknet-input');
+                const cmd = input.value.trim();
+                if (!cmd) return;
+                
+                input.value = '';
+                
+                const terminal = document.getElementById('darknet-terminal');
+                const el = document.createElement("div");
+                el.className = "text-purple-300 font-bold mb-1 mt-2";
+                el.innerHTML = `&gt; ${cmd}`;
+                terminal.appendChild(el);
+                terminal.scrollTop = terminal.scrollHeight;
+                
+                try {
+                    await fetch(`${baseUrl}/api/darknet/command`, {
+                        method: 'POST',
+                        headers: authHeaders,
+                        body: JSON.stringify({ command: cmd })
+                    });
+                } catch(err) {
+                    const errEl = document.createElement("div");
+                    errEl.className = "text-red-500 text-[10px]";
+                    errEl.innerHTML = `[ERROR] Failed to send command: ${err.message}`;
+                    terminal.appendChild(errEl);
+                }
+            }
+        }
 
         // NEMESIS KNOWLEDGE AUTO-INDEXER
         async function indexKnowledge() {

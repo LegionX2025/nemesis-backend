@@ -373,6 +373,54 @@ async def api_darknet_search(q: str = ""):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+from fastapi.responses import StreamingResponse
+
+darknet_stream_clients = []
+
+@app.get("/api/stream")
+async def api_stream():
+    async def event_generator():
+        q = asyncio.Queue()
+        darknet_stream_clients.append(q)
+        try:
+            while True:
+                msg = await q.get()
+                yield f"data: {json.dumps(msg)}\n\n"
+        except asyncio.CancelledError:
+            if q in darknet_stream_clients:
+                darknet_stream_clients.remove(q)
+            
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+class DarknetCommandRequest(BaseModel):
+    command: str
+
+@app.post("/api/darknet/command")
+async def api_darknet_command(req: DarknetCommandRequest):
+    cmd = req.command.strip()
+    
+    async def process_cmd():
+        await asyncio.sleep(0.5)
+        import datetime
+        now = datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M:%S")
+        response_msg = {"message": f"Command not recognized: {cmd}. Type 'help' for available commands.", "style": "red", "ts": now}
+        
+        if cmd.lower() == "help":
+            response_msg = {"message": "Available commands: scan <domain>, ping, status, clear", "style": "green", "ts": now}
+        elif cmd.lower().startswith("scan"):
+            response_msg = {"message": f"Initiating deep scan on {cmd.split(' ')[-1]}...", "style": "yellow", "ts": now}
+        elif cmd.lower() == "status":
+            response_msg = {"message": "Darknet Engine v2.0 - ONLINE - 12 Nodes Active", "style": "green", "ts": now}
+        elif cmd.lower() == "ping":
+            response_msg = {"message": "PONG", "style": "dim", "ts": now}
+            
+        for q in darknet_stream_clients:
+            await q.put(response_msg)
+            
+    asyncio.create_task(process_cmd())
+    
+    return {"status": "success"}
+
 @app.get("/admin/health")
 async def get_health():
     traces = get_active_traces(active_sessions)
