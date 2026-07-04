@@ -1278,7 +1278,7 @@ class TraceEngine:
                 diffs = []
                 for i, acc in enumerate(accounts):
                     pubkey = acc.get('pubkey') if isinstance(acc, dict) else acc
-            if i < len(pre_bals) and i < len(post_bals):
+                    if i < len(pre_bals) and i < len(post_bals):
                         diffs.append((pubkey, post_bals[i] - pre_bals[i]))
                 if not diffs: continue
                 sender = min(diffs, key=lambda x: x[1])
