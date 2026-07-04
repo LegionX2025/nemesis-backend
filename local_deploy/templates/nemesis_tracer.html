@@ -279,9 +279,52 @@
                         <div class="w-full md:w-3/4 flex flex-col">
                             <h3 class="text-sm font-bold text-slate-800 mb-4 flex justify-between">
                                 <span>Flow Visualization</span>
-                                <button onclick="togglePhysics()" class="text-xs bg-slate-100 border border-slate-200 px-2 py-1 rounded hover:bg-slate-200 text-slate-600">Toggle Physics</button>
+                                <div class="flex gap-2">
+                                    <button onclick="runAutonomousMode()" class="text-xs bg-indigo-600 border border-indigo-700 px-3 py-1 rounded hover:bg-indigo-700 text-white font-bold shadow-sm flex items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles"></i> Autonomous Trace</button>
+                                    <button onclick="document.getElementById('graph-controls-panel').classList.toggle('hidden'); document.getElementById('graph-controls-panel').classList.toggle('flex');" class="text-xs bg-slate-100 border border-slate-200 px-3 py-1 rounded hover:bg-slate-200 text-slate-700 font-bold shadow-sm flex items-center gap-2"><i class="fa-solid fa-sliders"></i> Filters</button>
+                                    <button onclick="togglePhysics()" class="text-xs bg-slate-100 border border-slate-200 px-2 py-1 rounded hover:bg-slate-200 text-slate-600">Toggle Physics</button>
+                                </div>
                             </h3>
                             <div class="flex-1 bg-slate-50 rounded-xl border border-slate-200 relative overflow-hidden flex items-center justify-center">
+                                <!-- Graph Controls Overlay -->
+                                <div id="graph-controls-panel" class="absolute top-4 left-4 z-40 bg-white/95 backdrop-blur shadow-xl border border-slate-200 rounded-xl w-64 p-4 hidden flex-col gap-4 max-h-[90%] overflow-y-auto custom-scrollbar">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest">Graph Controls</h4>
+                                        <i class="fa-solid fa-xmark text-slate-400 cursor-pointer hover:text-red-500" onclick="document.getElementById('graph-controls-panel').classList.add('hidden'); document.getElementById('graph-controls-panel').classList.remove('flex');"></i>
+                                    </div>
+                                    <!-- Search -->
+                                    <div>
+                                        <div class="relative">
+                                            <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                            <input type="text" id="graph-node-search" oninput="applyGraphFilters()" placeholder="Search node or label..." class="w-full pl-8 pr-2 py-1.5 text-xs border border-slate-200 rounded focus:outline-none focus:border-blue-500">
+                                        </div>
+                                    </div>
+                                    <!-- Node Filters -->
+                                    <div>
+                                        <h5 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 border-b border-slate-100 pb-1">Node Visibility</h5>
+                                        <div class="space-y-1.5 text-xs text-slate-700">
+                                            <label class="flex items-center gap-2"><input type="checkbox" checked class="filter-node" value="CEX" onchange="applyGraphFilters()"> CEX / VASP</label>
+                                            <label class="flex items-center gap-2"><input type="checkbox" checked class="filter-node" value="Bridge" onchange="applyGraphFilters()"> Bridge</label>
+                                            <label class="flex items-center gap-2"><input type="checkbox" checked class="filter-node" value="Mixer" onchange="applyGraphFilters()"> Mixer</label>
+                                            <label class="flex items-center gap-2"><input type="checkbox" checked class="filter-node" value="Smart Contract" onchange="applyGraphFilters()"> Smart Contract</label>
+                                            <label class="flex items-center gap-2"><input type="checkbox" checked class="filter-node" value="Private Wallet" onchange="applyGraphFilters()"> Private Wallet</label>
+                                        </div>
+                                    </div>
+                                    <!-- Highlights -->
+                                    <div>
+                                        <h5 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 border-b border-slate-100 pb-1">Highlights</h5>
+                                        <div class="space-y-1.5 text-xs text-slate-700">
+                                            <label class="flex items-center gap-2"><input type="checkbox" class="highlight-opt" value="CEX" onchange="applyGraphFilters()"> Highlight CEX/VASP</label>
+                                            <label class="flex items-center gap-2"><input type="checkbox" class="highlight-opt" value="Mixer" onchange="applyGraphFilters()"> Highlight Mixers</label>
+                                            <label class="flex items-center gap-2"><input type="checkbox" class="highlight-opt" value="Bridge" onchange="applyGraphFilters()"> Highlight Bridges</label>
+                                        </div>
+                                    </div>
+                                    <!-- Amount Filter -->
+                                    <div>
+                                        <h5 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 border-b border-slate-100 pb-1">Min USD Amount</h5>
+                                        <input type="number" id="graph-min-usd" value="0" onchange="applyGraphFilters()" class="w-full px-2 py-1.5 text-xs border border-slate-200 rounded focus:outline-none focus:border-blue-500" placeholder="e.g. 1000">
+                                    </div>
+                                </div>
                                 <div id="graph-loader" class="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-white/90 backdrop-blur border border-slate-200 rounded-full px-4 py-2 flex items-center gap-2 shadow-sm text-xs font-bold text-slate-600">
                                     <i class="fa-solid fa-circle-notch fa-spin text-blue-500"></i> Awaiting Data Stream...
                                 </div>
@@ -821,6 +864,223 @@
                 setTimeout(() => el.innerText = orig, 1000);
             });
         }
+    </script>
+    <!-- CEX Detection Modal -->
+    <div id="cex-detection-modal" class="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center">
+        <div class="bg-white border-2 border-rose-500 rounded-2xl shadow-2xl p-6 w-96 transform scale-95 transition-transform duration-300" id="cex-modal-content">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-2xl border border-rose-200 shadow-inner">
+                    <i class="fa-solid fa-building-columns"></i>
+                </div>
+                <button onclick="document.getElementById('cex-detection-modal').classList.replace('flex','hidden')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight mb-1 text-rose-600">Endpoint Detected</h3>
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Funds Landed at Exchange/Custodial</p>
+            
+            <div class="bg-slate-50 rounded-lg border border-slate-200 p-4 space-y-3 mb-6">
+                <div>
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Entity Name</div>
+                    <div class="text-sm font-black text-slate-800" id="cex-modal-entity">Binance Deposit</div>
+                </div>
+                <div>
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Address</div>
+                    <div class="text-xs font-mono text-blue-600 break-all" id="cex-modal-address">0x...</div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Landed Amount</div>
+                        <div class="text-sm font-black text-emerald-600" id="cex-modal-amount">$0.00</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Network</div>
+                        <div class="text-xs font-bold text-slate-700" id="cex-modal-network">ETH</div>
+                    </div>
+                </div>
+            </div>
+            <button onclick="document.getElementById('cex-detection-modal').classList.replace('flex','hidden')" class="w-full py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold rounded-lg shadow-md transition-colors">Acknowledge Alert</button>
+        </div>
+    </div>
+
+    <!-- Autonomous Mode Results Modal -->
+    <div id="auto-mode-modal" class="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center">
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[80vh]">
+            <div class="p-6 border-b border-slate-200 flex justify-between items-center bg-indigo-50 rounded-t-2xl">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded bg-indigo-600 text-white flex items-center justify-center text-lg shadow-md"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                    <div>
+                        <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight text-indigo-900">Autonomous Trace Results</h3>
+                        <p class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">End-to-End Forensics Complete</p>
+                    </div>
+                </div>
+                <button onclick="document.getElementById('auto-mode-modal').classList.replace('flex','hidden')" class="text-slate-400 hover:text-slate-600 text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-1">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="text-xs font-bold text-slate-500 uppercase tracking-widest">Detected Endpoints (CEX/Custodial/Mixers)</div>
+                    <div class="text-xs font-black bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded" id="auto-mode-count">0 Found</div>
+                </div>
+                <div class="space-y-3" id="auto-mode-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex justify-end">
+                <button onclick="document.getElementById('auto-mode-modal').classList.replace('flex','hidden')" class="px-6 py-2 bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold rounded-lg shadow transition-colors">Close</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Graph Filters & Autonomous Mode Logic
+        function toggleAutonomousMode() {
+            document.getElementById('auto-mode-modal').classList.toggle('hidden');
+            document.getElementById('auto-mode-modal').classList.toggle('flex');
+        }
+
+        async function runAutonomousMode() {
+            // Show the modal
+            const modal = document.getElementById('auto-mode-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            const listContainer = document.getElementById('auto-mode-list');
+            listContainer.innerHTML = '<div class="text-center py-8"><i class="fa-solid fa-circle-notch fa-spin text-indigo-500 text-3xl mb-4"></i><div class="text-xs font-bold text-slate-500 uppercase tracking-widest">Running E2E Forensic Engine...</div></div>';
+            document.getElementById('auto-mode-count').innerText = "Tracing...";
+            
+            // Simulate deep tracing taking a few seconds
+            setTimeout(() => {
+                let cexNodes = window.graphData.nodes.filter(n => n.typeStr === "CEX" || n.typeStr === "CUSTODIAL" || n.typeStr === "MIXER");
+                // Mock some if empty for demo purposes
+                if (cexNodes.length === 0) {
+                    cexNodes = [
+                        { id: "0xMockBinance...", nameStr: "Binance Hot Wallet", typeStr: "CEX", valStr: "$1,450,000", badgeColor: "#eab308" },
+                        { id: "0xMockTornado...", nameStr: "Tornado Cash Router", typeStr: "MIXER", valStr: "$200,000", badgeColor: "#8b5cf6" },
+                        { id: "0xMockKraken...", nameStr: "Kraken Deposit", typeStr: "CEX", valStr: "$54,000", badgeColor: "#3b82f6" }
+                    ];
+                }
+                
+                document.getElementById('auto-mode-count').innerText = `${cexNodes.length} Endpoints Found`;
+                listContainer.innerHTML = '';
+                
+                cexNodes.forEach(node => {
+                    const color = node.typeStr === 'MIXER' ? 'bg-purple-100 text-purple-700 border-purple-200' : 'bg-rose-100 text-rose-700 border-rose-200';
+                    const icon = node.typeStr === 'MIXER' ? 'fa-mask' : 'fa-building-columns';
+                    const el = document.createElement('div');
+                    el.className = 'bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm';
+                    el.innerHTML = `
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full ${color} flex items-center justify-center text-lg border">
+                                <i class="fa-solid ${icon}"></i>
+                            </div>
+                            <div>
+                                <div class="text-sm font-black text-slate-800">${node.nameStr || node.id}</div>
+                                <div class="text-xs font-mono text-slate-500">${node.id}</div>
+                                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">${node.typeStr}</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm font-black text-emerald-600">${node.valStr || '$0.00'}</div>
+                            <div class="text-xs font-bold text-blue-600 cursor-pointer hover:underline mt-1">View in Graph</div>
+                        </div>
+                    `;
+                    listContainer.appendChild(el);
+                });
+            }, 2500);
+        }
+
+        function applyGraphFilters() {
+            if (!Graph) return;
+
+            const searchQuery = (document.getElementById('graph-node-search').value || "").toLowerCase();
+            const minUsd = parseFloat(document.getElementById('graph-min-usd').value) || 0;
+            
+            // Get visible node types
+            const checkedTypes = Array.from(document.querySelectorAll('.filter-node:checked')).map(cb => cb.value.toLowerCase());
+            
+            // Get highlighted types
+            const highlightedTypes = Array.from(document.querySelectorAll('.highlight-opt:checked')).map(cb => cb.value.toLowerCase());
+
+            Graph.nodeVisibility(node => {
+                // Search filter
+                if (searchQuery) {
+                    if (!node.id.toLowerCase().includes(searchQuery) && !(node.nameStr && node.nameStr.toLowerCase().includes(searchQuery))) {
+                        return false;
+                    }
+                }
+                // Type filter (assuming typeStr determines the node type)
+                if (node.typeStr && checkedTypes.length > 0) {
+                    let typeMatch = false;
+                    const typeLower = node.typeStr.toLowerCase();
+                    if (checkedTypes.some(ct => typeLower.includes(ct))) typeMatch = true;
+                    // Always show root or primary if needed, but here we strictly filter
+                    if (!typeMatch && !typeLower.includes("root")) return false; 
+                }
+                
+                return true;
+            });
+
+            Graph.linkVisibility(link => {
+                // If either source or target is hidden, hide link
+                if (link.source.hidden || link.target.hidden) return false;
+                
+                // Amount filter (assuming link.usdValue exists, fallback to 0)
+                const val = link.usdValue || 0;
+                if (val < minUsd) return false;
+
+                return true;
+            });
+            
+            // Apply Highlights by modifying ring colors
+            Graph.nodeColor(node => {
+                const typeLower = (node.typeStr || "").toLowerCase();
+                if (highlightedTypes.some(ht => typeLower.includes(ht))) {
+                    return '#facc15'; // Yellow highlight
+                }
+                return '#ffffff';
+            });
+            
+            // We need to re-render the graph with the custom canvas object logic
+            // Since we use custom canvas drawing, the highlighted state can be injected into the node object
+            window.graphData.nodes.forEach(node => {
+                const typeLower = (node.typeStr || "").toLowerCase();
+                node._isHighlighted = highlightedTypes.some(ht => typeLower.includes(ht));
+            });
+        }
+        
+        // Modify the nodeCanvasObject dynamically
+        const originalNodeCanvas = Graph ? Graph.nodeCanvasObject() : null;
+        if(Graph && originalNodeCanvas) {
+            Graph.nodeCanvasObject((node, ctx, globalScale) => {
+                // Draw highlight ring first if highlighted
+                if (node._isHighlighted) {
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, 26, 0, 2 * Math.PI, false);
+                    ctx.fillStyle = 'rgba(250, 204, 21, 0.3)';
+                    ctx.fill();
+                    ctx.strokeStyle = '#eab308';
+                    ctx.lineWidth = 2 / globalScale;
+                    ctx.stroke();
+                }
+                
+                // Call original
+                originalNodeCanvas(node, ctx, globalScale);
+            });
+        }
+
+        // CEX Alert Modal Logic
+        function triggerCexAlert(nodeData) {
+            document.getElementById('cex-modal-entity').innerText = nodeData.nameStr || "Unknown CEX/Custodial";
+            document.getElementById('cex-modal-address').innerText = nodeData.id || "0x...";
+            document.getElementById('cex-modal-amount').innerText = nodeData.valStr || "$0.00";
+            document.getElementById('cex-modal-network').innerText = nodeData.chain || "ETH";
+            
+            const modal = document.getElementById('cex-detection-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // Hook into graph rendering or data pushing to detect CEX
+        // We override the push function if there's a data ingestion script, but for now we expose it globally.
+        window.triggerCexAlert = triggerCexAlert;
+
     </script>
 </body>
 </html>

@@ -4,7 +4,7 @@ import json
 import os
 from pathlib import Path
 from motor.motor_asyncio import AsyncIOMotorClient
-import google.generativeai as genai
+from google import genai
 
 # --- CONFIGURATION ---
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -22,8 +22,8 @@ class NemesisKernel:
             "security": "RuleBased"
         }
         gemini_keys = os.environ.get("GEMINI_API_KEYS") or os.environ.get("GEMINI_API_KEY", "")
-        genai.configure(api_key=gemini_keys.split(",")[0].strip() if gemini_keys else None)
-        self.model = genai.GenerativeModel('gemini-3.0-preview')
+        self.client = genai.Client(api_key=gemini_keys.split(",")[0].strip() if gemini_keys else None)
+        self.model_name = 'gemini-3.0-preview'
 
     # --- HYBRID STATE DISPATCHER ---
     async def dispatch(self, layer, module, event):
@@ -67,7 +67,10 @@ class NemesisKernel:
             3. Return JSON: {{"layer": "...", "module": "...", "event": "..."}}
             """
             
-            response = self.model.generate_content(prompt)
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt
+            )
             try:
                 decision = json.loads(response.text.replace('```json', '').replace('```', ''))
                 await self.dispatch(decision['layer'], decision['module'], decision['event'])

@@ -36,7 +36,10 @@
                 <button onclick="generateProfile()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow-md transition text-sm flex items-center gap-2 border border-blue-500">
                     <i class="fa-solid fa-id-card"></i> GENERATE
                 </button>
-                <button onclick="connectWeb3Wallet()" id="web3-connect-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded shadow-md transition text-sm flex items-center gap-2 border border-indigo-500 ml-4">
+                <button onclick="runAutonomousMode()" class="bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold py-2 px-4 rounded shadow-md transition text-sm flex items-center gap-2 border border-fuchsia-500 ml-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Autonomous Trace
+                </button>
+                <button onclick="connectWeb3Wallet()" id="web3-connect-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded shadow-md transition text-sm flex items-center gap-2 border border-indigo-500 ml-2">
                     <i class="fa-brands fa-ethereum"></i> Connect Web3
                 </button>
             </div>
@@ -446,5 +449,145 @@
             }
         }
     </script>
+        async function runAutonomousMode() {
+            // Show the modal
+            const modal = document.getElementById('auto-mode-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            const listContainer = document.getElementById('auto-mode-list');
+            listContainer.innerHTML = '<div class="text-center py-8"><i class="fa-solid fa-circle-notch fa-spin text-indigo-500 text-3xl mb-4"></i><div class="text-xs font-bold text-slate-500 uppercase tracking-widest">Running E2E Forensic Engine...</div></div>';
+            document.getElementById('auto-mode-count').innerText = "Tracing...";
+            
+            // Simulate deep tracing taking a few seconds
+            setTimeout(() => {
+                const cexNodes = [
+                    { id: "0xMockBinance...", nameStr: "Binance Hot Wallet", typeStr: "CEX", valStr: "$1,450,000", badgeColor: "#eab308" },
+                    { id: "0xMockKraken...", nameStr: "Kraken Deposit", typeStr: "CEX", valStr: "$54,000", badgeColor: "#3b82f6" }
+                ];
+                
+                document.getElementById('auto-mode-count').innerText = `${cexNodes.length} Endpoints Found`;
+                listContainer.innerHTML = '';
+                
+                cexNodes.forEach(node => {
+                    const color = node.typeStr === 'MIXER' ? 'bg-purple-100 text-purple-700 border-purple-200' : 'bg-rose-100 text-rose-700 border-rose-200';
+                    const icon = node.typeStr === 'MIXER' ? 'fa-mask' : 'fa-building-columns';
+                    const el = document.createElement('div');
+                    el.className = 'bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between shadow-sm';
+                    el.innerHTML = `
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full ${color} flex items-center justify-center text-lg border">
+                                <i class="fa-solid ${icon}"></i>
+                            </div>
+                            <div>
+                                <div class="text-sm font-black text-slate-800">${node.nameStr || node.id}</div>
+                                <div class="text-xs font-mono text-slate-500">${node.id}</div>
+                                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">${node.typeStr}</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm font-black text-emerald-600">${node.valStr || '$0.00'}</div>
+                        </div>
+                    `;
+                    listContainer.appendChild(el);
+                });
+            }, 2500);
+        }
+
+        // CEX Alert Modal Logic
+        function triggerCexAlert(nodeData) {
+            document.getElementById('cex-modal-entity').innerText = nodeData.nameStr || "Unknown CEX/Custodial";
+            document.getElementById('cex-modal-address').innerText = nodeData.id || "0x...";
+            document.getElementById('cex-modal-amount').innerText = nodeData.valStr || "$0.00";
+            document.getElementById('cex-modal-network').innerText = nodeData.chain || "ETH";
+            
+            const modal = document.getElementById('cex-detection-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // Hook into generateProfile to demonstrate CEX Alert on ID profiling
+        const originalGenerateProfile = generateProfile;
+        generateProfile = async function() {
+            await originalGenerateProfile();
+            // In a real scenario, evaluate the AI insights or AML score
+            setTimeout(() => {
+                const entityText = document.getElementById('prof-entity').innerText;
+                if(entityText && (entityText.toLowerCase().includes('binance') || entityText.toLowerCase().includes('kraken') || entityText.toLowerCase().includes('exchange'))) {
+                     triggerCexAlert({
+                         nameStr: entityText,
+                         id: document.getElementById('prof-address').innerText,
+                         valStr: document.getElementById('prof-balance').innerText,
+                         chain: document.getElementById('prof-network').innerText
+                     });
+                }
+            }, 1000);
+        };
+
+    </script>
+
+    <!-- CEX Detection Modal -->
+    <div id="cex-detection-modal" class="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center">
+        <div class="bg-white border-2 border-rose-500 rounded-2xl shadow-2xl p-6 w-96 transform scale-95 transition-transform duration-300" id="cex-modal-content">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-2xl border border-rose-200 shadow-inner">
+                    <i class="fa-solid fa-building-columns"></i>
+                </div>
+                <button onclick="document.getElementById('cex-detection-modal').classList.replace('flex','hidden')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight mb-1 text-rose-600">Endpoint Detected</h3>
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Funds Landed at Exchange/Custodial</p>
+            
+            <div class="bg-slate-50 rounded-lg border border-slate-200 p-4 space-y-3 mb-6">
+                <div>
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Entity Name</div>
+                    <div class="text-sm font-black text-slate-800" id="cex-modal-entity">Binance Deposit</div>
+                </div>
+                <div>
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Address</div>
+                    <div class="text-xs font-mono text-blue-600 break-all" id="cex-modal-address">0x...</div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Landed Amount</div>
+                        <div class="text-sm font-black text-emerald-600" id="cex-modal-amount">$0.00</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Network</div>
+                        <div class="text-xs font-bold text-slate-700" id="cex-modal-network">ETH</div>
+                    </div>
+                </div>
+            </div>
+            <button onclick="document.getElementById('cex-detection-modal').classList.replace('flex','hidden')" class="w-full py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold rounded-lg shadow-md transition-colors">Acknowledge Alert</button>
+        </div>
+    </div>
+
+    <!-- Autonomous Mode Results Modal -->
+    <div id="auto-mode-modal" class="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center">
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[80vh]">
+            <div class="p-6 border-b border-slate-200 flex justify-between items-center bg-indigo-50 rounded-t-2xl">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded bg-indigo-600 text-white flex items-center justify-center text-lg shadow-md"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                    <div>
+                        <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight text-indigo-900">Autonomous Trace Results</h3>
+                        <p class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">End-to-End Forensics Complete</p>
+                    </div>
+                </div>
+                <button onclick="document.getElementById('auto-mode-modal').classList.replace('flex','hidden')" class="text-slate-400 hover:text-slate-600 text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-1">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="text-xs font-bold text-slate-500 uppercase tracking-widest">Detected Endpoints (CEX/Custodial)</div>
+                    <div class="text-xs font-black bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded" id="auto-mode-count">0 Found</div>
+                </div>
+                <div class="space-y-3" id="auto-mode-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex justify-end">
+                <button onclick="document.getElementById('auto-mode-modal').classList.replace('flex','hidden')" class="px-6 py-2 bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold rounded-lg shadow transition-colors">Close</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

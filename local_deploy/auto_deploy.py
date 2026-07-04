@@ -8,10 +8,10 @@ import json
 import shutil
 from pathlib import Path
 try:
-    import google.generativeai as genai
+    from google import genai
 except ImportError:
-    subprocess.run([sys.executable, "-m", "pip", "install", "google-generativeai"], check=True)
-    import google.generativeai as genai
+    subprocess.run([sys.executable, "-m", "pip", "install", "google-genai"], check=True)
+    from google import genai
 
 def get_env_var(key, default=""):
     env_path = Path(".env")
@@ -30,10 +30,9 @@ if "CLOUDFLARE_API_TOKEN" in os.environ:
 GEMINI_API_KEYS = get_env_var("GEMINI_API_KEYS", "")
 if GEMINI_API_KEYS:
     # Use the first key
-    genai.configure(api_key=GEMINI_API_KEYS.split(",")[0].strip('"'))
-    MODEL = genai.GenerativeModel("gemini-2.5-flash")
+    CLIENT = genai.Client(api_key=GEMINI_API_KEYS.split(",")[0].strip('"'))
 else:
-    MODEL = None
+    CLIENT = None
 
 def print_header(title):
     print(f"\n{'='*60}")
@@ -41,7 +40,7 @@ def print_header(title):
     print(f"{'='*60}")
 
 def apply_ai_fix(error_log, cwd):
-    if not MODEL:
+    if not CLIENT:
         print("⚠️ Gemini API not configured. Cannot attempt AI auto-fix.")
         return False
         
@@ -73,7 +72,10 @@ def apply_ai_fix(error_log, cwd):
     """
     print("🧠 Asking Gemini for a fix...")
     try:
-        response = MODEL.generate_content(prompt)
+        response = CLIENT.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt
+        )
         text = response.text.strip()
         if text.startswith("```json"):
             text = text.split("```json")[1].split("```")[0].strip()

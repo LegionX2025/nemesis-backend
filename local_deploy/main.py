@@ -1386,7 +1386,7 @@ async def get_nemesis_tx_history(address: str):
 
 @app.post("/api/nemesis_id/generate_report")
 async def nemesis_generate_report(req: NemesisReportRequest):
-    import google.generativeai as genai
+    from google import genai
     from services.trace_engine import CONFIG
     import traceback
     
@@ -1395,8 +1395,8 @@ async def nemesis_generate_report(req: NemesisReportRequest):
         return {"markdown": "Error: No Gemini API keys configured."}
         
     try:
-        genai.configure(api_key=keys[0])
-        model = genai.GenerativeModel("gemini-2.5-flash")
+        client = genai.Client(api_key=keys[0])
+        model_name = "gemini-2.5-flash"
         
         import json
         
@@ -1412,7 +1412,7 @@ async def nemesis_generate_report(req: NemesisReportRequest):
         if req.type == "insights":
             prompt = f"Provide a brief 3-paragraph forensic AI insight for the cryptocurrency address {req.address}. Focus on anomalies, risk factors, and cluster behavior based on the following tracer data: {context_data}. Format it entirely in Markdown."
             
-        response = await asyncio.to_thread(model.generate_content, prompt)
+        response = await asyncio.to_thread(client.models.generate_content, model=model_name, contents=prompt)
         return {"markdown": response.text}
     except Exception as e:
         logger.error(f"Gemini API Error: {traceback.format_exc()}")

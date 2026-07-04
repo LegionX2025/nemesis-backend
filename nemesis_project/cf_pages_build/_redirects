@@ -1,2 +1,0 @@
-/api/*  https://nemesis-local.onrender.com/api/:splat  200
-/admin/api/*  https://nemesis-local.onrender.com/admin/api/:splat  200
