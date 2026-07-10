@@ -21,8 +21,8 @@ COPY . .
 ENV PORT=3001
 EXPOSE $PORT
 
-# Change working directory to local_deploy where the actual project lives
-WORKDIR /app/local_deploy
+# Change working directory to root where api module exists
+WORKDIR /app
 
 # Start FastAPI server
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-3001}"]
+CMD ["sh", "-c", "uvicorn api.server:app --host 0.0.0.0 --port ${PORT:-8000}"]

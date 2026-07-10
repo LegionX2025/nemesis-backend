@@ -343,6 +343,42 @@
         </div>
     </div>
 
+    <!-- Initial Trace Setup Modal -->
+    <div id="trace-setup-modal" class="fixed inset-0 z-[200] bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+            <div class="p-6 bg-slate-50 border-b border-slate-200">
+                <h2 class="font-black text-slate-800 text-xl uppercase tracking-tight">Trace Setup</h2>
+                <p class="text-xs text-slate-500 font-medium mt-1">Configure OmniChain investigation parameters.</p>
+            </div>
+            <div class="p-6 space-y-5">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wide mb-2">Seed Addresses / Tx Hashes</label>
+                    <textarea id="setup-seeds" class="w-full h-24 bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm font-mono focus:border-blue-500 focus:bg-white outline-none custom-scrollbar" placeholder="Paste wallets, transactions, or entities here (comma separated)"></textarea>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wide mb-2">Total Amount to Trace (Optional)</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                        <input type="number" id="setup-amount" class="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 pl-8 pr-4 text-sm focus:border-blue-500 focus:bg-white outline-none" placeholder="0.00">
+                    </div>
+                </div>
+                <div class="space-y-3 pt-2 border-t border-slate-100">
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" id="setup-autodetect" checked class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                        <span class="text-sm font-semibold text-slate-700">Auto-detect addresses/tx hash</span>
+                    </label>
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" id="setup-compute-amount" checked class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                        <span class="text-sm font-semibold text-slate-700">Compute total amount to trace if blank</span>
+                    </label>
+                </div>
+                <button onclick="submitTraceSetup()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors shadow-md shadow-blue-500/20 text-sm tracking-wide">
+                    <i class="fa-solid fa-bolt mr-2"></i> INITIATE TRACE
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Ledger Minimize Toggle
         let isLedgerMinimized = false;
@@ -382,6 +418,8 @@
             if (window.traceIdParam) {
                 document.getElementById('metric-trace-id').innerText = window.traceIdParam;
                 connectWebSocket(window.traceIdParam);
+            } else {
+                document.getElementById('trace-setup-modal').classList.remove('hidden');
             }
         });
 
@@ -678,6 +716,44 @@
             } catch(e) { console.error(e); }
         }
 
+        async function submitTraceSetup() {
+            let seeds = document.getElementById('setup-seeds').value.trim();
+            if(!seeds) {
+                alert("Please provide at least one seed address or transaction hash.");
+                return;
+            }
+            
+            let amount = document.getElementById('setup-amount').value || "0";
+            
+            document.getElementById('trace-setup-modal').classList.add('hidden');
+            
+            let loader = document.getElementById('graph-loader');
+            if (loader) loader.style.display = 'flex';
+            let badge = document.getElementById('graph-status-badge');
+            if (badge) badge.innerText = "Initializing";
+            
+            if(wsConnection) wsConnection.close();
+
+            try {
+                const response = await fetch(window.BACKEND_URL + '/api/start_trace', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ seeds: seeds, target_amount: amount, target_currency: "USD", chain_override: "AUTO" })
+                });
+                
+                const data = await response.json();
+                if (data.trace_id) {
+                    document.getElementById('metric-trace-id').innerText = data.trace_id;
+                    connectWebSocket(data.trace_id);
+                } else {
+                    if (loader) loader.style.display = 'none';
+                    alert("Trace Error: " + (data.error || "Unknown error"));
+                }
+            } catch(e) {
+                if (loader) loader.style.display = 'none';
+                alert("Connection failed. Is the backend running?");
+            }
+        }
+
         async function startNewTrace() {
             let searchInput = document.getElementById('globalSearch').value;
             if(!searchInput) return;
@@ -693,7 +769,7 @@
             try {
                 const response = await fetch(window.BACKEND_URL + '/api/start_trace', {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ seeds: searchInput, target_amount: 0, target_currency: "USD", chain_override: "AUTO" })
+                    body: JSON.stringify({ seeds: searchInput, target_amount: "0", target_currency: "USD", chain_override: "AUTO" })
                 });
                 
                 const data = await response.json();
@@ -704,11 +780,11 @@
                     connectWebSocket(data.trace_id);
                 } else {
                     alert("Failed to start trace.");
-                    document.getElementById('graph-loader').style.display = 'none';
+                    if (loader) loader.style.display = 'none';
                 }
             } catch (err) {
                 alert("Error calling backend API.");
-                document.getElementById('graph-loader').style.display = 'none';
+                if (loader) loader.style.display = 'none';
             }
         }
 
