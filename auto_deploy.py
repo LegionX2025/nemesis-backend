@@ -44,7 +44,7 @@ def main():
         run_cmd(f'"{sys.executable}" -m pip install -r requirements.txt', cwd="local_deploy", exit_on_error=False)
         
 
-    worker_dir = os.path.join(os.getcwd(), "cloudflare_worker")
+    worker_dir = os.path.join(os.getcwd(), "local_deploy", "frontend", "nemesis-global-worker")
     if os.path.exists(os.path.join(worker_dir, "package.json")):
         print("    -> Installing Node.js requirements (cloudflare_worker)...")
         run_cmd("npm install", cwd=worker_dir, exit_on_error=False)
@@ -87,17 +87,17 @@ def main():
 
     # 2. CLOUDFLARE DEPLOY (EDGE PROXY)
     print("\n>>> [2/3] Deploying Edge Architecture (Cloudflare Worker)")
-    worker_dir = os.path.join(os.getcwd(), "cloudflare_worker")
+    worker_dir = os.path.join(os.getcwd(), "local_deploy", "frontend", "nemesis-global-worker")
     if not os.path.exists(worker_dir):
         print(f"[ERROR] Worker directory not found: {worker_dir}")
         sys.exit(1)
         
-    run_cmd("npx wrangler deploy", cwd=worker_dir)
+    run_cmd("npx wrangler deploy src/index.ts -c wrangler.toml --compatibility-date 2024-12-01", cwd=worker_dir)
     print("    -> Cloudflare Edge proxy successfully deployed!")
 
     # 3. CLOUDFLARE DEPLOY (FRONTEND)
     print("\n>>> [3/3] Deploying Main Frontend (Cloudflare Pages)")
-    frontend_dir = os.path.join(os.getcwd(), "local_deploy")
+    frontend_dir = os.path.join(os.getcwd(), "local_deploy", "frontend")
     if not os.path.exists(frontend_dir):
         print(f"[ERROR] Frontend directory not found: {frontend_dir}")
         sys.exit(1)
