@@ -55,6 +55,7 @@ def main():
     print("    -> Adding strict core project files...")
     core_files = [
         "local_deploy/",
+        "adapters/", "intel/", "graph/", "core/", "api/", "scratch/", "nemesis_v32.py",
         "requirements.txt", "render.yaml", "auto_deploy.py", 
         "Dockerfile", ".gitignore"
     ]
@@ -90,12 +91,25 @@ def main():
 
     # 3. CLOUDFLARE DEPLOY (FRONTEND)
     print("\n>>> [3/3] Deploying Main Frontend (Cloudflare Pages)")
-    frontend_dir = os.path.join(os.getcwd(), "local_deploy", "templates")
+    frontend_dir = os.path.join(os.getcwd(), "local_deploy")
     if not os.path.exists(frontend_dir):
         print(f"[ERROR] Frontend directory not found: {frontend_dir}")
         sys.exit(1)
         
-    run_cmd("npx wrangler pages deploy . --project-name nemesis-id-frontend", cwd=frontend_dir)
+    print("    -> Bundling frontend assets...")
+    # Create a temporary dist directory to hold both templates and static assets
+    dist_dir = os.path.join(frontend_dir, "_cf_pages_dist")
+    if sys.platform == "win32":
+        run_cmd(f"if exist {dist_dir} rmdir /s /q {dist_dir}")
+        run_cmd(f"mkdir {dist_dir}")
+        run_cmd(f"xcopy /e /i /y {os.path.join(frontend_dir, 'templates')} {dist_dir}")
+        run_cmd(f"xcopy /e /i /y {os.path.join(frontend_dir, 'static')} {os.path.join(dist_dir, 'static')}")
+    else:
+        run_cmd(f"rm -rf {dist_dir} && mkdir -p {dist_dir}")
+        run_cmd(f"cp -r {os.path.join(frontend_dir, 'templates')}/* {dist_dir}/")
+        run_cmd(f"cp -r {os.path.join(frontend_dir, 'static')} {dist_dir}/")
+
+    run_cmd("npx wrangler pages deploy _cf_pages_dist --project-name nemesis-id-frontend", cwd=frontend_dir)
     print("    -> Cloudflare Pages frontend successfully deployed!")
     
     print("\n============================================================")

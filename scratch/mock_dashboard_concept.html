@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEMESIS Dashboard Concept - V2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Using Vis.js for the graph rendering to match production app -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/standalone/umd/vis-network.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+                    colors: {
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 900: '#0c4a6e' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #f8fafc; color: #0f172a; font-family: 'Inter', sans-serif; overflow: hidden; }
+        
+        /* 3D Flipcard CSS */
+        .perspective { perspective: 1000px; }
+        .preserve-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        .card-flip-container:hover .card-flip-inner { transform: rotateY(180deg); }
+        
+        /* Custom Animations */
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(14, 165, 233, 0.4); }
+            50% { box-shadow: 0 0 20px rgba(14, 165, 233, 0.8); }
+        }
+        .animate-glow { animation: pulse-glow 2s infinite; }
+        
+        /* Glassmorphism panel */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen">
+
+    <!-- Top Header -->
+    <header class="h-16 bg-white/80 backdrop-blur border-b border-slate-200 flex items-center justify-between px-6 z-50 shadow-sm relative">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-lion text-brand-600 text-3xl"></i>
+            <div class="flex flex-col">
+                <span class="font-black text-xl tracking-tight leading-none text-slate-900">NEMESIS</span>
+                <span class="text-[9px] text-slate-500 font-bold tracking-widest uppercase mt-0.5">V2 Dashboard Engine</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-xs font-bold border border-emerald-100 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> LIVE TRACING
+            </div>
+            <button class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-slate-200 transition-colors">
+                <i class="fa-solid fa-bell"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 flex relative">
+        <!-- Sidebar -->
+        <aside class="w-20 lg:w-64 glass-panel border-r border-slate-200 flex flex-col items-center lg:items-start py-6 z-40 transition-all duration-300">
+            <div class="w-full px-4 space-y-6">
+                <!-- Nav Item -->
+                <div class="flex items-center gap-4 text-brand-600 bg-brand-50 rounded-xl p-3 cursor-pointer group">
+                    <i class="fa-solid fa-network-wired text-xl group-hover:scale-110 transition-transform"></i>
+                    <span class="hidden lg:block font-bold text-sm">Graph Topology</span>
+                </div>
+                <div class="flex items-center gap-4 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl p-3 cursor-pointer transition-colors">
+                    <i class="fa-solid fa-table-list text-xl"></i>
+                    <span class="hidden lg:block font-bold text-sm">Ledger Feed</span>
+                </div>
+                <div class="flex items-center gap-4 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl p-3 cursor-pointer transition-colors">
+                    <i class="fa-solid fa-shield-halved text-xl"></i>
+                    <span class="hidden lg:block font-bold text-sm">Intel Reports</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <div class="flex-1 flex flex-col relative bg-slate-50/50">
+            
+            <!-- Floating Flipcards Dashboard Area -->
+            <div class="absolute top-6 left-6 right-6 z-30 grid grid-cols-1 md:grid-cols-3 gap-6 pointer-events-none">
+                
+                <!-- Card 1: Asset Flow (Flipcard) -->
+                <div class="perspective card-flip-container h-32 pointer-events-auto cursor-pointer">
+                    <div class="relative w-full h-full transition-transform duration-700 preserve-3d card-flip-inner shadow-lg rounded-2xl">
+                        <!-- Front -->
+                        <div class="absolute w-full h-full backface-hidden glass-panel rounded-2xl p-5 flex flex-col justify-between border-l-4 border-l-brand-500">
+                            <div class="flex justify-between items-center text-slate-500">
+                                <span class="text-xs font-black uppercase tracking-wider">Total Trace Volume</span>
+                                <i class="fa-solid fa-money-bill-transfer text-brand-500"></i>
+                            </div>
+                            <div class="text-3xl font-black text-slate-800 tracking-tight font-mono">$1,298,598.63</div>
+                            <div class="text-[10px] font-bold text-emerald-500">+12% from previous hop</div>
+                        </div>
+                        <!-- Back -->
+                        <div class="absolute w-full h-full backface-hidden glass-panel rounded-2xl p-5 rotate-y-180 bg-brand-600 text-white flex flex-col justify-center items-center">
+                            <i class="fa-brands fa-ethereum text-2xl mb-2"></i>
+                            <div class="text-xs font-bold text-brand-100">Ethereum Network Breakdown</div>
+                            <div class="text-sm font-mono mt-1">452.3 ETH | 1.2M USDT</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Risk Profile -->
+                <div class="perspective card-flip-container h-32 pointer-events-auto cursor-pointer">
+                    <div class="relative w-full h-full transition-transform duration-700 preserve-3d card-flip-inner shadow-lg rounded-2xl">
+                        <div class="absolute w-full h-full backface-hidden glass-panel rounded-2xl p-5 flex flex-col justify-between border-l-4 border-l-red-500">
+                            <div class="flex justify-between items-center text-slate-500">
+                                <span class="text-xs font-black uppercase tracking-wider">Risk Score</span>
+                                <i class="fa-solid fa-triangle-exclamation text-red-500 animate-pulse"></i>
+                            </div>
+                            <div class="text-3xl font-black text-slate-800 tracking-tight font-mono">94 / 100</div>
+                            <div class="text-[10px] font-bold text-red-500 uppercase">Critical Priority</div>
+                        </div>
+                        <div class="absolute w-full h-full backface-hidden glass-panel rounded-2xl p-5 rotate-y-180 bg-red-600 text-white flex flex-col justify-center">
+                            <div class="text-xs font-bold mb-2">Identified Threats:</div>
+                            <ul class="text-[10px] space-y-1 list-disc pl-4 font-mono">
+                                <li>Lazarus Group Match (98%)</li>
+                                <li>Tornado Cash Interaction</li>
+                                <li>High-Velocity Smurfing</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Node Discovery -->
+                <div class="perspective card-flip-container h-32 pointer-events-auto cursor-pointer">
+                    <div class="relative w-full h-full transition-transform duration-700 preserve-3d card-flip-inner shadow-lg rounded-2xl">
+                        <div class="absolute w-full h-full backface-hidden glass-panel rounded-2xl p-5 flex flex-col justify-between border-l-4 border-l-purple-500">
+                            <div class="flex justify-between items-center text-slate-500">
+                                <span class="text-xs font-black uppercase tracking-wider">Nodes Discovered</span>
+                                <i class="fa-solid fa-diagram-project text-purple-500"></i>
+                            </div>
+                            <div class="text-3xl font-black text-slate-800 tracking-tight font-mono">1,402</div>
+                            <div class="text-[10px] font-bold text-slate-500">Across 15 layers of depth</div>
+                        </div>
+                        <div class="absolute w-full h-full backface-hidden glass-panel rounded-2xl p-5 rotate-y-180 bg-purple-600 text-white flex flex-col justify-center text-center">
+                            <i class="fa-solid fa-satellite-dish text-2xl mb-2 animate-bounce"></i>
+                            <div class="text-xs font-bold">Trace Engine Active</div>
+                            <div class="text-[10px] text-purple-200 mt-1">Scanning 4 chains concurrently</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Graph Canvas Container -->
+            <div id="vis-network" class="absolute inset-0 z-10"></div>
+            
+            <!-- Bottom HUD Controls -->
+            <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 glass-panel rounded-full px-6 py-3 flex items-center gap-6 shadow-xl animate-glow">
+                <button class="text-slate-500 hover:text-brand-600 flex flex-col items-center transition-colors">
+                    <i class="fa-solid fa-expand text-lg"></i>
+                    <span class="text-[9px] font-bold mt-1 uppercase">Focus</span>
+                </button>
+                <div class="w-px h-6 bg-slate-300"></div>
+                <button class="text-brand-600 flex flex-col items-center">
+                    <i class="fa-solid fa-play text-lg"></i>
+                    <span class="text-[9px] font-bold mt-1 uppercase">Live Stream</span>
+                </button>
+                <div class="w-px h-6 bg-slate-300"></div>
+                <button class="text-slate-500 hover:text-brand-600 flex flex-col items-center transition-colors">
+                    <i class="fa-solid fa-wand-magic-sparkles text-lg"></i>
+                    <span class="text-[9px] font-bold mt-1 uppercase">Auto-Layout</span>
+                </button>
+            </div>
+            
+        </div>
+    </main>
+
+    <script>
+        // Init Vis.js Network matching the Hexagon/Dual-Line/Gradient Style
+        const container = document.getElementById('vis-network');
+        
+        // Mock nodes with Binance/Tether images
+        const nodes = new vis.DataSet([
+            { id: 1, label: '0x1A2B...9C8D', image: 'https://cryptologos.cc/logos/ethereum-eth-logo.png', outflow: 865737.47, isSuspect: true, shape: 'circularImage' },
+            { id: 2, label: 'Tether Admin', image: 'https://cryptologos.cc/logos/tether-usdt-logo.png', outflow: 865729.18, isSuspect: false, shape: 'circularImage' },
+            { id: 3, label: 'Binance Hot', image: 'https://cryptologos.cc/logos/bnb-bnb-logo.png', outflow: 432861.45, isSuspect: false, shape: 'circularImage' },
+            { id: 4, label: '0xra58...3urq', image: 'https://cryptologos.cc/logos/ethereum-eth-logo.png', outflow: 0, isSuspect: true, shape: 'circularImage' }
+        ]);
+
+        const edges = new vis.DataSet([
+            { from: 1, to: 2, label: 'TRC20 Transfer\n$865,737.47' },
+            { from: 2, to: 3, label: 'TRC20 Transfer\n$865,729.18' },
+            { from: 3, to: 4, label: 'TRC20 Withdrawal\n$432,861.45' }
+        ]);
+
+        const data = { nodes: nodes, edges: edges };
+        
+        const options = {
+            layout: { hierarchical: { enabled: true, direction: 'LR', nodeSpacing: 300, levelSeparation: 350 } },
+            physics: false,
+            nodes: { 
+                size: 35, 
+                borderWidth: 0,
+                font: { size: 14, face: 'Inter', color: '#0f172a', background: 'rgba(255,255,255,0.9)' },
+                shadow: { enabled: true, color: 'rgba(0,0,0,0.15)', size: 20, x: 0, y: 10 }
+            },
+            edges: { 
+                arrows: {
+                    to: { enabled: true, scaleFactor: 1, type: 'arrow' },
+                    middle: { enabled: true, scaleFactor: 0.8, type: 'diamond' }
+                },
+                font: { align: 'top', size: 12, color: '#475569', background: 'rgba(255,255,255,0.9)', strokeWidth: 0 }, 
+                smooth: { enabled: true, type: 'cubicBezier', forceDirection: 'horizontal', roundness: 0.4 },
+                color: { color: '#3b82f6', highlight: '#2563eb' },
+                width: 3,
+                shadow: { enabled: true, color: 'rgba(59,130,246,0.3)', size: 10, x: 0, y: 0 } // Glow effect on line
+            }
+        };
+
+        const network = new vis.Network(container, data, options);
+
+        // Draw Hexagons and Badges
+        network.on("afterDrawing", function (ctx) {
+            const position = network.getPositions();
+            nodes.forEach(function(node) {
+                if (position[node.id]) {
+                    const x = position[node.id].x;
+                    const y = position[node.id].y;
+                    
+                    // Draw Hexagon Border
+                    ctx.beginPath();
+                    const hexRadius = 45; 
+                    for (let i = 0; i < 6; i++) {
+                        const angle = 2 * Math.PI / 6 * i - Math.PI / 2;
+                        const hx = x + hexRadius * Math.cos(angle);
+                        const hy = y + hexRadius * Math.sin(angle);
+                        if (i === 0) { ctx.moveTo(hx, hy); } else { ctx.lineTo(hx, hy); }
+                    }
+                    ctx.closePath();
+                    ctx.lineWidth = 4;
+                    ctx.strokeStyle = node.isSuspect ? '#ef4444' : '#3b82f6';
+                    ctx.shadowColor = node.isSuspect ? 'rgba(239,68,68,0.5)' : 'rgba(59,130,246,0.5)';
+                    ctx.shadowBlur = 15;
+                    ctx.stroke();
+                    ctx.shadowBlur = 0;
+
+                    // Draw Outflow Badge
+                    if (node.outflow > 0) {
+                        const formattedAmount = "$" + node.outflow.toLocaleString();
+                        ctx.fillStyle = "#ffffff";
+                        ctx.strokeStyle = "#e2e8f0";
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.roundRect(x - 45, y - 75, 90, 24, 6);
+                        ctx.fill(); ctx.stroke();
+                        
+                        ctx.fillStyle = node.isSuspect ? "#ef4444" : "#10b981";
+                        ctx.font = "bold 12px Inter, sans-serif";
+                        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                        ctx.fillText("💰 " + formattedAmount, x, y - 63);
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

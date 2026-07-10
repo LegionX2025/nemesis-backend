@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LIONSGATE NETWORK BLOCKCHAIN FORENSICS</title>
+    <!-- Include html2pdf.js for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Include Vis.js for Network Graph -->
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        :root {
+            --primary-blue: #003366;
+            --text-main: #333333;
+            --victim-color: #d88e00;
+            --suspect-color: #b71c1c;
+            --mixing-color: #1976d2;
+            --consolidation-color: #6a1b9a;
+            --cex-color: #2e7d32;
+            --border-light: #e0e0e0;
+            --bg-light: #f9f9f9;
+        }
+        body {
+            background-color: #eaeaea;
+            margin: 0;
+            padding: 0;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: var(--text-main);
+            font-size: 10pt;
+            line-height: 1.6;
+        }
+
+        /* Action Bar */
+        .action-bar {
+            position: fixed; top: 0; left: 0; right: 0;
+            background: #202124; color: white; padding: 10px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 1000; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .action-bar button, .action-bar label.button {
+            background: #f8f9fa; color: #202124; border: 1px solid #dadce0;
+            padding: 6px 14px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: 10px;
+        }
+        .action-bar button:hover, .action-bar label.button:hover { background: #e8eaed; }
+
+        /* Document Container */
+        .page-wrapper { margin-top: 60px; display: flex; flex-direction: column; align-items: center; }
+        .page {
+            width: 21cm; min-height: 29.7cm; padding: 1.5cm 2cm; margin-bottom: 1cm;
+            background: #ffffff; box-shadow: 0 1px 5px rgba(0,0,0,0.2);
+            position: relative; box-sizing: border-box;
+        }
+
+        /* Header */
+        .header-logo { display: block; margin: 0 auto 15px auto; width: 60px; }
+        .header-title { text-align: center; color: var(--primary-blue); font-size: 14pt; font-weight: bold; letter-spacing: 2px; margin: 0; }
+        .header-subtitle { text-align: center; font-size: 18pt; font-weight: bold; margin: 5px 0; color: #000; }
+        .header-tagline { text-align: center; font-size: 10pt; color: #666; letter-spacing: 1px; border-bottom: 2px solid var(--primary-blue); padding-bottom: 20px; margin-bottom: 30px; }
+
+        /* Tables */
+        .meta-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        .meta-table td { border: 1px solid var(--border-light); padding: 10px 15px; vertical-align: top; }
+        .meta-table td.lbl { width: 35%; background-color: var(--bg-light); font-weight: bold; color: var(--text-main); }
+        .meta-table td.val { width: 65%; color: var(--text-main); font-family: 'Courier New', Courier, monospace; font-size: 9pt; }
+        .red-mono { color: #d32f2f; }
+
+        .data-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 8.5pt; }
+        .data-table th, .data-table td { border: 1px solid var(--border-light); padding: 8px; text-align: left; word-break: break-all; }
+        .data-table th { background-color: var(--bg-light); font-weight: bold; color: var(--text-main); }
+
+        /* Sections */
+        h2 { color: var(--primary-blue); font-size: 14pt; border-bottom: 1px solid var(--border-light); padding-bottom: 5px; margin-top: 40px; margin-bottom: 15px; }
+        h3 { color: var(--primary-blue); font-size: 12pt; margin-top: 30px; border-left: 4px solid var(--primary-blue); padding-left: 10px; }
+        
+        .narrative-box {
+            border: 1px solid var(--border-light); padding: 15px 20px; background: #fff; margin-bottom: 30px;
+            text-align: justify; font-size: 9.5pt; border-top: 3px solid var(--primary-blue);
+        }
+        .narrative-title { font-weight: bold; color: #555; font-size: 8.5pt; text-transform: uppercase; margin-bottom: 15px; border-bottom: 1px dotted #ccc; padding-bottom: 5px; }
+
+        /* Legend */
+        .legend { display: flex; justify-content: center; align-items: center; gap: 15px; border: 1px solid var(--border-light); border-radius: 5px; padding: 10px; margin-bottom: 30px; font-size: 8pt; font-weight: bold; }
+        .legend span { display: flex; align-items: center; }
+        .legend-box { width: 12px; height: 12px; border: 2px solid; border-radius: 2px; margin-right: 5px; }
+        
+        /* Flow Diagrams */
+        .flow-container { display: flex; justify-content: center; align-items: center; margin: 30px 0; gap: 15px; flex-wrap: wrap; }
+        .node-box {
+            border: 2px solid; border-radius: 8px; padding: 15px; min-width: 250px; text-align: center;
+            background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .node-title { font-weight: bold; font-size: 10pt; text-transform: uppercase; margin-bottom: 10px; }
+        .node-entity { font-size: 8.5pt; color: #666; margin-bottom: 8px; }
+        .node-address { font-family: 'Courier New', monospace; font-size: 8pt; padding: 5px; border: 1px solid #eee; background: #fafafa; border-radius: 3px; word-break: break-all; }
+        .node-meta { font-size: 8pt; color: #666; margin-top: 8px; }
+        
+        .tx-arrow { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .tx-details { border: 1px solid #e0e0e0; background: #fdfdfd; padding: 5px 10px; border-radius: 4px; font-size: 7.5pt; font-family: 'Courier New', monospace; text-align: center; margin-bottom: 5px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .tx-amount { color: var(--cex-color); font-weight: bold; font-family: sans-serif; }
+        .arrow-line { width: 40px; height: 2px; background: #999; position: relative; }
+        .arrow-line::after { content: ''; position: absolute; right: -5px; top: -4px; border-width: 5px 0 5px 6px; border-style: solid; border-color: transparent transparent transparent #999; }
+
+        .type-victim { border-color: var(--victim-color); }
+        .type-victim .node-title { color: var(--victim-color); }
+        .type-suspect { border-color: var(--suspect-color); }
+        .type-suspect .node-title { color: var(--suspect-color); }
+        .type-mixing { border-color: var(--mixing-color); border-style: dashed; }
+        .type-mixing .node-title { color: var(--mixing-color); }
+        .type-consolidation { border-color: var(--consolidation-color); }
+        .type-consolidation .node-title { color: var(--consolidation-color); }
+        .type-cex { border-color: var(--cex-color); border-width: 3px; }
+        .type-cex .node-title { color: var(--cex-color); }
+
+        /* Terminal Big Box */
+        .terminal-container { border: 1px solid #ccc; border-radius: 8px; background: #fdfdfd; padding: 20px; text-align: center; margin: 30px auto; width: 80%; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .terminal-target { border: 3px solid var(--cex-color); border-radius: 8px; padding: 20px; background: #fff; }
+        .terminal-header { font-weight: bold; color: var(--cex-color); font-size: 14pt; margin-bottom: 10px; }
+        .terminal-sub { font-weight: bold; color: #999; text-transform: uppercase; font-size: 10pt; margin-top: 15px; letter-spacing: 1px; }
+
+        /* Graph Container */
+        #network-graph { width: 100%; height: 500px; border: 1px solid var(--border-light); background: #fafafa; margin: 15px 0; border-radius: 4px; }
+
+        /* Footer */
+        .doc-footer {
+            position: absolute; bottom: 1cm; left: 2cm; right: 2cm; display: flex; justify-content: space-between;
+            font-size: 8pt; color: #888; border-top: 1px solid #eee; padding-top: 10px;
+        }
+
+        @media print {
+            body { background: white; }
+            .action-bar { display: none !important; }
+            .page-wrapper { margin-top: 0; }
+            .page { box-shadow: none; margin: 0; width: 100%; padding: 1.5cm; page-break-after: always; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="action-bar" id="actionBar">
+        <div><strong>Lionsgate Network Forensics System</strong></div>
+        <div>
+            <label class="button" for="file-upload">Import Files</label>
+            <input type="file" id="file-upload" multiple style="display: none;" onchange="handleFileUpload(event)">
+            <button onclick="window.print()">Print</button>
+            <button onclick="generatePDF()">Export to PDF</button>
+        </div>
+    </div>
+
+    <div class="page-wrapper" id="report-content">
+        
+        <!-- PAGE 1: Overview -->
+        <div class="page">
+            {% if logo_base64 %}
+            <img src="{{ logo_base64 }}" alt="Lionsgate Logo" class="header-logo" style="width: 100px; max-height: 100px; object-fit: contain; margin-bottom: 20px;">
+            {% else %}
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Lion_shield.svg/1024px-Lion_shield.svg.png" alt="Logo Placeholder" class="header-logo" style="opacity: 0.8; filter: grayscale(100%);">
+            {% endif %}
+            <div class="header-title">LIONSGATE INTELLIGENCE NETWORK</div>
+            <div class="header-subtitle">BLOCKCHAIN FORENSIC TRACE REPORT</div>
+            <div class="header-tagline">CRYPTOCURRENCY RECOVERY | AI-ENHANCED ASSET TRACING</div>
+
+            <table class="meta-table">
+                <tr><td class="lbl">Report Reference</td><td class="val">LGN-US-{{ date_execution[:4] }}-{{ case_id }} / AI-TRACE-OMNI</td></tr>
+                <tr><td class="lbl">Analytic Engine</td><td class="val">NEMESIS ID (BALIF v2.0) w/ AI Recombination Heuristics</td></tr>
+                <tr><td class="lbl">Assets Traced</td><td class="val">{{ target_asset }}</td></tr>
+                <tr>
+                    <td class="lbl">Identified Suspect Wallets (Origin Seeds)</td>
+                    <td class="val red-mono">{{ suspect_wallet_list | safe }}</td>
+                </tr>
+                <tr><td class="lbl">Prepared For</td><td class="val">Law Enforcement Cyber / Financial Crimes Unit (CALEO Support)</td></tr>
+                <tr><td class="lbl">Date of Report</td><td class="val">{{ date_execution }}</td></tr>
+            </table>
+
+            <h2>Case Overview</h2>
+            <table class="meta-table" style="border: none;">
+                <tr><td class="lbl" style="background: none; width: 25%; border: none; padding: 5px 0;">Complainant:</td><td class="val" style="border: none; padding: 5px 0; font-family: inherit;">Victim Profile Extracted</td></tr>
+                <tr><td class="lbl" style="background: none; width: 25%; border: none; padding: 5px 0;">Reported Net Loss:</td><td class="val" style="border: none; padding: 5px 0; font-family: inherit;">{{ target_amount }} {{ target_asset }}</td></tr>
+            </table>
+
+            <div class="narrative-box">
+                <div class="narrative-title">EVIDENTIARY TRACE NARRATIVE FOR MOTIONS / WARRANTS</div>
+                {{ narrative_html | safe }}
+            </div>
+
+            <div class="doc-footer">
+                <span>{{ file_path }}</span><span>1/{{ total_pages }}</span>
+            </div>
+        </div>
+
+        <!-- PAGE 2: Chronological Flow of Funds -->
+        <div class="page">
+            <h2>FULL CHRONOLOGICAL FLOW OF FUNDS</h2>
+            
+            <div class="legend">
+                <span>GRAPH FILTERS WITH COLOR CODING PATH LINES:</span>
+                <span><div class="legend-box" style="border-color: var(--victim-color);"></div> Victim Origin</span>
+                <span><div class="legend-box" style="border-color: var(--suspect-color);"></div> Suspect Seeds</span>
+                <span><div class="legend-box" style="border-color: var(--mixing-color); border-style: dashed;"></div> Mixing/Fragmentation</span>
+                <span><div class="legend-box" style="border-color: var(--consolidation-color);"></div> Terminal Consolidation</span>
+                <span><div class="legend-box" style="border-color: var(--cex-color);"></div> CEX Offramp (Binance)</span>
+            </div>
+
+            {{ flow_steps_html | safe }}
+
+            <div class="doc-footer">
+                <span>{{ file_path }}</span><span>2/{{ total_pages }}</span>
+            </div>
+        </div>
+
+        <!-- PAGE 3: Evidentiary Proof Master Graph -->
+        <div class="page" style="overflow: hidden; padding: 0;">
+            <div style="width: 29.7cm; height: 21cm; transform: rotate(90deg) translateY(-21cm); transform-origin: top left; padding: 1.5cm 2cm; box-sizing: border-box;">
+                <h2 style="margin-top: 0;">EXHIBIT A: EVIDENTIARY PROOF</h2>
+                <div style="font-weight: bold; color: var(--primary-blue); font-size: 11pt; margin-bottom: 10px;">MASTER GRAPH VISUALIZATION: Full Chronological Flow From Victim Origin to Terminal Endpoints</div>
+                
+                <div class="narrative-box" style="border-top: none; border-left: 3px solid var(--primary-blue);">
+                    <div class="narrative-title">EVIDENTIARY SUMMARY: AI-DRIVEN RECOMBINATION TRACING</div>
+                    {{ graph_narrative_html | safe }}
+                </div>
+
+                <div id="network-graph" style="width: 100%; height: 11cm; border: 1px solid var(--border-light); background: #fafafa; border-radius: 4px;"></div>
+
+                <div class="doc-footer" style="position: static; margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px;">
+                    <span>{{ file_path }}</span><span>3/{{ total_pages }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 4: Terminal Target & OSINT -->
+        <div class="page">
+            {{ terminal_target_html | safe }}
+
+            <h2>Threat Intelligence - OSINT REPORT</h2>
+            <div id="osint-content" style="font-size: 9.5pt; text-align: justify;">
+                {{ osint_report | safe }}
+            </div>
+
+            <div class="doc-footer">
+                <span>{{ file_path }}</span><span>4/{{ total_pages }}</span>
+            </div>
+        </div>
+
+        <!-- PAGE 5: Disclaimers -->
+        <div class="page">
+            <h2 style="margin-top: 0;">Scope of Services & Disclaimers</h2>
+            <div style="font-size: 9pt; color: #555; text-align: justify; line-height: 1.8;">
+                Lionsgate Network makes no warranties, whether express, implied, statutory, or otherwise, with respect to the services or deliverables provided in this report. Lionsgate Network specifically disclaims all implied warranties of merchantability, fitness for a particular purpose, non-infringement, and those arising from a course of dealing, usage, or trade, and all such warranties are excluded to the fullest extent permitted by law.<br><br>
+                Lionsgate Network will not be liable for any lost profits, business, contracts, revenues, goodwill, production, anticipated savings, loss of data, or costs of procuring substitute goods or services, or for any claim or demand against the company by any other party. In no event will Lionsgate Network be liable for consequential, incidental, special, indirect, or exemplary damages arising out of this agreement or any work statement, however caused and (to the fullest extent permitted by law) under any theory of liability—including negligence—even if Lionsgate Network has been advised of the possibility of such damages.<br><br>
+                Lionsgate Network supports your recovery journey by producing advanced forensic blockchain tracing and OSINT intelligence designed to document the flow of assets, identify relevant entities, and prepare the evidentiary foundation required for escalation.<br><br>
+                It is essential for clients to understand that law enforcement is the only authority empowered to subpoena, freeze, or seize funds. Our role is to strengthen your case, accelerate understanding, and provide detectives with the clearest possible roadmap for action—maximizing the probability of a successful recovery outcome.<br><br>
+                Lionsgate Network stands ready to collaborate with investigators, share findings, and assist in presenting your case through accurate, verified, and legally structured forensic evidence.<br><br>
+                <em>Lionsgate Network is on standby to support law enforcement detectives with forensic evidence and help facilitate the strongest outcome. You are not alone — we’ve got your back.</em>
+            </div>
+            
+            <div class="doc-footer">
+                <span>{{ file_path }}</span><span>5/{{ total_pages }}</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JS Logic -->
+    <script>
+        function generatePDF() {
+            const element = document.getElementById('report-content');
+            const opt = {
+              margin:       0,
+              filename:     'Lionsgate_Forensic_Report.pdf',
+              image:        { type: 'jpeg', quality: 0.98 },
+              html2canvas:  { scale: 2 },
+              jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('network-graph');
+            const rawNodes = {{ graph_nodes | safe }};
+            const rawEdges = {{ graph_edges | safe }};
+            const data = { nodes: new vis.DataSet(rawNodes), edges: new vis.DataSet(rawEdges) };
+            const options = {
+                nodes: { shape: 'box', font: { size: 10, face: 'Courier New' }, borderWidth: 2, margin: 10 },
+                edges: { width: 2, arrows: { to: { enabled: true, scaleFactor: 0.8 } }, font: { size: 9, align: 'top', face: 'Courier New' }, color: { color: '#999', highlight: '#333' } },
+                layout: { hierarchical: { direction: 'UD', sortMethod: 'directed', nodeSpacing: 150, levelSeparation: 150 } },
+                physics: false
+            };
+            new vis.Network(container, data, options);
+        });
+    </script>
+</body>
+</html>
