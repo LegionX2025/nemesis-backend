@@ -156,6 +156,8 @@ class DummyMongoCollection:
         pass
     async def find_one(self, filter):
         return None
+    async def count_documents(self, filter):
+        return 0
 
 class DummyMongoDB:
     def __getattr__(self, name):

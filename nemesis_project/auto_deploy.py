@@ -180,7 +180,8 @@ def main():
     check_binary_exists("npm")
     check_binary_exists("npx")
     print_log("    -> Installing Python requirements (Root)...")
-    run_cmd("pip install -r requirements.txt", exit_on_error=False)
+    if os.path.exists("requirements.txt"):
+        run_cmd("pip install -r requirements.txt", exit_on_error=False)
     
     if os.path.exists("cloudflare_worker/package.json"):
         print_log("    -> Installing Node.js requirements (cloudflare_worker)...")
@@ -192,11 +193,11 @@ def main():
         
     # Purge Git Cache
     print_log("    -> Purging git cache to avoid phantom files...")
-    run_cmd("git rm -r --cached .", exit_on_error=False)
-    run_cmd("git rm -rf local_deploy/", exit_on_error=False)
+    run_cmd("git rm -r -q --cached .", exit_on_error=False)
+    run_cmd("git rm -rf -q local_deploy/", exit_on_error=False)
     
     # Ensure .gitignore exists to prevent LFS issues
-    gitignore_content = "node_modules/\ncloudflare_worker/node_modules/\nvenv/\n__pycache__/\n.env\n"
+    gitignore_content = "node_modules/\ncloudflare_worker/node_modules/\nvenv/\n__pycache__/\n.env\npython_modules/\n"
     if not os.path.exists(".gitignore"):
         with open(".gitignore", "w", encoding="utf-8") as f:
             f.write(gitignore_content)
