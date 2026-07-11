@@ -54,6 +54,13 @@ class RecursiveTracer:
                 parsed_edges = await self.parse_state_transition(session, tx, tx_type, resolved_chain, seed)
                 if parsed_edges:
                     edges_to_insert.extend(parsed_edges)
+                    if progress_callback:
+                        for e in parsed_edges:
+                            try:
+                                await progress_callback(e, True)
+                            except TypeError:
+                                # Fallback if progress_callback doesn't accept two arguments
+                                pass
         
         if edges_to_insert:
             for e in edges_to_insert:

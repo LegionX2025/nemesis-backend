@@ -32,6 +32,15 @@ def main():
     # Assumes wrangler is installed and authenticated
     frontend_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "frontend")
     if os.path.exists(frontend_dir):
+        import shutil
+        import os
+        static_src = os.path.join(frontend_dir, "static")
+        static_dst = os.path.join(frontend_dir, "templates", "static")
+        if os.path.exists(static_src):
+            if os.path.exists(static_dst):
+                shutil.rmtree(static_dst)
+            shutil.copytree(static_src, static_dst)
+            
         run_command(f"cd {frontend_dir} && npx wrangler pages deploy templates --project-name nemesis-frontend", "Deploying Cloudflare Pages")
     
     # 3b. Deploy Cloudflare Global Worker (Backend/API)

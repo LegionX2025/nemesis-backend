@@ -776,17 +776,9 @@ class OmniChainEngineWrapper:
     async def run(self):
         self.is_running = True
         try:
-            async def progress_cb(msg):
-                for ws in list(self.clients):
-                    try:
-                        await ws.send_json({"type": "PROGRESS", "message": msg})
-                    except:
-                        pass
-
-            for suspect_wallet in self.seeds:
-                async for edge in self.tracer.start_omni_trace_bfs(suspect_wallet, max_depth=100000, progress_callback=progress_cb):
-                    # Convert edge dict to TraceEngine style payload for UI
-                    # Calculate USD Estimate
+            async def progress_cb(msg_or_edge, is_edge=False):
+                if is_edge:
+                    edge = msg_or_edge
                     asset = str(edge.get('asset', 'UNKNOWN')).upper()
                     try: amount_val = float(edge.get('amount', 0))
                     except: amount_val = 0.0
@@ -803,6 +795,7 @@ class OmniChainEngineWrapper:
                     amount_str = f"{amount_val:,.4f} {asset} (~${usd_val:,.2f} USD)" if usd_val > 0 else f"{amount_val:,.4f} {asset}"
                     
                     import datetime, random
+                    suspect_wallet = engine.seeds[0] if engine.seeds else "UNKNOWN"
                     node = {
                         "type": "TRANSFER",
                         "typeStr": edge.get("edge_type", "TRANSFER"),
@@ -831,14 +824,25 @@ class OmniChainEngineWrapper:
                         "Transaction intelligence": "Clean"
                     }
                     async with self.state_lock:
-                        self.ledger.append(node)
+                        if node not in self.ledger:
+                            self.ledger.append(node)
                     
                     for ws in list(self.clients):
                         try:
                             await ws.send_json(node)
                         except:
                             self.clients.discard(ws)
-                            
+                else:
+                    for ws in list(self.clients):
+                        try:
+                            await ws.send_json({"type": "PROGRESS", "message": msg_or_edge})
+                        except:
+                            pass
+
+            for suspect_wallet in self.seeds:
+                async for edge in self.tracer.start_omni_trace_bfs(suspect_wallet, max_depth=100000, progress_callback=progress_cb):
+                    # We skip sending here because progress_cb(edge, True) handles it,
+                    # but we keep this to satisfy the generator and calculate target_amount break condition.
                     if edge.get("edge_type") == "TRANSFER" and edge.get("amount"):
                         if self.target_amount > 0 and abs(float(edge["amount"]) - self.target_amount) / self.target_amount < 0.05:
                             logger.info(f"Target amount matched: {edge['tx_hash']}")
