@@ -16,8 +16,14 @@ def main():
     print("==================================================")
 
     # 1. Sync with GitHub
-    run_command("git add . && git commit -m \"Auto-deploy: GBEO v3 architecture\" && git push origin main", "Syncing with GitHub")
-
+    print("\n🚀 Syncing with GitHub...")
+    # Add files and check if there are changes before committing
+    subprocess.run("git add .", shell=True)
+    status_result = subprocess.run("git diff --staged --quiet", shell=True)
+    if status_result.returncode != 0:
+        run_command('git commit -m "Auto-deploy: GBEO v3 architecture" && git push origin main', "Committing and Pushing to GitHub")
+    else:
+        print("✅ No new changes to commit. Proceeding...")
     # 2. Build Render Backend
     # Assumes Render is connected to GitHub and triggers on push, but we could also hit a deploy hook if provided.
     print("\n🚀 Render Backend build triggered automatically via GitHub Push...")
