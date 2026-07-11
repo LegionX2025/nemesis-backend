@@ -1,0 +1,7 @@
+name = "nemesis-python-backend"
+main = "app/main.py"
+compatibility_date = "2024-03-20"
+compatibility_flags = ["python_workers"]
+
+[vars]
+APP_MODE = "production"

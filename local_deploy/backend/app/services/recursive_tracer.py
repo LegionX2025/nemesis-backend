@@ -4,7 +4,10 @@ from datetime import datetime
 from services.database import db_instance
 from services.trace_engine import TraceEngine, detect_chain, EVM_DOMAINS
 import aiohttp
-import pymongo
+try:
+    import pymongo
+except ImportError:
+    pymongo = None
 from services.api_rotator import api_rotator
 from services.mixer_heuristics import MixerCorrelationEngine
 from services.bridge_resolver import BridgeResolver
@@ -76,13 +79,14 @@ class RecursiveTracer:
                     upsert=True
                 )
             if edges_to_insert:
-                try:
-                    requests = [pymongo.UpdateOne({"_id": edge["_id"]}, {"$set": edge}, upsert=True) for edge in edges_to_insert]
-                    self.edges_col.bulk_write(requests, ordered=False)
-                except pymongo.errors.BulkWriteError:
-                    pass
-                except Exception as e:
-                    logger.error(f"MongoDB Insert Error: {e}")
+                if pymongo is not None:
+                    try:
+                        requests = [pymongo.UpdateOne({"_id": edge["_id"]}, {"$set": edge}, upsert=True) for edge in edges_to_insert]
+                        self.edges_col.bulk_write(requests, ordered=False)
+                    except pymongo.errors.BulkWriteError:
+                        pass
+                    except Exception as e:
+                        logger.error(f"MongoDB Insert Error: {e}")
         
         return len(edges_to_insert)
 
