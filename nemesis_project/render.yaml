@@ -1,7 +1,10 @@
 services:
   - type: web
     name: nemesis-backend
-    env: docker
+    env: python
+    rootDir: nemesis_project
+    buildCommand: "pip install --upgrade pip && pip install -r requirements.txt && playwright install chromium"
+    startCommand: "python main.py"
     region: oregon
     plan: starter # Can be changed to 'free' if preferred
     healthCheckPath: /
