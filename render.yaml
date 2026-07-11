@@ -1,7 +1,9 @@
 services:
   - type: web
     name: nemesis-backend
-    env: docker
+    env: python
+    buildCommand: "pip install -r requirements.txt && playwright install --with-deps chromium"
+    startCommand: "uvicorn api.server:app --host 0.0.0.0 --port $PORT"
     region: oregon
     plan: starter # Can be changed to 'free' if preferred
     healthCheckPath: /
