@@ -1,9 +1,9 @@
 import asyncio
 import json
 import logging
+import os
 from playwright.async_api import async_playwright
 from datetime import datetime, timezone
-from config import APP_CONFIG
 
 logger = logging.getLogger("PlaywrightScraper")
 
@@ -68,7 +68,7 @@ class HeadlessExplorerScraper:
         Bypasses Cloudflare and parses the DOM to extract transactions
         when APIs fail or rotate out.
         """
-        if APP_CONFIG.get("ICF_USE_BROWSER_SCRAPER", "false").lower() != "true":
+        if os.environ.get("ICF_USE_BROWSER_SCRAPER", "false").lower() != "true":
             logger.warning("Browser scraper disabled in .env")
             return []
 

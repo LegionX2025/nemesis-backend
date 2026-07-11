@@ -18,7 +18,12 @@ class ThreatIntelEngine:
     async def init_db(self):
         if not self.db:
             await db_engine.connect()
-            self.db = db_engine.db
+            from services.database_connector import db_connector
+            if db_connector.mongo_db is not None:
+                self.db = db_engine.db
+            else:
+                self.db = None
+                logger.warning("[THREAT_INTEL] Database is offline. Running in memory-only mode.")
 
     async def _get_session(self):
         if not self.session:
@@ -55,9 +60,12 @@ class ThreatIntelEngine:
                                 })
                     
                     if records:
-                        await self.db.threat_intel.delete_many({"source": "CFTC"})
-                        await self.db.threat_intel.insert_many(records)
-                        logger.info(f"[THREAT_INTEL] Ingested {len(records)} CFTC RED List records.")
+                        if self.db:
+                            await self.db.threat_intel.delete_many({"source": "CFTC"})
+                            await self.db.threat_intel.insert_many(records)
+                            logger.info(f"[THREAT_INTEL] Ingested {len(records)} CFTC RED List records.")
+                        else:
+                            logger.info(f"[THREAT_INTEL] Memory Mode: {len(records)} CFTC RED List records found (Not Saved).")
                 else:
                     logger.warning(f"[THREAT_INTEL] CFTC fetch failed: HTTP {resp.status}")
         except Exception as e:
@@ -98,8 +106,11 @@ class ThreatIntelEngine:
                     if records:
                         # De-duplicate by entity name
                         unique_records = {r['entity_name']: r for r in records}.values()
-                        await self.db.threat_intel.insert_many(list(unique_records))
-                        logger.info(f"[THREAT_INTEL] Ingested {len(unique_records)} SEC Entity flags.")
+                        if self.db:
+                            await self.db.threat_intel.insert_many(list(unique_records))
+                            logger.info(f"[THREAT_INTEL] Ingested {len(unique_records)} SEC Entity flags.")
+                        else:
+                            logger.info(f"[THREAT_INTEL] Memory Mode: {len(unique_records)} SEC Entity flags found (Not Saved).")
         except Exception as e:
             logger.error(f"[THREAT_INTEL] SEC Scraper Error: {e}")
 
@@ -128,9 +139,12 @@ class ThreatIntelEngine:
                                     "ingested_at": datetime.utcnow().isoformat()
                                 })
                         if records:
-                            await self.db.threat_intel.delete_many({"source": "GITHUB_IOC"})
-                            await self.db.threat_intel.insert_many(records)
-                            logger.info(f"[THREAT_INTEL] Ingested {len(records)} Crypto IoC addresses.")
+                            if self.db:
+                                await self.db.threat_intel.delete_many({"source": "GITHUB_IOC"})
+                                await self.db.threat_intel.insert_many(records)
+                                logger.info(f"[THREAT_INTEL] Ingested {len(records)} Crypto IoC addresses.")
+                            else:
+                                logger.info(f"[THREAT_INTEL] Memory Mode: {len(records)} Crypto IoC addresses found (Not Saved).")
                     except json.JSONDecodeError:
                         pass
         except Exception as e:
@@ -156,9 +170,12 @@ class ThreatIntelEngine:
                             "ingested_at": datetime.utcnow().isoformat()
                         })
                     if records:
-                        await self.db.threat_intel.delete_many({"source": "OFAC"})
-                        await self.db.threat_intel.insert_many(records)
-                        logger.info(f"[THREAT_INTEL] Ingested {len(records)} OFAC Sanctioned addresses.")
+                        if self.db:
+                            await self.db.threat_intel.delete_many({"source": "OFAC"})
+                            await self.db.threat_intel.insert_many(records)
+                            logger.info(f"[THREAT_INTEL] Ingested {len(records)} OFAC sanctioned addresses.")
+                        else:
+                            logger.info(f"[THREAT_INTEL] Memory Mode: {len(records)} OFAC sanctioned addresses found (Not Saved).")
         except Exception as e:
             logger.error(f"[THREAT_INTEL] OFAC Scraper Error: {e}")
             

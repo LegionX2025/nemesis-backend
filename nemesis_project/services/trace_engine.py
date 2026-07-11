@@ -158,6 +158,7 @@ CONFIG = {
     "TATUM_API_KEY": os.getenv("TATUM_API_KEY", ""),
     "ANKR_API_KEY": os.getenv("ANKR_API_KEY", ""),
     "INFURA_API_KEY": os.getenv("INFURA_API_KEY", ""),
+    "BITQUERY_API_TOKEN": os.getenv("BITQUERY_API_TOKEN", "df03db15-748d-481c-98a6-c31a48898c11"),
     "GETBLOCK_BTC_KEY": os.getenv("GETBLOCK_BTC_KEY", ""),
     "GETBLOCK_ETH_KEY": os.getenv("GETBLOCK_ETH_KEY", ""),
     "GETBLOCK_SOL_KEY": os.getenv("GETBLOCK_SOL_KEY", ""),
@@ -980,6 +981,48 @@ class TraceEngine:
                 except: pass
             return results
 
+        async def fetch_bitquery():
+            results = []
+            bq_key = CONFIG.get("BITQUERY_API_TOKEN")
+            if bq_key and actual_chain in ["ETHEREUM", "BSC", "POLYGON"]:
+                bq_url = "https://streaming.bitquery.io/graphql"
+                headers = {"Content-Type": "application/json", "Authorization": f"Bearer {bq_key}"}
+                query = """
+                query ($network: evm_network, $address: String) {
+                  EVM(network: $network, dataset: combined) {
+                    Transfers(
+                      where: {any: [{Transfer: {Sender: {eq: $address}}}, {Transfer: {Receiver: {eq: $address}}}]}
+                      limit: {count: 50}
+                      orderBy: {descending: Block_Time}
+                    ) {
+                      Transaction { Hash }
+                      Transfer { Sender Receiver Amount }
+                      Block { Time }
+                    }
+                  }
+                }
+                """
+                net_map = {"ETHEREUM": "eth", "BSC": "bsc", "POLYGON": "matic"}
+                payload = {"query": query, "variables": {"network": net_map[actual_chain], "address": addr.lower()}}
+                try:
+                    async with session.post(bq_url, json=payload, headers=headers, timeout=10) as r:
+                        if r.status == 200:
+                            data = await r.json()
+                            for t in data.get("data", {}).get("EVM", {}).get("Transfers", []):
+                                try:
+                                    ts_str = t.get("Block", {}).get("Time", "")
+                                    ts = str(int(datetime.fromisoformat(ts_str.replace("Z", "+00:00")).timestamp())) if ts_str else str(int(datetime.now(timezone.utc).timestamp()))
+                                except: ts = str(int(datetime.now(timezone.utc).timestamp()))
+                                results.append({
+                                    "hash": t.get("Transaction", {}).get("Hash"),
+                                    "from": t.get("Transfer", {}).get("Sender"),
+                                    "to": t.get("Transfer", {}).get("Receiver"),
+                                    "value": str(t.get("Transfer", {}).get("Amount", 0)),
+                                    "timeStamp": ts
+                                })
+                except: pass
+            return results
+
         # -------------------------------------------------------------
         # 🐝 SWARM AGENT EXECUTION: Parallel fetching from all APIs
         # -------------------------------------------------------------
@@ -987,6 +1030,7 @@ class TraceEngine:
         swarm_tasks.append(fetch_ankr())
         swarm_tasks.append(fetch_blockscout())
         swarm_tasks.append(fetch_tatum())
+        swarm_tasks.append(fetch_bitquery())
         
         logger.info(f"Dispatching Swarm Agents for {addr} on {actual_chain} (Tasks: {len(swarm_tasks)})")
         swarm_results = await asyncio.gather(*swarm_tasks, return_exceptions=True)

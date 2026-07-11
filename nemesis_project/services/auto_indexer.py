@@ -9,7 +9,8 @@ class AutoDynamicIndexer:
         self.default_docs = [
             "https://developers.cloudflare.com/fundamentals/api/get-started/",
             "https://docs.render.com/api",
-            "https://docs.github.com/en/rest"
+            "https://docs.github.com/en/rest",
+            "https://docs.bitquery.io/docs/category/graphql-api/"
         ]
         self.kb_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "knowledge_base")
         os.makedirs(self.kb_dir, exist_ok=True)
