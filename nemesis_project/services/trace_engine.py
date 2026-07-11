@@ -159,6 +159,7 @@ CONFIG = {
     "ANKR_API_KEY": os.getenv("ANKR_API_KEY", ""),
     "INFURA_API_KEY": os.getenv("INFURA_API_KEY", ""),
     "BITQUERY_API_TOKEN": os.getenv("BITQUERY_API_TOKEN", "df03db15-748d-481c-98a6-c31a48898c11"),
+    "BITQUERY_V2_TOKEN": os.getenv("BITQUERY_V2_TOKEN", ""),
     "GETBLOCK_BTC_KEY": os.getenv("GETBLOCK_BTC_KEY", ""),
     "GETBLOCK_ETH_KEY": os.getenv("GETBLOCK_ETH_KEY", ""),
     "GETBLOCK_SOL_KEY": os.getenv("GETBLOCK_SOL_KEY", ""),
@@ -983,7 +984,7 @@ class TraceEngine:
 
         async def fetch_bitquery():
             results = []
-            bq_key = CONFIG.get("BITQUERY_API_TOKEN")
+            bq_key = CONFIG.get("BITQUERY_V2_TOKEN") or CONFIG.get("BITQUERY_API_TOKEN")
             if bq_key and actual_chain in ["ETHEREUM", "BSC", "POLYGON"]:
                 bq_url = "https://streaming.bitquery.io/graphql"
                 headers = {"Content-Type": "application/json", "Authorization": f"Bearer {bq_key}"}
