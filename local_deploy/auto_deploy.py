@@ -34,6 +34,11 @@ def main():
     if os.path.exists(frontend_dir):
         run_command(f"cd {frontend_dir} && npx wrangler pages deploy templates --project-name nemesis-frontend", "Deploying Cloudflare Pages")
     
+    # 3b. Deploy Cloudflare Global Worker (Backend/API)
+    worker_dir = os.path.join(frontend_dir, "nemesis-global-worker")
+    if os.path.exists(worker_dir):
+        run_command(f"cd {worker_dir} && npx wrangler deploy", "Deploying Cloudflare Global Worker API")
+    
     # 4. Deploy Cloudflare Edge Proxy (if applicable)
     print("\n🚀 Cloudflare Edge proxy updated via wrangler configurations...")
 

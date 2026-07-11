@@ -3,8 +3,6 @@ main = "src/index.ts"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
 
-
-
 # ============================================================================
 # KV NAMESPACES
 # ============================================================================
@@ -103,11 +101,10 @@ id = "2bf62864eaf64708b5a349169d6efc7e"
 localConnectionString = "postgresql://admin:nemesis2026@ep-morning-glitter-adpz0uqn-pooler.c-2.us-east-1.aws.neon.tech:5432/intelligence"
 
 # ============================================================================
-# ENVIRONMENT VARIABLES
+# ENVIRONMENT VARIABLES (NON-SENSITIVE ONLY)
 # ============================================================================
 [vars]
-PYTHON_BACKEND_URL = "https://nemesis-backend-rwp4.onrender.com"
+PYTHON_BACKEND_URL = "https://nemesis-python-worker.legionxgaming2021.workers.dev"
 NODE_ENV = "production"
 APP_NAME = "nemesis-platform"
 APP_MODE = "production"
-

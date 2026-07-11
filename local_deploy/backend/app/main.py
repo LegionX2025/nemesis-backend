@@ -776,8 +776,15 @@ class OmniChainEngineWrapper:
     async def run(self):
         self.is_running = True
         try:
+            async def progress_cb(msg):
+                for ws in list(self.clients):
+                    try:
+                        await ws.send_json({"type": "PROGRESS", "message": msg})
+                    except:
+                        pass
+
             for suspect_wallet in self.seeds:
-                async for edge in self.tracer.start_omni_trace_bfs(suspect_wallet, max_depth=100000):
+                async for edge in self.tracer.start_omni_trace_bfs(suspect_wallet, max_depth=100000, progress_callback=progress_cb):
                     # Convert edge dict to TraceEngine style payload for UI
                     # Calculate USD Estimate
                     asset = str(edge.get('asset', 'UNKNOWN')).upper()
@@ -1955,8 +1962,14 @@ async def legacy_trace_websocket(websocket: WebSocket):
                 async def run_legacy_trace():
                     from services.recursive_tracer import RecursiveTracer
                     tracer = RecursiveTracer()
+                    async def progress_cb(msg):
+                        try:
+                            await websocket.send_json({"type": "PROGRESS", "message": msg})
+                        except:
+                            pass
+
                     for seed in seeds_list:
-                        async for edge in tracer.start_omni_trace_bfs(seed, max_depth=100000):
+                        async for edge in tracer.start_omni_trace_bfs(seed, max_depth=100000, progress_callback=progress_cb):
                             asset = str(edge.get('asset', 'UNKNOWN')).upper()
                             try: amount_val = float(edge.get('amount', 0))
                             except: amount_val = 0.0

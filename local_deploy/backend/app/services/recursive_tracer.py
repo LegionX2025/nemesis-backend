@@ -28,21 +28,21 @@ class RecursiveTracer:
         self.mixer_engine = MixerCorrelationEngine(self.db)
         self.bridge_resolver = BridgeResolver(self.db)
     
-    async def ingest_wallet_transactions(self, seed: str, chain: str) -> int:
+    async def ingest_wallet_transactions(self, seed: str, chain: str, progress_callback=None) -> int:
         """Fetches transactions for a wallet from the fallback tier and ingests into Graph DB"""
         if not self.session:
             async with aiohttp.ClientSession() as session:
-                return await self._do_ingest(session, seed, chain)
-        return await self._do_ingest(self.session, seed, chain)
+                return await self._do_ingest(session, seed, chain, progress_callback)
+        return await self._do_ingest(self.session, seed, chain, progress_callback)
         
-    async def _do_ingest(self, session, seed: str, chain: str) -> int:
+    async def _do_ingest(self, session, seed: str, chain: str, progress_callback=None) -> int:
         edges_to_insert = []
         
         # If EVM_AUTO, fan out to all supported EVM networks to find cross-chain activity
         chains_to_fetch = list(EVM_DOMAINS.keys()) if chain == "EVM_AUTO" else [chain]
         
         # Swarm Fetch handles the parallel tier-based fallback logic natively per-chain
-        swarm_data = await swarm_instance.swarm_fetch(session, seed, chains_to_fetch)
+        swarm_data = await swarm_instance.swarm_fetch(session, seed, chains_to_fetch, progress_callback)
         
         for resolved_chain, tx_list in swarm_data.items():
             if not tx_list:
@@ -394,35 +394,35 @@ class RecursiveTracer:
                 
         return correlated_withdrawals
 
-    async def start_omni_trace(self, suspect_wallet: str, max_depth: int = 3):
+    async def start_omni_trace(self, suspect_wallet: str, max_depth: int = 3, progress_callback=None):
         """Orchestrator to ensure all EVM chains are ingested before tracing starts."""
         suspect_wallet = suspect_wallet.lower()
         chain = detect_chain(suspect_wallet)
         if chain == "EVM_AUTO":
             logger.info(f"Detected EVM wallet. Commencing Omni-Chain Ingestion across {len(EVM_DOMAINS)} networks...")
             # Fan out ingest requests across all EVM networks
-            tasks = [self.ingest_wallet_transactions(suspect_wallet, evm_chain) for evm_chain in EVM_DOMAINS.keys()]
+            tasks = [self.ingest_wallet_transactions(suspect_wallet, evm_chain, progress_callback) for evm_chain in EVM_DOMAINS.keys()]
             await asyncio.gather(*tasks, return_exceptions=True)
             logger.info("Omni-Chain Ingestion Complete.")
         else:
             if chain != "INVALID":
                 logger.info(f"Commencing Single-Chain Ingestion for {chain}...")
-                await self.ingest_wallet_transactions(suspect_wallet, chain)
+                await self.ingest_wallet_transactions(suspect_wallet, chain, progress_callback)
 
-        async for edge in self.trace_from_entity(suspect_wallet, depth=0, max_depth=max_depth):
+        async for edge in self.trace_from_entity(suspect_wallet, depth=0, max_depth=max_depth, progress_callback=progress_callback):
             yield edge
 
-    async def start_omni_trace_bfs(self, suspect_wallet: str, max_depth: int = 1000000):
+    async def start_omni_trace_bfs(self, suspect_wallet: str, max_depth: int = 1000000, progress_callback=None):
         """Breadth-First Search Orchestrator for tracing."""
         suspect_wallet = suspect_wallet.lower()
         chain = detect_chain(suspect_wallet)
         if chain == "EVM_AUTO":
             logger.info(f"[BFS] Detected EVM wallet. Commencing Omni-Chain Ingestion...")
-            tasks = [self.ingest_wallet_transactions(suspect_wallet, evm_chain) for evm_chain in EVM_DOMAINS.keys()]
+            tasks = [self.ingest_wallet_transactions(suspect_wallet, evm_chain, progress_callback) for evm_chain in EVM_DOMAINS.keys()]
             await asyncio.gather(*tasks, return_exceptions=True)
         elif chain != "INVALID":
             logger.info(f"[BFS] Commencing Single-Chain Ingestion for {chain}...")
-            await self.ingest_wallet_transactions(suspect_wallet, chain)
+            await self.ingest_wallet_transactions(suspect_wallet, chain, progress_callback)
 
         queue = [(suspect_wallet, 0)]
         visited = {suspect_wallet}
@@ -441,7 +441,7 @@ class RecursiveTracer:
                 ent = self.entities_col.find_one({"_id": current_entity})
                 c = ent["chain"] if ent else detect_chain(current_entity)
                 if c != "INVALID":
-                    await self.ingest_wallet_transactions(current_entity, c)
+                    await self.ingest_wallet_transactions(current_entity, c, progress_callback)
                     edges = list(self.edges_col.find({"from": current_entity}))
 
             edges.sort(key=lambda x: float(x.get("amount", 0)), reverse=True)
@@ -492,7 +492,7 @@ class RecursiveTracer:
                         visited.add(nxt)
                         queue.append((nxt, depth + 1))
 
-    async def trace_from_entity(self, entity_id: str, depth=0, max_depth=2, visited=None):
+    async def trace_from_entity(self, entity_id: str, depth=0, max_depth=2, visited=None, progress_callback=None):
         """Recursive graph traversal for state transitions via async generator."""
         entity_id = entity_id.lower()
         if visited is None: visited = set()
@@ -509,7 +509,7 @@ class RecursiveTracer:
             ent = self.entities_col.find_one({"_id": entity_id})
             chain = ent["chain"] if ent else detect_chain(entity_id)
             if chain != "INVALID":
-                await self.ingest_wallet_transactions(entity_id, chain)
+                await self.ingest_wallet_transactions(entity_id, chain, progress_callback)
                 edges = list(self.edges_col.find({"from": entity_id}))
 
         edges.sort(key=lambda x: float(x.get("amount", 0)), reverse=True)
@@ -517,7 +517,7 @@ class RecursiveTracer:
         for edge in edges:
             yield edge
             
-            async for sub_edge in self.trace_from_entity(edge["to"], depth+1, max_depth, visited):
+            async for sub_edge in self.trace_from_entity(edge["to"], depth+1, max_depth, visited, progress_callback):
                 yield sub_edge
             
             # 1. Handle Bridges
@@ -530,7 +530,7 @@ class RecursiveTracer:
                     )
                     
                 if linked:
-                    async for sub_edge in self.trace_from_entity(linked["bridge_entity"], depth+1, max_depth, visited):
+                    async for sub_edge in self.trace_from_entity(linked["bridge_entity"], depth+1, max_depth, visited, progress_callback):
                         yield sub_edge
                     
             # 2. Handle Mixers
@@ -542,7 +542,7 @@ class RecursiveTracer:
                 )
                 for medge in mixer_edges:
                     yield medge
-                    async for sub_edge in self.trace_from_entity(medge["to"], depth+1, max_depth, visited):
+                    async for sub_edge in self.trace_from_entity(medge["to"], depth+1, max_depth, visited, progress_callback):
                         yield sub_edge
                     
             # 3. Handle Identity Linking
@@ -550,7 +550,7 @@ class RecursiveTracer:
             for art in artifacts:
                 for e in art.get("linked_entities", []):
                     if e != edge["to"]:
-                        async for sub_edge in self.trace_from_entity(e, depth+1, max_depth, visited):
+                        async for sub_edge in self.trace_from_entity(e, depth+1, max_depth, visited, progress_callback):
                             yield sub_edge
                         
             # 4. Handle CEX Internal Ledgers

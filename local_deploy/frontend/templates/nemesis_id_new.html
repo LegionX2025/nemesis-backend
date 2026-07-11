@@ -327,40 +327,14 @@
                     <h3 class="font-mono text-xs font-bold text-slate-700 uppercase mb-3 border-b border-slate-200 pb-2"><i class="fa-solid fa-globe text-blue-400 mr-2"></i> Global Identity Resolution</h3>
                     <div class="bg-slate-50 rounded p-4 border border-slate-200 mb-6 flex flex-col md:flex-row items-center justify-between gap-4 font-mono text-[10px]">
                         <!-- Hyper Node Visualization -->
-                        <div class="flex items-center gap-2">
-                            <div class="text-center">
-                                <div class="w-12 h-12 rounded-full bg-blue-600/20 border border-blue-500 flex items-center justify-center mx-auto mb-1">
-                                    <i class="fa-brands fa-github text-xl text-blue-400"></i>
-                                </div>
-                                <span class="text-slate-600">@vbuterin</span>
-                            </div>
-                            <i class="fa-solid fa-link text-slate-600"></i>
-                            <div class="text-center">
-                                <div class="w-12 h-12 rounded-full bg-emerald-600/20 border border-emerald-500 flex items-center justify-center mx-auto mb-1">
-                                    <i class="fa-solid fa-wallet text-xl text-emerald-400"></i>
-                                </div>
-                                <span class="text-emerald-400 font-bold">Wallet</span>
-                            </div>
-                            <i class="fa-solid fa-link text-slate-600"></i>
-                            <div class="text-center">
-                                <div class="w-12 h-12 rounded-full bg-purple-600/20 border border-purple-500 flex items-center justify-center mx-auto mb-1">
-                                    <i class="fa-brands fa-twitter text-xl text-purple-400"></i>
-                                </div>
-                                <span class="text-slate-600">@VitalikButerin</span>
-                            </div>
-                            <i class="fa-solid fa-link text-slate-600"></i>
-                            <div class="text-center">
-                                <div class="w-12 h-12 rounded-full bg-amber-600/20 border border-amber-500 flex items-center justify-center mx-auto mb-1">
-                                    <i class="fa-solid fa-globe text-xl text-amber-400"></i>
-                                </div>
-                                <span class="text-slate-600">vitalik.eth</span>
-                            </div>
+                        <div class="flex items-center gap-2" id="identity-resolution-graph">
+                            <span class="text-slate-500 italic">Awaiting AI graph resolution...</span>
                         </div>
                         
                         <!-- Attribution Confidence -->
                         <div class="bg-white p-3 rounded border border-slate-600 text-right">
                             <span class="text-slate-600 block mb-1">Attribution Confidence</span>
-                            <span class="text-2xl font-black text-emerald-500" id="meta-attribution-confidence">99.5%</span>
+                            <span class="text-2xl font-black text-emerald-500" id="meta-attribution-confidence">...</span>
                             <span class="text-[8px] text-slate-500 block mt-1">Based on Verified Evidence Vectors</span>
                         </div>
                     </div>
@@ -379,14 +353,14 @@
                         <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">First Activity</span><span class="text-slate-900 font-bold" id="meta-first-act">Loading...</span></div>
                         <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">Last Activity</span><span class="text-slate-900 font-bold" id="meta-last-act">Loading...</span></div>
                         <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">Total Transactions</span><span class="text-slate-900 font-black" id="meta-total-tx">0</span></div>
-                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">Total Inbound</span><span class="text-emerald-600 font-bold usd-value" id="meta-total-in-usd">$84,500,000</span><span class="text-emerald-600 font-bold native-value" id="meta-total-in-native">26,500 ETH</span></div>
-                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">Total Outbound</span><span class="text-red-600 font-bold usd-value" id="meta-total-out-usd">$83,047,109</span><span class="text-red-600 font-bold native-value" id="meta-total-out-native">26,047 ETH</span></div>
-                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">Current Balance</span><span class="text-blue-600 font-bold usd-value" id="meta-balance-usd">$1,452,890</span><span class="text-blue-600 font-bold native-value" id="meta-balance-native">453 ETH</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">Total Inbound</span><span class="text-emerald-600 font-bold usd-value" id="meta-total-in-usd">Fetching...</span><span class="text-emerald-600 font-bold native-value" id="meta-total-in-native">...</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">Total Outbound</span><span class="text-red-600 font-bold usd-value" id="meta-total-out-usd">Fetching...</span><span class="text-red-600 font-bold native-value" id="meta-total-out-native">...</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">Current Balance</span><span class="text-blue-600 font-bold usd-value" id="meta-balance-usd">Fetching...</span><span class="text-blue-600 font-bold native-value" id="meta-balance-native">...</span></div>
                         <div class="flex justify-between pt-2">
                             <span class="text-slate-600">Funded By:</span>
                             <div class="text-right">
-                                <span class="text-purple-600 font-bold cursor-pointer hover:underline" onclick="openDossier('wallet', '0xd90e...31b')">0xd90e...31b (Mixer)</span><br>
-                                <span class="text-[8px]">TX: 0xab8f...9c1a</span>
+                                <span class="text-purple-600 font-bold cursor-pointer hover:underline" id="meta-funded-by">Loading...</span><br>
+                                <span class="text-[8px]" id="meta-funded-tx">TX: ...</span>
                             </div>
                         </div>
                     </div>
@@ -431,13 +405,13 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div class="data-card border-t-4 border-t-emerald-500">
                     <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Total Inbound Volume</p>
-                    <p class="font-mono text-3xl font-black text-emerald-600 val-usd">$84,500,000</p>
-                    <p class="font-mono text-3xl font-black text-emerald-600 val-native">26,500 ETH</p>
+                    <p class="font-mono text-3xl font-black text-emerald-600 val-usd" id="counterparty-total-in-usd">Fetching...</p>
+                    <p class="font-mono text-3xl font-black text-emerald-600 val-native" id="counterparty-total-in-native">...</p>
                 </div>
                 <div class="data-card border-t-4 border-t-red-500">
                     <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Total Outbound Volume</p>
-                    <p class="font-mono text-3xl font-black text-red-600 val-usd">$83,047,109</p>
-                    <p class="font-mono text-3xl font-black text-red-600 val-native">26,047 ETH</p>
+                    <p class="font-mono text-3xl font-black text-red-600 val-usd" id="counterparty-total-out-usd">Fetching...</p>
+                    <p class="font-mono text-3xl font-black text-red-600 val-native" id="counterparty-total-out-native">...</p>
                 </div>
             </div>
 
@@ -1149,7 +1123,7 @@
             if (!address) return;
 
             const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-                ? 'http://127.0.0.1:8088'
+                ? 'http://127.0.0.1:8088' 
                 : 'https://nemesis-api.legionxgaming2021.workers.dev';
 
             try {

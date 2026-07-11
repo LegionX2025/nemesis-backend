@@ -11,6 +11,8 @@ class SwarmOrchestrator:
     def __init__(self, max_concurrent=10):
         # Limit parallel scraping to avoid OOM
         self.semaphore = asyncio.Semaphore(max_concurrent)
+        # Limit Tier 1 API concurrency to avoid hitting strict rate limits (429) across 15 chains
+        self.tier1_semaphore = asyncio.Semaphore(3)
 
     async def _fetch_ankr(self, session, address: str, chain: str) -> list:
         # Map our internal chain names to Ankr's expected blockchain names
@@ -36,6 +38,7 @@ class SwarmOrchestrator:
         all_txs = []
         page_token = ""
         
+        retries = 0
         while True:
             payload = {
                 "jsonrpc": "2.0",
@@ -52,6 +55,8 @@ class SwarmOrchestrator:
                 
             try:
                 async with session.post(url, json=payload, timeout=15) as r:
+                    if r.status == 429:
+                        raise Exception(f"429")
                     if r.status != 200:
                         raise Exception(f"Ankr API Error on {chain}: {r.status}")
                         
@@ -81,8 +86,16 @@ class SwarmOrchestrator:
                         break
                         
                     page_token = next_page
+                    retries = 0 # reset on success
                     await asyncio.sleep(0.5)
             except Exception as e:
+                err_str = str(e)
+                if ("429" in err_str or "Rate limit" in err_str) and retries < 3:
+                    retries += 1
+                    delay = 1.5 ** retries
+                    logger.warning(f"Ankr 429 Rate Limit on {chain}. Retrying {retries}/3 in {delay:.1f}s...")
+                    await asyncio.sleep(delay)
+                    continue
                 logger.error(f"Ankr Request failed on {chain}: {e}")
                 return None
         return all_txs
@@ -106,6 +119,7 @@ class SwarmOrchestrator:
         all_txs = []
         page = 1
         offset = 100
+        retries = 0
         try:
             while True:
                 params = {
@@ -120,10 +134,15 @@ class SwarmOrchestrator:
                     "apikey": api_key
                 }
                 async with session.get(base_url, params=params, timeout=15) as r:
+                    if r.status == 429:
+                        raise Exception("429")
                     if r.status != 200:
                         raise Exception(f"Etherscan Error on {chain}: {r.status}")
                     data = await r.json()
+                    
                     if data.get("status") != "1" and "No transactions found" not in data.get("message", ""):
+                        if data.get("message") == "NOTOK":
+                            raise Exception("429 Rate limit (NOTOK)")
                         raise Exception(f"Etherscan API Error on {chain}: {data.get('message')}")
                         
                     txs = data.get("result", [])
@@ -143,10 +162,19 @@ class SwarmOrchestrator:
                         break # End of pagination
                         
                     page += 1
+                    retries = 0 # reset on success
                     await asyncio.sleep(0.3) # Rate limit protection
         except Exception as e:
-            logger.error(f"Etherscan Request failed on {chain}: {e}")
-            return None
+            err_str = str(e)
+            if ("429" in err_str or "NOTOK" in err_str or "Rate limit" in err_str) and retries < 3:
+                retries += 1
+                delay = 1.5 ** retries
+                logger.warning(f"Etherscan 429 Rate Limit on {chain}. Retrying {retries}/3 in {delay:.1f}s...")
+                await asyncio.sleep(delay)
+                # Restart the loop at the current page
+            else:
+                logger.error(f"Etherscan Request failed on {chain}: {e}")
+                return None
         return all_txs
     async def _fetch_tatum(self, session, address: str, chain: str) -> list:
         tatum_chain_map = {
@@ -162,28 +190,40 @@ class SwarmOrchestrator:
         if not tatum_key: return None
 
         all_txs = []
-        try:
-            url = f"https://api.tatum.io/v3/{tatum_chain}/account/transaction/{address}"
-            headers = {"x-api-key": tatum_key}
-            
-            async with session.get(url, headers=headers, timeout=15) as r:
-                if r.status != 200:
-                    raise Exception(f"Tatum Error on {chain}: {r.status}")
-                txs = await r.json()
-                if isinstance(txs, list):
-                    for tx in txs:
-                        all_txs.append({
-                            "hash": tx.get("hash"),
-                            "from": str(tx.get("from", "")).lower(),
-                            "to": str(tx.get("to", "")).lower(),
-                            "value": str(tx.get("value", "0")),
-                            "timeStamp": str(tx.get("timestamp", 0) // 1000) if tx.get("timestamp") else "0",
-                            "methodId": tx.get("input", "0x")[:10],
-                            "contractAddress": str(tx.get("contractAddress", "")).lower()
-                        })
-        except Exception as e:
-            logger.error(f"Tatum Request failed on {chain}: {e}")
-            return None
+        retries = 0
+        while retries <= 3:
+            try:
+                url = f"https://api.tatum.io/v3/{tatum_chain}/account/transaction/{address}"
+                headers = {"x-api-key": tatum_key}
+                
+                async with session.get(url, headers=headers, timeout=15) as r:
+                    if r.status in [429, 402]:
+                        raise Exception(f"{r.status}")
+                    if r.status != 200:
+                        raise Exception(f"Tatum Error on {chain}: {r.status}")
+                    txs = await r.json()
+                    if isinstance(txs, list):
+                        for tx in txs:
+                            all_txs.append({
+                                "hash": tx.get("hash"),
+                                "from": str(tx.get("from", "")).lower(),
+                                "to": str(tx.get("to", "")).lower(),
+                                "value": str(tx.get("value", "0")),
+                                "timeStamp": str(tx.get("timestamp", 0) // 1000) if tx.get("timestamp") else "0",
+                                "methodId": tx.get("input", "0x")[:10],
+                                "contractAddress": str(tx.get("contractAddress", "")).lower()
+                            })
+                    break # Success, exit retry loop
+            except Exception as e:
+                err_str = str(e)
+                if ("429" in err_str or "402" in err_str) and retries < 3:
+                    retries += 1
+                    delay = 1.5 ** retries
+                    logger.warning(f"Tatum Rate/Payment Limit on {chain}. Retrying {retries}/3 in {delay:.1f}s...")
+                    await asyncio.sleep(delay)
+                else:
+                    logger.error(f"Tatum Request failed on {chain}: {e}")
+                    return None
         return all_txs
 
     async def _fetch_bitquery(self, session, address: str, chain: str) -> list:
@@ -312,11 +352,12 @@ class SwarmOrchestrator:
             ("Bitquery", self._fetch_bitquery)
         ]
         
-        for name, fetch_func in providers:
-            txs = await fetch_func(session, address, chain)
-            if txs is not None:
-                logger.info(f"[Swarm Agent] Extracted {len(txs)} historical TXs from Tier 1 ({name}) API for {address} on {chain}")
-                return txs
+        async with self.tier1_semaphore:
+            for name, fetch_func in providers:
+                txs = await fetch_func(session, address, chain)
+                if txs is not None:
+                    logger.info(f"[Swarm Agent] Extracted {len(txs)} historical TXs from Tier 1 ({name}) API for {address} on {chain}")
+                    return txs
                 
         return None
 
@@ -326,30 +367,42 @@ class SwarmOrchestrator:
             logger.info(f"[Swarm Agent] Scraping {chain} for {address}...")
             return await scraper_instance.scrape_evm_explorer(address, chain) # Assuming it handles pagination internally or we augment it
 
-    async def fetch_chain_data(self, session, address: str, chain: str) -> list:
+    async def fetch_chain_data(self, session, address: str, chain: str, progress_callback=None) -> list:
         """Execute the fallback waterfall for a specific chain."""
+        if progress_callback:
+            await progress_callback(f"Scanning {chain} via Tier 1 APIs...")
         # Try API first
         txs = await self._fetch_tier1_api(session, address, chain)
         if txs is not None:
+            if progress_callback:
+                await progress_callback(f"Extracted {len(txs)} TXs from {chain} [API]")
             # API succeeded (even if 0 transactions were found)
             return txs
             
         # Fallback to Deep DOM Scraper for Entity Identity (Cannot scrape raw TXs easily via DOM)
         logger.warning(f"Tier 1 API failed for {address} on {chain}. Delegating to Swarm Headless Scraper (Tier 2)...")
+        if progress_callback:
+            await progress_callback(f"API failed on {chain}. Delegating to Headless Scraper...")
+            
         label, cluster = await self._fetch_tier2_scraper(address, chain)
         if label or cluster:
-            logger.info(f"[Swarm Agent] Scraped entity identity via DOM: {label} ({cluster})")
+            msg = f"Scraped identity via DOM on {chain}: {label} ({cluster})"
+            logger.info(f"[Swarm Agent] {msg}")
+            if progress_callback:
+                await progress_callback(msg)
             
         # We must return an empty list of transactions to prevent NoneType errors in tracer
         return []
 
-    async def swarm_fetch(self, session, address: str, chains: list) -> dict:
+    async def swarm_fetch(self, session, address: str, chains: list, progress_callback=None) -> dict:
         """Parallel fetch across multiple chains using a swarm of workers."""
         logger.info(f"[*] Dispatching swarm agents for {address} across {len(chains)} chains...")
-        
+        if progress_callback:
+            await progress_callback(f"Dispatching omni-chain swarm for {address[:8]}...")
+            
         tasks = []
         for chain in chains:
-            tasks.append(self.fetch_chain_data(session, address, chain))
+            tasks.append(self.fetch_chain_data(session, address, chain, progress_callback))
             
         results = await asyncio.gather(*tasks, return_exceptions=True)
         
