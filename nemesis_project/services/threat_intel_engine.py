@@ -18,8 +18,7 @@ class ThreatIntelEngine:
     async def init_db(self):
         if not self.db:
             await db_engine.connect()
-            from services.database_connector import db_connector
-            if db_connector.mongo_db is not None:
+            if db_engine.db is not None:
                 self.db = db_engine.db
             else:
                 self.db = None

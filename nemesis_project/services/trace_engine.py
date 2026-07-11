@@ -356,6 +356,10 @@ async def fetch_oklink_label(session, chain: str, address: str) -> str:
     
     # 1. Advanced Playwright Stealth Interception (Offloaded to thread)
     import asyncio
+    global PLAYWRIGHT_SEMAPHORE
+    if 'PLAYWRIGHT_SEMAPHORE' not in globals():
+        PLAYWRIGHT_SEMAPHORE = asyncio.Semaphore(1)
+        
     try:
         import sys
         import os
@@ -368,14 +372,16 @@ async def fetch_oklink_label(session, chain: str, address: str) -> str:
         
         loop = asyncio.get_running_loop()
         
-        # Trigger the advanced crawler which also emits to Kafka
-        result = await loop.run_in_executor(None, scrape_oklink_entity, cname, address, 1, 50)
-        
-        if result and result.get("total_edges", 0) > 0:
-            logger.info(f"Kafka/Neo4j auto-clustering completed for {address}. Edges: {result['total_edges']}")
+        async with PLAYWRIGHT_SEMAPHORE:
+            # Trigger the advanced crawler which also emits to Kafka
+            result = await loop.run_in_executor(None, scrape_oklink_entity, cname, address, 1, 50)
             
-        # For the immediate tracing response, just return the primary tag if we have it
-        legacy_result = await loop.run_in_executor(None, scrape_oklink_tags, cname, address)
+            if result and result.get("total_edges", 0) > 0:
+                logger.info(f"Kafka/Neo4j auto-clustering completed for {address}. Edges: {result['total_edges']}")
+                
+            # For the immediate tracing response, just return the primary tag if we have it
+            legacy_result = await loop.run_in_executor(None, scrape_oklink_tags, cname, address)
+            
         if legacy_result and legacy_result.get("attributionTags"):
             primary_tag = legacy_result["attributionTags"][0]
             # Persist the primary tag to Neo4j
