@@ -7,7 +7,7 @@ from datetime import datetime
 class EntityResolutionEngine:
     def __init__(self):
         self.pg_uri = os.getenv("POSTGRES_URI")
-        self.mongo_uri = os.getenv("DATABASE_MONGO_URL", "mongodb+srv://MKpBkrUw:Z63zGHQaiYG6rhrb@us-east-1.ufsuw.mongodb.net/blockchain")
+        self.mongo_uri = os.getenv("DATABASE_MONGO_URL", "")
         self.entities = []
         
         # Init MongoDB

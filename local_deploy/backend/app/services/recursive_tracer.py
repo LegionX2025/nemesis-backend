@@ -171,16 +171,35 @@ class RecursiveTracer:
                     try: self.events_col.update_one({"_id": event_doc["_id"]}, {"$set": event_doc}, upsert=True)
                     except: pass
                 
+                # Identity & Behavioral Fingerprinting Hooks
+                behavioral_fingerprint = {
+                    "time_of_day": timestamp_dt.hour,
+                    "weekday": timestamp_dt.weekday(),
+                    "gas_preference": tx.get("gasPrice", "0"),
+                    "nonce_pattern": tx.get("nonce", "0"),
+                    "transfer_size": out_amount,
+                }
+                
+                financial_fingerprint = {
+                    "is_stablecoin": out_asset in stablecoins if 'stablecoins' in locals() else False,
+                    "is_native": out_asset == "ETH",
+                    "bridge_exposure": edge_type == "BRIDGE_HOP",
+                    "dex_exposure": edge_type == "SWAP",
+                }
+
                 edges.append({
-                    "_id": tx.get("hash") + "_0",
+                    "_id": f"{tx.get('hash')}_{tx.get('logIndex', '0')}_{seed}",
+                    "tx_hash": tx.get("hash"),
                     "from": str(tx.get("from", "")).lower(),
                     "to": str(tx.get("to", "")).lower(),
-                    "edge_type": edge_type,
-                    "tx_hash": tx.get("hash"),
-                    "chain": chain,
+                    "amount": out_amount,
                     "asset": out_asset,
-                    "amount": str(out_amount),
-                    "timestamp": timestamp_dt,
+                    "chain": chain,
+                    "timestamp": timestamp_dt.isoformat(),
+                    "edge_type": edge_type,
+                    "trace_id": seed,
+                    "behavioral_fingerprint": behavioral_fingerprint,
+                    "financial_fingerprint": financial_fingerprint,
                     "confidence": 1.0
                 })
                 

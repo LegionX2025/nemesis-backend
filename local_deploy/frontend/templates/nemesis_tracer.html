@@ -151,7 +151,16 @@
                             <span id="graph-status-badge" class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">Live</span>
                         </div>
                         <div class="flex gap-2">
+                            
+                            <select id="graph-layout-select" onchange="changeGraphLayout(this.value)" class="px-3 py-1 bg-white border border-slate-200 rounded text-xs font-semibold text-slate-600 hover:bg-slate-50 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <option value="force">Force Directed</option>
+                                <option value="circular">Circular Layout</option>
+                                <option value="dagre">Hierarchical (Tree)</option>
+                                <option value="radial">Radial Layout</option>
+                                <option value="grid">Grid Layout</option>
+                            </select>
                             <button onclick="togglePhysics()" class="px-3 py-1 bg-white border border-slate-200 rounded text-xs font-semibold text-slate-600 hover:bg-slate-50"><i class="fa-solid fa-magnet mr-1"></i> Toggle Physics</button>
+
                             <button class="px-3 py-1 bg-white border border-slate-200 rounded text-xs font-semibold text-slate-600 hover:bg-slate-50"><i class="fa-regular fa-floppy-disk mr-1"></i> Save</button>
                         </div>
                     </div>
@@ -222,12 +231,18 @@
                         <thead>
                             <tr class="text-[10px] uppercase tracking-wider text-slate-500 font-bold bg-white">
                                 <th class="px-4 py-3 border-b border-slate-200">Date/Time (UTC)</th>
+                                <th class="px-4 py-3 border-b border-slate-200">Type (mixing, bridging)</th>
                                 <th class="px-4 py-3 border-b border-slate-200">TX Hash</th>
                                 <th class="px-4 py-3 border-b border-slate-200">From Wallet(Entity)</th>
                                 <th class="px-4 py-3 border-b border-slate-200">To Wallet(Entity)</th>
+                                <th class="px-4 py-3 border-b border-slate-200">To Receiver Entity</th>
                                 <th class="px-4 py-3 border-b border-slate-200 text-right">Amount</th>
-                                <th class="px-4 py-3 border-b border-slate-200">Asset</th>
+                                <th class="px-4 py-3 border-b border-slate-200">Transaction Type</th>
                                 <th class="px-4 py-3 border-b border-slate-200">Behavioral Cluster</th>
+                                <th class="px-4 py-3 border-b border-slate-200">Clustered address{root}ENTITY</th>
+                                <th class="px-4 py-3 border-b border-slate-200 text-right">Confidence</th>
+                                <th class="px-4 py-3 border-b border-slate-200">Transaction Attributions</th>
+                                <th class="px-4 py-3 border-b border-slate-200">Transaction intelligence</th>
                             </tr>
                         </thead>
                         <tbody id="ledger-body" class="text-slate-700 font-medium font-mono text-[11px] divide-y divide-slate-100">
@@ -415,9 +430,14 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             initGraph();
+            const urlParams = new URLSearchParams(window.location.search);
+            const address = urlParams.get('address');
             if (window.traceIdParam) {
                 document.getElementById('metric-trace-id').innerText = window.traceIdParam;
                 connectWebSocket(window.traceIdParam);
+            } else if (address) {
+                document.getElementById('setup-seeds').value = address;
+                submitTraceSetup();
             } else {
                 document.getElementById('trace-setup-modal').classList.remove('hidden');
             }
@@ -658,6 +678,93 @@
             });
         }
 
+        
+        function changeGraphLayout(layoutType) {
+            let nodes = window.graphData.nodes;
+            let width = document.getElementById('graph-container').clientWidth;
+            let height = document.getElementById('graph-container').clientHeight;
+            let cx = 0, cy = 0;
+            
+            if(layoutType === 'force') {
+                physicsEnabled = true;
+                Graph.d3Force('charge').strength(-400);
+                Graph.d3ReheatSimulation();
+            } else {
+                physicsEnabled = false;
+                Graph.d3Force('charge').strength(0);
+                
+                if(layoutType === 'circular') {
+                    let r = Math.min(width, height) / 2 * 0.8;
+                    let angleStep = (2 * Math.PI) / nodes.length;
+                    nodes.forEach((n, i) => {
+                        n.fx = cx + r * Math.cos(i * angleStep);
+                        n.fy = cy + r * Math.sin(i * angleStep);
+                    });
+                } else if(layoutType === 'grid') {
+                    let cols = Math.ceil(Math.sqrt(nodes.length));
+                    let spacing = 150;
+                    let startX = cx - ((cols-1)*spacing)/2;
+                    let startY = cy - ((cols-1)*spacing)/2;
+                    nodes.forEach((n, i) => {
+                        n.fx = startX + (i % cols) * spacing;
+                        n.fy = startY + Math.floor(i / cols) * spacing;
+                    });
+                } else if(layoutType === 'radial') {
+                    let rStep = 100;
+                    nodes.forEach((n, i) => {
+                        if(i===0){ n.fx = cx; n.fy = cy; }
+                        else {
+                            let ring = Math.ceil(Math.sqrt(i));
+                            let r = ring * rStep;
+                            let maxInRing = (ring*ring) - ((ring-1)*(ring-1));
+                            let idxInRing = i - ((ring-1)*(ring-1));
+                            let angle = (2 * Math.PI / maxInRing) * idxInRing;
+                            n.fx = cx + r * Math.cos(angle);
+                            n.fy = cy + r * Math.sin(angle);
+                        }
+                    });
+                } else if(layoutType === 'dagre') {
+                    // Simple top-down tree based on BFS depth logic
+                    let levels = {};
+                    let currentLevel = [nodes[0]];
+                    let visited = new Set();
+                    if(nodes[0]) visited.add(nodes[0].id);
+                    let depth = 0;
+                    while(currentLevel.length > 0) {
+                        levels[depth] = currentLevel;
+                        let nextLevel = [];
+                        currentLevel.forEach(node => {
+                            let outgoing = window.graphData.links.filter(l => (l.source.id || l.source) === node.id);
+                            outgoing.forEach(link => {
+                                let targetId = link.target.id || link.target;
+                                if(!visited.has(targetId)) {
+                                    visited.add(targetId);
+                                    let targetNode = nodes.find(n => n.id === targetId);
+                                    if(targetNode) nextLevel.push(targetNode);
+                                }
+                            });
+                        });
+                        currentLevel = nextLevel;
+                        depth++;
+                    }
+                    
+                    let ySpacing = 150;
+                    let startY = cy - ((depth-1)*ySpacing)/2;
+                    Object.keys(levels).forEach(d => {
+                        let row = levels[d];
+                        let xSpacing = 150;
+                        let startX = cx - ((row.length-1)*xSpacing)/2;
+                        row.forEach((n, i) => {
+                            n.fx = startX + i * xSpacing;
+                            n.fy = startY + d * ySpacing;
+                        });
+                    });
+                }
+                
+                Graph.d3ReheatSimulation();
+            }
+        }
+
         function togglePhysics() {
             physicsEnabled = !physicsEnabled;
             Graph.cooldownTicks(physicsEnabled ? 300 : 0);
@@ -846,6 +953,17 @@
             if(ent.includes('polygon') || ent.includes('matic')) return 'https://cryptologos.cc/logos/polygon-matic-logo.png';
             if(ent.includes('tether') || ent.includes('usdt')) return 'https://cryptologos.cc/logos/tether-usdt-logo.png';
             if(ent.includes('stellar') || ent.includes('xlm')) return 'https://cryptologos.cc/logos/stellar-xlm-logo.png';
+            if(ent.includes('ripple') || ent.includes('xrp')) return 'https://cryptologos.cc/logos/xrp-xrp-logo.png';
+            if(ent.includes('tron') || ent.includes('trx')) return 'https://cryptologos.cc/logos/tron-trx-logo.png';
+            if(ent.includes('avalanche') || ent.includes('avax')) return 'https://cryptologos.cc/logos/avalanche-avax-logo.png';
+            if(ent.includes('arbitrum') || ent.includes('arb')) return 'https://cryptologos.cc/logos/arbitrum-arb-logo.png';
+            if(ent.includes('optimism') || ent.includes('op')) return 'https://cryptologos.cc/logos/optimism-ethereum-op-logo.png';
+            if(ent.includes('base')) return 'https://assets.coingecko.com/coins/images/279/standard/ethereum.png';
+            if(ent.includes('usdc')) return 'https://cryptologos.cc/logos/usd-coin-usdc-logo.png';
+            if(ent.includes('dai')) return 'https://cryptologos.cc/logos/multi-collateral-dai-dai-logo.png';
+            if(ent.includes('chainlink') || ent.includes('link')) return 'https://cryptologos.cc/logos/chainlink-link-logo.png';
+            if(ent.includes('dogecoin') || ent.includes('doge')) return 'https://cryptologos.cc/logos/dogecoin-doge-logo.png';
+            if(ent.includes('zksync')) return 'https://cryptologos.cc/logos/zksync-logo.png';
             return null;
         }
 
@@ -952,14 +1070,34 @@
             
             let amountStr = d.usd ? "$" + d.usd.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : d.amount;
             
+            // Map new payload properties or fallback to old ones
+            let dtUtc = d["Date/Time (UTC)"] || new Date().toISOString().replace('T',' ').substring(0,19);
+            let txType = d["Type transcation(mixing,bridging)"] || (d.is_terminal ? 'Terminal/CEX' : 'Hop');
+            let txHash = d["TX Hash"] || d.tx;
+            let fromW = d["From Wallet(Entity)"] || d.from;
+            let toW = d["To Wallet(Entity)"] || d.to;
+            let toRec = d["To Receiver Entity"] || d.receiver_entity || 'Unknown Entity';
+            let tType = d["Transaction Type"] || d.ticker || d.chain || 'UNKNOWN';
+            let bCluster = d["Behavioral Cluster"] || 'Pending Analysis';
+            let clusteredRoot = d["Clustered address{root}ENTITY"] || 'N/A';
+            let conf = d["Confidence"] !== undefined ? d["Confidence"] + "%" : '100%';
+            let txAttr = d["Transaction Attributions"] || 'On-Chain Trace';
+            let txIntel = d["Transaction intelligence"] || 'Clean';
+            
             tr.innerHTML = `
-                <td class="px-4 py-2">${new Date().toISOString().replace('T',' ').substring(0,19)}</td>
-                <td class="px-4 py-2 text-blue-600 hover:underline">${d.tx.substring(0,12)}...</td>
-                <td class="px-4 py-2">${d.sender_entity || d.from.substring(0,8)+'...'}</td>
-                <td class="px-4 py-2">${d.receiver_entity || d.to.substring(0,8)+'...'}</td>
+                <td class="px-4 py-2">${dtUtc}</td>
+                <td class="px-4 py-2 text-slate-500 font-sans">${txType}</td>
+                <td class="px-4 py-2 text-blue-600 hover:underline">${txHash.substring(0,12)}...</td>
+                <td class="px-4 py-2">${fromW.substring(0,8)+'...'}</td>
+                <td class="px-4 py-2">${toW.substring(0,8)+'...'}</td>
+                <td class="px-4 py-2">${toRec}</td>
                 <td class="px-4 py-2 text-right font-black ${d.is_terminal ? 'text-emerald-600' : 'text-slate-800'}">${amountStr}</td>
-                <td class="px-4 py-2">${d.ticker || d.chain}</td>
-                <td class="px-4 py-2 text-slate-500 font-sans">${d.is_terminal ? 'Terminal/CEX' : 'Hop'}</td>
+                <td class="px-4 py-2 uppercase">${tType}</td>
+                <td class="px-4 py-2">${bCluster}</td>
+                <td class="px-4 py-2 text-slate-400">${clusteredRoot}</td>
+                <td class="px-4 py-2 text-right text-emerald-600 font-bold">${conf}</td>
+                <td class="px-4 py-2">${txAttr}</td>
+                <td class="px-4 py-2">${txIntel === 'Clean' ? '<span class="text-emerald-500"><i class="fa-solid fa-check-circle"></i> Clean</span>' : '<span class="text-red-500"><i class="fa-solid fa-triangle-exclamation"></i> Alert</span>'}</td>
             `;
             tbody.insertBefore(tr, tbody.firstChild);
         }

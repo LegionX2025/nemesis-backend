@@ -12,7 +12,6 @@ logger = logging.getLogger("ApiRotator")
 
 class ApiRotator:
     def __init__(self):
-        # API Keys
         self.keys = {
             "ETHERSCAN": os.getenv("ETHERSCAN_API_KEY", "").split(","),
             "BSCSCAN": os.getenv("BSCSCAN_API_KEY", "").split(","),
@@ -20,7 +19,10 @@ class ApiRotator:
             "ARBISCAN": os.getenv("ARBISCAN_API_KEY", "").split(","),
             "INFURA": os.getenv("INFURA_API_KEY", "").split(","),
             "ALCHEMY": os.getenv("ALCHEMY_API_KEY", "").split(","),
-            "ANKR": os.getenv("ANKR_API_KEY", "").split(",")
+            "ANKR": os.getenv("ANKR_API_KEY", "").split(","),
+            "TATUM": os.getenv("TATUM_API_KEY", "").split(","),
+            "ETHPLORER": os.getenv("ETHPLORER_API_KEY", "").split(","),
+            "BITQUERY": os.getenv("BITQUERY_API_TOKEN", "").split(",")
         }
         
         # Strip empty strings
@@ -35,23 +37,27 @@ class ApiRotator:
         self.endpoints = {
             "ETHEREUM": {
                 "api": ["https://api.etherscan.io/v2/api?chainid=1"],
-                "rpc": ["https://mainnet.infura.io/v3/{}", "https://eth-mainnet.g.alchemy.com/v2/{}", "https://rpc.ankr.com/eth/{}"]
+                "rpc": ["https://cloudflare-eth.com", "https://eth.drpc.org", "https://1rpc.io/eth", "https://ethereum.publicnode.com", "https://mainnet.infura.io/v3/{}", "https://eth-mainnet.g.alchemy.com/v2/{}", "https://rpc.ankr.com/eth/{}"]
             },
             "BSC": {
                 "api": ["https://api.bscscan.com/api"],
-                "rpc": ["https://bsc-dataseed.binance.org/", "https://rpc.ankr.com/bsc/{}"]
+                "rpc": ["https://bsc-dataseed1.defibit.io", "https://bsc-dataseed1.ninicoin.io", "https://bsc.publicnode.com", "https://rpc.ankr.com/bsc/{}"]
             },
             "POLYGON": {
                 "api": ["https://api.polygonscan.com/api"],
-                "rpc": ["https://polygon-mainnet.infura.io/v3/{}", "https://polygon-mainnet.g.alchemy.com/v2/{}", "https://rpc.ankr.com/polygon/{}"]
+                "rpc": ["https://polygon-rpc.com", "https://polygon.drpc.org", "https://1rpc.io/matic", "https://polygon-mainnet.infura.io/v3/{}", "https://polygon-mainnet.g.alchemy.com/v2/{}", "https://rpc.ankr.com/polygon/{}"]
             },
             "ARBITRUM": {
                 "api": ["https://api.arbiscan.io/api"],
-                "rpc": ["https://arbitrum-mainnet.infura.io/v3/{}", "https://arb-mainnet.g.alchemy.com/v2/{}", "https://rpc.ankr.com/arbitrum/{}"]
+                "rpc": ["https://arb1.arbitrum.io/rpc", "https://arbitrum.drpc.org", "https://1rpc.io/arb", "https://arbitrum-mainnet.infura.io/v3/{}", "https://arb-mainnet.g.alchemy.com/v2/{}", "https://rpc.ankr.com/arbitrum/{}"]
             },
             "BASE": {
                 "api": ["https://api.basescan.org/api"],
-                "rpc": ["https://mainnet.base.org", "https://rpc.ankr.com/base/{}"]
+                "rpc": ["https://mainnet.base.org", "https://base.drpc.org", "https://base.publicnode.com", "https://rpc.ankr.com/base/{}"]
+            },
+            "OPTIMISM": {
+                "api": ["https://api-optimistic.etherscan.io/api"],
+                "rpc": ["https://mainnet.optimism.io", "https://optimism.drpc.org", "https://1rpc.io/op", "https://rpc.ankr.com/optimism/{}"]
             }
         }
         
@@ -172,7 +178,7 @@ class ApiRotator:
                     proxy={"server": self.get_proxy()} if self.get_proxy() else None
                 )
                 page = await context.new_page()
-                await page.goto(url, wait_until="networkidle", timeout=20000)
+                await page.goto(url, wait_until="domcontentloaded", timeout=30000)
                 
                 # Parse logs from DOM
                 log_elements = await page.locator(".log-record").all()

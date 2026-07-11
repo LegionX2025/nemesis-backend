@@ -5,8 +5,10 @@ from pymongo.errors import ConnectionFailure
 from neo4j import GraphDatabase, exceptions
 from dotenv import load_dotenv
 
-# Load environment variables before reading them
-load_dotenv()
+# Load environment variables before reading them, with override to fix old terminal sessions
+root_env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))), ".env")
+load_dotenv(root_env_path, override=True)
+load_dotenv(override=True)
 
 logger = logging.getLogger("NemesisDB")
 
@@ -53,6 +55,7 @@ class NemesisDB:
                 logger.warning("Neo4j credentials not fully set in environment.")
         except Exception as e:
             logger.error(f"Failed to connect to Neo4j Aura: {e}")
+            self.neo4j_driver = None
 
     def get_mongo_collection(self, collection_name: str):
         if self.db is not None:

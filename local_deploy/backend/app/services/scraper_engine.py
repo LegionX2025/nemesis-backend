@@ -26,32 +26,12 @@ ONTOLOGY_MAP = {
     'dex': 'DEX',
     'bridge': 'Bridge',
     'mev': 'MEV Bot',
-    'mixer': 'Privacy Protocol',
-    'phishing': 'Scam',
-    'drainer': 'Wallet Drainer',
-    'multisig': 'Smart Contract',
-    'hot': 'Exchange Hot Wallet',
-    'cold': 'Exchange Cold Wallet',
-    'hacker': 'Exploiter',
-    'stolen': 'Stolen Funds',
-    'sanction': 'Sanctioned Entity'
+    'mixer': 'Privacy Protocol'
 }
 
-def normalize_classification(tags, label):
-    combined = [str(t).lower() for t in tags] + [str(label).lower() if label else ""]
-    for key, val in ONTOLOGY_MAP.items():
-        if any(key in c for c in combined):
-            return val
-    return 'Unknown'
+from .explorer_adapters import ExplorerAdapter
 
-
-GBEO_ONTOLOGY = None
-try:
-    with open(os.path.join("NEMESIS_KNOWLEDGE_BASE_LIBRARY", "gbeo_v4_ontology.json"), "r", encoding="utf-8") as f:
-        GBEO_ONTOLOGY = json.load(f)
-    logger.info("GBEO v4 Ontology loaded successfully.")
-except Exception as e:
-    logger.warning(f"Could not load GBEO Ontology: {e}")
+adapter = ExplorerAdapter()
 
 class AutoScraper:
     def __init__(self):
@@ -74,9 +54,14 @@ class AutoScraper:
             logger.error(f"Failed to initialize Playwright: {e}. Please ensure 'playwright install chromium' has been run.")
 
     async def stop(self):
-        if self.context: await self.context.close()
-        if self.browser: await self.browser.close()
-        if self.playwright: await self.playwright.stop()
+        try:
+            if self.context: await self.context.close()
+            if self.browser: await self.browser.close()
+            if self.playwright: await self.playwright.stop()
+        except Exception as e:
+            msg = str(e)
+            if "Connection closed" not in msg and "Target page, context or browser has been closed" not in msg:
+                logger.warning(f"Error during playwright teardown: {e}")
             
     def _classify_text(self, text: str) -> tuple:
         """Takes a blob of text from a block explorer and returns a cluster/label based on keywords."""
@@ -101,25 +86,27 @@ class AutoScraper:
                     if "kraken" in text_lower: found_label = "Kraken"
                     if "tornado" in text_lower: found_label = "Tornado Cash"
                     break
-            if found_cluster:
-                break
-                
-        # Supplement with GBEO Ontology entity tags
-        if not found_label and GBEO_ONTOLOGY and "entity_tags" in GBEO_ONTOLOGY:
-            for tag in GBEO_ONTOLOGY["entity_tags"]:
-                if tag.lower() in text_lower:
-                    found_label = tag
-                    found_cluster = "UNKNOWN_CLUSTER"
-                    break
-                    
-        return found_label, found_cluster
+            metadata = {"text_blob": text}
+        classification = adapter.classify_wallet("UNKNOWN", "UNKNOWN", metadata)
+        
+        return found_cluster, classification
     async def scrape_ethplorer(self, address: str) -> tuple:
         """Scrape Ethplorer for Ethereum addresses."""
         if not self.context: return None, None
         page = await self.context.new_page()
         try:
             url = f"https://ethplorer.io/search/{address}"
-            await page.goto(url, wait_until="domcontentloaded", timeout=20000)
+            
+            # Anti-bot Headers
+            await page.set_extra_http_headers({
+                "Accept-Language": "en-US,en;q=0.9",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+                "Sec-Ch-Ua": "\"Google Chrome\";v=\"115\", \"Chromium\";v=\"115\", \"Not=A?Brand\";v=\"24\"",
+                "Sec-Ch-Ua-Mobile": "?0",
+                "Sec-Ch-Ua-Platform": "\"Windows\""
+            })
+            
+            await page.goto(url, wait_until="domcontentloaded", timeout=30000)
             await page.wait_for_timeout(3000) # Wait for React router
             content = await page.content()
             
@@ -171,7 +158,17 @@ class AutoScraper:
         try:
             # Address + Tab (e.g. #tokentxns or #analytics)
             url = f"{base_url}/address/{address}{tab}"
-            await page.goto(url, wait_until="domcontentloaded", timeout=15000)
+            
+            # Anti-bot Headers
+            await page.set_extra_http_headers({
+                "Accept-Language": "en-US,en;q=0.9",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+                "Sec-Ch-Ua": "\"Google Chrome\";v=\"115\", \"Chromium\";v=\"115\", \"Not=A?Brand\";v=\"24\"",
+                "Sec-Ch-Ua-Mobile": "?0",
+                "Sec-Ch-Ua-Platform": "\"Windows\""
+            })
+            
+            await page.goto(url, wait_until="domcontentloaded", timeout=30000)
             await page.wait_for_timeout(3000) # Let React/NextJS render
             
             # Deep DOM Extraction for badges, labels, tooltips and contract tags
@@ -193,7 +190,17 @@ class AutoScraper:
         page = await self.context.new_page()
         try:
             url = f"https://blockscan.com/address/{address}"
-            await page.goto(url, wait_until="domcontentloaded", timeout=15000)
+            
+            # Anti-bot Headers
+            await page.set_extra_http_headers({
+                "Accept-Language": "en-US,en;q=0.9",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+                "Sec-Ch-Ua": "\"Google Chrome\";v=\"115\", \"Chromium\";v=\"115\", \"Not=A?Brand\";v=\"24\"",
+                "Sec-Ch-Ua-Mobile": "?0",
+                "Sec-Ch-Ua-Platform": "\"Windows\""
+            })
+            
+            await page.goto(url, wait_until="domcontentloaded", timeout=30000)
             await page.wait_for_timeout(2000) # Let react render
             content = await page.content()
             
@@ -241,12 +248,12 @@ class AutoScraper:
                         data = await response.json()
                         profile['cluster_data'] = data.get('data') or data
                     except:
-                        pass
+                       pass
                         
             page.on('response', handle_response)
             
             # 2. Navigate to Address Page
-            url = f"https://www.oklink.com/{ok_chain}/address/{address}"
+            url = adapter.get_wallet_url(chain, address, use_intelligence_explorer=True)
             await page.goto(url, wait_until="networkidle", timeout=15000)
             
             # 3. Robust DOM Scraping for Labels
@@ -283,7 +290,7 @@ class AutoScraper:
                     pass
             
             # Normalize to GBEO v3 Classification
-            classification = normalize_classification(tags, main_label)
+            profile["classification"] = adapter.classify_wallet(chain, address, profile)
             
             if main_label or tags:
                 profile['attributions'].append({
@@ -291,7 +298,7 @@ class AutoScraper:
                     "chain": ok_chain,
                     "label": main_label,
                     "tags": tags,
-                    "class": classification
+                    "class": profile["classification"]
                 })
             
             # Also use old classifier logic to retain compatibility with graph engine
@@ -300,7 +307,7 @@ class AutoScraper:
             
             # If our strict ontology found something, use it, otherwise use legacy
             final_label = main_label if main_label else legacy_label
-            final_cluster = classification if classification != 'Unknown' else legacy_cluster
+            final_cluster = profile["classification"] if profile["classification"] != 'Unknown' else legacy_cluster
             
             profile['resolved_label'] = final_label
             profile['resolved_cluster'] = final_cluster
@@ -490,21 +497,9 @@ class AutoScraper:
             "cards": []
         }
         
-        base_url = "https://etherscan.io"
-        if GBEO_ONTOLOGY and "explorers" in GBEO_ONTOLOGY:
-            chain_map = {
-                "ETHEREUM": "Ethereum", "ETH": "Ethereum", 
-                "BASE": "Base", "ARBITRUM": "Arbitrum", 
-                "OPTIMISM": "Optimism", "POLYGON": "Polygon", 
-                "BSC": "BSC"
-            }
-            mapped_chain = chain_map.get(chain, "Ethereum")
-            if mapped_chain in GBEO_ONTOLOGY["explorers"]:
-                base_url = GBEO_ONTOLOGY["explorers"][mapped_chain]["base_url"]
-                
+        url = adapter.get_wallet_url(chain, address)
         page = await self.context.new_page()
         try:
-            url = f"{base_url}/address/{address}"
             logger.info(f"[DEEP SCRAPE] Loading {url}")
             await page.goto(url, wait_until="domcontentloaded", timeout=25000)
             await page.wait_for_timeout(4000) # Wait for Cloudflare/React

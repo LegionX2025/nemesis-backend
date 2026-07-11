@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NEMESIS ID | Multi-Domain Intelligence Reconstruction</title>
     
+    
+    <script>
+        // Suppress Tailwind CDN production warning
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) return;
+            originalWarn.apply(console, args);
+        };
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Syncopate:wght@700&display=swap" rel="stylesheet">
@@ -124,39 +134,40 @@
 
     <style>
         body { 
-            background-color: #020617 !important; 
-            background-image: radial-gradient(circle at top right, rgba(30, 58, 138, 0.15), transparent 40%),
-                              radial-gradient(circle at bottom left, rgba(15, 23, 42, 0.8), #020617);
-            color: #f8fafc !important; 
+            background-color: #f8fafc !important; 
+            background-image: radial-gradient(circle at top right, rgba(226, 232, 240, 0.8), transparent 40%),
+                              radial-gradient(circle at bottom left, rgba(241, 245, 249, 0.9), #f8fafc);
+            color: #0f172a !important; 
         }
         
-        /* Premium Glassmorphism */
+        /* Premium Glassmorphism Light */
         .glass-panel {
-            background: rgba(15, 23, 42, 0.6) !important;
+            background: rgba(255, 255, 255, 0.7) !important;
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(51, 65, 85, 0.5) !important;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(226, 232, 240, 0.8) !important;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
         }
         
         .glass-card {
-            background: rgba(30, 41, 59, 0.5) !important;
+            background: rgba(255, 255, 255, 0.8) !important;
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(71, 85, 105, 0.3) !important;
+            border: 1px solid rgba(203, 213, 225, 0.5) !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
             transition: all 0.3s ease;
         }
         
         .glass-card:hover {
-            border-color: rgba(59, 130, 246, 0.5) !important;
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.3) !important;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.1);
             transform: translateY(-2px);
         }
 
         /* Input styling */
         input, select, textarea {
-            background: rgba(15, 23, 42, 0.8) !important;
-            border: 1px solid rgba(51, 65, 85, 0.8) !important;
-            color: white !important;
+            background: rgba(255, 255, 255, 0.9) !important;
+            border: 1px solid rgba(203, 213, 225, 0.8) !important;
+            color: #0f172a !important;
         }
         input:focus, select:focus, textarea:focus {
             outline: none !important;
@@ -166,16 +177,16 @@
         
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
         /* Gradient Text */
         .text-gradient {
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-image: linear-gradient(to right, #60a5fa, #a78bfa);
+            background-image: linear-gradient(to right, #2563eb, #7c3aed);
         }
     </style>
 
@@ -184,58 +195,56 @@
 
     <div id="global-loader">
         <div class="cyber-ring mb-6"></div>
-        <h2 class="text-white font-cyber text-2xl tracking-widest animate-pulse">NEMESIS ID ENGINE</h2>
+        <h2 class="text-slate-900 font-cyber text-2xl tracking-widest animate-pulse">NEMESIS ID ENGINE</h2>
         <p class="text-blue-600 font-mono text-[10px] uppercase tracking-widest mt-2" id="loader-text">Fusing Blockchain, OSINT & Identity Graphs...</p>
     </div>
 
     <!-- Side Panel Data Dossier -->
     <div id="side-panel" class="flex flex-col">
-        <div class="bg-slate-900 border-b border-slate-700 text-white p-4 flex justify-between items-center sticky top-0 z-10 shadow-lg shadow-black/20">
+        <div class="bg-slate-50 border-b border-slate-200 text-slate-900 p-4 flex justify-between items-center sticky top-0 z-10 shadow-lg shadow-black/20">
             <h3 class="font-black tracking-widest uppercase text-sm flex items-center gap-2 font-mono"><i class="fa-solid fa-folder-open text-blue-600"></i> Intelligence Dossier</h3>
-            <button onclick="closeSidePanel()" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <button onclick="closeSidePanel()" class="text-slate-600 hover:text-slate-700"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
         <div class="p-5" id="side-panel-content"></div>
     </div>
 
     <!-- Custom Context Menu for Graph -->
     <div id="custom-context-menu">
-        <div class="px-4 py-2 border-b border-slate-700 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Graph Actions</div>
+        <div class="px-4 py-2 border-b border-slate-200 text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Graph Actions</div>
         <div class="context-menu-item" onclick="alertAction('trigger AI Insights', 'Generating AI Explanation...')"><i class="fa-solid fa-brain text-purple-500"></i> Trigger AI Insights</div>
         <div class="context-menu-item" onclick="alertAction('OSINT lookup', 'Scanning Clear/Dark Web...')"><i class="fa-solid fa-globe text-blue-500"></i> OSINT Lookup</div>
         <div class="context-menu-item" onclick="alertAction('Trace CEX', 'Resolving Custodial Endpoints...')"><i class="fa-solid fa-building-columns text-amber-500"></i> Trace CEX Hubs</div>
         <div class="context-menu-item" onclick="alertAction('Mixing Analysis', 'De-obfuscating Layers...')"><i class="fa-solid fa-mask text-slate-700"></i> Mixing Analysis</div>
-        <div class="context-menu-item border-t border-slate-700 mt-1 pt-2" onclick="closeContextMenu()"><i class="fa-solid fa-xmark"></i> Close Menu</div>
+        <div class="context-menu-item border-t border-slate-200 mt-1 pt-2" onclick="closeContextMenu()"><i class="fa-solid fa-xmark"></i> Close Menu</div>
     </div>
 
     <!-- Header Panel -->
     <header class="glass-panel px-6 py-4 flex-shrink-0 z-50 sticky top-0">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div class="flex items-start gap-4">
-                <div class="relative w-14 h-14 bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 rounded-xl border border-slate-700 flex items-center justify-center shadow-lg shadow-black/20">
+                <div class="relative w-14 h-14 bg-white/80 backdrop-blur-xl border border-slate-200/50 rounded-xl border border-slate-200 flex items-center justify-center shadow-lg shadow-black/20">
                     <i class="fa-solid fa-fingerprint text-blue-600 text-3xl animate-pulse"></i>
                 </div>
                 
                 <div>
                     <div class="flex items-center gap-3 mb-1">
                         <div class="flex -space-x-2">
-                            <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-6 h-6 rounded-full bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 p-1 border border-slate-700 relative z-30" title="Ethereum">
-                            <img src="https://cryptologos.cc/logos/polygon-matic-logo.png" class="w-6 h-6 rounded-full bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 p-1 border border-slate-700 relative z-20" title="Polygon">
-                            <img src="https://cryptologos.cc/logos/solana-sol-logo.png" class="w-6 h-6 rounded-full bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 p-1 border border-slate-700 relative z-10" title="Solana">
+                            <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-6 h-6 rounded-full bg-white/80 backdrop-blur-xl border border-slate-200/50 p-1 border border-slate-200 relative z-30" title="Ethereum">
+                            <img src="https://cryptologos.cc/logos/polygon-matic-logo.png" class="w-6 h-6 rounded-full bg-white/80 backdrop-blur-xl border border-slate-200/50 p-1 border border-slate-200 relative z-20" title="Polygon">
+                            <img src="https://cryptologos.cc/logos/solana-sol-logo.png" class="w-6 h-6 rounded-full bg-white/80 backdrop-blur-xl border border-slate-200/50 p-1 border border-slate-200 relative z-10" title="Solana">
                         </div>
-                        <h1 class="text-xl font-mono font-bold text-white tracking-tight flex items-center gap-2 hover:text-blue-600 cursor-pointer transition" onclick="copyToClipboard('0x742d35Cc6634C0532925a3b844Bc454e4438f44e')">
-                            0x742d35Cc6634C0532925a3b844Bc454e4438f44e <i class="fa-solid fa-copy text-xs text-slate-400"></i>
+                        <h1 class="text-xl font-mono font-bold text-slate-900 tracking-tight flex items-center gap-2 hover:text-blue-600 cursor-pointer transition" id="header-address-container">
+                            <span id="header-address">Loading Address...</span> <i class="fa-solid fa-copy text-xs text-slate-600"></i>
                         </h1>
                     </div>
                     
                     <div class="flex items-center gap-4 text-sm font-mono mt-1">
-                        <span class="text-slate-400 uppercase text-[10px] tracking-widest font-bold">NEMESIS ID: NMS-WALLET-ETH-00093231 | SUBJECT WALLET ENTITY</span>
+                        <span class="text-slate-600 uppercase text-[10px] tracking-widest font-bold">NEMESIS ID: NMS-WALLET-ETH-00093231 | SUBJECT WALLET ENTITY</span>
                     </div>
 
-                    <div class="flex flex-wrap gap-2 mt-2 text-[9px] font-bold uppercase tracking-wider font-mono">
-                        <span class="bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded shadow-lg shadow-black/20"><i class="fa-solid fa-skull mr-1"></i> Threat: Lazarus / APT38</span>
-                        <span class="bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded shadow-lg shadow-black/20"><i class="fa-solid fa-ban mr-1"></i> Sanctions: OFAC Match</span>
-                        <span class="bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded shadow-lg shadow-black/20">AML Risk: 94.2/100</span>
-                        <span class="bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded shadow-lg shadow-black/20">Priority: CRITICAL</span>
+                    <div class="flex flex-wrap gap-2 mt-2 text-[9px] font-bold uppercase tracking-wider font-mono" id="header-threat-tags">
+                        <span class="bg-slate-50 text-slate-700 border border-slate-200 px-2 py-0.5 rounded shadow-lg shadow-black/20">Analyzing Risk...</span>
+
                         <div class="flex items-center gap-1.5 text-emerald-600 ml-2">
                             <span class="live-dot"></span> STATUS: ACTIVE
                         </div>
@@ -252,10 +261,10 @@
                     </div>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="toggleCurrency()" class="bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 hover:bg-slate-900 border border-slate-600 text-blue-600 font-mono font-bold py-2 px-4 rounded shadow-lg shadow-black/20 transition text-[10px] uppercase tracking-widest">
+                    <button onclick="toggleCurrency()" class="bg-white/80 backdrop-blur-xl border border-slate-200/50 hover:bg-slate-50 border border-slate-600 text-blue-600 font-mono font-bold py-2 px-4 rounded shadow-lg shadow-black/20 transition text-[10px] uppercase tracking-widest">
                         <i class="fa-solid fa-retweet"></i> Toggle USD / Crypto
                     </button>
-                    <button onclick="switchTab('tab-report')" class="w-full md:w-auto bg-slate-900 hover:bg-slate-800 text-white font-mono font-bold py-2 px-5 rounded shadow-xl shadow-black/40 transition text-[10px] uppercase tracking-widest flex items-center justify-center gap-2">
+                    <button onclick="switchTab('tab-report')" class="w-full md:w-auto bg-slate-50 hover:bg-white text-slate-900 font-mono font-bold py-2 px-5 rounded shadow-xl shadow-black/40 transition text-[10px] uppercase tracking-widest flex items-center justify-center gap-2">
                         <i class="fa-solid fa-file-export"></i> Export DOSSIER
                     </button>
                 </div>
@@ -264,7 +273,7 @@
     </header>
 
     <!-- 12 Unified Navigation Tabs -->
-    <nav class="bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 border-b border-slate-700 px-2 flex overflow-x-auto scrollbar-hide flex-shrink-0 z-40 relative sticky top-[95px] shadow-lg shadow-black/20">
+    <nav class="bg-white/80 backdrop-blur-xl border border-slate-200/50 border-b border-slate-200 px-2 flex overflow-x-auto scrollbar-hide flex-shrink-0 z-40 relative sticky top-[95px] shadow-lg shadow-black/20">
         <button class="tab-btn active px-5 py-4" onclick="switchTab('tab-profile')"><i class="fa-solid fa-id-card mr-1.5"></i> Wallet Profile</button>
         <button class="tab-btn px-5 py-4" onclick="switchTab('tab-counterparties')"><i class="fa-solid fa-users-viewfinder mr-1.5"></i> Counterparties</button>
         <button class="tab-btn px-5 py-4" onclick="switchTab('tab-assets')"><i class="fa-solid fa-wallet mr-1.5"></i> Assets</button>
@@ -274,7 +283,7 @@
         <button class="tab-btn px-5 py-4" onclick="switchTab('tab-graph')"><i class="fa-solid fa-project-diagram mr-1.5 text-blue-600"></i> Trace Graph</button>
         <button class="tab-btn px-5 py-4" onclick="switchTab('tab-aml')"><i class="fa-solid fa-shield-halved mr-1.5 text-red-600"></i> AML</button>
         <button class="tab-btn px-5 py-4" onclick="switchTab('tab-georisk')"><i class="fa-solid fa-earth-americas mr-1.5 text-emerald-600"></i> GeoRisk</button>
-        <button class="tab-btn px-5 py-4" onclick="switchTab('tab-intelligence')"><i class="fa-solid fa-user-secret mr-1.5 text-white"></i> Intelligence</button>
+        <button class="tab-btn px-5 py-4" onclick="switchTab('tab-intelligence')"><i class="fa-solid fa-user-secret mr-1.5 text-slate-900"></i> Intelligence</button>
         <button class="tab-btn px-5 py-4" onclick="switchTab('tab-ai-insights')"><i class="fa-solid fa-brain mr-1.5 text-purple-600"></i> AI Insights</button>
         <button class="tab-btn px-5 py-4" onclick="switchTab('tab-report')"><i class="fa-solid fa-file-pdf mr-1.5 text-indigo-600"></i> Report</button>
     </nav>
@@ -288,7 +297,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Executive Identity Reconstruction -->
                 <div class="data-card lg:col-span-2 border-t-4 border-t-blue-600 doc-style">
-                    <h2 class="text-lg font-black text-white uppercase tracking-widest flex items-center gap-2 font-serif border-b border-slate-600 pb-3 mb-4">
+                    <h2 class="text-lg font-black text-slate-900 uppercase tracking-widest flex items-center gap-2 font-serif border-b border-slate-600 pb-3 mb-4">
                         Executive Identity Reconstruction
                     </h2>
                     <p class="text-sm text-slate-700 font-serif leading-relaxed mb-6 text-justify">
@@ -296,34 +305,34 @@
                     </p>
                     
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono text-[10px] mb-6">
-                        <div class="bg-slate-900 p-3 rounded border border-slate-700 relative overflow-hidden">
+                        <div class="bg-slate-50 p-3 rounded border border-slate-200 relative overflow-hidden">
                             <div class="absolute top-0 right-0 w-16 h-16 bg-blue-500/10 rounded-full blur-xl"></div>
-                            <span class="text-slate-400 block mb-1"><i class="fa-solid fa-robot text-blue-500 mr-1"></i> Entity Type (ML)</span><span class="text-white font-bold text-xs block" id="ml-entity-type">Whale Wallet / EOA</span>
+                            <span class="text-slate-600 block mb-1"><i class="fa-solid fa-robot text-blue-500 mr-1"></i> Entity Type (ML)</span><span class="text-slate-900 font-bold text-xs block" id="ml-entity-type">Whale Wallet / EOA</span>
                         </div>
-                        <div class="bg-slate-900 p-3 rounded border border-slate-700 relative overflow-hidden">
+                        <div class="bg-slate-50 p-3 rounded border border-slate-200 relative overflow-hidden">
                             <div class="absolute top-0 right-0 w-16 h-16 bg-purple-500/10 rounded-full blur-xl"></div>
-                            <span class="text-slate-400 block mb-1"><i class="fa-solid fa-route text-purple-500 mr-1"></i> Transfer Pattern</span><span class="text-purple-400 font-bold text-xs block" id="ml-transfer-pattern">High-Velocity Routing</span>
+                            <span class="text-slate-600 block mb-1"><i class="fa-solid fa-route text-purple-500 mr-1"></i> Transfer Pattern</span><span class="text-purple-400 font-bold text-xs block" id="ml-transfer-pattern">High-Velocity Routing</span>
                         </div>
-                        <div class="bg-slate-900 p-3 rounded border border-slate-700 relative overflow-hidden">
+                        <div class="bg-slate-50 p-3 rounded border border-slate-200 relative overflow-hidden">
                             <div class="absolute top-0 right-0 w-16 h-16 bg-amber-500/10 rounded-full blur-xl"></div>
-                            <span class="text-slate-400 block mb-1"><i class="fa-solid fa-gas-pump text-amber-500 mr-1"></i> Gas Pattern</span><span class="text-amber-400 font-bold text-xs block" id="ml-gas-pattern">Programmatic Sweeps</span>
+                            <span class="text-slate-600 block mb-1"><i class="fa-solid fa-gas-pump text-amber-500 mr-1"></i> Gas Pattern</span><span class="text-amber-400 font-bold text-xs block" id="ml-gas-pattern">Programmatic Sweeps</span>
                         </div>
-                        <div class="bg-slate-900 p-3 rounded border border-slate-700 relative overflow-hidden">
+                        <div class="bg-slate-50 p-3 rounded border border-slate-200 relative overflow-hidden">
                             <div class="absolute top-0 right-0 w-16 h-16 bg-red-500/10 rounded-full blur-xl"></div>
-                            <span class="text-slate-400 block mb-1"><i class="fa-solid fa-shield-virus text-red-500 mr-1"></i> Threat Score</span><span class="text-red-500 font-bold text-xs block" id="ml-threat-score">98.4% (CRITICAL)</span>
+                            <span class="text-slate-600 block mb-1"><i class="fa-solid fa-shield-virus text-red-500 mr-1"></i> Threat Score</span><span class="text-red-500 font-bold text-xs block" id="ml-threat-score">98.4% (CRITICAL)</span>
                         </div>
                     </div>
 
                     <!-- OSINT Entity Resolution Graph (Hyper-Node) -->
-                    <h3 class="font-mono text-xs font-bold text-slate-300 uppercase mb-3 border-b border-slate-700 pb-2"><i class="fa-solid fa-globe text-blue-400 mr-2"></i> Global Identity Resolution</h3>
-                    <div class="bg-slate-900 rounded p-4 border border-slate-700 mb-6 flex flex-col md:flex-row items-center justify-between gap-4 font-mono text-[10px]">
+                    <h3 class="font-mono text-xs font-bold text-slate-700 uppercase mb-3 border-b border-slate-200 pb-2"><i class="fa-solid fa-globe text-blue-400 mr-2"></i> Global Identity Resolution</h3>
+                    <div class="bg-slate-50 rounded p-4 border border-slate-200 mb-6 flex flex-col md:flex-row items-center justify-between gap-4 font-mono text-[10px]">
                         <!-- Hyper Node Visualization -->
                         <div class="flex items-center gap-2">
                             <div class="text-center">
                                 <div class="w-12 h-12 rounded-full bg-blue-600/20 border border-blue-500 flex items-center justify-center mx-auto mb-1">
                                     <i class="fa-brands fa-github text-xl text-blue-400"></i>
                                 </div>
-                                <span class="text-slate-400">@vbuterin</span>
+                                <span class="text-slate-600">@vbuterin</span>
                             </div>
                             <i class="fa-solid fa-link text-slate-600"></i>
                             <div class="text-center">
@@ -337,64 +346,64 @@
                                 <div class="w-12 h-12 rounded-full bg-purple-600/20 border border-purple-500 flex items-center justify-center mx-auto mb-1">
                                     <i class="fa-brands fa-twitter text-xl text-purple-400"></i>
                                 </div>
-                                <span class="text-slate-400">@VitalikButerin</span>
+                                <span class="text-slate-600">@VitalikButerin</span>
                             </div>
                             <i class="fa-solid fa-link text-slate-600"></i>
                             <div class="text-center">
                                 <div class="w-12 h-12 rounded-full bg-amber-600/20 border border-amber-500 flex items-center justify-center mx-auto mb-1">
                                     <i class="fa-solid fa-globe text-xl text-amber-400"></i>
                                 </div>
-                                <span class="text-slate-400">vitalik.eth</span>
+                                <span class="text-slate-600">vitalik.eth</span>
                             </div>
                         </div>
                         
                         <!-- Attribution Confidence -->
-                        <div class="bg-slate-800 p-3 rounded border border-slate-600 text-right">
-                            <span class="text-slate-400 block mb-1">Attribution Confidence</span>
+                        <div class="bg-white p-3 rounded border border-slate-600 text-right">
+                            <span class="text-slate-600 block mb-1">Attribution Confidence</span>
                             <span class="text-2xl font-black text-emerald-500">99.5%</span>
                             <span class="text-[8px] text-slate-500 block mt-1">Based on 3 Verified Evidence Vectors</span>
                         </div>
                     </div>
 
                     <!-- Timeline Intelligence -->
-                    <h3 class="font-mono text-xs font-bold text-slate-300 uppercase mb-3 border-b border-slate-700 pb-2"><i class="fa-solid fa-clock text-emerald-400 mr-2"></i> Timeline Intelligence</h3>
-                    <div class="space-y-3 font-mono text-[10px] mb-6 border-l-2 border-slate-700 pl-4 ml-2 relative">
+                    <h3 class="font-mono text-xs font-bold text-slate-700 uppercase mb-3 border-b border-slate-200 pb-2"><i class="fa-solid fa-clock text-emerald-400 mr-2"></i> Timeline Intelligence</h3>
+                    <div class="space-y-3 font-mono text-[10px] mb-6 border-l-2 border-slate-200 pl-4 ml-2 relative">
                         <!-- Timeline items -->
                         <div class="relative">
                             <div class="absolute -left-[21px] top-1 w-2 h-2 rounded-full bg-emerald-500 border border-slate-900"></div>
                             <span class="text-emerald-400 font-bold mr-2">2015-07-30</span>
-                            <span class="text-white">Wallet Address Created (Ethereum Genesis)</span>
+                            <span class="text-slate-900">Wallet Address Created (Ethereum Genesis)</span>
                         </div>
                         <div class="relative">
                             <div class="absolute -left-[21px] top-1 w-2 h-2 rounded-full bg-blue-500 border border-slate-900"></div>
                             <span class="text-blue-400 font-bold mr-2">2018-10-14</span>
-                            <span class="text-white">GitHub Commit <a href="#" class="text-slate-400 hover:text-blue-300 underline">(ethereum/EIPs)</a> signing txs from this wallet.</span>
+                            <span class="text-slate-900">GitHub Commit <a href="#" class="text-slate-600 hover:text-blue-300 underline">(ethereum/EIPs)</a> signing txs from this wallet.</span>
                         </div>
                         <div class="relative">
                             <div class="absolute -left-[21px] top-1 w-2 h-2 rounded-full bg-purple-500 border border-slate-900"></div>
                             <span class="text-purple-400 font-bold mr-2">2021-08-01</span>
-                            <span class="text-white">Twitter Profile update mentioning wallet public key.</span>
+                            <span class="text-slate-900">Twitter Profile update mentioning wallet public key.</span>
                         </div>
                         <div class="relative">
                             <div class="absolute -left-[21px] top-1 w-2 h-2 rounded-full bg-amber-500 border border-slate-900"></div>
                             <span class="text-amber-400 font-bold mr-2">2023-01-15</span>
-                            <span class="text-white">ENS Name `vitalik.eth` mapped to this address.</span>
+                            <span class="text-slate-900">ENS Name `vitalik.eth` mapped to this address.</span>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Wallet Metadata -->
                 <div class="data-card border-t-4 border-t-emerald-500">
-                    <h2 class="text-xs font-black text-white uppercase tracking-widest mb-4 border-b border-slate-700 pb-2">Profile Metadata</h2>
-                    <div class="space-y-4 font-mono text-[10px] text-slate-300">
-                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-400">First Activity</span><span class="text-white font-bold">2023-04-12 14:02 UTC</span></div>
-                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-400">Last Activity</span><span class="text-white font-bold">2026-05-27 08:14 UTC</span></div>
-                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-400">Total Transactions</span><span class="text-white font-black">14,205</span></div>
-                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-400">Total Inbound</span><span class="text-emerald-600 font-bold usd-value">$84,500,000</span><span class="text-emerald-600 font-bold native-value">26,500 ETH</span></div>
-                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-400">Total Outbound</span><span class="text-red-600 font-bold usd-value">$83,047,109</span><span class="text-red-600 font-bold native-value">26,047 ETH</span></div>
-                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-400">Current Balance</span><span class="text-blue-600 font-bold usd-value">$1,452,890</span><span class="text-blue-600 font-bold native-value">453 ETH</span></div>
+                    <h2 class="text-xs font-black text-slate-900 uppercase tracking-widest mb-4 border-b border-slate-200 pb-2">Profile Metadata</h2>
+                    <div class="space-y-4 font-mono text-[10px] text-slate-700">
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">First Activity</span><span class="text-slate-900 font-bold">2023-04-12 14:02 UTC</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">Last Activity</span><span class="text-slate-900 font-bold">2026-05-27 08:14 UTC</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">Total Transactions</span><span class="text-slate-900 font-black">14,205</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">Total Inbound</span><span class="text-emerald-600 font-bold usd-value">$84,500,000</span><span class="text-emerald-600 font-bold native-value">26,500 ETH</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">Total Outbound</span><span class="text-red-600 font-bold usd-value">$83,047,109</span><span class="text-red-600 font-bold native-value">26,047 ETH</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">Current Balance</span><span class="text-blue-600 font-bold usd-value">$1,452,890</span><span class="text-blue-600 font-bold native-value">453 ETH</span></div>
                         <div class="flex justify-between pt-2">
-                            <span class="text-slate-400">Funded By:</span>
+                            <span class="text-slate-600">Funded By:</span>
                             <div class="text-right">
                                 <span class="text-purple-600 font-bold cursor-pointer hover:underline" onclick="openDossier('wallet', '0xd90e...31b')">0xd90e...31b (Mixer)</span><br>
                                 <span class="text-[8px]">TX: 0xab8f...9c1a</span>
@@ -405,13 +414,13 @@
             </div>
 
             <!-- Interacted With / Clustered -->
-            <div class="data-card p-0 shadow-lg shadow-black/20 border-slate-700 mt-6 border-t-4 border-t-slate-800">
-                <div class="p-4 border-b border-slate-700 bg-slate-900 flex justify-between items-center">
-                    <h3 class="text-xs font-black uppercase text-white tracking-widest"><i class="fa-solid fa-network-wired text-slate-400 mr-2"></i> Interacted With & Clustered Wallets</h3>
+            <div class="data-card p-0 shadow-lg shadow-black/20 border-slate-200 mt-6 border-t-4 border-t-slate-800">
+                <div class="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                    <h3 class="text-xs font-black uppercase text-slate-900 tracking-widest"><i class="fa-solid fa-network-wired text-slate-600 mr-2"></i> Interacted With & Clustered Wallets</h3>
                     <div class="flex gap-2">
-                        <button class="bg-blue-600 text-white px-3 py-1 rounded text-[10px] font-mono">Ethereum</button>
-                        <button class="bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 border border-slate-600 text-slate-300 px-3 py-1 rounded text-[10px] font-mono hover:bg-slate-900">Solana</button>
-                        <button class="bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 border border-slate-600 text-slate-300 px-3 py-1 rounded text-[10px] font-mono hover:bg-slate-900">Polygon</button>
+                        <button class="bg-blue-600 text-slate-900 px-3 py-1 rounded text-[10px] font-mono">Ethereum</button>
+                        <button class="bg-white/80 backdrop-blur-xl border border-slate-200/50 border border-slate-600 text-slate-700 px-3 py-1 rounded text-[10px] font-mono hover:bg-slate-50">Solana</button>
+                        <button class="bg-white/80 backdrop-blur-xl border border-slate-200/50 border border-slate-600 text-slate-700 px-3 py-1 rounded text-[10px] font-mono hover:bg-slate-50">Polygon</button>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
@@ -430,14 +439,14 @@
                                 <td class="text-blue-600 hover:underline font-bold">0x28c6c06298d514db089934071355e5743bf21d60</td>
                                 <td><span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-[9px] font-bold border border-amber-200">CUSTODIAL (Binance)</span></td>
                                 <td class="text-center text-red-600 font-black"><i class="fa-solid fa-arrow-up"></i> OUTBOUND</td>
-                                <td class="text-right font-black text-white"><span class="val-usd">$1,200,000</span><span class="val-native">400 ETH</span></td>
+                                <td class="text-right font-black text-slate-900"><span class="val-usd">$1,200,000</span><span class="val-native">400 ETH</span></td>
                                 <td><img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-4 h-4 inline"> ETH</td>
                             </tr>
                             <tr class="cursor-pointer" onclick="openDossier('wallet', '0xd90...31b')">
                                 <td class="text-blue-600 hover:underline font-bold">0xd90e2f925da726b50c4ed8d0fb90ad053324f31b</td>
                                 <td><span class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-[9px] font-bold border border-purple-200">MIXER (Tornado Cash)</span></td>
                                 <td class="text-center text-emerald-600 font-black"><i class="fa-solid fa-arrow-down"></i> INBOUND</td>
-                                <td class="text-right font-black text-white"><span class="val-usd">$10,000,000</span><span class="val-native">3,125 ETH</span></td>
+                                <td class="text-right font-black text-slate-900"><span class="val-usd">$10,000,000</span><span class="val-native">3,125 ETH</span></td>
                                 <td><img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-4 h-4 inline"> ETH</td>
                             </tr>
                         </tbody>
@@ -452,20 +461,20 @@
         <div id="tab-counterparties" class="tab-content space-y-6 max-w-[1600px] mx-auto">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div class="data-card border-t-4 border-t-emerald-500">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Inbound Volume</p>
+                    <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Total Inbound Volume</p>
                     <p class="font-mono text-3xl font-black text-emerald-600 val-usd">$84,500,000</p>
                     <p class="font-mono text-3xl font-black text-emerald-600 val-native">26,500 ETH</p>
                 </div>
                 <div class="data-card border-t-4 border-t-red-500">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Outbound Volume</p>
+                    <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Total Outbound Volume</p>
                     <p class="font-mono text-3xl font-black text-red-600 val-usd">$83,047,109</p>
                     <p class="font-mono text-3xl font-black text-red-600 val-native">26,047 ETH</p>
                 </div>
             </div>
 
             <div class="data-card border-t-4 border-t-purple-500">
-                <h2 class="text-sm font-black text-white uppercase tracking-widest mb-4">Counterparty Intelligence</h2>
-                <div class="overflow-x-auto rounded border border-slate-700">
+                <h2 class="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Counterparty Intelligence</h2>
+                <div class="overflow-x-auto rounded border border-slate-200">
                     <table class="cyber-table whitespace-nowrap">
                         <thead>
                             <tr>
@@ -478,13 +487,13 @@
                             </tr>
                         </thead>
                         <tbody class="font-mono text-xs">
-                            <tr class="cursor-pointer hover:bg-slate-900 transition" onclick="openDossier('intel', 'Counterparty Profile')">
-                                <td class="text-slate-400">2026-05-27 08:14</td>
+                            <tr class="cursor-pointer hover:bg-slate-50 transition" onclick="openDossier('intel', 'Counterparty Profile')">
+                                <td class="text-slate-600">2026-05-27 08:14</td>
                                 <td><img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-4 h-4 inline"> ETH</td>
                                 <td class="text-blue-600">0xab12...89ef</td>
-                                <td><span class="font-bold text-white">CLS-88921 (Binance Hot)</span></td>
-                                <td class="text-slate-300">0x28c...d60</td>
-                                <td class="text-slate-400 text-[10px]">CEX Custodial Cashout endpoint.</td>
+                                <td><span class="font-bold text-slate-900">CLS-88921 (Binance Hot)</span></td>
+                                <td class="text-slate-700">0x28c...d60</td>
+                                <td class="text-slate-600 text-[10px]">CEX Custodial Cashout endpoint.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -498,23 +507,23 @@
         <div id="tab-assets" class="tab-content space-y-6 max-w-[1600px] mx-auto">
             <div class="data-card border-t-4 border-t-blue-500 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                    <h2 class="text-sm font-black text-white uppercase tracking-widest">Global Multi-Chain Portfolio</h2>
-                    <p class="text-[10px] font-mono text-slate-400 mt-1">Tracking all tokens, NFTs, and cross-chain holdings.</p>
+                    <h2 class="text-sm font-black text-slate-900 uppercase tracking-widest">Global Multi-Chain Portfolio</h2>
+                    <p class="text-[10px] font-mono text-slate-600 mt-1">Tracking all tokens, NFTs, and cross-chain holdings.</p>
                 </div>
                 <div class="flex gap-2 font-mono text-[10px]">
-                    <button class="bg-blue-600 text-white px-3 py-1.5 rounded font-bold">ALL CHAINS</button>
-                    <button class="bg-slate-800/50 text-slate-300 border border-slate-600 px-3 py-1.5 rounded hover:bg-slate-800">ETH</button>
-                    <button class="bg-slate-800/50 text-slate-300 border border-slate-600 px-3 py-1.5 rounded hover:bg-slate-800">SOL</button>
+                    <button class="bg-blue-600 text-slate-900 px-3 py-1.5 rounded font-bold">ALL CHAINS</button>
+                    <button class="bg-white/50 text-slate-700 border border-slate-600 px-3 py-1.5 rounded hover:bg-white">ETH</button>
+                    <button class="bg-white/50 text-slate-700 border border-slate-600 px-3 py-1.5 rounded hover:bg-white">SOL</button>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="data-card border border-slate-700 shadow-lg shadow-black/20">
-                    <h3 class="text-xs font-black uppercase text-slate-300 mb-4 border-b border-slate-700 pb-2">Balance Analytics</h3>
+                <div class="data-card border border-slate-200 shadow-lg shadow-black/20">
+                    <h3 class="text-xs font-black uppercase text-slate-700 mb-4 border-b border-slate-200 pb-2">Balance Analytics</h3>
                     <div class="h-64 relative w-full"><canvas id="chartBalances"></canvas></div>
                 </div>
-                <div class="data-card border border-slate-700 shadow-lg shadow-black/20">
-                    <h3 class="text-xs font-black uppercase text-slate-300 mb-4 border-b border-slate-700 pb-2">Holdings Distribution</h3>
+                <div class="data-card border border-slate-200 shadow-lg shadow-black/20">
+                    <h3 class="text-xs font-black uppercase text-slate-700 mb-4 border-b border-slate-200 pb-2">Holdings Distribution</h3>
                     <div class="h-64 relative w-full"><canvas id="chartChains"></canvas></div>
                 </div>
             </div>
@@ -525,21 +534,21 @@
         ====================================== -->
         <div id="tab-chains" class="tab-content max-w-[1600px] mx-auto">
             <div class="data-card border-t-4 border-t-indigo-500">
-                <h2 class="text-sm font-black text-white uppercase tracking-widest mb-4 border-b border-slate-700 pb-2">Supported Blockchain Networks</h2>
+                <h2 class="text-sm font-black text-slate-900 uppercase tracking-widest mb-4 border-b border-slate-200 pb-2">Supported Blockchain Networks</h2>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="p-4 border border-slate-700 rounded flex flex-col items-center justify-center gap-2 hover:border-blue-400 transition cursor-pointer">
+                    <div class="p-4 border border-slate-200 rounded flex flex-col items-center justify-center gap-2 hover:border-blue-400 transition cursor-pointer">
                         <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-10 h-10">
                         <span class="font-bold font-mono text-xs text-slate-700">Ethereum</span>
                     </div>
-                    <div class="p-4 border border-slate-700 rounded flex flex-col items-center justify-center gap-2 hover:border-blue-400 transition cursor-pointer">
+                    <div class="p-4 border border-slate-200 rounded flex flex-col items-center justify-center gap-2 hover:border-blue-400 transition cursor-pointer">
                         <img src="https://cryptologos.cc/logos/polygon-matic-logo.png" class="w-10 h-10">
                         <span class="font-bold font-mono text-xs text-slate-700">Polygon</span>
                     </div>
-                    <div class="p-4 border border-slate-700 rounded flex flex-col items-center justify-center gap-2 hover:border-blue-400 transition cursor-pointer">
+                    <div class="p-4 border border-slate-200 rounded flex flex-col items-center justify-center gap-2 hover:border-blue-400 transition cursor-pointer">
                         <img src="https://cryptologos.cc/logos/bnb-bnb-logo.png" class="w-10 h-10">
                         <span class="font-bold font-mono text-xs text-slate-700">BSC</span>
                     </div>
-                    <div class="p-4 border border-slate-700 rounded flex flex-col items-center justify-center gap-2 hover:border-blue-400 transition cursor-pointer">
+                    <div class="p-4 border border-slate-200 rounded flex flex-col items-center justify-center gap-2 hover:border-blue-400 transition cursor-pointer">
                         <img src="https://cryptologos.cc/logos/solana-sol-logo.png" class="w-10 h-10">
                         <span class="font-bold font-mono text-xs text-slate-700">Solana</span>
                     </div>
@@ -552,38 +561,38 @@
         ====================================== -->
         <div id="tab-transactions" class="tab-content max-w-[1600px] mx-auto space-y-6">
             
-            <div class="data-card border-l-4 border-l-blue-600 bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 shadow-lg shadow-black/20">
-                <div class="flex flex-col md:flex-row justify-between items-center gap-4 border-b border-slate-700 pb-4 mb-4">
+            <div class="data-card border-l-4 border-l-blue-600 bg-white/80 backdrop-blur-xl border border-slate-200/50 shadow-lg shadow-black/20">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4 border-b border-slate-200 pb-4 mb-4">
                     <div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Value Volume Transactions</p>
+                        <p class="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Total Value Volume Transactions</p>
                         <div class="flex gap-4">
-                            <span class="font-mono text-lg font-black text-emerald-600">IN: <span class="val-usd">$84.5M</span><span class="val-native">26.5k ETH</span></span>
-                            <span class="font-mono text-lg font-black text-red-600">OUT: <span class="val-usd">$83.0M</span><span class="val-native">26.0k ETH</span></span>
+                            <span class="font-mono text-lg font-black text-emerald-600">IN: <span class="val-usd" id="dyn-vol-in-usd">Fetching...</span><span class="val-native" id="dyn-vol-in-eth"></span></span>
+                            <span class="font-mono text-lg font-black text-red-600">OUT: <span class="val-usd" id="dyn-vol-out-usd">Fetching...</span><span class="val-native" id="dyn-vol-out-eth"></span></span>
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <button class="bg-blue-600 text-white px-3 py-1.5 rounded text-[10px] font-mono font-bold shadow-lg shadow-black/20">Multi-Chain</button>
-                        <button class="bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 border border-slate-600 text-slate-300 px-3 py-1.5 rounded text-[10px] font-mono hover:bg-slate-900">Bridging</button>
-                        <button class="bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 border border-slate-600 text-slate-300 px-3 py-1.5 rounded text-[10px] font-mono hover:bg-slate-900">Tokens/NFT</button>
+                        <button class="bg-blue-600 text-slate-900 px-3 py-1.5 rounded text-[10px] font-mono font-bold shadow-lg shadow-black/20">Multi-Chain</button>
+                        <button class="bg-white/80 backdrop-blur-xl border border-slate-200/50 border border-slate-600 text-slate-700 px-3 py-1.5 rounded text-[10px] font-mono hover:bg-slate-50">Bridging</button>
+                        <button class="bg-white/80 backdrop-blur-xl border border-slate-200/50 border border-slate-600 text-slate-700 px-3 py-1.5 rounded text-[10px] font-mono hover:bg-slate-50">Tokens/NFT</button>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-3 font-mono text-[10px] mb-6">
-                    <div class="bg-slate-900 p-3 rounded border border-slate-700 shadow-lg shadow-black/20 flex flex-col items-center"><span class="text-slate-400 font-bold mb-1">SWAPS</span><span class="text-blue-600 font-black text-sm">3,402</span></div>
-                    <div class="bg-slate-900 p-3 rounded border border-slate-700 shadow-lg shadow-black/20 flex flex-col items-center"><span class="text-slate-400 font-bold mb-1">BRIDGES</span><span class="text-indigo-600 font-black text-sm">845</span></div>
-                    <div class="bg-slate-900 p-3 rounded border border-slate-700 shadow-lg shadow-black/20 flex flex-col items-center"><span class="text-slate-400 font-bold mb-1">WRAPS/UNWRAPS</span><span class="text-slate-700 font-black text-sm">1,200</span></div>
-                    <div class="bg-slate-900 p-3 rounded border border-slate-700 shadow-lg shadow-black/20 flex flex-col items-center"><span class="text-slate-400 font-bold mb-1">MIXERS</span><span class="text-purple-600 font-black text-sm">142</span></div>
-                    <div class="bg-slate-900 p-3 rounded border border-slate-700 shadow-lg shadow-black/20 flex flex-col items-center"><span class="text-slate-400 font-bold mb-1">CEX_DEPOSIT</span><span class="text-red-600 font-black text-sm">38</span></div>
+                    <div class="bg-slate-50 p-3 rounded border border-slate-200 shadow-lg shadow-black/20 flex flex-col items-center"><span class="text-slate-600 font-bold mb-1">SWAPS</span><span class="text-blue-600 font-black text-sm" id="dyn-cnt-swaps">...</span></div>
+                    <div class="bg-slate-50 p-3 rounded border border-slate-200 shadow-lg shadow-black/20 flex flex-col items-center"><span class="text-slate-600 font-bold mb-1">BRIDGES</span><span class="text-indigo-600 font-black text-sm" id="dyn-cnt-bridges">...</span></div>
+                    <div class="bg-slate-50 p-3 rounded border border-slate-200 shadow-lg shadow-black/20 flex flex-col items-center"><span class="text-slate-600 font-bold mb-1">WRAPS/UNWRAPS</span><span class="text-slate-700 font-black text-sm" id="dyn-cnt-wraps">...</span></div>
+                    <div class="bg-slate-50 p-3 rounded border border-slate-200 shadow-lg shadow-black/20 flex flex-col items-center"><span class="text-slate-600 font-bold mb-1">MIXERS</span><span class="text-purple-600 font-black text-sm" id="dyn-cnt-mixers">...</span></div>
+                    <div class="bg-slate-50 p-3 rounded border border-slate-200 shadow-lg shadow-black/20 flex flex-col items-center"><span class="text-slate-600 font-bold mb-1">CEX_DEPOSIT</span><span class="text-red-600 font-black text-sm" id="dyn-cnt-cex">...</span></div>
                 </div>
             </div>
 
             <!-- Transaction History Table -->
-            <div class="data-card p-0 shadow-lg shadow-black/20 border-slate-700 mt-6 border-t-4 border-t-slate-800">
-                <div class="p-4 border-b border-slate-700 bg-slate-900 flex justify-between items-center">
-                    <h3 class="text-xs font-black uppercase text-white tracking-widest"><i class="fa-solid fa-list text-slate-400 mr-2"></i> Transaction History (Attributions & Patterns)</h3>
+            <div class="data-card p-0 shadow-lg shadow-black/20 border-slate-200 mt-6 border-t-4 border-t-slate-800">
+                <div class="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                    <h3 class="text-xs font-black uppercase text-slate-900 tracking-widest"><i class="fa-solid fa-list text-slate-600 mr-2"></i> Transaction History (Attributions & Patterns)</h3>
                     <div class="flex gap-2">
                         <input type="text" placeholder="Search Hash/Entity..." class="border border-slate-600 rounded px-2 py-1 text-xs font-mono outline-none focus:border-blue-500">
-                        <button class="bg-slate-800 text-white px-3 py-1 rounded text-xs font-mono font-bold"><i class="fa-solid fa-filter"></i></button>
+                        <button class="bg-white text-slate-900 px-3 py-1 rounded text-xs font-mono font-bold"><i class="fa-solid fa-filter"></i></button>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
@@ -601,40 +610,8 @@
                                 <th>Intelligence / Pattern</th>
                             </tr>
                         </thead>
-                        <tbody class="font-mono text-xs">
-                            <tr class="cursor-pointer hover:bg-blue-50 transition" onclick="openDossier('tx', '0xab12...89ef')">
-                                <td class="text-slate-300">2026-05-27 08:14</td>
-                                <td><img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-4 h-4 inline mr-1"> ETH</td>
-                                <td class="text-blue-600 hover:underline" onclick="event.stopPropagation(); verifyOnExplorer('0xab12...89ef')">0xab12...89ef</td>
-                                <td><span class="bg-amber-100 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded text-[9px] font-bold">CEX_DEPOSIT</span></td>
-                                <td class="text-center text-red-600 font-black"><i class="fa-solid fa-arrow-right"></i> OUT</td>
-                                <td><span class="text-white font-bold">SUBJECT (EOA)</span></td>
-                                <td><span class="text-amber-700 font-bold">Binance Hot 14</span></td>
-                                <td class="text-right font-black text-white"><span class="val-usd text-red-600">-$1,200,000</span><span class="val-native text-red-600">-400 ETH</span></td>
-                                <td class="text-[9px] text-slate-400">Terminal Egress / Cash Out</td>
-                            </tr>
-                            <tr class="cursor-pointer hover:bg-blue-50 transition" onclick="openDossier('tx', '0xcd34...90fa')">
-                                <td class="text-slate-300">2026-05-26 11:20</td>
-                                <td><img src="https://cryptologos.cc/logos/polygon-matic-logo.png" class="w-4 h-4 inline mr-1"> POLY</td>
-                                <td class="text-blue-600 hover:underline" onclick="event.stopPropagation(); verifyOnExplorer('0xcd34...90fa')">0xcd34...90fa</td>
-                                <td><span class="bg-indigo-100 text-indigo-800 border border-indigo-300 px-1.5 py-0.5 rounded text-[9px] font-bold">BRIDGE</span></td>
-                                <td class="text-center text-emerald-600 font-black"><i class="fa-solid fa-arrow-left"></i> IN</td>
-                                <td><span class="text-indigo-700 font-bold">Stargate Router</span></td>
-                                <td><span class="text-white font-bold">SUBJECT (EOA)</span></td>
-                                <td class="text-right font-black text-white"><span class="val-usd text-emerald-600">+$5,500,000</span><span class="val-native text-emerald-600">+5.5M USDC</span></td>
-                                <td class="text-[9px] text-slate-400">Chain Hopping Detected</td>
-                            </tr>
-                            <tr class="cursor-pointer hover:bg-blue-50 transition" onclick="openDossier('tx', '0xef56...12bc')">
-                                <td class="text-slate-300">2026-05-25 09:10</td>
-                                <td><img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-4 h-4 inline mr-1"> ETH</td>
-                                <td class="text-blue-600 hover:underline" onclick="event.stopPropagation(); verifyOnExplorer('0xef56...12bc')">0xef56...12bc</td>
-                                <td><span class="bg-purple-100 text-purple-800 border border-purple-300 px-1.5 py-0.5 rounded text-[9px] font-bold">MIXER</span></td>
-                                <td class="text-center text-emerald-600 font-black"><i class="fa-solid fa-arrow-left"></i> IN</td>
-                                <td><span class="text-purple-700 font-bold">Tornado Cash</span></td>
-                                <td><span class="text-white font-bold">SUBJECT (EOA)</span></td>
-                                <td class="text-right font-black text-white"><span class="val-usd text-emerald-600">+$310,000</span><span class="val-native text-emerald-600">+100 ETH</span></td>
-                                <td class="text-[9px] text-slate-400">Obfuscation Entry</td>
-                            </tr>
+                        <tbody class="font-mono text-xs dynamic-data-tbody">
+                            <tr><td colspan="9" class="text-center py-4 text-slate-600"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Fetching Live Data...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -645,7 +622,7 @@
              TAB 6: BALANCES (Moved to Assets)
         ====================================== -->
         <div id="tab-balances" class="tab-content max-w-[1600px] mx-auto">
-            <div class="data-card text-center py-32 text-slate-400 font-mono border-dashed border-2 border-slate-600 bg-slate-900">
+            <div class="data-card text-center py-32 text-slate-600 font-mono border-dashed border-2 border-slate-600 bg-slate-50">
                 Balances intelligence successfully merged into <a href="#" onclick="switchTab('tab-assets')" class="text-blue-600 font-bold hover:underline">Assets</a> tab.
             </div>
         </div>
@@ -655,42 +632,42 @@
         ====================================== -->
         <div id="tab-graph" class="tab-content h-full max-w-[1600px] mx-auto space-y-6">
             <!-- Controls -->
-            <div class="data-card p-4 flex flex-col md:flex-row justify-between items-center gap-4 border-t-4 border-t-blue-600 bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 shadow-lg shadow-black/20">
-                <h2 class="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2"><i class="fa-solid fa-diagram-project text-blue-600"></i> Autonomous Trace Graph</h2>
+            <div class="data-card p-4 flex flex-col md:flex-row justify-between items-center gap-4 border-t-4 border-t-blue-600 bg-white/80 backdrop-blur-xl border border-slate-200/50 shadow-lg shadow-black/20">
+                <h2 class="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2"><i class="fa-solid fa-diagram-project text-blue-600"></i> Autonomous Trace Graph</h2>
                 
                 <div class="flex flex-wrap items-center gap-3">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase">Layout:</span>
-                    <select id="graph-layout-selector" onchange="changeGraphLayout()" class="bg-slate-900 border border-slate-600 text-white text-xs font-mono px-3 py-1.5 rounded outline-none focus:border-blue-500">
+                    <span class="text-[10px] font-bold text-slate-600 uppercase">Layout:</span>
+                    <select id="graph-layout-selector" onchange="changeGraphLayout()" class="bg-slate-50 border border-slate-600 text-slate-900 text-xs font-mono px-3 py-1.5 rounded outline-none focus:border-blue-500">
                         <option value="hierarchical_lr">Hierarchical Tree (LR)</option>
                         <option value="hierarchical_ud">Hierarchical (UD)</option>
                         <option value="force">Force-Directed Physics</option>
                     </select>
                     
-                    <span class="text-[10px] font-bold text-slate-400 uppercase ml-2">Custom Trace:</span>
-                    <select class="bg-slate-900 border border-slate-600 text-white text-xs font-mono px-3 py-1.5 rounded outline-none focus:border-blue-500">
+                    <span class="text-[10px] font-bold text-slate-600 uppercase ml-2">Custom Trace:</span>
+                    <select class="bg-slate-50 border border-slate-600 text-slate-900 text-xs font-mono px-3 py-1.5 rounded outline-none focus:border-blue-500">
                         <option>Asset Tracer</option>
                         <option>Custodial Scanner</option>
                         <option>Tracer</option>
                     </select>
                     
-                    <button class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-1.5 rounded text-[10px] uppercase font-bold font-mono transition shadow-lg shadow-black/20 flex items-center gap-2" onclick="alertAction('Generating AI Report', 'Processing Infographics')"><i class="fa-solid fa-robot"></i> Generate AI Infographics</button>
-                    <button class="bg-slate-800 hover:bg-slate-900 text-white px-5 py-1.5 rounded text-[10px] uppercase font-bold font-mono transition shadow-lg shadow-black/20 flex items-center gap-2" onclick="switchTab('tab-report')"><i class="fa-solid fa-file-pdf"></i> Investigation Report</button>
+                    <button class="bg-blue-600 hover:bg-blue-700 text-slate-900 px-5 py-1.5 rounded text-[10px] uppercase font-bold font-mono transition shadow-lg shadow-black/20 flex items-center gap-2" onclick="alertAction('Generating AI Report', 'Processing Infographics')"><i class="fa-solid fa-robot"></i> Generate AI Infographics</button>
+                    <button class="bg-white hover:bg-slate-50 text-slate-900 px-5 py-1.5 rounded text-[10px] uppercase font-bold font-mono transition shadow-lg shadow-black/20 flex items-center gap-2" onclick="switchTab('tab-report')"><i class="fa-solid fa-file-pdf"></i> Investigation Report</button>
                 </div>
             </div>
             
             <div class="flex flex-col lg:flex-row gap-4 relative">
                 <!-- Trace Graph Canvas -->
                 <div class="flex-grow shadow-lg shadow-black/20 relative w-full lg:w-3/4">
-                    <div class="absolute top-4 left-4 z-10 bg-slate-800/80 backdrop-blur-xl border border-slate-700/50/90 backdrop-blur px-3 py-2 rounded border border-slate-700 text-[10px] font-mono font-bold text-slate-300 shadow-lg shadow-black/20 flex flex-col gap-1 pointer-events-none">
+                    <div class="absolute top-4 left-4 z-10 bg-white/80 backdrop-blur-xl border border-slate-200/50/90 backdrop-blur px-3 py-2 rounded border border-slate-200 text-[10px] font-mono font-bold text-slate-700 shadow-lg shadow-black/20 flex flex-col gap-1 pointer-events-none">
                         <div class="flex items-center gap-2 text-blue-600"><i class="fa-solid fa-circle animate-pulse text-[8px]"></i> GRAPH ENGINE ACTIVE</div>
-                        <div class="text-slate-400">Nodes movable | Right-click for options</div>
+                        <div class="text-slate-600">Nodes movable | Right-click for options</div>
                     </div>
                     <div id="trace-network" class="graph-container h-[700px]"></div>
                 </div>
 
                 <!-- Color Legends & Tracing Data -->
-                <div class="data-card h-[700px] border border-slate-700 shadow-lg shadow-black/20 w-full lg:w-1/4 !opacity-100 flex flex-col">
-                    <h3 class="text-xs font-black uppercase text-white tracking-widest border-b border-slate-700 pb-3 mb-4"><i class="fa-solid fa-palette mr-1 text-slate-400"></i> Color Legends</h3>
+                <div class="data-card h-[700px] border border-slate-200 shadow-lg shadow-black/20 w-full lg:w-1/4 !opacity-100 flex flex-col">
+                    <h3 class="text-xs font-black uppercase text-slate-900 tracking-widest border-b border-slate-200 pb-3 mb-4"><i class="fa-solid fa-palette mr-1 text-slate-600"></i> Color Legends</h3>
                     <ul class="space-y-3 font-mono text-[10px] text-slate-700 flex-grow">
                         <li class="flex items-center gap-2"><span class="w-3 h-3 bg-[#ef4444] rounded-full border border-slate-600"></span> Subject Wallet</li>
                         <li class="flex items-center gap-2"><span class="w-3 h-3 bg-[#3b82f6] rounded-full border border-slate-600"></span> Regular Wallets</li>
@@ -700,9 +677,9 @@
                         <li class="flex items-center gap-2"><span class="w-3 h-3 bg-[#64748b] rounded-full border border-slate-600"></span> Mixers</li>
                         <li class="flex items-center gap-2"><span class="w-3 h-3 bg-[#be123c] rounded-full border border-slate-600"></span> High-risk addresses</li>
                     </ul>
-                    <div class="border-t border-slate-700 pt-4 mt-auto">
-                        <h3 class="text-[10px] font-black uppercase text-white mb-2">Live Ledger Details</h3>
-                        <p class="text-[9px] font-mono text-slate-400 leading-relaxed">Select nodes or edges to populate real-time ledger intelligence in the sliding modal.</p>
+                    <div class="border-t border-slate-200 pt-4 mt-auto">
+                        <h3 class="text-[10px] font-black uppercase text-slate-900 mb-2">Live Ledger Details</h3>
+                        <p class="text-[9px] font-mono text-slate-600 leading-relaxed">Select nodes or edges to populate real-time ledger intelligence in the sliding modal.</p>
                     </div>
                 </div>
             </div>
@@ -712,42 +689,42 @@
              TAB 8: AML & OBFUSCATION
         ====================================== -->
         <div id="tab-aml" class="tab-content space-y-6 max-w-[1600px] mx-auto">
-            <div class="data-card border-t-4 border-t-red-600 bg-slate-800/80 backdrop-blur-xl border border-slate-700/50">
-                <h2 class="text-sm font-black text-white uppercase tracking-widest mb-6">AML / CFT Compliance Report</h2>
+            <div class="data-card border-t-4 border-t-red-600 bg-white/80 backdrop-blur-xl border border-slate-200/50">
+                <h2 class="text-sm font-black text-slate-900 uppercase tracking-widest mb-6">AML / CFT Compliance Report</h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <div class="alert-flashing rounded-xl flex flex-col items-center justify-center py-8">
-                        <div class="text-7xl font-black font-mono text-red-600 drop-shadow-lg shadow-black/20">94<span class="text-3xl text-red-400">.2</span></div>
-                        <div class="text-xs font-bold uppercase tracking-widest text-red-700 mt-2">Critical AML Risk</div>
+                        <div class="text-7xl font-black font-mono text-red-600 drop-shadow-lg shadow-black/20" id="dyn-aml-score">--<span class="text-3xl text-red-400">.-</span></div>
+                        <div class="text-xs font-bold uppercase tracking-widest text-red-700 mt-2">AML Score</div>
                     </div>
                     
-                    <div class="col-span-2 bg-slate-900 p-5 rounded-xl border border-slate-700 shadow-lg shadow-black/20 cursor-pointer hover:border-red-400 transition" onclick="openDossier('math', 'Weighted AML Score')">
-                        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-widest border-b border-slate-700 pb-2 mb-4">Risk Exposure Breakdown (Weighted)</h3>
+                    <div class="col-span-2 bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-lg shadow-black/20 cursor-pointer hover:border-red-400 transition" onclick="openDossier('math', 'Weighted AML Score')">
+                        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-widest border-b border-slate-200 pb-2 mb-4">Risk Exposure Breakdown (Weighted)</h3>
                         <div class="space-y-3 font-mono text-[10px]">
-                            <div class="flex justify-between items-center"><span class="text-slate-300">Exposure Rate</span><span class="text-red-600 font-bold bg-red-100 px-2 py-0.5 rounded border border-red-200">94.2%</span></div>
-                            <div class="flex justify-between items-center"><span class="text-slate-300">Sanctions Overlap (OFAC)</span><span class="text-red-600 font-bold">Critical (35%)</span></div>
-                            <div class="flex justify-between items-center"><span class="text-slate-300">Mixer Exposure</span><span class="text-red-600 font-bold">High (20%)</span></div>
-                            <div class="flex justify-between items-center"><span class="text-slate-300">Illicit Transactions</span><span class="text-amber-600 font-bold">Detected</span></div>
-                            <div class="flex justify-between items-center pt-2 border-t border-slate-700">
-                                <span class="text-slate-300">Consistent Senders:</span>
-                                <span class="text-white font-bold">12 Wallets (<span class="val-usd">$28.4M</span><span class="val-native">8.9k ETH</span>)</span>
+                            <div class="flex justify-between items-center"><span class="text-slate-700">Exposure Rate</span><span class="text-slate-600 font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200" id="dyn-aml-rate">Scanning...</span></div>
+                            <div class="flex justify-between items-center"><span class="text-slate-700">Sanctions Overlap (OFAC)</span><span class="text-slate-600 font-bold" id="dyn-aml-ofac">Scanning...</span></div>
+                            <div class="flex justify-between items-center"><span class="text-slate-700">Mixer Exposure</span><span class="text-slate-600 font-bold" id="dyn-aml-mixer">Scanning...</span></div>
+                            <div class="flex justify-between items-center"><span class="text-slate-700">Illicit Transactions</span><span class="text-slate-600 font-bold" id="dyn-aml-illicit">Scanning...</span></div>
+                            <div class="flex justify-between items-center pt-2 border-t border-slate-200">
+                                <span class="text-slate-700">Consistent Senders:</span>
+                                <span class="text-slate-600 font-bold" id="dyn-aml-senders">Scanning...</span>
                             </div>
                             <div class="flex justify-between items-center">
-                                <span class="text-slate-300">Last Receivers (Deposits to):</span>
-                                <span class="text-white font-bold">3 CEXs (<span class="val-usd">$12.8M</span><span class="val-native">4k ETH</span>)</span>
+                                <span class="text-slate-700">Last Receivers (Deposits to):</span>
+                                <span class="text-slate-600 font-bold" id="dyn-aml-receivers">Scanning...</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <h3 class="text-xs font-bold text-slate-700 uppercase tracking-widest border-b border-slate-700 pb-2 mb-4">VASP Interactions</h3>
-                <div class="overflow-x-auto border border-slate-700 rounded">
+                <h3 class="text-xs font-bold text-slate-700 uppercase tracking-widest border-b border-slate-200 pb-2 mb-4">VASP Interactions</h3>
+                <div class="overflow-x-auto border border-slate-200 rounded">
                     <table class="cyber-table whitespace-nowrap w-full">
                         <thead><tr><th>Entity & Wallet Address</th><th>Classification / Typology</th><th class="text-right">Exposure Vol</th></tr></thead>
-                        <tbody>
-                            <tr><td class="font-mono text-blue-600 cursor-pointer hover:underline" onclick="openDossier('intel', 'Tornado Cash')">Tornado Cash Router<br><span class="text-[9px] text-slate-400">0xd90...31b</span></td><td><span class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-[9px] border border-purple-200 font-bold">Sanctioned Mixer</span></td><td class="text-right font-mono font-bold text-red-600"><span class="val-usd">$14,500,000</span><span class="val-native">4,500 ETH</span></td></tr>
-                            <tr><td class="font-mono text-blue-600 cursor-pointer hover:underline" onclick="openDossier('intel', 'Binance Hot 14')">Binance Hot Wallet 14<br><span class="text-[9px] text-slate-400">0x28c...d60</span></td><td><span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-[9px] border border-amber-200 font-bold">VASP (CEX) Terminal</span></td><td class="text-right font-mono font-bold text-red-600"><span class="val-usd">$8,200,000</span><span class="val-native">2,500 ETH</span></td></tr>
-                        </tbody>
+                        <tbody class="dynamic-data-tbody">
+<!-- MOCK DATA STRIPPED - WAITING FOR API FETCH -->
+<tr><td colspan="6" class="text-center py-4 text-slate-600"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Fetching Live Data...</td></tr>
+</tbody>
                     </table>
                 </div>
             </div>
@@ -758,8 +735,8 @@
         ====================================== -->
         <div id="tab-georisk" class="tab-content h-full max-w-[1600px] mx-auto space-y-6">
             <div class="data-card h-[500px] p-0 relative overflow-hidden flex flex-col border-slate-600 border-t-4 border-t-emerald-500">
-                <div class="p-4 bg-slate-800/80 backdrop-blur-xl border border-slate-700/50/90 backdrop-blur border-b border-slate-700 flex justify-between items-center z-10 absolute top-0 w-full shadow-lg shadow-black/20">
-                    <h2 class="text-sm font-black text-white uppercase tracking-widest"><i class="fa-solid fa-earth-americas text-emerald-500 mr-2"></i> Global GeoRisk Map</h2>
+                <div class="p-4 bg-white/80 backdrop-blur-xl border border-slate-200/50/90 backdrop-blur border-b border-slate-200 flex justify-between items-center z-10 absolute top-0 w-full shadow-lg shadow-black/20">
+                    <h2 class="text-sm font-black text-slate-900 uppercase tracking-widest"><i class="fa-solid fa-earth-americas text-emerald-500 mr-2"></i> Global GeoRisk Map</h2>
                     <span class="text-[9px] font-mono bg-emerald-50 text-emerald-600 px-2 py-1 rounded border border-emerald-200 shadow-lg shadow-black/20 font-bold">DATA INTEGRITY: NO MOCKS</span>
                 </div>
                 
@@ -769,18 +746,18 @@
                     <div class="absolute top-[35%] left-[75%] group cursor-pointer z-20" onclick="openDossier('geo', 'DPRK Node')">
                         <div class="w-3 h-3 bg-red-500 rounded-full animate-ping absolute"></div>
                         <div class="w-3 h-3 bg-red-600 rounded-full relative z-10 shadow-[0_0_10px_rgba(220,38,38,0.5)] border border-white"></div>
-                        <div class="hidden group-hover:block bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 border border-red-200 text-[10px] font-mono p-3 rounded mt-2 absolute top-2 w-64 z-30 shadow-xl">
+                        <div class="hidden group-hover:block bg-white/80 backdrop-blur-xl border border-slate-200/50 border border-red-200 text-[10px] font-mono p-3 rounded mt-2 absolute top-2 w-64 z-30 shadow-xl">
                             <strong class="text-red-700 block mb-1 text-xs">Primary Operations: DPRK</strong>
-                            <span class="text-slate-300">IP: <span class="text-white font-bold">175.45.176.x</span></span><br>
-                            <span class="text-slate-400 block border-t border-slate-100 pt-1 mt-1">Associated Entity: SUBJECT WALLET<br>LLM Adv. Threat Intelligence Confirmed.</span>
+                            <span class="text-slate-700">IP: <span class="text-slate-900 font-bold">175.45.176.x</span></span><br>
+                            <span class="text-slate-600 block border-t border-slate-100 pt-1 mt-1">Associated Entity: SUBJECT WALLET<br>LLM Adv. Threat Intelligence Confirmed.</span>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="data-card p-0 overflow-hidden shadow-lg shadow-black/20">
-                <div class="p-4 border-b border-slate-700 bg-slate-900">
-                    <h3 class="text-xs font-black uppercase text-white tracking-widest"><i class="fa-solid fa-server text-emerald-600 mr-2"></i> Associated IP Relay Nodes & Transactions</h3>
+                <div class="p-4 border-b border-slate-200 bg-slate-50">
+                    <h3 class="text-xs font-black uppercase text-slate-900 tracking-widest"><i class="fa-solid fa-server text-emerald-600 mr-2"></i> Associated IP Relay Nodes & Transactions</h3>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="cyber-table whitespace-nowrap w-full">
@@ -793,14 +770,8 @@
                                 <th class="text-right">Total Amount Sent/Received</th>
                             </tr>
                         </thead>
-                        <tbody class="font-mono text-xs">
-                            <tr class="hover:bg-slate-800/50 transition cursor-pointer" onclick="openDossier('geo', 'DPRK Node')">
-                                <td><span class="font-bold text-white">DPRK (Pyongyang)</span></td>
-                                <td><span class="text-slate-400">175.45.176.x</span></td>
-                                <td><span class="text-slate-400">2026-05-25 09:10</span></td>
-                                <td><span class="text-blue-600 hover:underline">0x742d...44e</span></td>
-                                <td class="text-right font-black"><span class="val-usd text-white">$10.0M</span><span class="val-native text-white">3,125 ETH</span></td>
-                            </tr>
+                        <tbody class="font-mono text-xs dynamic-data-tbody">
+                            <tr><td colspan="5" class="text-center py-4 text-slate-600"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Fetching Live Geo Data...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -811,40 +782,48 @@
              TAB 10: CROSS-INTELLIGENCE (OSINT)
         ====================================== -->
         <div id="tab-intelligence" class="tab-content max-w-[1600px] mx-auto space-y-6">
-            <div class="data-card border-t-4 border-t-slate-800 bg-slate-800/80 backdrop-blur-xl border border-slate-700/50">
-                <h2 class="text-sm font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2"><i class="fa-solid fa-user-secret text-white"></i> OSINT & Reconnaissance Summary</h2>
+            <div class="data-card border-t-4 border-t-slate-800 bg-white/80 backdrop-blur-xl border border-slate-200/50">
+                <h2 class="text-sm font-black text-slate-900 uppercase tracking-widest mb-6 flex items-center gap-2"><i class="fa-solid fa-user-secret text-slate-900"></i> OSINT & Reconnaissance Summary</h2>
                 
                 <div class="bg-amber-50 border border-amber-200 p-4 rounded mb-6 font-mono text-xs text-amber-900">
                     <strong>Custodial Wallet Entry:</strong> <span id="intel-id-custodial">Loading...</span>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 font-mono text-xs">
-                    <div class="bg-slate-900 p-4 rounded border border-slate-700">
-                        <span class="text-slate-400 font-bold block mb-1">Social Media & OSINT</span>
+                    <div class="bg-slate-50 p-4 rounded border border-slate-200">
+                        <span class="text-slate-600 font-bold block mb-1">Social Media & OSINT</span>
                         <span id="intel-id-osint" class="text-blue-400 font-bold block">Loading...</span>
                     </div>
-                    <div class="bg-slate-900 p-4 rounded border border-slate-700">
-                        <span class="text-slate-400 font-bold block mb-1">Darknet Mentions</span>
+                    <div class="bg-slate-50 p-4 rounded border border-slate-200">
+                        <span class="text-slate-600 font-bold block mb-1">Darknet Mentions</span>
                         <span id="intel-id-darknet" class="text-red-400 font-bold block">Loading...</span>
                     </div>
-                    <div class="bg-slate-900 p-4 rounded border border-slate-700">
-                        <span class="text-slate-400 font-bold block mb-1">Arkham Intelligence</span>
+                    <div class="bg-slate-50 p-4 rounded border border-slate-200">
+                        <span class="text-slate-600 font-bold block mb-1">Arkham Intelligence</span>
                         <span id="intel-id-arkham" class="text-emerald-400 font-bold block">Loading...</span>
                     </div>
-                    <div class="bg-slate-900 p-4 rounded border border-slate-700">
-                        <span class="text-slate-400 font-bold block mb-1">VASP Directory Alias</span>
+                    <div class="bg-slate-50 p-4 rounded border border-slate-200">
+                        <span class="text-slate-600 font-bold block mb-1">VASP Directory Alias</span>
                         <span id="intel-id-vasp" class="text-emerald-400 font-bold block">Loading...</span>
                     </div>
-                    <div class="bg-slate-900 p-4 rounded border border-slate-700 md:col-span-2">
-                        <span class="text-slate-400 font-bold block mb-1">Threat Exposure & Interacted Entities</span>
-                        <span class="text-white block">Tagged as Malicious: <strong id="intel-id-malicious" class="bg-slate-600 text-white px-2 py-0.5 rounded ml-1">Loading...</strong></span>
+                    <div class="bg-slate-50 p-4 rounded border border-slate-200 md:col-span-2">
+                        <span class="text-slate-600 font-bold block mb-1">Threat Exposure & Interacted Entities</span>
+                        <span class="text-slate-900 block">Tagged as Malicious: <strong id="intel-id-malicious" class="bg-slate-600 text-slate-900 px-2 py-0.5 rounded ml-1">Loading...</strong></span>
                     </div>
                 </div>
             </div>
             
             <script>
                 async function fetchLiveIdIntel() {
-                    const address = '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'; // Example address for nemesis_id_new
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const address = urlParams.get('address') || 'Unknown Address';
+                    
+                    // Set basic UI elements
+                    const addrSpan = document.getElementById('header-address');
+                    if (addrSpan) addrSpan.innerText = address;
+                    const addrCont = document.getElementById('header-address-container');
+                    if (addrCont) addrCont.onclick = () => copyToClipboard(address);
+
                     try {
                         let res = await fetch(`http://127.0.0.1:8088/api/nemesis_id/intel/${address}`);
                         let data = await res.json();
@@ -858,15 +837,27 @@
                         let malEl = document.getElementById('intel-id-malicious');
                         if (data.is_malicious) {
                             malEl.innerText = "YES";
-                            malEl.className = "bg-red-600 text-white px-2 py-0.5 rounded ml-1 font-bold";
+                            malEl.className = "bg-red-600 text-slate-900 px-2 py-0.5 rounded ml-1 font-bold";
+                            document.getElementById('header-threat-tags').innerHTML = `<span class="bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded shadow-lg shadow-black/20"><i class="fa-solid fa-skull mr-1"></i> Threat Detected</span>`;
                         } else {
                             malEl.innerText = "NO";
-                            malEl.className = "bg-emerald-600 text-white px-2 py-0.5 rounded ml-1 font-bold";
+                            malEl.className = "bg-emerald-600 text-slate-900 px-2 py-0.5 rounded ml-1 font-bold";
+                            document.getElementById('header-threat-tags').innerHTML = `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded shadow-lg shadow-black/20"><i class="fa-solid fa-check mr-1"></i> No Threats Found</span>`;
                         }
                     } catch (e) {
                         console.error('Failed to load intel', e);
                     }
                 }
+                
+                // Initialize URL parameters on load
+                document.addEventListener('DOMContentLoaded', () => {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const address = urlParams.get('address') || 'Unknown Address';
+                    const addrSpan = document.getElementById('header-address');
+                    if (addrSpan) addrSpan.innerText = address;
+                    const addrCont = document.getElementById('header-address-container');
+                    if (addrCont) addrCont.onclick = () => copyToClipboard(address);
+                });
                 
                 // Fetch when tab switches
                 const origSwitchTab = window.switchTab;
@@ -883,32 +874,14 @@
              TAB 11: AI INSIGHTS REPORT
         ====================================== -->
         <div id="tab-ai-insights" class="tab-content max-w-[1600px] mx-auto">
-            <div class="data-card border-t-4 border-t-purple-600 bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 shadow-lg shadow-black/20 doc-style">
+            <div class="data-card border-t-4 border-t-purple-600 bg-white/80 backdrop-blur-xl border border-slate-200/50 shadow-lg shadow-black/20 doc-style">
                 <div class="flex justify-between items-center border-b border-slate-600 pb-4 mb-6">
-                    <h2 class="text-lg font-black text-white uppercase tracking-widest flex items-center gap-3 font-serif"><i class="fa-solid fa-brain text-purple-600 text-xl"></i> AI Insights Report (Advanced LLM)</h2>
-                    <button onclick="switchTab('tab-report')" class="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2 rounded text-xs font-bold font-mono uppercase tracking-widest transition shadow-xl shadow-black/40"><i class="fa-solid fa-file-export mr-2"></i> Export Report</button>
+                    <h2 class="text-lg font-black text-slate-900 uppercase tracking-widest flex items-center gap-3 font-serif"><i class="fa-solid fa-brain text-purple-600 text-xl"></i> AI Insights Report (Advanced LLM)</h2>
+                    <button onclick="switchTab('tab-report')" class="bg-slate-50 hover:bg-white text-slate-900 px-5 py-2 rounded text-xs font-bold font-mono uppercase tracking-widest transition shadow-xl shadow-black/40"><i class="fa-solid fa-file-export mr-2"></i> Export Report</button>
                 </div>
                 
-                <div class="space-y-6 font-serif text-sm text-slate-700 leading-relaxed">
-                    <p><strong>Summary:</strong> The "discontinuity problem" represents the holy grail of modern crypto forensics. When an asset moves from Ethereum, enters a decentralized bridge or a mixer, and emerges on Solana, the native ledger link is physically and cryptographically severed. There is no on-chain variable that says Transaction A on Ethereum equals Transaction B on Solana. To make the Lionsgate Intelligence Network's "Nemesis" tracer a reality, this gap is bridged using probability, data science, and massive infrastructure.</p>
-                    
-                    <p><strong>Methodology & Data Sources:</strong> Unified identity graph combining blockchain, OSINT, and darknet data.</p>
-                    <p><strong>Findings & Timeline:</strong> Subject wallet activated on 2023-04-12, funded via Tornado Cash.</p>
-                    
-                    <div class="bg-slate-900 border border-slate-700 p-4 rounded font-mono text-xs">
-                        <strong>Transactions Analysis & Patterns:</strong> Peel chain execution. High velocity transfers.<br>
-                        <strong>Metrics:</strong> 14,205 transactions. $18.2M Lifetime Volume.<br>
-                        <strong>Risks:</strong> Critical AML Exposure. OFAC Sanctions match.<br>
-                        <strong>Source & Destination:</strong> Tornado Cash &rarr; Binance Hot Wallet 14.<br>
-                        <strong>Clustered Wallets:</strong> 142 associated wallets.<br>
-                        <strong>Custodian Destination:</strong> Binance P2P (83% Probability).
-                    </div>
-                    
-                    <div class="flex items-center justify-center p-6 bg-slate-800/50 border border-slate-600 rounded border-dashed text-slate-400 font-mono text-xs">
-                        [ Blockchain Snapshot Transaction Graph Rendered Here ]
-                    </div>
-                    
-                    <p class="bg-blue-50 border border-blue-200 p-4 rounded text-blue-900 font-bold"><strong>Recommendations:</strong> Issue preservation order referencing Binance deposit address 0x28c...d60.</p>
+                <div id="ai-insights-content" class="space-y-6 font-serif text-sm text-slate-700 leading-relaxed">
+                    <p><em>Awaiting AI Generation... (Feature requires backend connection)</em></p>
                 </div>
             </div>
         </div>
@@ -916,30 +889,37 @@
         <!-- =====================================
              TAB 12: GENERATE INFOGRAPHICS FULL REPORT
         ====================================== -->
-        <div id="tab-report" class="tab-content bg-slate-800 p-4 md:p-8 rounded-xl overflow-y-auto max-h-[85vh]">
-            <div class="max-w-[8.5in] mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 p-4 rounded-lg shadow-lg shadow-black/20 border border-slate-600">
+        <div id="tab-report" class="tab-content bg-white p-4 md:p-8 rounded-xl overflow-y-auto max-h-[85vh]">
+            <div class="max-w-[8.5in] mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 bg-white/80 backdrop-blur-xl border border-slate-200/50 p-4 rounded-lg shadow-lg shadow-black/20 border border-slate-600">
                 <div class="flex-grow">
-                    <p class="text-white text-sm font-bold flex items-center gap-2"><i class="fa-solid fa-file-contract text-blue-600 text-xl"></i> Law Enforcement Evidentiary Document</p>
+                    <p class="text-slate-900 text-sm font-bold flex items-center gap-2"><i class="fa-solid fa-file-contract text-blue-600 text-xl"></i> Law Enforcement Evidentiary Document</p>
                     <div class="mt-2 flex items-center gap-2 font-mono text-xs">
-                        <label for="zip-code" class="text-slate-400 font-bold">Enter Client Zip Code:</label>
+                        <label for="zip-code" class="text-slate-600 font-bold">Enter Client Zip Code:</label>
                         <input type="text" id="zip-code" placeholder="e.g., 90210" class="border border-slate-600 rounded px-2 py-1 outline-none w-24" onkeyup="updateZipCode()">
                     </div>
                 </div>
-                <button onclick="downloadReport()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-6 rounded-lg transition text-xs uppercase tracking-widest shadow-xl shadow-black/40 flex items-center gap-2 w-full md:w-auto justify-center">
+                <button onclick="downloadReport()" class="bg-red-600 hover:bg-red-700 text-slate-900 font-bold py-2.5 px-6 rounded-lg transition text-xs uppercase tracking-widest shadow-xl shadow-black/40 flex items-center gap-2 w-full md:w-auto justify-center">
                     <i class="fa-solid fa-download"></i> Export as PDF
                 </button>
             </div>
 
             <!-- THE ACTUAL PRINTABLE CONTAINER -->
             <div id="printable-area" class="print-doc-container active relative">
-                <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; margin: auto; width: 60%; opacity: 0.03; pointer-events: none; z-index: 0; background-image: url('logo_nemesis.png'); background-repeat: no-repeat; background-position: center; background-size: contain;"></div>
+                <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; margin: auto; width: 60%; opacity: 0.03; pointer-events: none; z-index: 0; background-image: none; background-repeat: no-repeat; background-position: center; background-size: contain;"></div>
                 
                 <div style="position: relative; z-index: 10;">
                     <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px;">
-                        <img src="logo_nemesis.png" alt="LIONSGATE" style="height: 60px; margin: 0 auto 10px auto; filter: grayscale(100%);" onerror="this.src='https://via.placeholder.com/150x60?text=LIONSGATE'">
+                        <img src="/static/images/logo_nemesis.png" alt="LIONSGATE NETWORK" style="height: 60px; margin: 0 auto 10px auto; filter: grayscale(100%);" >
                         <h1 style="font-size: 24px; font-weight: 900; text-transform: uppercase; margin: 0; letter-spacing: 2px; color: #f8fafc;">Cyber Intelligence & Forensic Report</h1>
                         <p style="font-size: 12px; font-weight: bold; color: #f8fafc; text-transform: uppercase; letter-spacing: 2px; margin: 5px 0 0 0;">Strictly Confidential / Evidentiary Use</p>
-                        <p style="font-size: 12px; font-family: monospace; margin-top: 15px; color: #f8fafc;">NEMESIS ID: <span style="font-weight: bold;">NMS-WALLET-ETH-00093231</span> | DATE: May 27, 2026</p>
+                        <p style="font-size: 12px; font-family: monospace; margin-top: 15px; color: #f8fafc;">NEMESIS ID: <span style="font-weight: bold;" id="report-nemesis-id">Loading...</span> | DATE: <span id="report-date">Loading...</span></p>
+                        <script>
+                            document.addEventListener("DOMContentLoaded", () => {
+                                const urlParams = new URLSearchParams(window.location.search);
+                                document.getElementById('report-nemesis-id').innerText = urlParams.get('address') || 'Unknown';
+                                document.getElementById('report-date').innerText = new Date().toLocaleDateString();
+                            });
+                        </script>
                     </div>
 
                     <h2 style="font-size: 16px; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-bottom: 10px;">Table of Contents</h2>
@@ -977,10 +957,10 @@
                     <h2 style="font-size: 16px; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-bottom: 10px;">Chronological Fund Flow & Source/Destination Entities</h2>
                     <table style="font-size: 11px; margin-bottom: 15px; width: 100%; border-collapse: collapse;">
                         <thead><tr style="background: #eee;"><th style="border: 1px solid #aaa; padding: 5px;">Date</th><th style="border: 1px solid #aaa; padding: 5px;">Source</th><th style="border: 1px solid #aaa; padding: 5px;">Destination Entity</th><th style="border: 1px solid #aaa; padding: 5px;">Amount</th><th style="border: 1px solid #aaa; padding: 5px;">Type</th></tr></thead>
-                        <tbody>
-                            <tr><td style="border: 1px solid #aaa; padding: 5px;">2026-05-25</td><td style="border: 1px solid #aaa; padding: 5px;">0xd90e...31b</td><td style="border: 1px solid #aaa; padding: 5px;"><strong>SUBJECT WALLET</strong></td><td style="border: 1px solid #aaa; padding: 5px;">10,000,000 USD</td><td style="border: 1px solid #aaa; padding: 5px;">MIXER (IN)</td></tr>
-                            <tr><td style="border: 1px solid #aaa; padding: 5px;">2026-05-27</td><td style="border: 1px solid #aaa; padding: 5px;"><strong>SUBJECT WALLET</strong></td><td style="border: 1px solid #aaa; padding: 5px;"><strong>Binance Hot Wallet 14</strong></td><td style="border: 1px solid #aaa; padding: 5px;">1,200,000 USD</td><td style="border: 1px solid #aaa; padding: 5px;">CEX DEPOSIT</td></tr>
-                        </tbody>
+                        <tbody class="dynamic-data-tbody">
+<!-- MOCK DATA STRIPPED - WAITING FOR API FETCH -->
+<tr><td colspan="6" class="text-center py-4 text-slate-600"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Fetching Live Data...</td></tr>
+</tbody>
                     </table>
 
                     <div class="page-break"></div>
@@ -1088,11 +1068,11 @@
             triggerLoader(`Generating Intelligence Dossier...`);
             setTimeout(() => {
                 let html = `
-                    <div class="space-y-4 font-mono text-sm text-white">
-                        <h4 class="font-black text-white border-b border-slate-600 pb-2 mb-4 uppercase text-lg"><i class="fa-solid fa-microchip text-blue-600"></i> Intelligence Dossier</h4>
-                        <div class="bg-slate-900 p-4 border border-slate-700 rounded shadow-lg shadow-black/20">
-                            <h5 class="text-xs font-bold text-slate-400 uppercase border-b border-slate-700 pb-1 mb-2">Metadata Context: ${context}</h5>
-                            <p class="text-xs text-slate-300 leading-relaxed">This entity data has been resolved through NEMESIS ID's multi-domain intelligence reconstruction engine, bridging on-chain activity with darknet and OSINT infrastructure.</p>
+                    <div class="space-y-4 font-mono text-sm text-slate-900">
+                        <h4 class="font-black text-slate-900 border-b border-slate-600 pb-2 mb-4 uppercase text-lg"><i class="fa-solid fa-microchip text-blue-600"></i> Intelligence Dossier</h4>
+                        <div class="bg-slate-50 p-4 border border-slate-200 rounded shadow-lg shadow-black/20">
+                            <h5 class="text-xs font-bold text-slate-600 uppercase border-b border-slate-200 pb-1 mb-2">Metadata Context: ${context}</h5>
+                            <p class="text-xs text-slate-700 leading-relaxed">This entity data has been resolved through NEMESIS ID's multi-domain intelligence reconstruction engine, bridging on-chain activity with darknet and OSINT infrastructure.</p>
                         </div>
                     </div>
                 `;
@@ -1108,25 +1088,56 @@
         }
 
         // Vis.js Trace Graph Init (Tree Layout + Color Coding + Arrows)
-        function initTraceGraph() {
+        function initTraceGraph(txList = [], subjectAddr = null) {
             const container = document.getElementById('trace-network');
             
-            const nodes = new vis.DataSet([
-                { id: 1, label: 'SUBJECT EOA\n0x742...', color: { background: '#ef4444', border: '#b91c1c' }, font: { color: '#ffffff' }, size: 30, level: 2 },
-                { id: 2, label: 'Tornado Cash\nMixer', color: { background: '#64748b', border: '#475569' }, font: { color: '#ffffff' }, size: 25, level: 1 },
-                { id: 3, label: 'Stargate Router\nBridge/Contract', color: { background: '#8b5cf6', border: '#6d28d9' }, font: { color: '#ffffff' }, size: 25, level: 3 },
-                { id: 4, label: 'Binance Hot 14\nCEX/Custodial', color: { background: '#f59e0b', border: '#d97706' }, font: { color: '#ffffff' }, size: 35, level: 4 },
-                { id: 5, label: 'Private Node', color: { background: '#3b82f6', border: '#2563eb' }, font: { color: '#ffffff' }, size: 15, level: 1 },
-                { id: 6, label: 'High Risk Node', color: { background: '#be123c', border: '#9f1239' }, font: { color: '#ffffff' }, size: 20, level: 3 }
-            ]);
+            let nodesArray = [];
+            let edgesArray = [];
+            
+            if (txList.length === 0) {
+                // Fallback mock if no data
+                nodesArray = [
+                    { id: 1, label: 'SUBJECT EOA\n0x742...', color: { background: '#ef4444', border: '#b91c1c' }, font: { color: '#ffffff' }, size: 30, level: 2 },
+                    { id: 2, label: 'Tornado Cash\nMixer', color: { background: '#64748b', border: '#475569' }, font: { color: '#ffffff' }, size: 25, level: 1 },
+                    { id: 3, label: 'Stargate Router\nBridge', color: { background: '#8b5cf6', border: '#6d28d9' }, font: { color: '#ffffff' }, size: 25, level: 3 }
+                ];
+                edgesArray = [
+                    { id: 'e1', from: 2, to: 1, label: '🟢 100 ETH\n(Mixer)', font: { color: '#1e293b', align: 'horizontal', background: 'rgba(255,255,255,0.8)' }, width: 3, color: { color: '#ef4444' } },
+                    { id: 'e3', from: 1, to: 3, label: '🟣 5.5M USDC\n(Bridge)', font: { color: '#1e293b', align: 'horizontal', background: 'rgba(255,255,255,0.8)' }, width: 3, color: { color: '#8b5cf6' } }
+                ];
+            } else {
+                let nodeMap = new Map();
+                
+                // Add subject node
+                if(subjectAddr) {
+                    nodeMap.set(subjectAddr.toLowerCase(), { id: subjectAddr.toLowerCase(), label: `SUBJECT\n${subjectAddr.substring(0,6)}...`, color: { background: '#ef4444', border: '#b91c1c' }, font: { color: '#ffffff' }, size: 30, level: 2 });
+                }
+                
+                txList.forEach((tx, idx) => {
+                    const fromId = tx.from ? tx.from.toLowerCase() : 'unknown';
+                    const toId = tx.to ? tx.to.toLowerCase() : 'unknown';
+                    
+                    if(!nodeMap.has(fromId)) {
+                        nodeMap.set(fromId, { id: fromId, label: `Node\n${fromId.substring(0,6)}...`, color: { background: '#3b82f6', border: '#2563eb' }, font: { color: '#ffffff' }, size: 20, level: fromId === (subjectAddr||'').toLowerCase() ? 2 : 1 });
+                    }
+                    if(!nodeMap.has(toId)) {
+                        nodeMap.set(toId, { id: toId, label: `Node\n${toId.substring(0,6)}...`, color: { background: '#f59e0b', border: '#d97706' }, font: { color: '#ffffff' }, size: 20, level: toId === (subjectAddr||'').toLowerCase() ? 2 : 3 });
+                    }
+                    
+                    const edgeId = `${fromId}-${toId}-${idx}`;
+                    edgesArray.push({
+                        id: edgeId, from: fromId, to: toId,
+                        label: `${parseFloat(tx.value||0).toFixed(2)} ETH`,
+                        font: { color: '#1e293b', align: 'horizontal', background: 'rgba(255,255,255,0.8)' },
+                        width: Math.min(5, Math.max(1, parseFloat(tx.value||0) / 10)),
+                        color: { color: (tx.risk_score||0) > 80 ? '#be123c' : '#3b82f6' }
+                    });
+                });
+                nodesArray = Array.from(nodeMap.values());
+            }
 
-            const edges = new vis.DataSet([
-                { id: 'e1', from: 2, to: 1, label: '🟢 100 ETH\n(Mixer Obfuscation)', font: { color: '#1e293b', align: 'horizontal', background: 'rgba(255,255,255,0.8)' }, width: 3, color: { color: '#ef4444' } },
-                { id: 'e2', from: 5, to: 1, label: '🔵 $4.5M\n(Private Tx)', font: { color: '#1e293b', align: 'horizontal', background: 'rgba(255,255,255,0.8)' }, width: 2, color: { color: '#3b82f6' } },
-                { id: 'e3', from: 1, to: 3, label: '🟣 5.5M USDC\n(Bridge Lock)', font: { color: '#1e293b', align: 'horizontal', background: 'rgba(255,255,255,0.8)' }, width: 3, color: { color: '#8b5cf6' } },
-                { id: 'e4', from: 1, to: 4, label: '🟠 400 ETH\n(CEX Deposit)', font: { color: '#1e293b', align: 'horizontal', background: 'rgba(255,255,255,0.8)' }, width: 4, color: { color: '#f59e0b' } },
-                { id: 'e5', from: 1, to: 6, label: '🔴 $800k\n(High Risk Node)', font: { color: '#1e293b', align: 'horizontal', background: 'rgba(255,255,255,0.8)' }, width: 2, color: { color: '#be123c' } }
-            ]);
+            const nodes = new vis.DataSet(nodesArray);
+            const edges = new vis.DataSet(edgesArray);
 
             const data = { nodes: nodes, edges: edges };
             
@@ -1138,7 +1149,7 @@
                 nodes: { shape: 'dot', borderWidth: 2, shadow: true }
             };
 
-            networkGraph = new vis.Network(container, data, options);
+            window.networkGraph = new vis.Network(container, data, options);
 
             // Right-Click Context Menu Logic
             networkGraph.on("oncontext", function (params) {
@@ -1166,5 +1177,116 @@
             animateEdges();
         }
     </script>
+
+    <script>
+        // Dynamic Fetch Logic
+        async function fetchNemesisIdData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const address = urlParams.get('address');
+            if (!address) return;
+
+            try {
+                // 1. Fetch Profile
+                const profileRes = await fetch(`http://127.0.0.1:8088/api/nemesis_id/profile/${address}`);
+                if (profileRes.ok) {
+                    const profileData = await profileRes.json();
+                    
+                    // Update header
+                    const elHeaderAddr = document.getElementById('header-address');
+                    if (elHeaderAddr) elHeaderAddr.innerText = profileData.address || address;
+                    
+                    // Update basic profile fields
+                    document.getElementById('profile-nemesis-id') && (document.getElementById('profile-nemesis-id').innerText = profileData.nemesis_id || 'N/A');
+                    document.getElementById('profile-entity-name') && (document.getElementById('profile-entity-name').innerText = profileData.entity_name || 'Unknown');
+                    document.getElementById('profile-risk-score') && (document.getElementById('profile-risk-score').innerText = profileData.risk_score || '0');
+                    document.getElementById('profile-balance') && (document.getElementById('profile-balance').innerText = `$${(profileData.estimated_balance_usd || 0).toLocaleString()}`);
+                }
+
+                // 2. Fetch AML
+                const amlRes = await fetch(`http://127.0.0.1:8088/api/nemesis_id/aml/${address}`);
+                if (amlRes.ok) {
+                    const amlData = await amlRes.json();
+                    document.getElementById('aml-score') && (document.getElementById('aml-score').innerText = amlData.risk_score || '0');
+                    document.getElementById('aml-classification') && (document.getElementById('aml-classification').innerText = amlData.classification || 'Unknown');
+                }
+
+                // 3. Fetch TX History
+                const txRes = await fetch(`http://127.0.0.1:8088/api/nemesis_id/tx_history/${address}`);
+                if (txRes.ok) {
+                    const txData = await txRes.json();
+                    console.log("Loaded TX History:", txData);
+                    
+                    if (txData && txData.transactions && txData.transactions.length > 0) {
+                        const tbodyHtml = txData.transactions.slice(0, 50).map(tx => {
+                            const valNative = parseFloat(tx.value || 0).toFixed(4);
+                            const valUsd = (parseFloat(tx.value || 0) * 2000).toLocaleString('en-US', {style: 'currency', currency: 'USD'}); // Mock price for now
+                            const riskScore = tx.risk_score || 0;
+                            let riskHtml = `<span class="bg-blue-500/20 text-blue-600 px-2 py-1 rounded text-[10px] font-bold">LOW [${riskScore}]</span>`;
+                            if (riskScore > 80) riskHtml = `<span class="bg-red-500/20 text-red-600 px-2 py-1 rounded text-[10px] font-bold alert-flashing">CRITICAL [${riskScore}]</span>`;
+                            else if (riskScore > 50) riskHtml = `<span class="bg-amber-500/20 text-amber-600 px-2 py-1 rounded text-[10px] font-bold">MEDIUM [${riskScore}]</span>`;
+                            
+                            return `
+                                <tr class="border-b border-slate-200 hover:bg-slate-50 transition-colors">
+                                    <td class="p-3">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fa-solid fa-arrow-right-arrow-left text-slate-400"></i>
+                                            <span class="font-mono text-[10px] text-blue-600">${tx.hash ? tx.hash.substring(0,8)+'...' : 'N/A'}</span>
+                                        </div>
+                                    </td>
+                                    <td class="p-3 font-mono text-[10px] text-slate-600">${new Date(tx.timestamp || Date.now()).toLocaleString()}</td>
+                                    <td class="p-3">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-5 h-5 rounded bg-white flex items-center justify-center border border-slate-200 shadow-sm">
+                                                <i class="fa-solid fa-wallet text-[8px] text-slate-500"></i>
+                                            </div>
+                                            <span class="font-mono text-[10px] text-slate-700">${tx.from ? tx.from.substring(0,8)+'...' : 'N/A'}</span>
+                                        </div>
+                                    </td>
+                                    <td class="p-3">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-5 h-5 rounded bg-white flex items-center justify-center border border-slate-200 shadow-sm">
+                                                <i class="fa-solid fa-wallet text-[8px] text-slate-500"></i>
+                                            </div>
+                                            <span class="font-mono text-[10px] text-slate-700">${tx.to ? tx.to.substring(0,8)+'...' : 'N/A'}</span>
+                                        </div>
+                                    </td>
+                                    <td class="p-3 font-mono text-xs font-bold text-slate-800">
+                                        <span class="usd-value">${valUsd}</span>
+                                        <span class="native-value">${valNative} ETH</span>
+                                    </td>
+                                    <td class="p-3 text-right">${riskHtml}</td>
+                                </tr>
+                            `;
+                        }).join('');
+                        
+                        document.querySelectorAll('.dynamic-data-tbody').forEach(tbody => {
+                            tbody.innerHTML = tbodyHtml;
+                        });
+                        
+                        // Also update graph with this data!
+                        if (document.getElementById('trace-network')) {
+                            initTraceGraph(txData.transactions, address);
+                        }
+                    } else {
+                        document.querySelectorAll('.dynamic-data-tbody').forEach(tbody => {
+                            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-slate-500">No transactions found for this identity.</td></tr>';
+                        });
+                        if (document.getElementById('trace-network')) {
+                            initTraceGraph([], address);
+                        }
+                    }
+                }
+
+            } catch (err) {
+                console.error("Error fetching NEMESIS ID data:", err);
+            }
+        }
+        
+        // Trigger fetch on load
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchNemesisIdData();
+        });
+    </script>
+
 </body>
 </html>

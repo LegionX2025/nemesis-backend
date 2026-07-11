@@ -3,137 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEMESIS Tracer | Omni-Chain Forensics</title>
+    <title>NEMESIS TRACER | OmniChain Flow Analysis</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/nemesis-light.css">
-    <script src="/static/js/particles.js"></script>
-    
-    <script>
-        const IS_LOCAL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "";
-        window.BACKEND_URL = IS_LOCAL ? "http://127.0.0.1:8088" : "https://nemesis-api.legionxgaming2021.workers.dev";
-    </script>
+
+    <style>
+        body { 
+            background-color: #f8fafc !important; 
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        #quantum-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; }
+        
+        /* Glassmorphism Input Card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(226, 232, 240, 0.9) !important;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            box-shadow: 0 15px 50px rgba(168, 85, 247, 0.1);
+        }
+
+        /* Input styling */
+        input, select, textarea {
+            background: rgba(255, 255, 255, 0.9) !important;
+            border: 1px solid rgba(203, 213, 225, 0.8) !important;
+            color: #0f172a !important;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none !important;
+            border-color: #a855f7 !important;
+            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15) !important;
+        }
+
+        /* Global Loader */
+        #global-loader { 
+            position: fixed; inset: 0; background: rgba(248, 250, 252, 0.98); 
+            z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            transition: opacity 0.4s ease; 
+        }
+        .cyber-ring { 
+            width: 120px; height: 120px; border: 3px solid transparent; 
+            border-top-color: #a855f7; border-right-color: #a855f7; border-radius: 50%; 
+            animation: spin 1s linear infinite; box-shadow: 0 0 30px rgba(168, 85, 247, 0.1); position: relative; 
+        }
+        .cyber-ring::before { 
+            content:''; position:absolute; inset: 10px; border: 3px solid transparent; 
+            border-left-color: #3b82f6; border-bottom-color: #3b82f6; border-radius: 50%; 
+            animation: spin 2s linear infinite reverse; 
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .logo-enter {
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+    </style>
 </head>
 <body class="h-screen flex items-center justify-center p-4 relative">
-    
+
+    <!-- WebGL Particle Background -->
     <canvas id="quantum-bg"></canvas>
 
     <!-- Active Loader Overlay -->
-    <div id="global-loader" style="display: none;" class="fixed inset-0 bg-slate-50/95 z-50 flex flex-col items-center justify-center backdrop-blur-sm">
-        <div class="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-6"></div>
-        <h2 class="text-slate-900 font-black text-2xl tracking-widest uppercase text-nemesis-effect" id="loader-title">Igniting Core Engines</h2>
-        <p class="text-blue-600 font-mono text-xs uppercase tracking-widest mt-3" id="loader-text">Configuring Pathfinding Targets...</p>
+    <div id="global-loader" style="display: none;">
+        <div class="cyber-ring mb-8"></div>
+        <h2 class="text-[#0f172a] font-black text-2xl tracking-widest uppercase">Initializing Tracer Graph</h2>
+        <p class="text-purple-600 font-mono text-xs uppercase tracking-widest mt-3" id="loader-text">Booting OmniChain Flow Analysis Engine...</p>
     </div>
 
-    <!-- Global Top Navigation -->
-    <nav class="absolute top-0 left-0 w-full p-6 z-40 flex justify-between items-center glass-panel">
-        <div class="flex items-center gap-3">
-            <i class="fa-solid fa-lion text-slate-800 text-3xl"></i>
-            <div class="flex flex-col">
-                <span class="font-black text-xl tracking-tight leading-none text-slate-900">NEMESIS</span>
-                <span class="text-[9px] text-slate-500 font-bold tracking-widest uppercase mt-0.5">By Lionsgate Network</span>
-            </div>
-        </div>
-        
-        <div class="relative group">
-            <button class="bg-white/80 backdrop-blur border border-slate-200 px-5 py-2.5 rounded-full text-sm font-bold text-slate-700 hover:text-blue-600 hover:border-blue-300 transition-all shadow-sm flex items-center gap-2">
-                <i class="fa-solid fa-grip"></i> NEMESIS APPS <i class="fa-solid fa-chevron-down text-xs ml-1 transition-transform group-hover:rotate-180"></i>
-            </button>
-            <div class="absolute right-0 top-full mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-2 group-hover:translate-y-0 overflow-hidden">
-                <a href="/nemesis_id_landing" class="block px-4 py-3 hover:bg-slate-50 border-b border-slate-100 transition">
-                    <div class="text-sm font-bold text-slate-800 flex items-center gap-2"><i class="fa-solid fa-fingerprint text-blue-500 w-5 text-center"></i> NEMESIS ID</div>
-                    <div class="text-[10px] text-slate-500 ml-7 mt-0.5 uppercase tracking-wider">KYC & Identity Intel</div>
-                </a>
-                <a href="/nemesis_tracer_landing" class="block px-4 py-3 bg-blue-50/50 hover:bg-blue-50 border-b border-slate-100 transition">
-                    <div class="text-sm font-bold text-blue-700 flex items-center gap-2"><i class="fa-solid fa-network-wired text-blue-600 w-5 text-center"></i> NEMESIS TRACER</div>
-                    <div class="text-[10px] text-blue-500 ml-7 mt-0.5 uppercase tracking-wider">Omni-Chain Forensics</div>
-                </a>
-                <a href="/darknet_search" class="block px-4 py-3 hover:bg-slate-50 transition">
-                    <div class="text-sm font-bold text-slate-800 flex items-center gap-2"><i class="fa-solid fa-mask text-purple-500 w-5 text-center"></i> DARKNET</div>
-                    <div class="text-[10px] text-slate-500 ml-7 mt-0.5 uppercase tracking-wider">Deep Web Sweeping</div>
-                </a>
-            </div>
-        </div>
-    </nav>
-
     <!-- Main Input Card -->
-    <div class="glass-panel rounded-2xl w-full max-w-2xl p-8 md:p-12 relative overflow-hidden z-10 shadow-2xl">
+    <div class="glass-card rounded-2xl w-full max-w-2xl p-8 md:p-12 relative overflow-hidden" id="input-container">
+        <!-- Decoration -->
+        <div class="absolute -top-10 -right-10 w-40 h-40 bg-purple-100 rounded-full blur-3xl opacity-50"></div>
+        <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-100 rounded-full blur-3xl opacity-50"></div>
+
         <div class="relative z-10">
-            <div class="text-center mb-8">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 border border-blue-100 shadow-sm mb-4">
-                    <i class="fa-solid fa-network-wired text-blue-600 text-3xl"></i>
+            <div class="text-center mb-10">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-50 border border-purple-100 shadow-sm mb-4">
+                    <i class="fa-solid fa-diagram-project text-purple-600 text-3xl"></i>
                 </div>
-                <h1 class="text-3xl font-black text-slate-800 tracking-tight mb-2 text-nemesis-effect">NEMESIS TRACER</h1>
-                <p class="text-slate-500 font-mono text-xs uppercase tracking-widest">Autonomous Omni-Chain Forensic Graph</p>
+                <h1 class="text-3xl font-black text-slate-800 tracking-tight mb-2">NEMESIS TRACER</h1>
+                <p class="text-slate-500 font-mono text-sm uppercase tracking-widest">Real-time OmniChain Fund Flow Analysis</p>
             </div>
 
-            <form id="traceForm" onsubmit="event.preventDefault(); startTrace();">
-                <div class="mb-4">
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono flex justify-between items-center">
-                        <span>Trace Seeds (Wallets or TX Hashes)</span>
-                        <span class="text-blue-500 font-normal">One per line</span>
-                    </label>
-                    <div class="input-container">
-                        <textarea id="trace_seeds" rows="3" class="w-full p-4 rounded-xl transition text-sm resize-none font-mono bg-transparent border-none focus:ring-0 focus:outline-none" placeholder="0xabc...&#10;0xdef..." required oninput="checkTxHash()"></textarea>
+            <form id="searchForm" class="space-y-4" onsubmit="event.preventDefault(); startTracing();">
+                <!-- Main Input Textarea -->
+                <div class="relative">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono">Seed Addresses / TX Hashes (One per line)</label>
+                    <div class="relative flex items-start">
+                        <!-- Chain Logo Display -->
+                        <div id="chain-logo-container" class="absolute left-4 top-4 w-6 h-6 flex items-center justify-center transition-all duration-300">
+                            <i class="fa-solid fa-magnifying-glass text-slate-400"></i>
+                        </div>
+                        <textarea id="wallet_address" rows="3" class="w-full pl-14 pr-4 py-4 rounded-xl transition resize-none" placeholder="0x...&#10;bc1...&#10;0xabc..." autocomplete="off" oninput="detectChain(this.value)" required></textarea>
                     </div>
-                    
-                    <div id="tx-feedback-container" class="mt-2 space-y-1"></div>
-                    <p id="tx-hash-helper" class="text-[10px] text-slate-400 mt-2 hidden"><i class="fa-solid fa-circle-info mr-1"></i>TX Hash Detected: Backend will auto-extract total outflow amount and receiver wallet as trace seed.</p>
+                    <p id="chain-detected-text" class="text-[10px] text-purple-600 font-mono font-bold mt-2 ml-1 hidden uppercase tracking-wider popIn"></p>
                 </div>
                 
-                <div class="mb-4">
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono">Target Network Chain</label>
-                    <div class="input-container relative">
-                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none" id="chain-icon-container">
-                            <i class="fa-solid fa-globe text-slate-400"></i>
-                        </div>
-                        <select id="target_chain" class="w-full pl-10 pr-4 py-3 rounded-xl transition bg-transparent border-none font-mono text-sm appearance-none focus:ring-0 focus:outline-none" onchange="updateChainIcon()">
-                            <option value="AUTO" data-icon="fa-globe">Auto Detect Cross-Chain</option>
-                            <option value="BITCOIN" data-icon-src="https://cryptologos.cc/logos/bitcoin-btc-logo.png">Bitcoin (BTC)</option>
-                            <option value="ETHEREUM" data-icon-src="https://cryptologos.cc/logos/ethereum-eth-logo.png">Ethereum (ETH/ERC20)</option>
-                            <option value="BSC" data-icon-src="https://cryptologos.cc/logos/bnb-bnb-logo.png">Binance Smart Chain (BSC)</option>
-                            <option value="SOLANA" data-icon-src="https://cryptologos.cc/logos/solana-sol-logo.png">Solana (SOL)</option>
-                            <option value="TRON" data-icon-src="https://cryptologos.cc/logos/tron-trx-logo.png">Tron (TRC20)</option>
-                            <option value="POLYGON" data-icon-src="https://cryptologos.cc/logos/polygon-matic-logo.png">Polygon (MATIC)</option>
-                            <option value="ARBITRUM" data-icon-src="https://cryptologos.cc/logos/arbitrum-arb-logo.png">Arbitrum (ARB)</option>
-                            <option value="STELLAR" data-icon-src="https://cryptologos.cc/logos/stellar-xlm-logo.png">Stellar (XLM)</option>
-                            <option value="RIPPLE" data-icon-src="https://cryptologos.cc/logos/xrp-xrp-logo.png">XRP Ledger (Ripple)</option>
+                <!-- Total Loss and Asset Type -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono">Total Loss Assets</label>
+                        <input type="number" id="loss_amount" class="w-full px-4 py-3 rounded-xl transition" placeholder="e.g. 150000" min="0">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono">Asset Type</label>
+                        <select id="asset_type" class="w-full px-4 py-3 rounded-xl transition text-slate-700">
+                            <option value="USD">USD ($)</option>
+                            <option value="ALL_TOKENS">All Tokens</option>
+                            <option value="BTC">Bitcoin (BTC)</option>
+                            <option value="ETH">Ethereum (ETH)</option>
+                            <option value="USDT">Tether (USDT)</option>
+                            <option value="USDC">USDC</option>
                         </select>
-                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                            <i class="fa-solid fa-chevron-down text-slate-400 text-xs"></i>
-                        </div>
                     </div>
                 </div>
 
-                <div class="mb-6">
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono flex justify-between">
-                        <span>Total Loss Amount to Trace (Optional)</span>
-                        <span class="text-blue-500 font-normal">Leave blank for auto-computation</span>
-                    </label>
-                    <div class="flex gap-2">
-                        <div class="input-container relative w-1/3">
-                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none" id="currency-icon-container">
-                                <i class="fa-solid fa-dollar-sign text-emerald-500"></i>
-                            </div>
-                            <select id="target_currency" class="w-full pl-8 pr-4 py-3 rounded-xl transition bg-transparent border-none font-mono text-sm appearance-none focus:ring-0 focus:outline-none" onchange="updateCurrencyIcon()">
-                                <option value="USD" data-icon="fa-dollar-sign text-emerald-500">USD</option>
-                                <option value="EUR" data-icon="fa-euro-sign text-blue-600">EUR</option>
-                            </select>
-                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                <i class="fa-solid fa-chevron-down text-slate-400 text-xs"></i>
-                            </div>
-                        </div>
-                        <div class="input-container w-2/3">
-                            <input type="number" step="any" id="trace_amount" class="w-full pl-4 pr-4 py-3 rounded-xl transition bg-transparent border-none font-mono text-sm focus:ring-0 focus:outline-none" placeholder="0.00">
-                        </div>
+                <!-- Chains / Networks -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono">Networks to Trace</label>
+                    <select id="networks" class="w-full px-4 py-3 rounded-xl transition text-slate-700" multiple size="3">
+                        <option value="ALL" selected>OmniChain (Auto-Detect All)</option>
+                        <option value="ETHEREUM">Ethereum</option>
+                        <option value="BSC">Binance Smart Chain</option>
+                        <option value="POLYGON">Polygon</option>
+                        <option value="ARBITRUM">Arbitrum</option>
+                        <option value="OPTIMISM">Optimism</option>
+                        <option value="BASE">Base</option>
+                        <option value="AVALANCHE">Avalanche</option>
+                        <option value="SOLANA">Solana</option>
+                        <option value="TRON">Tron</option>
+                        <option value="BITCOIN">Bitcoin</option>
+                    </select>
+                    <p class="text-[10px] text-slate-400 font-mono mt-1 ml-1">Hold Ctrl (Windows) or Command (Mac) to select multiple.</p>
+                </div>
+
+                <!-- Date Range -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono">Start Date (Optional)</label>
+                        <input type="date" id="start_date" class="w-full px-4 py-3 rounded-xl transition text-slate-700">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono">End Date (Optional)</label>
+                        <input type="date" id="end_date" class="w-full px-4 py-3 rounded-xl transition text-slate-700">
                     </div>
                 </div>
 
-                <div class="flex justify-end gap-3 mt-8">
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-500/30">
-                        <i class="fa-solid fa-magnifying-glass-chart"></i> INITIATE FORENSIC TRACE
+                <div class="flex justify-center mt-4">
+                    <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-mono font-bold py-3.5 px-6 rounded-xl shadow-lg transition text-sm uppercase tracking-widest flex items-center justify-center gap-3">
+                        <i class="fa-solid fa-satellite-dish text-purple-400"></i> Deploy Swarm Tracker
                     </button>
                 </div>
             </form>
@@ -141,72 +179,90 @@
     </div>
 
     <script>
-        function checkTxHash() {
-            const seeds = document.getElementById('trace_seeds').value.split('\n');
-            const hasTx = seeds.some(s => (s.trim().length === 66 && s.trim().startsWith('0x')) || (s.trim().length === 64 && !s.trim().startsWith('0x')));
-            document.getElementById('tx-hash-helper').style.display = hasTx ? 'block' : 'none';
-        }
+        const CHAINS = {
+            ETH: { regex: /^0x[a-fA-F0-9]{40}$/, name: 'Ethereum / EVM', logo: 'https://cryptologos.cc/logos/ethereum-eth-logo.png' },
+            BTC: { regex: /^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,39}$/, name: 'Bitcoin', logo: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png' },
+            SOL: { regex: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/, name: 'Solana', logo: 'https://cryptologos.cc/logos/solana-sol-logo.png' },
+            TRX: { regex: /^T[A-Za-z1-9]{33}$/, name: 'Tron', logo: 'https://cryptologos.cc/logos/tron-trx-logo.png' }
+        };
 
-        function updateChainIcon() {
-            const select = document.getElementById('target_chain');
-            const option = select.options[select.selectedIndex];
-            const container = document.getElementById('chain-icon-container');
+        function detectChain(address) {
+            const logoContainer = document.getElementById('chain-logo-container');
+            const textContainer = document.getElementById('chain-detected-text');
             
-            if (option.dataset.iconSrc) {
-                container.innerHTML = `<img src="${option.dataset.iconSrc}" class="w-4 h-4 grayscale opacity-70">`;
+            let detected = null;
+            let val = address.trim().split('\n')[0]; // Grab first line
+
+            if (val.length === 0) {
+                resetLogo();
+                return;
+            }
+
+            // Quick pattern matching
+            if (CHAINS.ETH.regex.test(val)) detected = CHAINS.ETH;
+            else if (CHAINS.BTC.regex.test(val)) detected = CHAINS.BTC;
+            else if (CHAINS.SOL.regex.test(val)) detected = CHAINS.SOL;
+            else if (CHAINS.TRX.regex.test(val)) detected = CHAINS.TRX;
+
+            if (detected) {
+                logoContainer.innerHTML = `<img src="${detected.logo}" class="w-6 h-6 logo-enter drop-shadow-md">`;
+                textContainer.innerHTML = `<i class="fa-solid fa-check-circle mr-1"></i> ${detected.name} Network Detected`;
+                textContainer.classList.remove('hidden');
+                textContainer.classList.remove('text-red-500');
+                textContainer.classList.add('text-purple-600');
             } else {
-                container.innerHTML = `<i class="fa-solid ${option.dataset.icon || 'fa-globe'} text-slate-400"></i>`;
+                logoContainer.innerHTML = `<i class="fa-solid fa-circle-question text-amber-500 logo-enter"></i>`;
+                textContainer.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Unknown Chain Format`;
+                textContainer.classList.remove('hidden');
+                textContainer.classList.remove('text-purple-600');
+                textContainer.classList.add('text-red-500');
             }
         }
 
-        function updateCurrencyIcon() {
-            const select = document.getElementById('target_currency');
-            const option = select.options[select.selectedIndex];
-            document.getElementById('currency-icon-container').innerHTML = `<i class="fa-solid ${option.dataset.icon || 'fa-dollar-sign'}"></i>`;
+        function resetLogo() {
+            document.getElementById('chain-logo-container').innerHTML = `<i class="fa-solid fa-magnifying-glass text-slate-400 logo-enter"></i>`;
+            document.getElementById('chain-detected-text').classList.add('hidden');
         }
 
+        function startTracing() {
+            const val = document.getElementById('wallet_address').value.trim();
+            if (!val) return;
 
-        async function startTrace() {
-            const seeds = document.getElementById('trace_seeds').value.trim();
-            const chain = document.getElementById('target_chain').value;
-            const amount = document.getElementById('trace_amount').value;
-            const currency = document.getElementById('target_currency').value;
+            // Gather additional inputs
+            const lossAmount = document.getElementById('loss_amount').value;
+            const assetType = document.getElementById('asset_type').value;
+            const networksSelect = document.getElementById('networks');
+            const selectedNetworks = Array.from(networksSelect.selectedOptions).map(opt => opt.value).join(',');
+            const startDate = document.getElementById('start_date').value;
+            const endDate = document.getElementById('end_date').value;
 
-            if (!seeds) return alert("Please provide at least one seed address or transaction hash.");
-
+            document.getElementById('input-container').style.display = 'none';
             document.getElementById('global-loader').style.display = 'flex';
             
-            try {
-                const response = await fetch(window.BACKEND_URL + '/api/start_trace', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        seeds: seeds, 
-                        target_amount: amount, 
-                        target_currency: currency,
-                        chain_override: chain,
-                        max_depth: 12,
-                        max_hops: 1000
-                    })
-                });
-
-                const data = await response.json();
-                if (data.trace_id) {
-                    window.location.href = `/tracer?trace_id=${data.trace_id}`;
-                } else {
-                    alert("Error starting trace: " + JSON.stringify(data));
-                    document.getElementById('global-loader').style.display = 'none';
+            const texts = [
+                "Deploying Distributed Tracer Swarm...",
+                "Mapping Peer-to-Peer Fund Topologies...",
+                "Bypassing Sub-Graph Limitations...",
+                "Running Multi-Tier BFS Graph Analysis...",
+                "Synchronizing WebSockets..."
+            ];
+            let i = 0;
+            const textEl = document.getElementById('loader-text');
+            const interval = setInterval(() => {
+                if (i < texts.length) {
+                    textEl.innerText = texts[i];
+                    i++;
                 }
-            } catch (err) {
-                console.error(err);
-                alert("Failed to connect to OmniChain Engine. Is the backend running?");
-                document.getElementById('global-loader').style.display = 'none';
-            }
+            }, 800);
+
+            // Redirect to dashboard with address attached + new params
+            setTimeout(() => {
+                clearInterval(interval);
+                let query = `?address=${encodeURIComponent(val)}&loss=${encodeURIComponent(lossAmount)}&asset=${encodeURIComponent(assetType)}&networks=${encodeURIComponent(selectedNetworks)}&start=${encodeURIComponent(startDate)}&end=${encodeURIComponent(endDate)}`;
+                window.location.href = `/nemesis_tracer.html${query}`;
+            }, 4000);
         }
-        
-        // Init
-        updateChainIcon();
-        updateCurrencyIcon();
     </script>
+    <script src="/static/js/particles.js"></script>
 </body>
 </html>

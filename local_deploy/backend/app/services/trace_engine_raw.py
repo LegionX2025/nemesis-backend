@@ -1,4 +1,8 @@
-import os\nimport asyncio\nimport json\nimport csv\nimport time\nfrom datetime import datetime, timezone\nfrom collections import defaultdict\nimport certifi\nimport aiohttp\nimport logging\nfrom motor.motor_asyncio import AsyncIOMotorClient\nlogger = logging.getLogger('TraceEngine')\n\nimport certifi
+import os
+import time
+from datetime import datetime, timezone
+from collections import defaultdict
+from motor.motor_asyncio import AsyncIOMotorClient
 import socket
 import asyncio
 import csv
@@ -22,6 +26,8 @@ from pydantic import BaseModel
 import uvicorn
 from motor.motor_asyncio import AsyncIOMotorClient
 import time
+import certifi
+import socket
 
 # Fix SSL and Windows Asyncio issues
 os.environ['SSL_CERT_FILE'] = certifi.where()
@@ -267,13 +273,7 @@ class SOCState:
             self.seed_chains[seed] = chain
             self.queue.put_nowait((seed, 0, target_amount, "NONE", chain, seed)) 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    await init_mongodb()
-    yield
 
-
-app.mount("/static", StaticFiles(directory="."), name="static")
 
 
 
@@ -594,5 +594,4 @@ class TraceRequest(BaseModel):
     start_date: str = ""
     end_date: str = ""
     chain_override: str = "AUTO"
-
-\n\n
+

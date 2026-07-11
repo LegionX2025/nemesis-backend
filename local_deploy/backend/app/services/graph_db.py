@@ -15,9 +15,11 @@ class Neo4jService:
     async def connect(self):
         try:
             self.driver = AsyncGraphDatabase.driver(self.uri, auth=(self.username, self.password))
+            await self.driver.verify_connectivity()
             logger.info(f"[*] Connected to Neo4j Aura Instance: {self.uri}")
         except Exception as e:
             logger.error(f"[!] Failed to connect to Neo4j Aura: {e}")
+            self.driver = None
 
     async def close(self):
         if self.driver:

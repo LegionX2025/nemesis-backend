@@ -123,18 +123,22 @@ CONFIG = {
     "PUBLICNODE_BITCOIN_RPC": os.getenv("PUBLICNODE_BITCOIN_RPC", ""),
     "PUBLICNODE_SOLANA_WSS": os.getenv("PUBLICNODE_SOLANA_WSS", ""),
     "PUBLICNODE_TRON_RPC": os.getenv("PUBLICNODE_TRON_RPC", ""),
-    "XRPSCAN_BASE_URL": os.getenv("XRPSCAN_BASE_URL", "https://api.xrpscan.com/api/v1")
+    "XRPSCAN_BASE_URL": os.getenv("XRPSCAN_BASE_URL", "https://api.xrpscan.com/api/v1"),
+    "BITQUERY_API_TOKEN": os.getenv("BITQUERY_API_TOKEN", "")
 }
 
 EVM_DOMAINS = {
     "ETHEREUM": 1, "BSC": 56,
     "POLYGON": 137, "BASE": 8453,
-    "ARBITRUM": 42161, "OPTIMISM": 10
+    "ARBITRUM": 42161, "OPTIMISM": 10,
+    "AVALANCHE": 43114, "LINEA": 59144,
+    "CELO": 42220, "ZKSYNC": 324
 }
 
 USD_RATES = {
     "ETHEREUM": 3100.00, "BITCOIN": 65000.00, "TRON": 0.12, "POLYGON": 0.70, "BSC": 580.0,
-    "BASE": 3100.00, "ARBITRUM": 3100.00, "OPTIMISM": 3100.00
+    "BASE": 3100.00, "ARBITRUM": 3100.00, "OPTIMISM": 3100.00,
+    "AVALANCHE": 30.00, "LINEA": 3100.00, "CELO": 0.60, "ZKSYNC": 3100.00
 }
 
 KNOWN_ENTITIES = {
@@ -659,7 +663,7 @@ class TraceEngine:
         self.start_date = start_date; self.end_date = end_date
         for seed in seeds:
             chain = detect_chain(seed, default_chain)
-            if chain == "EVM_AUTO":
+            if chain == "EVM_AUTO" or chain == "ETHEREUM":
                 self.seed_chains[seed] = "MULTI-EVM"
                 for evm_chain in EVM_DOMAINS.keys():
                     self.queue.put_nowait((seed, 0, target_amount, "NONE", evm_chain, seed))
@@ -822,6 +826,14 @@ class TraceEngine:
             base_url = "https://api.arbiscan.io/api"
         elif actual_chain == "OPTIMISM":
             base_url = "https://api-optimistic.etherscan.io/api"
+        elif actual_chain == "AVALANCHE":
+            base_url = "https://api.snowtrace.io/api"
+        elif actual_chain == "LINEA":
+            base_url = "https://api.lineascan.build/api"
+        elif actual_chain == "CELO":
+            base_url = "https://api.celoscan.io/api"
+        elif actual_chain == "ZKSYNC":
+            base_url = "https://api-era.zksync.network/api"
         else:
             base_url = "https://api.etherscan.io/api"
             
@@ -942,6 +954,84 @@ class TraceEngine:
                         logger.error(f"Blockscout Error on {actual_chain}: {e}")
                         pass
                 
+        # 2.5 Bitquery GraphQL API Fallback
+        if not all_txs and CONFIG.get("BITQUERY_API_TOKEN"):
+            bq_net = {"ETHEREUM": "ethereum", "BSC": "bsc", "POLYGON": "matic"}.get(actual_chain, "ethereum")
+            bq_url = "https://streaming.bitquery.io/graphql"
+            bq_query = f"""
+            query {{
+              ethereum(network: {bq_net}) {{
+                transfers(receiver: {{is: "{addr}"}}, options: {{limit: 50, desc: "block.timestamp.time"}}) {{
+                  transaction {{ hash }}
+                  sender {{ address }}
+                  receiver {{ address }}
+                  amount
+                  currency {{ decimals, symbol }}
+                  block {{ timestamp {{ time }} }}
+                }}
+                transfers(sender: {{is: "{addr}"}}, options: {{limit: 50, desc: "block.timestamp.time"}}) {{
+                  transaction {{ hash }}
+                  sender {{ address }}
+                  receiver {{ address }}
+                  amount
+                  currency {{ decimals, symbol }}
+                  block {{ timestamp {{ time }} }}
+                }}
+              }}
+            }}
+            """
+            try:
+                bq_headers = {"Content-Type": "application/json", "Authorization": f"Bearer {CONFIG['BITQUERY_API_TOKEN']}"}
+                async with session.post(bq_url, json={"query": bq_query}, headers=bq_headers, timeout=12) as r:
+                    if r.status == 200:
+                        data = await r.json()
+                        if data and isinstance(data, dict):
+                            eth_data = data.get("data") or {}
+                            if isinstance(eth_data, dict):
+                                eth_data = eth_data.get("ethereum", {})
+                            else:
+                                eth_data = {}
+                        else:
+                            eth_data = {}
+                        if isinstance(eth_data, list) and len(eth_data) > 0:
+                            eth_data = eth_data[0]
+                        # the response shape varies slightly between bitquery v1 and v2, adapting generally:
+                        txs = []
+                        if isinstance(eth_data, dict):
+                            txs = eth_data.get("transfers", [])
+                        
+                        for t in txs:
+                            if not t: continue
+                            t_tx = t.get("transaction") or {}
+                            t_hash = t_tx.get("hash")
+                            if not t_hash: continue
+                            t["hash"] = t_hash
+                            t_sender = t.get("sender") or {}
+                            t["from"] = t_sender.get("address")
+                            t_receiver = t.get("receiver") or {}
+                            t["to"] = t_receiver.get("address")
+                            try:
+                                val_float = float(t.get("amount") or 0)
+                                t_curr = t.get("currency") or {}
+                                dec = int(t_curr.get("decimals") or 18)
+                                t["value"] = str(int(val_float * (10**dec)))
+                                t["tokenDecimal"] = str(dec)
+                                t["tokenSymbol"] = t_curr.get("symbol", "")
+                            except:
+                                t["value"] = "0"
+                            t_block = t.get("block") or {}
+                            t_ts = t_block.get("timestamp") or {}
+                            time_str = t_ts.get("time")
+                            if time_str:
+                                try:
+                                    dt = datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
+                                    t["timeStamp"] = str(int(dt.timestamp()))
+                                except: pass
+                            all_txs.append(t)
+            except Exception as e:
+                logger.error(f"Bitquery Error on {actual_chain}: {e}")
+                pass
+
         # 3. Ethplorer Fallback (ETHEREUM only)
         if not all_txs and actual_chain == "ETHEREUM":
             ethp_key = CONFIG.get("ETHPLORER_API_KEY", "freekey")
