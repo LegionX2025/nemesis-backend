@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEMESIS | Lionsgate Network</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- 2D Force Graph -->
+    <script src="https://unpkg.com/force-graph@1.43.3/dist/force-graph.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 900: '#0c4a6e' },
+                        slate: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1', 400: '#94a3b8', 500: '#64748b', 600: '#475569', 700: '#334155', 800: '#1e293b', 900: '#0f172a' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #f8fafc; color: #1e293b; overflow: hidden; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .nav-item { transition: all 0.2s ease; }
+        .nav-item:hover, .nav-item.active { background: #f1f5f9; color: #0284c7; font-weight: 600; }
+        .nav-item.active { border-left: 3px solid #0284c7; padding-left: 13px; }
+        
+        /* Graph Canvas Wrapper */
+        #graph-container canvas { outline: none; border-radius: 0.75rem; }
+        
+        /* Timeline Nodes */
+        .timeline-node { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; z-index: 10; border: 2px solid #e2e8f0; background: white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .timeline-line { position: absolute; top: 24px; left: 24px; right: -24px; height: 2px; background: #cbd5e1; z-index: 0; }
+        .timeline-line-active { background: #3b82f6; }
+        .badge-check { position: absolute; top: -4px; right: -4px; background: #10b981; color: white; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-size: 10px; border: 2px solid white; }
+    </style>
+</head>
+<body class="flex h-screen antialiased">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between flex-shrink-0 z-20">
+        <div>
+            <!-- Logo -->
+            <div class="h-16 flex items-center px-6 border-b border-slate-200 gap-3">
+                <i class="fa-solid fa-lion text-slate-800 text-3xl"></i>
+                <div class="flex flex-col">
+                    <span class="font-black text-xl tracking-tight leading-none text-slate-900">NEMESIS</span>
+                    <span class="text-[9px] text-slate-500 font-bold tracking-widest uppercase mt-0.5">By Lionsgate Network</span>
+                </div>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="p-4 space-y-0.5 text-sm font-medium text-slate-600">
+                <a href="#" class="nav-item active flex items-center gap-3 px-4 py-2.5 rounded-lg"><i class="fa-solid fa-border-all w-5 text-center"></i> Dashboard</a>
+                <a href="#" class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-lg"><i class="fa-solid fa-magnifying-glass-chart w-5 text-center"></i> Investigations</a>
+                <a href="#" class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-lg"><i class="fa-solid fa-diagram-project w-5 text-center"></i> Graph Explorer</a>
+                <a href="#" class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-lg"><i class="fa-regular fa-bell w-5 text-center"></i> Alerts</a>
+                <a href="#" class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-lg"><i class="fa-solid fa-folder-open w-5 text-center"></i> Cases</a>
+                <div class="pt-4 pb-2 px-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Database</div>
+                <a href="#" class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-lg"><i class="fa-solid fa-users w-5 text-center"></i> Entities</a>
+                <a href="#" class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-lg"><i class="fa-solid fa-wallet w-5 text-center"></i> Wallets</a>
+                <a href="#" class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-lg"><i class="fa-solid fa-building-columns w-5 text-center"></i> Exchanges</a>
+                <a href="#" class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-lg"><i class="fa-solid fa-bridge w-5 text-center"></i> Bridges</a>
+                <div class="pt-4 pb-2 px-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Compliance</div>
+                <a href="#" class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-lg"><i class="fa-solid fa-ban w-5 text-center"></i> Sanctions</a>
+                <a href="#" class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-lg"><i class="fa-solid fa-shield-halved w-5 text-center"></i> AML Rules</a>
+            </nav>
+        </div>
+        
+        <!-- Bottom Settings & Branding -->
+        <div class="p-6 border-t border-slate-200">
+            <div class="flex items-center gap-3 mb-6 opacity-40 grayscale">
+                <i class="fa-solid fa-lion text-3xl"></i>
+                <div class="font-black text-lg leading-none tracking-tight">LIONSGATE<br>NETWORK</div>
+            </div>
+            <div class="text-[10px] text-slate-400 font-mono">
+                Version 2.5.0<br>
+                © 2026 Lionsgate Network<br>
+                All Rights Reserved
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#f4f7fb]">
+        
+        <!-- TOP HEADER -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0 z-10 shadow-sm">
+            <div class="flex-1 max-w-3xl">
+                <div class="relative">
+                    <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" class="w-full bg-slate-50 border border-slate-200 rounded-full py-2 pl-11 pr-4 text-sm text-slate-700 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-all" placeholder="Search by Address, Txn Hash, Entity, ENS, Domain...">
+                </div>
+            </div>
+
+            <div class="flex items-center gap-5 text-slate-500 ml-4">
+                <button class="hover:text-slate-800 transition-colors"><i class="fa-regular fa-sun text-lg"></i></button>
+                <div class="relative">
+                    <button class="hover:text-slate-800 transition-colors"><i class="fa-regular fa-bell text-lg"></i></button>
+                    <span class="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500"></span>
+                </div>
+                <button class="hover:text-slate-800 transition-colors"><i class="fa-regular fa-envelope text-lg"></i></button>
+                <button class="hover:text-slate-800 transition-colors"><i class="fa-solid fa-globe text-lg"></i></button>
+                <div class="h-6 w-px bg-slate-200 mx-1"></div>
+                <div class="flex items-center gap-3 cursor-pointer">
+                    <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-white overflow-hidden">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Analyst&backgroundColor=1e293b" alt="User">
+                    </div>
+                    <div class="hidden md:block text-left">
+                        <div class="text-sm font-bold text-slate-800 leading-none">Analyst</div>
+                        <div class="text-[10px] text-slate-500 font-medium mt-1">Lionsgate Network</div>
+                    </div>
+                    <i class="fa-solid fa-chevron-down text-xs text-slate-400 ml-1"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- SCROLLABLE WORKSPACE -->
+        <div class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar p-6 flex flex-col gap-6">
+            
+            <!-- METRICS ROW -->
+            <div class="widget-container bg-transparent">
+                <div class="flex justify-between items-center mb-3 px-1 widget-header">
+                    <h3 class="text-sm font-bold text-slate-800">Global Metrics</h3>
+                    <button class="text-slate-400 hover:text-slate-600 transition-colors toggle-btn"><i class="fa-solid fa-chevron-up"></i></button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 shrink-0 widget-content">
+                    <div class="bg-white rounded-xl border border-slate-200 p-5 flex items-center gap-4 shadow-sm">
+                        <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 text-xl"><i class="fa-regular fa-user"></i></div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Addresses</div>
+                            <div class="text-2xl font-black text-slate-800">1.24B</div>
+                            <div class="text-xs text-emerald-500 font-bold mt-0.5"><i class="fa-solid fa-arrow-up mr-1"></i>4.38%</div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl border border-slate-200 p-5 flex items-center gap-4 shadow-sm">
+                        <div class="w-12 h-12 rounded-full bg-cyan-50 flex items-center justify-center text-cyan-500 text-xl"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Transactions</div>
+                            <div class="text-2xl font-black text-slate-800">9.87B</div>
+                            <div class="text-xs text-emerald-500 font-bold mt-0.5"><i class="fa-solid fa-arrow-up mr-1"></i>6.72%</div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl border border-slate-200 p-5 flex items-center gap-4 shadow-sm">
+                        <div class="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-600 text-xl"><i class="fa-solid fa-dollar-sign"></i></div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Volume (USD)</div>
+                            <div class="text-2xl font-black text-slate-800">$2.74T</div>
+                            <div class="text-xs text-emerald-500 font-bold mt-0.5"><i class="fa-solid fa-arrow-up mr-1"></i>8.19%</div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl border border-slate-200 p-5 flex items-center gap-4 shadow-sm">
+                        <div class="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 text-xl"><i class="fa-regular fa-folder-open"></i></div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Active Investigations</div>
+                            <div class="text-2xl font-black text-slate-800">128</div>
+                            <div class="text-xs text-emerald-500 font-bold mt-0.5"><i class="fa-solid fa-arrow-up mr-1"></i>12.50%</div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl border border-slate-200 p-5 flex items-center gap-4 shadow-sm">
+                        <div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-500 text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">High Risk Alerts</div>
+                            <div class="text-2xl font-black text-slate-800">37</div>
+                            <div class="text-xs text-emerald-500 font-bold mt-0.5"><i class="fa-solid fa-arrow-up mr-1"></i>3.70%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCENARIO TIMELINE CARD -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 shrink-0 widget-container">
+                <div class="flex justify-between items-center mb-6 widget-header">
+                    <div class="flex items-center gap-3">
+                        <h2 class="text-xl font-black text-slate-800">Scenario: BTC → WBTC → ETH → Base → Coinbase</h2>
+                        <span class="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-black tracking-wider uppercase rounded">Completed</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="flex gap-2">
+                            <button class="px-4 py-2 border border-slate-200 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50 flex items-center gap-2"><i class="fa-regular fa-bookmark"></i> Save</button>
+                            <button class="px-4 py-2 border border-slate-200 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50 flex items-center gap-2"><i class="fa-solid fa-arrow-up-from-bracket"></i> Export</button>
+                            <button class="px-3 py-2 border border-slate-200 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                        </div>
+                        <div class="h-6 w-px bg-slate-200 mx-1"></div>
+                        <button class="text-slate-400 hover:text-slate-600 transition-colors toggle-btn text-lg"><i class="fa-solid fa-chevron-up"></i></button>
+                    </div>
+                </div>
+
+                <div class="widget-content">
+                <!-- Timeline Graphic -->
+                <div class="relative flex justify-between items-center px-4 mb-8">
+                    <div class="absolute top-6 left-10 right-10 h-0.5 bg-blue-500 z-0"></div>
+                    
+                    <!-- Nodes -->
+                    <div class="relative flex flex-col items-center gap-3 z-10 w-24">
+                        <div class="w-12 h-12 rounded-full border-2 border-slate-200 bg-white shadow-md flex items-center justify-center text-orange-500 text-2xl relative"><i class="fa-brands fa-bitcoin"></i><div class="badge-check"><i class="fa-solid fa-check"></i></div></div>
+                        <div class="text-center"><div class="text-sm font-bold text-slate-800">BTC</div><div class="text-xs text-slate-500">Bitcoin Lock</div></div>
+                    </div>
+                    <div class="relative flex flex-col items-center gap-3 z-10 w-24">
+                        <div class="w-12 h-12 rounded-full border-2 border-slate-200 bg-slate-900 shadow-md flex items-center justify-center text-white text-xl relative"><i class="fa-solid fa-shield-halved"></i><div class="badge-check"><i class="fa-solid fa-check"></i></div></div>
+                        <div class="text-center"><div class="text-sm font-bold text-slate-800">BitGo Custody</div><div class="text-xs text-slate-500">Custodian Custody</div></div>
+                    </div>
+                    <div class="relative flex flex-col items-center gap-3 z-10 w-24">
+                        <div class="w-12 h-12 rounded-full border-2 border-slate-200 bg-white shadow-md flex items-center justify-center text-orange-500 text-2xl relative"><i class="fa-brands fa-bitcoin"></i><div class="badge-check"><i class="fa-solid fa-check"></i></div></div>
+                        <div class="text-center"><div class="text-sm font-bold text-slate-800">WBTC</div><div class="text-xs text-slate-500">Ethereum Mint</div></div>
+                    </div>
+                    <div class="relative flex flex-col items-center gap-3 z-10 w-24">
+                        <div class="w-12 h-12 rounded-full border-2 border-slate-200 bg-white shadow-md flex items-center justify-center text-slate-800 text-2xl relative"><i class="fa-brands fa-ethereum"></i><div class="badge-check"><i class="fa-solid fa-check"></i></div></div>
+                        <div class="text-center"><div class="text-sm font-bold text-slate-800">Ethereum</div><div class="text-xs text-slate-500">Transfer</div></div>
+                    </div>
+                    <div class="relative flex flex-col items-center gap-3 z-10 w-24">
+                        <div class="w-12 h-12 rounded-full border-2 border-slate-200 bg-cyan-500 shadow-md flex items-center justify-center text-white text-xl relative"><i class="fa-solid fa-bridge-water"></i><div class="badge-check"><i class="fa-solid fa-check"></i></div></div>
+                        <div class="text-center"><div class="text-sm font-bold text-slate-800">Across Bridge</div><div class="text-xs text-slate-500">Bridge Lock</div></div>
+                    </div>
+                    <div class="relative flex flex-col items-center gap-3 z-10 w-24">
+                        <div class="w-12 h-12 rounded-full border-2 border-slate-200 bg-blue-600 shadow-md flex items-center justify-center text-white text-2xl relative font-black font-serif">O<div class="badge-check"><i class="fa-solid fa-check"></i></div></div>
+                        <div class="text-center"><div class="text-sm font-bold text-slate-800">Base</div><div class="text-xs text-slate-500">Base Mint</div></div>
+                    </div>
+                    <div class="relative flex flex-col items-center gap-3 z-10 w-24">
+                        <div class="w-12 h-12 rounded-full border-2 border-slate-200 bg-white shadow-md flex items-center justify-center text-blue-500 text-xl relative"><i class="fa-solid fa-wind"></i><div class="badge-check"><i class="fa-solid fa-check"></i></div></div>
+                        <div class="text-center"><div class="text-sm font-bold text-slate-800">Aerodrome</div><div class="text-xs text-slate-500">DEX Swap</div></div>
+                    </div>
+                    <div class="relative flex flex-col items-center gap-3 z-10 w-24">
+                        <div class="w-12 h-12 rounded-full border-2 border-slate-200 bg-blue-600 shadow-md flex items-center justify-center text-white text-2xl relative font-black">C<div class="badge-check"><i class="fa-solid fa-check"></i></div></div>
+                        <div class="text-center"><div class="text-sm font-bold text-slate-800">Coinbase</div><div class="text-xs text-slate-500">Exchange Deposit</div></div>
+                    </div>
+                </div>
+
+                <!-- Sub-points -->
+                <div class="mt-8 border-t border-slate-100 pt-6">
+                    <h3 class="text-sm font-bold text-slate-800 mb-4">Transfer Points</h3>
+                    <div class="relative flex justify-between px-2">
+                        <div class="absolute top-1.5 left-2 right-2 h-0.5 bg-slate-200 z-0"></div>
+                        <!-- Mini points -->
+                        <div class="z-10 flex flex-col items-center gap-2"><div class="w-3.5 h-3.5 rounded-full bg-blue-400 border-2 border-white shadow"></div><div class="text-[10px] font-bold text-slate-600 text-center w-16 leading-tight">Source Wallet</div></div>
+                        <div class="z-10 flex flex-col items-center gap-2"><div class="w-3.5 h-3.5 rounded-full bg-blue-400 border-2 border-white shadow"></div><div class="text-[10px] font-bold text-slate-600 text-center w-16 leading-tight">BitGo Deposit</div></div>
+                        <div class="z-10 flex flex-col items-center gap-2"><div class="w-3.5 h-3.5 rounded-full bg-blue-400 border-2 border-white shadow"></div><div class="text-[10px] font-bold text-slate-600 text-center w-16 leading-tight">Custody Confirm</div></div>
+                        <div class="z-10 flex flex-col items-center gap-2"><div class="w-3.5 h-3.5 rounded-full bg-blue-400 border-2 border-white shadow"></div><div class="text-[10px] font-bold text-slate-600 text-center w-16 leading-tight">WBTC Mint</div></div>
+                        <div class="z-10 flex flex-col items-center gap-2"><div class="w-3.5 h-3.5 rounded-full bg-blue-400 border-2 border-white shadow"></div><div class="text-[10px] font-bold text-slate-600 text-center w-16 leading-tight">ETH Wallet</div></div>
+                        <div class="z-10 flex flex-col items-center gap-2"><div class="w-3.5 h-3.5 rounded-full bg-blue-400 border-2 border-white shadow"></div><div class="text-[10px] font-bold text-slate-600 text-center w-16 leading-tight">Uniswap Swap</div></div>
+                        <div class="z-10 flex flex-col items-center gap-2"><div class="w-3.5 h-3.5 rounded-full bg-blue-400 border-2 border-white shadow"></div><div class="text-[10px] font-bold text-slate-600 text-center w-16 leading-tight">Across Lock</div></div>
+                        <div class="z-10 flex flex-col items-center gap-2"><div class="w-3.5 h-3.5 rounded-full bg-blue-400 border-2 border-white shadow"></div><div class="text-[10px] font-bold text-slate-600 text-center w-16 leading-tight">Bridge Relayer</div></div>
+                        <div class="z-10 flex flex-col items-center gap-2"><div class="w-3.5 h-3.5 rounded-full bg-blue-400 border-2 border-white shadow"></div><div class="text-[10px] font-bold text-slate-600 text-center w-16 leading-tight">Base Mint</div></div>
+                        <div class="z-10 flex flex-col items-center gap-2"><div class="w-3.5 h-3.5 rounded-full bg-blue-400 border-2 border-white shadow"></div><div class="text-[10px] font-bold text-slate-600 text-center w-16 leading-tight">Aerodrome Swap</div></div>
+                        <div class="z-10 flex flex-col items-center gap-2"><div class="w-3.5 h-3.5 rounded-full bg-blue-400 border-2 border-white shadow"></div><div class="text-[10px] font-bold text-slate-600 text-center w-16 leading-tight">Coinbase Deposit</div></div>
+                        <div class="z-10 flex flex-col items-center gap-2"><div class="w-3.5 h-3.5 rounded-full bg-blue-600 border-2 border-white shadow"></div><div class="text-[10px] font-bold text-slate-800 text-center w-16 leading-tight">Internal Ledger</div></div>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <!-- MAIN GRID -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 shrink-0">
+                
+                <!-- Left/Center: Analysis Tabs & Graph -->
+                <div class="col-span-1 lg:col-span-9 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden widget-container h-[600px] transition-all">
+                    <!-- Tabs -->
+                    <div class="flex justify-between items-center border-b border-slate-200 bg-slate-50 widget-header pr-4 shrink-0">
+                        <div class="flex px-2 overflow-x-auto custom-scrollbar">
+                            <button class="px-6 py-4 text-sm font-bold text-blue-600 border-b-2 border-blue-600 whitespace-nowrap bg-white">Overview</button>
+                            <button class="px-6 py-4 text-sm font-bold text-slate-500 hover:text-slate-800 whitespace-nowrap">Transactions</button>
+                            <button class="px-6 py-4 text-sm font-bold text-slate-500 hover:text-slate-800 whitespace-nowrap">Token Transfers (ERC-20)</button>
+                            <button class="px-6 py-4 text-sm font-bold text-slate-500 hover:text-slate-800 whitespace-nowrap">Authorizations (EIP-7702)</button>
+                            <button class="px-6 py-4 text-sm font-bold text-slate-500 hover:text-slate-800 whitespace-nowrap">Other Transactions</button>
+                            <button class="px-6 py-4 text-sm font-bold text-slate-500 hover:text-slate-800 whitespace-nowrap">Analytics</button>
+                            <button class="px-6 py-4 text-sm font-bold text-slate-500 hover:text-slate-800 whitespace-nowrap">Assets</button>
+                        </div>
+                        <button class="text-slate-400 hover:text-slate-600 transition-colors toggle-btn ml-4"><i class="fa-solid fa-chevron-up"></i></button>
+                    </div>
+                    
+                    <div class="flex-1 flex flex-col md:flex-row p-6 gap-8 widget-content min-h-0 overflow-y-auto">
+                        <!-- Summary Info -->
+                        <div class="w-full md:w-1/3 flex flex-col gap-4">
+                            <h3 class="text-sm font-bold text-slate-800 mb-2">Summary</h3>
+                            <div class="flex justify-between items-center"><span class="text-xs font-semibold text-slate-500">Scenario ID</span><span class="text-xs font-medium text-slate-800">SCN-2024-0001</span></div>
+                            <div class="flex justify-between items-center"><span class="text-xs font-semibold text-slate-500">Category</span><span class="text-xs font-medium text-slate-800">Cross-Chain Bridge</span></div>
+                            <div class="flex justify-between items-center"><span class="text-xs font-semibold text-slate-500">Risk Score</span><span class="text-xs font-black text-red-500 bg-red-50 px-2 py-0.5 rounded">85 / 100</span></div>
+                            <div class="flex justify-between items-center"><span class="text-xs font-semibold text-slate-500">Confidence</span><span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">94% <i class="fa-solid fa-shield-halved ml-1"></i></span></div>
+                            <div class="flex justify-between items-center pt-3 border-t border-slate-100"><span class="text-xs font-semibold text-slate-500">Total Volume</span><span class="text-sm font-black text-slate-800">$12,842,735.18 <i class="fa-brands fa-ethereum text-slate-400 ml-1"></i></span></div>
+                            <div class="flex justify-between items-center"><span class="text-xs font-semibold text-slate-500">Total Transactions</span><span class="text-xs font-bold text-slate-800">27 <i class="fa-solid fa-code-commit text-slate-400 ml-1"></i></span></div>
+                            <div class="flex justify-between items-center pt-3 border-t border-slate-100"><span class="text-xs font-semibold text-slate-500">First Transaction</span><span class="text-xs font-medium text-slate-800">May 12, 2024 10:21:34 UTC</span></div>
+                            <div class="flex justify-between items-center"><span class="text-xs font-semibold text-slate-500">Last Transaction</span><span class="text-xs font-medium text-slate-800">May 12, 2024 11:02:18 UTC</span></div>
+                            <div class="flex justify-between items-center"><span class="text-xs font-semibold text-slate-500">Duration</span><span class="text-xs font-medium text-slate-800">40m 44s</span></div>
+                            <div class="flex justify-between items-center pt-3 border-t border-slate-100"><span class="text-xs font-semibold text-slate-500">Analyst</span><span class="text-xs font-medium text-slate-800">Lionsgate Network</span></div>
+                            <div class="flex justify-between items-center"><span class="text-xs font-semibold text-slate-500">Status</span><span class="text-[10px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100">Completed</span></div>
+                        </div>
+
+                        <!-- Force Graph Canvas -->
+                        <div class="w-full md:w-2/3 flex flex-col">
+                            <h3 class="text-sm font-bold text-slate-800 mb-4">Flow Visualization</h3>
+                            <div class="flex-1 bg-slate-50 rounded-xl border border-slate-200 relative overflow-hidden flex items-center justify-center">
+                                <div id="graph-container" class="absolute inset-0 cursor-grab active:cursor-grabbing w-full h-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Sidebar: Entity Details -->
+                <div class="col-span-1 lg:col-span-3 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col p-6 overflow-hidden custom-scrollbar widget-container h-[600px] transition-all">
+                    
+                    <div class="flex justify-between items-center mb-4 widget-header shrink-0">
+                        <h3 class="text-sm font-bold text-slate-800">Entity Details</h3>
+                        <button class="text-slate-400 hover:text-slate-600 transition-colors toggle-btn"><i class="fa-solid fa-chevron-up"></i></button>
+                    </div>
+                    
+                    <div class="widget-content flex flex-col flex-1 overflow-y-auto custom-scrollbar pr-2 min-h-0">
+                        <div class="flex justify-between items-center mb-6">
+                            <div class="text-lg font-bold text-slate-900 font-mono tracking-tight" id="sidebar-id">0x5A8F...e7B21a</div>
+                            <i class="fa-regular fa-copy text-slate-400 cursor-pointer hover:text-blue-500 transition-colors"></i>
+                        </div>
+                    
+                    <div class="flex justify-end mb-4">
+                        <span id="sidebar-type" class="px-2 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase rounded border border-blue-100">EOA</span>
+                    </div>
+
+                    <div class="space-y-3 mb-8">
+                        <div class="flex justify-between items-center"><span class="text-xs font-semibold text-slate-500">Ethereum Address</span><span class="text-xs font-medium text-slate-800"></span></div>
+                        <div class="flex justify-between items-center"><span class="text-xs font-semibold text-slate-500">Cluster</span><span class="text-xs font-semibold text-blue-600 cursor-pointer hover:underline">Lionsgate Cluster 6987</span></div>
+                        <div class="flex justify-between items-center"><span class="text-xs font-semibold text-slate-500">First Seen</span><span class="text-xs font-medium text-slate-800">Jan 18, 2023 14:32:11 UTC</span></div>
+                        <div class="flex justify-between items-center"><span class="text-xs font-semibold text-slate-500">Last Seen</span><span class="text-xs font-medium text-slate-800">May 12, 2024 11:02:18 UTC</span></div>
+                        <div class="flex justify-between items-center pt-2 border-t border-slate-100"><span class="text-xs font-semibold text-slate-500">Balance</span><span class="text-xs font-medium text-slate-800">2.45 ETH</span></div>
+                        <div class="flex justify-between items-center"><span class="text-xs font-semibold text-slate-500">USD Value</span><span id="sidebar-usd" class="text-sm font-bold text-slate-800">$8,742.21</span></div>
+                    </div>
+
+                    <h3 class="text-xs font-bold text-slate-800 mb-3 uppercase tracking-wider">Labels</h3>
+                    <div class="flex flex-wrap gap-2 mb-8">
+                        <span class="px-2.5 py-1 bg-blue-50 text-blue-600 text-xs font-medium rounded border border-blue-100">Exchange Deposit</span>
+                        <span class="px-2.5 py-1 bg-blue-50 text-blue-600 text-xs font-medium rounded border border-blue-100">High Value</span>
+                        <span class="px-2.5 py-1 bg-purple-50 text-purple-600 text-xs font-medium rounded border border-purple-100">Bridge User</span>
+                        <span class="px-2.5 py-1 bg-emerald-50 text-emerald-600 text-xs font-medium rounded border border-emerald-100">DeFi User</span>
+                    </div>
+
+                    <h3 class="text-xs font-bold text-slate-800 mb-3 uppercase tracking-wider">Address Tags</h3>
+                    <div class="flex flex-wrap gap-2 mb-8">
+                        <span class="px-2.5 py-1 bg-slate-50 text-blue-600 text-xs font-medium rounded border border-slate-200">Coinbase Deposit Address</span>
+                        <span class="px-2.5 py-1 bg-slate-50 text-blue-600 text-xs font-medium rounded border border-slate-200">Public Address</span>
+                    </div>
+
+                    <h3 class="text-xs font-bold text-slate-800 mb-3 uppercase tracking-wider">Risk Indicators</h3>
+                    <div class="space-y-3 mb-8">
+                        <div class="flex justify-between items-center"><span class="text-xs font-semibold text-slate-600">Bridge Usage</span><span class="px-2 py-0.5 bg-red-50 text-red-600 text-[10px] font-bold uppercase rounded border border-red-100">High</span></div>
+                        <div class="flex justify-between items-center"><span class="text-xs font-semibold text-slate-600">Mixing Behavior</span><span class="px-2 py-0.5 bg-amber-50 text-amber-600 text-[10px] font-bold uppercase rounded border border-amber-100">Medium</span></div>
+                        <div class="flex justify-between items-center"><span class="text-xs font-semibold text-slate-600">Sanctioned Entity</span><span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase rounded border border-emerald-100">Low</span></div>
+                        <div class="flex justify-between items-center"><span class="text-xs font-semibold text-slate-600">Exchange Deposit</span><span class="px-2 py-0.5 bg-red-50 text-red-600 text-[10px] font-bold uppercase rounded border border-red-100">High</span></div>
+                        <div class="flex justify-between items-center"><span class="text-xs font-semibold text-slate-600">New Wallet</span><span class="px-2 py-0.5 bg-amber-50 text-amber-600 text-[10px] font-bold uppercase rounded border border-amber-100">Medium</span></div>
+                        <div class="flex justify-between items-center pt-3 border-t border-slate-100"><span class="text-xs font-bold text-slate-800">Overall Risk</span><span class="text-lg font-black text-red-500">85<span class="text-xs text-slate-400"> / 100</span></span></div>
+                    </div>
+
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Notes</h3>
+                        <i class="fa-solid fa-pen text-slate-400 text-xs cursor-pointer hover:text-blue-500 transition-colors"></i>
+                    </div>
+                    <div class="text-xs text-slate-400 italic">No notes added</div>
+
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </main>
+
+    <script>
+        let Graph = null;
+        
+        // Setup Image Caching for crisp canvas rendering
+        const imageCache = {};
+        function getCachedImage(url) {
+            if (!url) return null;
+            if (imageCache[url]) return imageCache[url];
+            const img = new Image();
+            img.src = url;
+            img.crossOrigin = "Anonymous";
+            imageCache[url] = img;
+            return img;
+        }
+
+        // Preload Binance Logo
+        getCachedImage('https://cryptologos.cc/logos/bnb-bnb-logo.png');
+
+        // NEMESIS ENGINE DATA INJECTION POINT
+        let mockData = { nodes: [], links: [] };
+        let knownNodes = new Set();
+        
+        function setupWebSocket() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const traceId = urlParams.get('trace_id');
+            if(!traceId) return;
+            
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsHost = window.location.host;
+            const ws = new WebSocket(`${wsProtocol}//${wsHost}/ws/${traceId}`);
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === "INIT") return;
+                
+                // Add nodes if not exist
+                if(!knownNodes.has(data.source)) {
+                    mockData.nodes.push({ id: data.source, nameStr: "Source Wallet", typeStr: "EOA", valStr: "", displayId: data.source.substring(0,10)+"...", isBinance: false, badgeIcon: "fa-wallet", badgeColor: "#64748b" });
+                    knownNodes.add(data.source);
+                }
+                if(!knownNodes.has(data.target)) {
+                    mockData.nodes.push({ id: data.target, nameStr: "Destination", typeStr: "Wallet", valStr: "", displayId: data.target.substring(0,10)+"...", isBinance: false, badgeIcon: "fa-wallet", badgeColor: "#64748b" });
+                    knownNodes.add(data.target);
+                }
+                
+                // Add Link
+                mockData.links.push({
+                    source: data.source,
+                    target: data.target,
+                    valStr: data.valStr,
+                    hashStr: data.id.substring(0,10) + '...',
+                    tagStr: data.chain
+                });
+                
+                if(Graph) {
+                    Graph.graphData(mockData);
+                }
+            };
+        }
+
+        function initGraph() {
+            const container = document.getElementById('graph-container');
+            
+            // Use 2D Force-Graph for precise typographic alignment per spec
+            Graph = ForceGraph()(container)
+                .graphData(mockData)
+                .backgroundColor('#f8fafc')
+                .cooldownTicks(0) // Static layout for linear flow
+                .nodeId('id')
+                
+                // --- MODERN CLEAN NODE DESIGN ---
+                .nodeCanvasObject((node, ctx, globalScale) => {
+                    const R = 22; // Base circle radius
+                    
+                    // 1. Draw Main Background Circle & Shadow
+                    ctx.shadowColor = 'rgba(0,0,0,0.08)';
+                    ctx.shadowBlur = 15;
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, R, 0, 2 * Math.PI, false);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fill();
+                    
+                    ctx.shadowColor = 'transparent'; // reset shadow
+                    ctx.lineWidth = 1 / globalScale;
+                    ctx.strokeStyle = '#e2e8f0';
+                    ctx.stroke();
+
+                    // 2. Draw Center Icon / Logo
+                    if (node.isBinance) {
+                        // Use Binance Logo (using standard BNB crypto logo as proxy for Binance Exchange)
+                        const img = getCachedImage('https://cryptologos.cc/logos/bnb-bnb-logo.png');
+                        if (img && img.complete) {
+                            ctx.save();
+                            ctx.beginPath();
+                            ctx.arc(node.x, node.y, R - 2, 0, 2 * Math.PI);
+                            ctx.clip();
+                            ctx.drawImage(img, node.x - R + 4, node.y - R + 4, (R - 4) * 2, (R - 4) * 2);
+                            ctx.restore();
+                        }
+                    } else {
+                        // Use FontAwesome Wallet Icon for Unknown
+                        ctx.font = `900 ${R * 1.1}px "Font Awesome 6 Free"`;
+                        ctx.fillStyle = '#3b82f6'; // Brand Blue
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('\uf555', node.x, node.y);
+                    }
+
+                    // 3. Draw Overlapping Badge (Bottom Right)
+                    const badgeR = R * 0.35;
+                    const badgeX = node.x + R * 0.7;
+                    const badgeY = node.y + R * 0.7;
+                    
+                    ctx.beginPath();
+                    ctx.arc(badgeX, badgeY, badgeR, 0, 2 * Math.PI);
+                    ctx.fillStyle = node.badgeColor;
+                    ctx.fill();
+                    
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2 / globalScale;
+                    ctx.stroke();
+                    
+                    ctx.font = `900 ${badgeR * 1.1}px "Font Awesome 6 Free"`;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(node.badgeIcon, badgeX, badgeY);
+
+                    // 4. Draw Typography Below Node
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'top';
+                    
+                    // USD Value (Blue)
+                    ctx.font = `bold ${5}px Inter`;
+                    ctx.fillStyle = '#2563eb';
+                    ctx.fillText(node.valStr, node.x, node.y + R + 6);
+                    
+                    // Entity Name
+                    ctx.font = `bold ${4}px Inter`;
+                    ctx.fillStyle = node.isBinance ? '#2563eb' : '#3b82f6'; // Blue per spec
+                    ctx.fillText(node.nameStr, node.x, node.y + R + 13);
+                    
+                    // Entity Type (Grey)
+                    ctx.font = `600 ${3.5}px Inter`;
+                    ctx.fillStyle = '#64748b';
+                    ctx.fillText(node.typeStr, node.x, node.y + R + 18);
+                })
+                .nodePointerAreaPaint((node, color, ctx) => {
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, 25, 0, 2 * Math.PI); // Click area
+                    ctx.fill();
+                })
+                
+                // --- MODERN CLEAN LINK DESIGN ---
+                .linkCanvasObjectMode(() => 'after')
+                .linkCanvasObject((link, ctx) => {
+                    const start = link.source;
+                    const end = link.target;
+                    if (typeof start !== 'object' || typeof end !== 'object') return;
+
+                    const midX = start.x + (end.x - start.x) / 2;
+                    const midY = start.y + (end.y - start.y) / 2;
+
+                    ctx.save();
+                    ctx.translate(midX, midY);
+                    
+                    // Keep text upright
+                    let angle = Math.atan2(end.y - start.y, end.x - start.x);
+                    if (angle > Math.PI / 2 || angle < -Math.PI / 2) {
+                        angle += Math.PI;
+                    }
+                    ctx.rotate(angle);
+
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+
+                    // Top Text: ↓ OUTFLOW & Amount (Red)
+                    ctx.font = `bold ${3.5}px Inter`;
+                    ctx.fillStyle = '#ef4444'; 
+                    ctx.fillText(`↓ OUTFLOW`, 0, -8);
+                    
+                    ctx.font = `bold ${4.5}px Inter`;
+                    ctx.fillText(link.valStr, 0, -3.5);
+
+                    // Bottom Text: Hash (Grey)
+                    ctx.font = `400 ${3.5}px Inter`;
+                    ctx.fillStyle = '#64748b';
+                    ctx.fillText(link.hashStr, 0, 3.5);
+                    
+                    // TRC20 Tag Box
+                    if(link.tagStr) {
+                        ctx.font = `bold ${3}px Inter`;
+                        const tw = ctx.measureText(link.tagStr).width;
+                        ctx.fillStyle = '#f1f5f9'; // Slate-100
+                        ctx.beginPath();
+                        ctx.roundRect(-tw/2 - 2, 6.5, tw + 4, 5, 1.5);
+                        ctx.fill();
+                        ctx.strokeStyle = '#e2e8f0';
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                        ctx.fillStyle = '#64748b';
+                        ctx.fillText(link.tagStr, 0, 9);
+                    }
+
+                    ctx.restore();
+                })
+                .linkColor(() => '#3b82f6') // Solid Blue line per spec
+                .linkWidth(1)
+                .linkDirectionalArrowLength(4.5)
+                .linkDirectionalArrowRelPos(1)
+                .linkDirectionalArrowColor(() => '#3b82f6')
+                
+                // Interaction
+                .onNodeClick(node => {
+                    document.getElementById('sidebar-id').innerText = node.displayId;
+                    document.getElementById('sidebar-type').innerText = node.isBinance ? 'CEX' : 'EOA';
+                    document.getElementById('sidebar-usd').innerText = node.valStr;
+                });
+                
+            // Initial Zoom fit
+            setTimeout(() => {
+                Graph.zoomToFit(400, 50);
+            }, 300);
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            setupWebSocket();
+            initGraph();
+            
+            // Handle Resizing
+            window.addEventListener('resize', () => {
+                const container = document.getElementById('graph-container');
+                if (Graph && container) {
+                    Graph.width(container.clientWidth).height(container.clientHeight);
+                }
+            });
+        });
+
+        // Widget Toggle Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const container = this.closest('.widget-container');
+                    const content = container.querySelector('.widget-content');
+                    const icon = this.querySelector('i');
+                    
+                    if (content.classList.contains('hidden')) {
+                        content.classList.remove('hidden');
+                        icon.classList.remove('fa-chevron-down');
+                        icon.classList.add('fa-chevron-up');
+                        
+                        // If it has a set height, restore it
+                        if (container.classList.contains('h-auto')) {
+                            container.classList.remove('h-auto');
+                            if (container.hasAttribute('data-original-height')) {
+                                container.classList.add(container.getAttribute('data-original-height'));
+                            }
+                        }
+                    } else {
+                        content.classList.add('hidden');
+                        icon.classList.remove('fa-chevron-up');
+                        icon.classList.add('fa-chevron-down');
+                        
+                        // Remove fixed height class to allow collapse
+                        const heightMatch = Array.from(container.classList).find(c => c.startsWith('h-[') || c.startsWith('h-'));
+                        if (heightMatch && heightMatch !== 'h-auto' && heightMatch !== 'h-full') {
+                            container.setAttribute('data-original-height', heightMatch);
+                            container.classList.remove(heightMatch);
+                            container.classList.add('h-auto');
+                        }
+                    }
+                    
+                    // Adjust Graph size if this is the graph container
+                    if (Graph && !content.classList.contains('hidden')) {
+                        setTimeout(() => {
+                            const graphContainer = document.getElementById('graph-container');
+                            if (graphContainer) {
+                                Graph.width(graphContainer.clientWidth).height(graphContainer.clientHeight);
+                            }
+                        }, 50); // slight delay to allow layout to settle
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
