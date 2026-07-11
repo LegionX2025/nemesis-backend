@@ -1069,13 +1069,9 @@
                 const tbody = document.getElementById('cases-table');
                 
                 if (!data || !data.cases || data.cases.length === 0) {
-                    // Mock data if backend empty
                     tbody.innerHTML = `
                         <tr>
-                            <td class="py-3 font-mono text-[#00b8ff]">CASE-X991</td>
-                            <td class="py-3">Lazarus Group Suspect</td>
-                            <td class="py-3"><span class="bg-orange-500/10 text-orange-400 px-2 py-1 rounded text-[10px] border border-orange-500/30">INVESTIGATING</span></td>
-                            <td class="py-3 text-right"><button class="text-xs text-gray-400 hover:text-white">View</button></td>
+                            <td colspan="4" class="py-3 text-center text-gray-500">No active cases found.</td>
                         </tr>
                     `;
                     return;
@@ -1090,7 +1086,7 @@
                     </tr>
                 `).join('');
             } catch (e) {
-                console.error("Backend offline, loading mock cases.");
+                console.error("Backend offline, unable to load cases.");
             }
         }
 
@@ -1105,10 +1101,9 @@
                     document.getElementById('stat-cases').innerText = data.cases;
                 }
             } catch (e) {
-                // Mock stats
-                document.getElementById('stat-traces').innerText = 12450;
-                document.getElementById('stat-wallets').innerText = 5420;
-                document.getElementById('stat-cases').innerText = 12;
+                document.getElementById('stat-traces').innerText = "0";
+                document.getElementById('stat-wallets').innerText = "0";
+                document.getElementById('stat-cases').innerText = "0";
             }
         }
 

@@ -132,8 +132,7 @@
                 </div>
 
                 <div class="flex justify-end gap-3 mt-8">
-                    <button type="button" onclick="loadSample()" class="px-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200 bg-white">Load Sample</button>
-                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-500/30">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-500/30">
                         <i class="fa-solid fa-magnifying-glass-chart"></i> INITIATE FORENSIC TRACE
                     </button>
                 </div>
@@ -166,11 +165,6 @@
             document.getElementById('currency-icon-container').innerHTML = `<i class="fa-solid ${option.dataset.icon || 'fa-dollar-sign'}"></i>`;
         }
 
-        function loadSample() {
-            document.getElementById('trace_seeds').value = "TNcykrU6R99SrR5BnxaqtDZe1V7o2sf664";
-            document.getElementById('target_chain').value = "TRON";
-            updateChainIcon();
-        }
 
         async function startTrace() {
             const seeds = document.getElementById('trace_seeds').value.trim();
