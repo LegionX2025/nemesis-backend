@@ -5385,8 +5385,7 @@ NEMESIS_ROOT/
                 
                 // Append text with rudimentary markdown/newline formatting
                 let text = event.data;
-                text = text.replace(/
-/g, '<br>');
+                text = text.replace(/\n/g, '<br>');
                 if (text.includes("```python")) {
                     text = text.replace(/```python/g, '<div class="bg-slate-900/50 p-2 rounded mt-2 border border-slate-700 font-mono text-[10px] text-blue-300">');
                     text = text.replace(/```/g, '</div>');

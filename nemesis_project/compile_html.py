@@ -22,9 +22,9 @@ for filename in os.listdir(frontend_dir):
         original_content = content
         
         # Replace {% include 'includes/head_assets.html' %} or similar
-        content = re.sub(r"{%\s*include\s*['\"]includes/head_assets\.html['\"]\s*%}", includes.get("head_assets.html", ""), content)
-        content = re.sub(r"{%\s*include\s*['\"]includes/global_nav\.html['\"]\s*%}", includes.get("global_nav.html", ""), content)
-        content = re.sub(r"{%\s*include\s*['\"]includes/footer\.html['\"]\s*%}", includes.get("footer.html", ""), content)
+        content = re.sub(r"{%\s*include\s*['\"]includes/head_assets\.html['\"]\s*%}", lambda m: includes.get("head_assets.html", ""), content)
+        content = re.sub(r"{%\s*include\s*['\"]includes/global_nav\.html['\"]\s*%}", lambda m: includes.get("global_nav.html", ""), content)
+        content = re.sub(r"{%\s*include\s*['\"]includes/footer\.html['\"]\s*%}", lambda m: includes.get("footer.html", ""), content)
         
         # Replace Flask url_for('static', filename='path/to/file') with 'static/path/to/file'
         content = re.sub(r"{{\s*url_for\('static',\s*filename=['\"](.*?)['\"]\)\s*}}", r"static/\1", content)
