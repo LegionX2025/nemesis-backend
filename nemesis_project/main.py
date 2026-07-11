@@ -948,9 +948,15 @@ async def nemesis_id_tx_history(address: str):
         docs = await cursor.to_list(length=5)
         transactions = []
         for doc in docs:
+            doc_chain = doc.get("chain", "UNKNOWN")
             for l in doc.get("ledger", []):
                 if l.get("from", "").lower() == address.lower() or l.get("to", "").lower() == address.lower():
-                    transactions.append(l)
+                    item = dict(l)
+                    if "amount" not in item and "value" in item:
+                        item["amount"] = item["value"]
+                    if "chain" not in item:
+                        item["chain"] = doc_chain
+                    transactions.append(item)
                     
         return {"transactions": transactions[:20]}
     except Exception as e:
