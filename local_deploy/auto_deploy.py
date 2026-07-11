@@ -45,6 +45,7 @@ def main():
     # 3. Deploy Cloudflare Pages Frontend
     # Assumes wrangler is installed and authenticated
     frontend_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "frontend")
+    cf_frontend_success = False
     if os.path.exists(frontend_dir):
         static_src = os.path.join(frontend_dir, "static")
         static_dst = os.path.join(frontend_dir, "templates", "static")
@@ -53,7 +54,15 @@ def main():
                 shutil.rmtree(static_dst)
             shutil.copytree(static_src, static_dst)
             
-        run_command(f"cd {frontend_dir} && npx wrangler pages deploy templates --project-name nemesis-frontend", "Deploying Cloudflare Pages")
+        print(f"\n🚀 Deploying Cloudflare Pages...")
+        result = subprocess.run(f"npx wrangler pages deploy templates --project-name nemesis-frontend", shell=True, cwd=frontend_dir)
+        if result.returncode == 0:
+            print("✅ Success: Deploying Cloudflare Pages")
+            cf_frontend_success = True
+        else:
+            print("❌ Failed: Deploying Cloudflare Pages")
+            print("   => FALLING BACK TO VERCEL DEPLOYMENT...")
+            subprocess.run("npx vercel --prod --yes", shell=True, cwd=frontend_dir)
     
     # 3b. Deploy Cloudflare Global Worker (Backend/API)
     worker_dir = os.path.join(frontend_dir, "nemesis-global-worker")
