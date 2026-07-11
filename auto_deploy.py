@@ -44,7 +44,7 @@ def main():
         run_cmd(f'"{sys.executable}" -m pip install -r requirements.txt', cwd="local_deploy", exit_on_error=False)
         
 
-    worker_dir = os.path.join(os.getcwd(), "local_deploy", "frontend", "nemesis-global-worker")
+    worker_dir = os.path.join(os.getcwd(), "cloudflare_worker")
     if os.path.exists(os.path.join(worker_dir, "package.json")):
         print("    -> Installing Node.js requirements (cloudflare_worker)...")
         run_cmd("npm install", cwd=worker_dir, exit_on_error=False)
@@ -87,7 +87,7 @@ def main():
 
     # 2. CLOUDFLARE DEPLOY (EDGE PROXY)
     print("\n>>> [2/3] Deploying Edge Architecture (Cloudflare Worker)")
-    worker_dir = os.path.join(os.getcwd(), "local_deploy", "frontend", "nemesis-global-worker")
+    worker_dir = os.path.join(os.getcwd(), "cloudflare_worker")
     if not os.path.exists(worker_dir):
         print(f"[ERROR] Worker directory not found: {worker_dir}")
         sys.exit(1)
@@ -97,43 +97,12 @@ def main():
 
     # 3. CLOUDFLARE DEPLOY (FRONTEND)
     print("\n>>> [3/3] Deploying Main Frontend (Cloudflare Pages)")
-    frontend_dir = os.path.join(os.getcwd(), "local_deploy", "frontend")
+    frontend_dir = os.path.join(os.getcwd(), "cloudflare_frontend")
     if not os.path.exists(frontend_dir):
         print(f"[ERROR] Frontend directory not found: {frontend_dir}")
         sys.exit(1)
         
-    print("    -> Bundling frontend assets natively in Python...")
-    # Create a temporary dist directory to hold both templates and static assets
-    dist_dir = os.path.join(frontend_dir, "_cf_pages_dist")
-    
-    # Clean up existing directory using native python shutil
-    if os.path.exists(dist_dir):
-        try:
-            shutil.rmtree(dist_dir)
-        except Exception as e:
-            print(f"[WARNING] Failed to clean up {dist_dir} completely: {e}")
-            
-    os.makedirs(dist_dir, exist_ok=True)
-    
-    # Copy templates and static using shutil
-    templates_src = os.path.join(frontend_dir, 'templates')
-    static_src = os.path.join(frontend_dir, 'static')
-    static_dest = os.path.join(dist_dir, 'static')
-    
-    if os.path.exists(templates_src):
-        # copy contents of templates into the root of dist_dir
-        for item in os.listdir(templates_src):
-            s = os.path.join(templates_src, item)
-            d = os.path.join(dist_dir, item)
-            if os.path.isdir(s):
-                shutil.copytree(s, d)
-            else:
-                shutil.copy2(s, d)
-                
-    if os.path.exists(static_src):
-        shutil.copytree(static_src, static_dest)
-
-    run_cmd("npx wrangler pages deploy _cf_pages_dist --project-name nemesis-id-frontend", cwd=frontend_dir)
+    run_cmd("npx wrangler pages deploy . --project-name nemesis-id-frontend", cwd=frontend_dir)
     print("    -> Cloudflare Pages frontend successfully deployed!")
     
     print("\n============================================================")

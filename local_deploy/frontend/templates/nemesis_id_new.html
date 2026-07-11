@@ -44,20 +44,20 @@
         
         /* Context Menu */
         #custom-context-menu { display: none; position: absolute; z-index: 1000; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 0.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 0.5rem 0; min-width: 220px; }
-        .context-menu-item { padding: 0.5rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #f8fafc; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 0.5rem; }
-        .context-menu-item:hover { background: #f1f5f9; color: #f8fafc; }
+        .context-menu-item { padding: 0.5rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #334155; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 0.5rem; }
+        .context-menu-item:hover { background: #f1f5f9; color: #0f172a; }
 
         /* Alerts & Sync */
-        @keyframes flash-critical { 0%, 100% { background-color: rgba(239, 68, 68, 0.05); border-color: #f8fafc; box-shadow: 0 0 15px rgba(239, 68, 68, 0.1); color: #f8fafc; } 50% { background-color: rgba(239, 68, 68, 0.15); border-color: #f8fafc; box-shadow: 0 0 25px rgba(239, 68, 68, 0.3); color: #f8fafc; } }
+        @keyframes flash-critical { 0%, 100% { background-color: rgba(239, 68, 68, 0.05); border-color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.1); color: #b91c1c; } 50% { background-color: rgba(239, 68, 68, 0.15); border-color: #ef4444; box-shadow: 0 0 25px rgba(239, 68, 68, 0.3); color: #ef4444; } }
         .alert-flashing { animation: flash-critical 1.5s infinite; border-width: 1px; }
         .live-dot { height: 8px; width: 8px; background-color: #f8fafc; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px #10b981; animation: pulse 2s infinite; }
 
         /* Tabs */
         .tab-content { display: none; animation: fadeIn 0.4s ease-out; }
         .tab-content.active { display: block; }
-        .tab-btn { transition: all 0.2s; border-bottom: 2px solid transparent; white-space: nowrap; color: #f8fafc; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.05em; }
-        .tab-btn:hover { color: #f8fafc; background: rgba(0,0,0,0.02); }
-        .tab-btn.active { border-bottom-color: #f8fafc; color: #f8fafc; background: rgba(37, 99, 235, 0.05); font-weight: 700; }
+        .tab-btn { transition: all 0.2s; border-bottom: 2px solid transparent; white-space: nowrap; color: #475569; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; letter-spacing: 0.05em; }
+        .tab-btn:hover { color: #0f172a; background: rgba(0,0,0,0.02); }
+        .tab-btn.active { border-bottom-color: #2563eb; color: #2563eb; background: rgba(37, 99, 235, 0.05); font-weight: 700; }
         
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -70,7 +70,7 @@
         
         /* Tables */
         .cyber-table { width: 100%; border-collapse: separate; border-spacing: 0; }
-        .cyber-table th { background: #f8fafc; border-bottom: 2px solid #e2e8f0; padding: 0.75rem; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: #f8fafc; }
+        .cyber-table th { background: #f1f5f9; border-bottom: 2px solid #e2e8f0; padding: 0.75rem; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: #475569; }
         .cyber-table td { border-bottom: 1px solid #f1f5f9; padding: 0.75rem; font-size: 0.75rem; }
         .cyber-table tr:hover td { background-color: #f8fafc; }
         
@@ -239,7 +239,7 @@
                     </div>
                     
                     <div class="flex items-center gap-4 text-sm font-mono mt-1">
-                        <span class="text-slate-600 uppercase text-[10px] tracking-widest font-bold">NEMESIS ID: NMS-WALLET-ETH-00093231 | SUBJECT WALLET ENTITY</span>
+                        <span class="text-slate-600 uppercase text-[10px] tracking-widest font-bold" id="header-nemesis-id">NEMESIS ID: LOADING | SUBJECT WALLET ENTITY</span>
                     </div>
 
                     <div class="flex flex-wrap gap-2 mt-2 text-[9px] font-bold uppercase tracking-wider font-mono" id="header-threat-tags">
@@ -360,8 +360,8 @@
                         <!-- Attribution Confidence -->
                         <div class="bg-white p-3 rounded border border-slate-600 text-right">
                             <span class="text-slate-600 block mb-1">Attribution Confidence</span>
-                            <span class="text-2xl font-black text-emerald-500">99.5%</span>
-                            <span class="text-[8px] text-slate-500 block mt-1">Based on 3 Verified Evidence Vectors</span>
+                            <span class="text-2xl font-black text-emerald-500" id="meta-attribution-confidence">99.5%</span>
+                            <span class="text-[8px] text-slate-500 block mt-1">Based on Verified Evidence Vectors</span>
                         </div>
                     </div>
 
@@ -396,12 +396,12 @@
                 <div class="data-card border-t-4 border-t-emerald-500">
                     <h2 class="text-xs font-black text-slate-900 uppercase tracking-widest mb-4 border-b border-slate-200 pb-2">Profile Metadata</h2>
                     <div class="space-y-4 font-mono text-[10px] text-slate-700">
-                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">First Activity</span><span class="text-slate-900 font-bold">2023-04-12 14:02 UTC</span></div>
-                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">Last Activity</span><span class="text-slate-900 font-bold">2026-05-27 08:14 UTC</span></div>
-                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">Total Transactions</span><span class="text-slate-900 font-black">14,205</span></div>
-                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">Total Inbound</span><span class="text-emerald-600 font-bold usd-value">$84,500,000</span><span class="text-emerald-600 font-bold native-value">26,500 ETH</span></div>
-                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">Total Outbound</span><span class="text-red-600 font-bold usd-value">$83,047,109</span><span class="text-red-600 font-bold native-value">26,047 ETH</span></div>
-                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">Current Balance</span><span class="text-blue-600 font-bold usd-value">$1,452,890</span><span class="text-blue-600 font-bold native-value">453 ETH</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">First Activity</span><span class="text-slate-900 font-bold" id="meta-first-act">Loading...</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">Last Activity</span><span class="text-slate-900 font-bold" id="meta-last-act">Loading...</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">Total Transactions</span><span class="text-slate-900 font-black" id="meta-total-tx">0</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">Total Inbound</span><span class="text-emerald-600 font-bold usd-value" id="meta-total-in-usd">$84,500,000</span><span class="text-emerald-600 font-bold native-value" id="meta-total-in-native">26,500 ETH</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">Total Outbound</span><span class="text-red-600 font-bold usd-value" id="meta-total-out-usd">$83,047,109</span><span class="text-red-600 font-bold native-value" id="meta-total-out-native">26,047 ETH</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-600">Current Balance</span><span class="text-blue-600 font-bold usd-value" id="meta-balance-usd">$1,452,890</span><span class="text-blue-600 font-bold native-value" id="meta-balance-native">453 ETH</span></div>
                         <div class="flex justify-between pt-2">
                             <span class="text-slate-600">Funded By:</span>
                             <div class="text-right">
@@ -1185,9 +1185,13 @@
             const address = urlParams.get('address');
             if (!address) return;
 
+            const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                ? 'http://127.0.0.1:8088'
+                : 'https://nemesis-api.legionxgaming2021.workers.dev';
+
             try {
                 // 1. Fetch Profile
-                const profileRes = await fetch(`http://127.0.0.1:8088/api/nemesis_id/profile/${address}`);
+                const profileRes = await fetch(`${API_BASE}/api/nemesis_id/profile/${address}`);
                 if (profileRes.ok) {
                     const profileData = await profileRes.json();
                     
@@ -1196,14 +1200,30 @@
                     if (elHeaderAddr) elHeaderAddr.innerText = profileData.address || address;
                     
                     // Update basic profile fields
-                    document.getElementById('profile-nemesis-id') && (document.getElementById('profile-nemesis-id').innerText = profileData.nemesis_id || 'N/A');
-                    document.getElementById('profile-entity-name') && (document.getElementById('profile-entity-name').innerText = profileData.entity_name || 'Unknown');
-                    document.getElementById('profile-risk-score') && (document.getElementById('profile-risk-score').innerText = profileData.risk_score || '0');
-                    document.getElementById('profile-balance') && (document.getElementById('profile-balance').innerText = `$${(profileData.estimated_balance_usd || 0).toLocaleString()}`);
+                    document.getElementById('header-nemesis-id') && (document.getElementById('header-nemesis-id').innerText = `NEMESIS ID: ${profileData.nemesis_id || 'N/A'} | SUBJECT WALLET ENTITY`);
+                    
+                    document.getElementById('meta-first-act') && (document.getElementById('meta-first-act').innerText = profileData.first_activity || 'Unknown');
+                    document.getElementById('meta-last-act') && (document.getElementById('meta-last-act').innerText = profileData.last_activity || 'Unknown');
+                    document.getElementById('meta-total-tx') && (document.getElementById('meta-total-tx').innerText = profileData.total_transactions || '0');
+                    document.getElementById('meta-total-in-native') && (document.getElementById('meta-total-in-native').innerText = `${profileData.total_received || '0.00'} ETH`);
+                    document.getElementById('meta-total-out-native') && (document.getElementById('meta-total-out-native').innerText = `${profileData.total_sent || '0.00'} ETH`);
+                    document.getElementById('meta-balance-usd') && (document.getElementById('meta-balance-usd').innerText = profileData.balance || '$0');
+                    document.getElementById('meta-balance-native') && (document.getElementById('meta-balance-native').innerText = '');
+                    
+                    document.getElementById('ml-entity-type') && (document.getElementById('ml-entity-type').innerText = profileData.entity?.name || 'Whale Wallet / EOA');
+                    
+                    if(profileData.tx_categories) {
+                        let highestPattern = 'Unknown';
+                        let maxCat = 0;
+                        for(const [k,v] of Object.entries(profileData.tx_categories)) {
+                            if(v > maxCat) { maxCat = v; highestPattern = k; }
+                        }
+                        document.getElementById('ml-transfer-pattern') && (document.getElementById('ml-transfer-pattern').innerText = highestPattern.toUpperCase());
+                    }
                 }
 
                 // 2. Fetch AML
-                const amlRes = await fetch(`http://127.0.0.1:8088/api/nemesis_id/aml/${address}`);
+                const amlRes = await fetch(`${API_BASE}/api/nemesis_id/aml/${address}`);
                 if (amlRes.ok) {
                     const amlData = await amlRes.json();
                     document.getElementById('aml-score') && (document.getElementById('aml-score').innerText = amlData.risk_score || '0');
@@ -1211,7 +1231,7 @@
                 }
 
                 // 3. Fetch TX History
-                const txRes = await fetch(`http://127.0.0.1:8088/api/nemesis_id/tx_history/${address}`);
+                const txRes = await fetch(`${API_BASE}/api/nemesis_id/tx_history/${address}`);
                 if (txRes.ok) {
                     const txData = await txRes.json();
                     console.log("Loaded TX History:", txData);

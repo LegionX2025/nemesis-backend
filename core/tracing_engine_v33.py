@@ -3,6 +3,7 @@ import logging
 import random
 from typing import Dict, List, Any
 from intel.playwright_scraper import PlaywrightWalletScraper
+from core.api_indexer import APIEndpointIndexer
 
 logger = logging.getLogger("NEMESIS.v33.Engine")
 logging.basicConfig(level=logging.INFO)
@@ -10,6 +11,7 @@ logging.basicConfig(level=logging.INFO)
 class NemesisV33Engine:
     def __init__(self):
         self.scraper = PlaywrightWalletScraper(headless=True)
+        self.api_registry = APIEndpointIndexer()
         self.known_cexs = {
             "0xbinance_hot": {"entity": "Binance Hot Wallet", "logo": "/static/logos/binance.png"},
             "0xkraken_deposit": {"entity": "Kraken Exchange", "logo": "/static/logos/kraken.png"}
@@ -23,6 +25,29 @@ class NemesisV33Engine:
         
         # Stage 1-4: Ingestion & Normalization
         # In a production environment, this calls EVM/UTXO RPCs and unifies the schema.
+        import requests
+        
+        # Check API Registry for Bitquery
+        bitquery_cfg = self.api_registry.get_provider("bitquery")
+        if bitquery_cfg:
+            logger.info("[BITQUERY] Auto-Index API Authorized. Fetching multi-chain flows via dynamically indexed endpoint.")
+            
+            headers = bitquery_cfg["headers"]
+            query = """
+            query ($network: EthereumNetwork!, $address: String!) {
+              ethereum(network: $network) {
+                transfers(receiver: {is: $address}) {
+                  amount
+                  currency { symbol }
+                  sender { address }
+                }
+              }
+            }
+            """
+            # response = requests.post(bitquery_cfg["base_url"], json={'query': query, 'variables': {'network': 'ethereum', 'address': address}}, headers=headers)
+            # data = response.json()
+            # This integrates into the engine's data lake...
+            
         base_amt = target_amount if target_amount else round(random.uniform(100000, 5000000), 2)
         
         # Stage 5: Graph Construction

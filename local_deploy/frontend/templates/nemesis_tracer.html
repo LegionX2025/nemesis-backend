@@ -13,7 +13,7 @@
     <script>
         const IS_LOCAL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "";
         window.BACKEND_URL = IS_LOCAL ? "http://127.0.0.1:8088" : "https://nemesis-api.legionxgaming2021.workers.dev";
-        window.WS_URL = IS_LOCAL ? "ws://127.0.0.1:8088" : "wss://nemesis-backend-rwp4.onrender.com";
+        window.WS_URL = IS_LOCAL ? "ws://127.0.0.1:8088" : "wss://nemesis-api.legionxgaming2021.workers.dev";
         window.traceIdParam = new URLSearchParams(window.location.search).get('trace_id');
     </script>
     <style>
@@ -432,11 +432,14 @@
             initGraph();
             const urlParams = new URLSearchParams(window.location.search);
             const address = urlParams.get('address');
+            const loss = urlParams.get('loss');
+            
             if (window.traceIdParam) {
                 document.getElementById('metric-trace-id').innerText = window.traceIdParam;
                 connectWebSocket(window.traceIdParam);
             } else if (address) {
                 document.getElementById('setup-seeds').value = address;
+                if (loss) document.getElementById('setup-amount').value = loss;
                 submitTraceSetup();
             } else {
                 document.getElementById('trace-setup-modal').classList.remove('hidden');
@@ -831,6 +834,11 @@
             }
             
             let amount = document.getElementById('setup-amount').value || "0";
+            const urlParams = new URLSearchParams(window.location.search);
+            let currency = urlParams.get('asset') || "USD";
+            let chainOverride = urlParams.get('networks') || "AUTO";
+            let startDate = urlParams.get('start') || "";
+            let endDate = urlParams.get('end') || "";
             
             document.getElementById('trace-setup-modal').classList.add('hidden');
             
@@ -842,9 +850,17 @@
             if(wsConnection) wsConnection.close();
 
             try {
+                // If it takes more than 100 seconds, CF will throw a 524 (Render cold start)
                 const response = await fetch(window.BACKEND_URL + '/api/start_trace', {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ seeds: seeds, target_amount: amount, target_currency: "USD", chain_override: "AUTO" })
+                    body: JSON.stringify({ 
+                        seeds: seeds, 
+                        target_amount: amount, 
+                        target_currency: currency, 
+                        chain_override: chainOverride,
+                        start_date: startDate,
+                        end_date: endDate
+                    })
                 });
                 
                 const data = await response.json();
@@ -857,7 +873,7 @@
                 }
             } catch(e) {
                 if (loader) loader.style.display = 'none';
-                alert("Connection failed. Is the backend running?");
+                alert("Connection failed (524 Timeout). If you are using Render free tier, please wait 2-3 minutes for the backend to wake up and try again.");
             }
         }
 

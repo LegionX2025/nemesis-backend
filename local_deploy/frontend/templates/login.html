@@ -9,11 +9,10 @@
         // ==========================================
         // DYNAMIC BACKEND ROUTING FOR CLOUDFLARE/LOCAL
         // ==========================================
-        const IS_LOCAL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-        window.BACKEND_URL = IS_LOCAL ? "" : "http://127.0.0.1:3001";
-        
+        const IS_LOCAL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "";
+        window.BACKEND_URL = IS_LOCAL ? "http://127.0.0.1:8088" : "https://nemesis-api.legionxgaming2021.workers.dev";
         let protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
-        window.WS_URL = IS_LOCAL ? (protocol + window.location.host) : "ws://127.0.0.1:3001";
+        window.WS_URL = IS_LOCAL ? "ws://127.0.0.1:8088" : "wss://nemesis-api.legionxgaming2021.workers.dev";
         // ==========================================
 </script>
     <style>
