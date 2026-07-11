@@ -394,7 +394,7 @@
         getCachedImage('https://cryptologos.cc/logos/bnb-bnb-logo.png');
 
         // NEMESIS ENGINE DATA INJECTION POINT
-        let mockData = { nodes: [], links: [] };
+        let graphData = { nodes: [], links: [] };
         let knownNodes = new Set();
         
         function setupWebSocket() {
@@ -412,16 +412,16 @@
                 
                 // Add nodes if not exist
                 if(!knownNodes.has(data.source)) {
-                    mockData.nodes.push({ id: data.source, nameStr: "Source Wallet", typeStr: "EOA", valStr: "", displayId: data.source.substring(0,10)+"...", isBinance: false, badgeIcon: "fa-wallet", badgeColor: "#64748b" });
+                    graphData.nodes.push({ id: data.source, nameStr: "Source Wallet", typeStr: "EOA", valStr: "", displayId: data.source.substring(0,10)+"...", isBinance: false, badgeIcon: "fa-wallet", badgeColor: "#64748b" });
                     knownNodes.add(data.source);
                 }
                 if(!knownNodes.has(data.target)) {
-                    mockData.nodes.push({ id: data.target, nameStr: "Destination", typeStr: "Wallet", valStr: "", displayId: data.target.substring(0,10)+"...", isBinance: false, badgeIcon: "fa-wallet", badgeColor: "#64748b" });
+                    graphData.nodes.push({ id: data.target, nameStr: "Destination", typeStr: "Wallet", valStr: "", displayId: data.target.substring(0,10)+"...", isBinance: false, badgeIcon: "fa-wallet", badgeColor: "#64748b" });
                     knownNodes.add(data.target);
                 }
                 
                 // Add Link
-                mockData.links.push({
+                graphData.links.push({
                     source: data.source,
                     target: data.target,
                     valStr: data.valStr,
@@ -430,7 +430,7 @@
                 });
                 
                 if(Graph) {
-                    Graph.graphData(mockData);
+                    Graph.graphData(graphData);
                 }
             };
         }
@@ -440,7 +440,7 @@
             
             // Use 2D Force-Graph for precise typographic alignment per spec
             Graph = ForceGraph()(container)
-                .graphData(mockData)
+                .graphData(graphData)
                 .backgroundColor('#f8fafc')
                 .cooldownTicks(0) // Static layout for linear flow
                 .nodeId('id')

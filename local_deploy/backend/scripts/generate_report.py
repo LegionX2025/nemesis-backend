@@ -12,7 +12,7 @@ except ImportError:
     HAS_GENAI = False
 
 def get_llm_response(prompt: str, trace_data: list = None) -> str:
-    """Uses Gemini to generate rich text if available, else returns mock data."""
+    """Uses Gemini to generate rich text if available. Fails gracefully otherwise."""
     api_key = os.environ.get("GEMINI_API_KEY")
     
     # Inject trace context into the prompt for the actual LLM
@@ -28,33 +28,8 @@ def get_llm_response(prompt: str, trace_data: list = None) -> str:
             return response.text.replace("\n", "<br>")
         except Exception as e:
             print(f"[!] LLM Generation failed: {e}")
-            return _get_mock_response(prompt, trace_data)
-    return _get_mock_response(prompt, trace_data)
-
-def _get_mock_response(prompt: str, trace_data: list = None) -> str:
-    # Build dynamic context from trace_data without generating fake/mock entities
-    seeds = set()
-    cexs = set()
-    total_cex = 0.0
-    if trace_data:
-        for e in trace_data:
-            seeds.add(e.get('From Wallet(Entity)', '').split(" ")[0])
-            to_ent = e.get('To Receiver Entity', '').upper()
-            if "CEX" in to_ent or "EXCHANGE" in to_ent or "BINANCE" in to_ent:
-                cexs.add(e.get('To Wallet(Entity)', '').split(" ")[0])
-                try: total_cex += float(str(e.get('Amount', '0')).split(" ")[0].replace(",", ""))
-                except: pass
-                
-    seed_str = ", ".join(list(seeds)[:2]) if seeds else "Unknown Origin"
-    cex_str = ", ".join(list(cexs)[:2]) if cexs else "Unknown CEX"
-    
-    if "Narrative" in prompt:
-        return f"Blockchain forensic tracing confirms illicit proceeds deposited into suspect seed addresses (e.g., {seed_str}). The funds were tracked through intermediary nodes to terminal VASP endpoints, notably {cex_str}. The analytical engine confirms approximately {total_cex} in assets resting in these terminal recombination wallets."
-    elif "OSINT" in prompt:
-        return f"<strong>Infrastructure:</strong> Assets routed via {seed_str} before converging at {cex_str}.<br><br><strong>Intelligence Analysis:</strong> Topological mapping highlights obfuscation routines routing towards highly-liquid exchanges."
-    elif "RECOMBINATION" in prompt:
-        return f"This master visualization documents the unredacted chain of custody of the assets. Investigators successfully followed disbursements downstream to evaluate recombination. Terminal consolidation wallets ({cex_str}) were identified containing the exact currency brought back together. This definitively details the wallet addresses and transaction hashes to support immediate recovery actions."
-    return ""
+            return "<strong style='color:red;'>[DATA INCOMPLETE] LLM Service Unavailable. Trace data extraction pending manual analyst review.</strong>"
+    return "<strong style='color:red;'>[DATA INCOMPLETE] API Key Missing or Service Offline.</strong>"
 
 def prepare_graph_data(trace_data):
     nodes = []

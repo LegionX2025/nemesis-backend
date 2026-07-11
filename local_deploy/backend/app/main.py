@@ -517,7 +517,7 @@ async def favicon():
     return Response(content=b"", media_type="image/x-icon")
 
 @app.get("/assets/fonts/{font_name}")
-async def dummy_font(font_name: str):
+async def empty_font_fallback(font_name: str):
     return Response(content=b"", media_type="font/woff2")
 
 @app.get("/admin")
@@ -1414,7 +1414,7 @@ async def fetch_real_txs(address: str):
     txs_map = {}
     
     async with aiohttp.ClientSession(connector=connector) as session:
-        engine = TraceEngine("dummy-fetch")
+        engine = TraceEngine("main-fetch")
         res = await engine.fetch_txs(session, address, chain_res)
         
         if res and res.get("data"):
@@ -1620,8 +1620,8 @@ async def get_nemesis_intel(address: str):
         if osint_doc:
             osint_entity = osint_entity or osint_doc.get("identities", {}).get("domains", [None])[0]
         
-        # Darknet mock or actual query (if we had a darknet collection)
-        # darknet_mentions = db.darknet_data.count_documents({"uie_entities.value": address})
+        # Query darknet collection for actual data
+        darknet_mentions = db.darknet_data.count_documents({"uie_entities.value": address})
         client.close()
     except Exception as e:
         logger.error(f"MongoDB intel fetch error: {e}")
@@ -1667,7 +1667,7 @@ async def nemesis_generate_report(req: NemesisReportRequest):
         context_data = ""
         if req.ledger_data:
             # Take up to 50 txs to avoid token limits
-            context_data += f"\n\n### Trace Ledger Data (Sample):\n{json.dumps(req.ledger_data[:50], indent=2)}"
+            context_data += f"\n\n### Trace Ledger Data (First 50 records):\n{json.dumps(req.ledger_data[:50], indent=2)}"
         if req.stats:
             context_data += f"\n\n### Node Statistics:\n{json.dumps(req.stats, indent=2)}"
             

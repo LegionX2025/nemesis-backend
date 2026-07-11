@@ -247,7 +247,7 @@ async def auto_compute_loss_amount(seeds_list, default_chain="AUTO"):
     extracted_seeds = []
     
     async with aiohttp.ClientSession() as session:
-        engine = TraceEngine("dummy-compute")
+        engine = TraceEngine("main-compute")
         
         async def fetch_seed_txs(seed):
             chain = detect_chain(seed, default_chain)

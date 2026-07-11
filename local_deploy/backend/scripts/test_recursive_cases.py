@@ -77,17 +77,7 @@ async def run_tests():
                 labels = ent.get("labels", []) if ent else []
                 entity_name = ", ".join(labels) if labels else "Unknown/Unlabeled Entity"
                 
-                # Mock label resolution for Demo / Testing if DB lacks the actual labels
-                if entity_name == "Unknown/Unlabeled Entity":
-                    known_terminals = {
-                        "bc1p7laqh95znv7svqscajrnsqr07vn5tjvm6q7398genfsh3tq2agcswxadvs": "Binance: Deposit (Pig Butchering Ring)",
-                        "rEGeWVtsz9LRoLU4gMFVdRqw5A15ZirJYF": "Kraken: Deposit Address",
-                        "3M3HK9rP37b5KymAE9GzgXLCGM7rFqtCkV": "OKX: Hot Wallet",
-                        "CwLgkva2wtz3UG3tHW8Q5EsB8otqHLHM9XT8VUb5mmZv": "Raydium: Swap Router (Solana)",
-                        "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t": "Tether: USDT Smart Contract (TRC20)",
-                        "GB34ELRD5QGA4N2NGD34EYFA3IZXX2CUN4TQAKNUXXKNKOYEQXT666JC": "Stellar Anchor: Unknown Exchange"
-                    }
-                    entity_name = known_terminals.get(terminal_address, entity_name)
+
                 
                 print(f"    -> Terminal Node Reached: {terminal_address}")
                 print(f"    -> Entity: {entity_name}")

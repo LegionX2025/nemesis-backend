@@ -24,7 +24,7 @@ class MixerHeuristics:
         return {
             "is_mixer": is_deposit or is_withdrawal,
             "type": "DEPOSIT" if is_deposit else ("WITHDRAWAL" if is_withdrawal else "UNKNOWN"),
-            "anonymity_set_size": 100, # Mocked set size for now
+            "anonymity_set_size": None, # Requires live pool contract query
             "probability_match": 0.85 if (is_deposit or is_withdrawal) else 0.0
         }
 

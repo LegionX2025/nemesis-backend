@@ -437,7 +437,7 @@ async def audit_dashboard(request: Request):
 
 @app.get("/nemesis_id")
 async def nemesis_id_dashboard(request: Request):
-    return templates.TemplateResponse(request=request, name="new_nemesis_id.html")
+    return templates.TemplateResponse(request=request, name="nemesis_id.html")
 
 @app.get("/darknet_search")
 async def darknet_search_dashboard(request: Request):
@@ -479,60 +479,6 @@ async def api_ontology():
         universal = [d for d in docs if d.get("type") == "UNIVERSAL_MATRIX"]
         matrix = universal[0].get("data", {}) if universal else {}
         
-        if not matrix:
-            matrix = {
-                "Bitcoin": { "Lock": "Script Hash (P2SH)", "Mint": "N/A", "Burn": "OP_RETURN", "Transfer": "UTXO SPEND", "Bridge": "WBTC Custody / Threshold Sig", "Exchange": "CEX Hot/Cold Deposit" },
-                "Ethereum": { "Lock": "Smart Contract Vault", "Mint": "ERC20/ERC721 Mint", "Burn": "Address 0x0 / Burn Func", "Transfer": "ETH Native / ERC20 Transfer", "Bridge": "Cross-Chain Escrow", "Exchange": "CEX Omnibus Account" },
-                "Tron": { "Lock": "TRC20 Lock", "Mint": "TRC20 Issue", "Burn": "TRC20 Burn", "Transfer": "TRX Native / TRC20 Transfer", "Bridge": "JustLend / BTTC Bridge", "Exchange": "CEX Deposit Address" },
-                "Polygon": { "Lock": "PoS Bridge Lock", "Mint": "Wrapped Matic Mint", "Burn": "PoS Bridge Burn", "Transfer": "MATIC / ERC20", "Bridge": "PoS / Plasma Bridge", "Exchange": "CEX Multi-chain" },
-                "BSC": { "Lock": "BEP20 Vault", "Mint": "BEP20 Mint", "Burn": "BEP20 Burn", "Transfer": "BNB / BEP20", "Bridge": "Binance Bridge", "Exchange": "Binance Hot Wallet" },
-                "Solana": { "Lock": "Program PDA Lock", "Mint": "SPL Token Mint", "Burn": "SPL Burn", "Transfer": "SOL Native / SPL", "Bridge": "Wormhole Portal", "Exchange": "CEX Deposit" }
-            }
-            
-        if not scenarios:
-            scenarios = [
-                {
-                    "scenario_id": "Tornado_Cash_Mixing",
-                    "chain": "Ethereum",
-                    "destination_chain": "Ethereum",
-                    "category": "Mixing / Obfuscation",
-                    "flow": "Suspect Wallet -> Tornado Cash Deposit -> Tornado Cash Relayer -> Clean Wallet",
-                    "state_transitions": ["NATIVE_DEPOSIT", "ZK_PROOF_GEN", "ANONYMOUS_WITHDRAWAL"],
-                    "fingerprints": ["TC_DEPOSIT_EVENT", "TC_WITHDRAWAL_EVENT", "EXACT_INCREMENTS"],
-                    "identity_signals": ["Timing Correlation", "Gas Price Heuristics", "Amount Matching"],
-                    "detection_logic": [
-                        {"stage": "Deposit", "detection": "Function: deposit() on known TC contract"},
-                        {"stage": "Withdrawal", "detection": "Function: withdraw() with zero-knowledge proof"},
-                        {"stage": "Correlation", "detection": "Heuristic matching of deposit and withdrawal within same block/timeframe"}
-                    ],
-                    "confidence_scoring": {
-                        "Deposit Event": 100,
-                        "Withdrawal Event": 100,
-                        "Link Correlation": 85
-                    }
-                },
-                {
-                    "scenario_id": "Cross_Chain_Bridge_Hop",
-                    "chain": "Bitcoin",
-                    "destination_chain": "Ethereum",
-                    "category": "Asset Re-denomination",
-                    "flow": "BTC Suspect -> Custodial Vault -> WBTC Mint -> Ethereum Suspect",
-                    "state_transitions": ["UTXO_LOCK", "CROSS_CHAIN_MSG", "ERC20_MINT"],
-                    "fingerprints": ["BTC_DEPOSIT", "MINT_EVENT", "BURN_EVENT"],
-                    "identity_signals": ["Merchant/Custody KYC", "Equivalent Value Output", "Timestamp Proximity"],
-                    "detection_logic": [
-                        {"stage": "Deposit", "detection": "BTC transfer to known custodian"},
-                        {"stage": "Mint", "detection": "WBTC Mint event on Ethereum"},
-                        {"stage": "Correlation", "detection": "Value match across chains with standard delay"}
-                    ],
-                    "confidence_scoring": {
-                        "BTC Deposit": 100,
-                        "WBTC Mint": 100,
-                        "Cross-chain Link": 92
-                    }
-                }
-            ]
-            
         return {"scenarios": scenarios, "matrix": matrix}
     except Exception as e:
         logger.error(f"Failed to fetch ontology: {e}")
@@ -795,7 +741,9 @@ async def wallet_profile(address: str, chain: str = "AUTO"):
                             bal = float(data.get("result", 0)) / 1e18
                             if bal > 0:
                                 ticker = "ETH" if actual_chain == "ETHEREUM" else "BNB" if actual_chain == "BSC" else "MATIC" if actual_chain == "POLYGON" else "NATIVE"
-                                balances.append({"token": ticker, "balance": round(bal, 4), "usd_value": round(bal * 3000, 2)}) # Mock USD rate for UI
+                                from services.price_oracle import get_current_usd_value
+                                usd_val = await get_current_usd_value(actual_chain, "native", bal)
+                                balances.append({"token": ticker, "balance": round(bal, 4), "usd_value": round(usd_val, 2)})
             except: pass
             
     return {"address": address, "chain": chain_res, "balances": balances}
@@ -845,15 +793,7 @@ async def nemesis_id_profile(address: str):
         "contact": "N/A",
         "trust_score": 50,
         "supported_tokens": [],
-        "smart_contract_code": None,
-        "analytics": {
-            "trading_volume_24h": "$0.00",
-            "avg_liquidity": "$0.00",
-            "weekly_visits": 0,
-            "market_share": "0%",
-            "coins": 0,
-            "token_allocations": {}
-        }
+        "smart_contract_code": None
     }
 
     try:
@@ -865,10 +805,15 @@ async def nemesis_id_profile(address: str):
                         stats = data.get("chain_stats", {})
                         funded = stats.get("funded_txo_sum", 0) / 1e8
                         spent = stats.get("spent_txo_sum", 0) / 1e8
-                        profile["balance"] = f"${(funded - spent) * 60000:,.2f}" # rough mock price
+                        from services.price_oracle import get_current_usd_value
+                        balance_usd = await get_current_usd_value("BITCOIN", "native", funded - spent)
+                        funded_usd = await get_current_usd_value("BITCOIN", "native", funded)
+                        spent_usd = await get_current_usd_value("BITCOIN", "native", spent)
+                        
+                        profile["balance"] = f"${balance_usd:,.2f}"
                         profile["native_value"] = f"{(funded - spent):.4f} BTC"
-                        profile["total_received"] = f"${funded * 60000:,.2f}"
-                        profile["total_sent"] = f"${spent * 60000:,.2f}"
+                        profile["total_received"] = f"${funded_usd:,.2f}"
+                        profile["total_sent"] = f"${spent_usd:,.2f}"
                         profile["tx_count"] = stats.get("tx_count", 0)
             elif chain in EVM_DOMAINS or chain in ("EVM", "EVM_AUTO"):
                 evm_apis = {
@@ -884,8 +829,10 @@ async def nemesis_id_profile(address: str):
                         data = await r.json()
                         if data.get("status") == "1":
                             bal_eth = int(data.get("result", 0)) / 1e18
+                            from services.price_oracle import get_current_usd_value
+                            usd_val = await get_current_usd_value(chain, "native", bal_eth)
                             profile["native_value"] = f"{bal_eth:.4f} {chain if chain not in ('EVM', 'EVM_AUTO') else 'ETH'}"
-                            profile["balance"] = f"${bal_eth * 3000:,.2f}" # rough mock price
+                            profile["balance"] = f"${usd_val:,.2f}"
     except Exception as e:
         logger.error(f"Error fetching real balance for {address}: {e}")
 

@@ -57,10 +57,28 @@ class MLEngine:
         if on_chain_address and on_chain_address in [w.lower() for w in osint_record.get("extracted_wallets", [])]:
             score += 0.8
             
-        # Time-based correlation (did the OSINT record get scraped around the same time as the first transaction?)
-        if on_chain_profile.get("first_seen") and osint_record.get("scraped_at"):
-            # Mock logic for time proximity
-            score += 0.1
+        first_seen = on_chain_profile.get("first_seen")
+        scraped_at = osint_record.get("scraped_at")
+        if first_seen and scraped_at:
+            try:
+                import datetime
+                if isinstance(first_seen, str) and first_seen.isdigit():
+                    first_seen = int(first_seen)
+                if isinstance(first_seen, (int, float)):
+                    first_dt = datetime.datetime.fromtimestamp(first_seen, datetime.timezone.utc)
+                else:
+                    first_dt = datetime.datetime.fromisoformat(str(first_seen).replace("Z", "+00:00"))
+                    
+                if isinstance(scraped_at, (int, float)):
+                    scraped_dt = datetime.datetime.fromtimestamp(scraped_at, datetime.timezone.utc)
+                else:
+                    scraped_dt = datetime.datetime.fromisoformat(str(scraped_at).replace("Z", "+00:00"))
+                
+                # If within 30 days
+                if abs((first_dt - scraped_dt).days) <= 30:
+                    score += 0.1
+            except Exception:
+                pass
             
         return min(score, 1.0)
 

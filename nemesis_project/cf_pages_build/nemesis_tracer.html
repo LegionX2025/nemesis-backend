@@ -180,50 +180,52 @@
             .prose ul { padding-left: 20px; margin-bottom: 1rem; list-style-type: disc; }
             
             /* Landing Page Styles */
-            #landing-page { position: fixed; inset: 0; z-index: 100; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f8fafc 100%); overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; transition: opacity 1.2s ease-in-out, visibility 1.2s ease-in-out; }
-            #tsparticles { position: absolute; inset: 0; z-index: 0; opacity: 1.0; pointer-events: none; }
-            .landing-content { position: relative; z-index: 10; width: 100%; height: 100%; display: flex; flex-direction: column; padding-top: 120px; }
+            #landing-page { position: fixed; inset: 0; z-index: 100; background: radial-gradient(circle at 50% 0%, #1e293b 0%, #020617 100%); overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; transition: opacity 1.2s ease-in-out, visibility 1.2s ease-in-out; }
+            #tsparticles { position: absolute; inset: 0; z-index: 0; opacity: 0.6; pointer-events: none; }
+            .landing-content { position: relative; z-index: 10; width: 100%; height: 100%; display: flex; flex-direction: column; padding-top: 120px; font-family: 'Inter', sans-serif; }
             
             .landing-nav { position: fixed; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 2.5rem 4rem; transition: all 0.4s ease; z-index: 90; background: transparent; border-bottom: 1px solid transparent; }
-            .landing-nav.minimized { padding: 1rem 4rem; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(15, 23, 42, 0.1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+            .landing-nav.minimized { padding: 1rem 4rem; background: rgba(2, 6, 23, 0.85); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 4px 20px -1px rgba(0, 0, 0, 0.4); }
             .landing-logo { display: flex; align-items: center; gap: 1rem; transition: all 0.4s ease; }
             .landing-nav.minimized .landing-logo img { height: 35px; }
             .landing-nav.minimized .landing-logo-text { font-size: 1rem; }
-            .landing-logo img { height: 45px; border-radius: 8px; border: 1px solid rgba(15,23,42,0.1); transition: height 0.4s ease; }
-            .landing-logo-text { font-size: 1.25rem; font-weight: 800; color: #0f172a; letter-spacing: 0.1em; line-height: 1.2; transition: font-size 0.4s ease; }
-            .landing-logo-text span { font-weight: 400; font-size: 0.65em; letter-spacing: 0.25em; display: block; color: #475569; }
+            .landing-logo img { height: 45px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); transition: height 0.4s ease; box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
+            .landing-logo-text { font-size: 1.25rem; font-weight: 800; color: #f8fafc; letter-spacing: 0.1em; line-height: 1.2; transition: font-size 0.4s ease; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+            .landing-logo-text span { font-weight: 400; font-size: 0.65em; letter-spacing: 0.25em; display: block; color: #94a3b8; }
             
-            .landing-links { display: flex; gap: 2rem; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; color: #64748b; text-transform: uppercase; align-items: center; }
-            .landing-links a { display: flex; align-items: center; gap: 0.5rem; color: #64748b; text-decoration: none; transition: all 0.3s; cursor: pointer; }
+            .landing-links { display: flex; gap: 2rem; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; color: #94a3b8; text-transform: uppercase; align-items: center; }
+            .landing-links a { display: flex; align-items: center; gap: 0.5rem; color: #94a3b8; text-decoration: none; transition: all 0.3s; cursor: pointer; }
             .landing-links a i { font-size: 1rem; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-            .landing-links a:hover { color: #0f172a; }
-            .landing-links a:hover i { transform: translateY(-3px) scale(1.15); }
+            .landing-links a:hover { color: #f8fafc; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
+            .landing-links a:hover i { transform: translateY(-3px) scale(1.15); filter: drop-shadow(0 0 8px currentColor); }
             
-            .icon-intel { color: #3b82f6; }
-            .icon-audit { color: #10b981; }
-            .icon-about { color: #8b5cf6; }
-            .icon-cap { color: #f59e0b; }
-            .icon-content { color: #ef4444; }
-            .icon-work { color: #06b6d4; }
-            .icon-arch { color: #f43f5e; }
-            .icon-trace { color: #84cc16; }
+            .icon-intel { color: #60a5fa; }
+            .icon-audit { color: #34d399; }
+            .icon-about { color: #a78bfa; }
+            .icon-cap { color: #fbbf24; }
+            .icon-content { color: #f87171; }
+            .icon-work { color: #22d3ee; }
+            .icon-arch { color: #fb7185; }
+            .icon-trace { color: #a3e635; }
             
-            .landing-btn-outline { border: 1px solid rgba(15,23,42,0.3); color: #0f172a; padding: 0.75rem 2rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; transition: all 0.3s; background: transparent; cursor: pointer; }
-            .landing-btn-outline:hover { background: #0f172a; color: #fff; }
+            .landing-btn-outline { border: 1px solid rgba(255,255,255,0.2); color: #f8fafc; padding: 0.75rem 2rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; transition: all 0.3s; background: rgba(255,255,255,0.05); cursor: pointer; backdrop-filter: blur(4px); }
+            .landing-btn-outline:hover { background: #f8fafc; color: #0f172a; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
             
             .landing-main { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 2rem; }
-            .landing-tag { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.7); border: 1px solid rgba(15,23,42,0.1); padding: 0.5rem 1rem; border-radius: 99px; color: #334155; font-size: 0.7rem; letter-spacing: 0.1em; margin-bottom: 1.5rem; backdrop-filter: blur(10px); box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-            .landing-title { font-size: 4.5rem; font-weight: 800; color: #0f172a; line-height: 1.1; max-width: 900px; margin-bottom: 1.5rem; letter-spacing: -0.02em; }
-            .landing-subtitle { font-size: 1.1rem; color: #475569; max-width: 650px; line-height: 1.6; margin-bottom: 3rem; }
+            .landing-tag { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem 1rem; border-radius: 99px; color: #e2e8f0; font-size: 0.7rem; letter-spacing: 0.1em; margin-bottom: 1.5rem; backdrop-filter: blur(10px); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+            .landing-title { font-size: 4.5rem; font-weight: 800; color: #ffffff; line-height: 1.1; max-width: 900px; margin-bottom: 1.5rem; letter-spacing: -0.02em; text-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+            .landing-subtitle { font-size: 1.1rem; color: #cbd5e1; max-width: 650px; line-height: 1.6; margin-bottom: 3rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
             
-            .landing-input-group { display: flex; flex-direction: column; gap: 1.25rem; width: 100%; max-width: 550px; background: rgba(255,255,255,0.7); border: 1px solid rgba(15,23,42,0.1); padding: 2.5rem; border-radius: 24px; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1); }
-            .landing-input-group label { text-align: left; font-size: 0.7rem; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.1em; }
-            .landing-input-group textarea, .landing-input-group input { width: 100%; background: #ffffff; border: 1px solid rgba(15,23,42,0.2); color: #0f172a; padding: 1rem; border-radius: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; outline: none; transition: all 0.3s; resize: none; }
-            .landing-input-group textarea:focus, .landing-input-group input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
-            .landing-btn-primary { background: #0f172a; color: #ffffff; font-weight: 800; padding: 1.25rem; border-radius: 12px; border: none; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; letter-spacing: 0.15em; text-transform: uppercase; font-size: 0.8rem; margin-top: 0.5rem; }
-            .landing-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(15,23,42,0.3); }
+            .landing-input-group { display: flex; flex-direction: column; gap: 1.25rem; width: 100%; max-width: 600px; background: rgba(15,23,42,0.4); border: 1px solid rgba(255,255,255,0.08); padding: 2.5rem; border-radius: 24px; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.05); }
+            .landing-input-group label { text-align: left; font-size: 0.7rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; }
+            .landing-input-group textarea, .landing-input-group input { width: 100%; background: rgba(2,6,23,0.5); border: 1px solid rgba(255,255,255,0.1); color: #f8fafc; padding: 1rem; border-radius: 12px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; outline: none; transition: all 0.3s; resize: none; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
+            .landing-input-group textarea:focus, .landing-input-group input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.2), inset 0 2px 4px rgba(0,0,0,0.3); background: rgba(2,6,23,0.8); }
+            .landing-btn-primary { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #ffffff; font-weight: 800; padding: 1.25rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); letter-spacing: 0.15em; text-transform: uppercase; font-size: 0.8rem; margin-top: 0.5rem; box-shadow: 0 10px 20px -5px rgba(37,99,235,0.5); position: relative; overflow: hidden; }
+            .landing-btn-primary::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent); transform: skewX(-20deg); transition: 0.5s; }
+            .landing-btn-primary:hover { transform: translateY(-3px); box-shadow: 0 15px 30px -5px rgba(37,99,235,0.6); }
+            .landing-btn-primary:hover::after { left: 150%; }
             
-            .landing-footer { display: flex; justify-content: space-between; align-items: center; padding: 2rem 4rem; border-top: 1px solid rgba(15,23,42,0.05); }
+            .landing-footer { display: flex; justify-content: space-between; align-items: center; padding: 2rem 4rem; border-top: 1px solid rgba(255,255,255,0.05); background: rgba(2,6,23,0.6); backdrop-filter: blur(10px); }
             .landing-footer-logos { display: flex; gap: 2.5rem; opacity: 0.5; }
             
             /* Content Modal */
@@ -279,63 +281,63 @@
                             <!-- Left Side: Parameters -->
                             <div class="flex flex-col gap-4">
                                 <div>
-                                    <label class="block text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-2">Total Loss Amount to Trace</label>
+                                    <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2">Total Loss Amount to Trace</label>
                                     <div class="flex w-full">
                                         <div class="relative w-1/3" id="landing-target-currency-container">
                                             <input type="hidden" id="landing-target-currency" value="USD">
-                                            <button type="button" onclick="toggleDropdown('landing-target-currency-dropdown')" class="flex items-center justify-between w-full bg-white/80 border border-slate-200/40 rounded-l-lg border-r-0 p-3 text-[11px] text-slate-700 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm h-full min-h-[46px]">
+                                            <button type="button" onclick="toggleDropdown('landing-target-currency-dropdown')" class="flex items-center justify-between w-full bg-slate-900/60 border border-slate-600/40 rounded-l-lg border-r-0 p-3 text-[11px] text-slate-200 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm h-full min-h-[46px]">
                                                 <div class="flex items-center gap-2" id="landing-target-currency-selected">
                                                     <span class="text-sm w-4 text-center">💵</span>
                                                     <span>USD</span>
                                                 </div>
-                                                <i class="fa-solid fa-chevron-down text-slate-400 text-[10px]"></i>
+                                                <i class="fa-solid fa-chevron-down text-slate-500 text-[10px]"></i>
                                             </button>
-                                            <div id="landing-target-currency-dropdown" class="hidden absolute z-50 w-[120px] mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                                                <button type="button" onclick="selectDropdownOption('landing-target-currency', 'USD', '💵', 'USD')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><span class="text-sm w-4 text-center">💵</span><span>USD</span></button>
-                                                <button type="button" onclick="selectDropdownOption('landing-target-currency', 'ETH', 'https://cryptologos.cc/logos/ethereum-eth-logo.svg', 'ETH')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/ethereum-eth-logo.svg" class="w-4 h-4 object-contain"><span>ETH</span></button>
-                                                <button type="button" onclick="selectDropdownOption('landing-target-currency', 'BTC', 'https://cryptologos.cc/logos/bitcoin-btc-logo.svg', 'BTC')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/bitcoin-btc-logo.svg" class="w-4 h-4 object-contain"><span>BTC</span></button>
-                                                <button type="button" onclick="selectDropdownOption('landing-target-currency', 'USDT', 'https://cryptologos.cc/logos/tether-usdt-logo.svg', 'USDT')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/tether-usdt-logo.svg" class="w-4 h-4 object-contain"><span>USDT</span></button>
-                                                <button type="button" onclick="selectDropdownOption('landing-target-currency', 'USDC', 'https://cryptologos.cc/logos/usd-coin-usdc-logo.svg', 'USDC')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/usd-coin-usdc-logo.svg" class="w-4 h-4 object-contain"><span>USDC</span></button>
+                                            <div id="landing-target-currency-dropdown" class="hidden absolute z-50 w-[120px] mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-2xl max-h-60 overflow-y-auto">
+                                                <button type="button" onclick="selectDropdownOption('landing-target-currency', 'USD', '💵', 'USD')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-200 hover:bg-slate-700 transition"><span class="text-sm w-4 text-center">💵</span><span>USD</span></button>
+                                                <button type="button" onclick="selectDropdownOption('landing-target-currency', 'ETH', 'https://cryptologos.cc/logos/ethereum-eth-logo.svg', 'ETH')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-200 hover:bg-slate-700 transition"><img src="https://cryptologos.cc/logos/ethereum-eth-logo.svg" class="w-4 h-4 object-contain"><span>ETH</span></button>
+                                                <button type="button" onclick="selectDropdownOption('landing-target-currency', 'BTC', 'https://cryptologos.cc/logos/bitcoin-btc-logo.svg', 'BTC')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-200 hover:bg-slate-700 transition"><img src="https://cryptologos.cc/logos/bitcoin-btc-logo.svg" class="w-4 h-4 object-contain"><span>BTC</span></button>
+                                                <button type="button" onclick="selectDropdownOption('landing-target-currency', 'USDT', 'https://cryptologos.cc/logos/tether-usdt-logo.svg', 'USDT')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-200 hover:bg-slate-700 transition"><img src="https://cryptologos.cc/logos/tether-usdt-logo.svg" class="w-4 h-4 object-contain"><span>USDT</span></button>
+                                                <button type="button" onclick="selectDropdownOption('landing-target-currency', 'USDC', 'https://cryptologos.cc/logos/usd-coin-usdc-logo.svg', 'USDC')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-200 hover:bg-slate-700 transition"><img src="https://cryptologos.cc/logos/usd-coin-usdc-logo.svg" class="w-4 h-4 object-contain"><span>USDC</span></button>
                                             </div>
                                         </div>
-                                        <input type="number" id="landing-target-amount" class="w-full bg-white/80 border border-slate-200/40 rounded-r-lg p-3 text-sm text-slate-700 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm" placeholder="e.g. 80000">
+                                        <input type="number" id="landing-target-amount" class="w-full bg-slate-900/60 border border-slate-600/40 rounded-r-lg p-3 text-sm text-slate-200 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm placeholder-slate-500" placeholder="e.g. 80000">
                                     </div>
                                 </div>
                                 <div>
-                                    <label class="block text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-2">Network Chain</label>
+                                    <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2">Network Chain</label>
                                     <div class="relative w-full" id="landing-chain-select-container">
                                         <input type="hidden" id="landing-chain-select" value="ALL">
-                                        <button type="button" onclick="toggleDropdown('landing-chain-select-dropdown')" class="flex items-center justify-between w-full bg-white/80 border border-slate-200/40 rounded-lg p-3 text-[11px] text-slate-700 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm h-full min-h-[46px]">
+                                        <button type="button" onclick="toggleDropdown('landing-chain-select-dropdown')" class="flex items-center justify-between w-full bg-slate-900/60 border border-slate-600/40 rounded-lg p-3 text-[11px] text-slate-200 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm h-full min-h-[46px]">
                                             <div class="flex items-center gap-2" id="landing-chain-select-selected">
                                                 <span class="text-sm w-4 text-center">🌐</span>
                                                 <span>ALL SUPPORTED NETWORKS</span>
                                             </div>
-                                            <i class="fa-solid fa-chevron-down text-slate-400 text-[10px]"></i>
+                                            <i class="fa-solid fa-chevron-down text-slate-500 text-[10px]"></i>
                                         </button>
-                                        <div id="landing-chain-select-dropdown" class="hidden absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-                                            <button type="button" onclick="selectDropdownOption('landing-chain-select', 'ALL', '🌐', 'ALL SUPPORTED NETWORKS')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><span class="text-sm w-4 text-center">🌐</span><span>ALL SUPPORTED NETWORKS</span></button>
-                                            <button type="button" onclick="selectDropdownOption('landing-chain-select', 'ETH', 'https://cryptologos.cc/logos/ethereum-eth-logo.svg', 'Ethereum (ETH)')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/ethereum-eth-logo.svg" class="w-4 h-4 object-contain"><span>Ethereum (ETH)</span></button>
-                                            <button type="button" onclick="selectDropdownOption('landing-chain-select', 'BSC', 'https://cryptologos.cc/logos/bnb-bnb-logo.svg', 'Binance Smart Chain')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/bnb-bnb-logo.svg" class="w-4 h-4 object-contain"><span>Binance Smart Chain</span></button>
-                                            <button type="button" onclick="selectDropdownOption('landing-chain-select', 'POLYGON', 'https://cryptologos.cc/logos/polygon-matic-logo.svg', 'Polygon (MATIC)')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/polygon-matic-logo.svg" class="w-4 h-4 object-contain"><span>Polygon (MATIC)</span></button>
-                                            <button type="button" onclick="selectDropdownOption('landing-chain-select', 'ARBITRUM', 'https://cryptologos.cc/logos/arbitrum-arb-logo.svg', 'Arbitrum (ARB)')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/arbitrum-arb-logo.svg" class="w-4 h-4 object-contain"><span>Arbitrum (ARB)</span></button>
-                                            <button type="button" onclick="selectDropdownOption('landing-chain-select', 'OPTIMISM', 'https://cryptologos.cc/logos/optimism-ethereum-op-logo.svg', 'Optimism (OP)')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/optimism-ethereum-op-logo.svg" class="w-4 h-4 object-contain"><span>Optimism (OP)</span></button>
-                                            <button type="button" onclick="selectDropdownOption('landing-chain-select', 'BASE', 'https://logowik.com/content/uploads/images/base-coin8494.logowik.com.webp', 'Base')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://logowik.com/content/uploads/images/base-coin8494.logowik.com.webp" class="w-4 h-4 object-contain"><span>Base</span></button>
-                                            <button type="button" onclick="selectDropdownOption('landing-chain-select', 'SOL', 'https://cryptologos.cc/logos/solana-sol-logo.svg', 'Solana (SOL)')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/solana-sol-logo.svg" class="w-4 h-4 object-contain"><span>Solana (SOL)</span></button>
-                                            <button type="button" onclick="selectDropdownOption('landing-chain-select', 'BTC', 'https://cryptologos.cc/logos/bitcoin-btc-logo.svg', 'Bitcoin (BTC)')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/bitcoin-btc-logo.svg" class="w-4 h-4 object-contain"><span>Bitcoin (BTC)</span></button>
-                                            <button type="button" onclick="selectDropdownOption('landing-chain-select', 'TRX', 'https://cryptologos.cc/logos/tron-trx-logo.svg', 'Tron (TRX)')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/tron-trx-logo.svg" class="w-4 h-4 object-contain"><span>Tron (TRX)</span></button>
-                                            <button type="button" onclick="selectDropdownOption('landing-chain-select', 'XRP', 'https://cryptologos.cc/logos/xrp-xrp-logo.svg', 'Ripple (XRP)')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/xrp-xrp-logo.svg" class="w-4 h-4 object-contain"><span>Ripple (XRP)</span></button>
-                                            <button type="button" onclick="selectDropdownOption('landing-chain-select', 'AVAX', 'https://cryptologos.cc/logos/avalanche-avax-logo.svg', 'Avalanche (AVAX)')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><img src="https://cryptologos.cc/logos/avalanche-avax-logo.svg" class="w-4 h-4 object-contain"><span>Avalanche (AVAX)</span></button>
+                                        <div id="landing-chain-select-dropdown" class="hidden absolute z-50 w-full mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-2xl max-h-60 overflow-y-auto">
+                                            <button type="button" onclick="selectDropdownOption('landing-chain-select', 'ALL', '🌐', 'ALL SUPPORTED NETWORKS')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-200 hover:bg-slate-700 transition"><span class="text-sm w-4 text-center">🌐</span><span>ALL SUPPORTED NETWORKS</span></button>
+                                            <button type="button" onclick="selectDropdownOption('landing-chain-select', 'ETH', 'https://cryptologos.cc/logos/ethereum-eth-logo.svg', 'Ethereum (ETH)')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-200 hover:bg-slate-700 transition"><img src="https://cryptologos.cc/logos/ethereum-eth-logo.svg" class="w-4 h-4 object-contain"><span>Ethereum (ETH)</span></button>
+                                            <button type="button" onclick="selectDropdownOption('landing-chain-select', 'BSC', 'https://cryptologos.cc/logos/bnb-bnb-logo.svg', 'Binance Smart Chain')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-200 hover:bg-slate-700 transition"><img src="https://cryptologos.cc/logos/bnb-bnb-logo.svg" class="w-4 h-4 object-contain"><span>Binance Smart Chain</span></button>
+                                            <button type="button" onclick="selectDropdownOption('landing-chain-select', 'POLYGON', 'https://cryptologos.cc/logos/polygon-matic-logo.svg', 'Polygon (MATIC)')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-200 hover:bg-slate-700 transition"><img src="https://cryptologos.cc/logos/polygon-matic-logo.svg" class="w-4 h-4 object-contain"><span>Polygon (MATIC)</span></button>
+                                            <button type="button" onclick="selectDropdownOption('landing-chain-select', 'ARBITRUM', 'https://cryptologos.cc/logos/arbitrum-arb-logo.svg', 'Arbitrum (ARB)')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-200 hover:bg-slate-700 transition"><img src="https://cryptologos.cc/logos/arbitrum-arb-logo.svg" class="w-4 h-4 object-contain"><span>Arbitrum (ARB)</span></button>
+                                            <button type="button" onclick="selectDropdownOption('landing-chain-select', 'OPTIMISM', 'https://cryptologos.cc/logos/optimism-ethereum-op-logo.svg', 'Optimism (OP)')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-200 hover:bg-slate-700 transition"><img src="https://cryptologos.cc/logos/optimism-ethereum-op-logo.svg" class="w-4 h-4 object-contain"><span>Optimism (OP)</span></button>
+                                            <button type="button" onclick="selectDropdownOption('landing-chain-select', 'BASE', 'https://logowik.com/content/uploads/images/base-coin8494.logowik.com.webp', 'Base')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-200 hover:bg-slate-700 transition"><img src="https://logowik.com/content/uploads/images/base-coin8494.logowik.com.webp" class="w-4 h-4 object-contain"><span>Base</span></button>
+                                            <button type="button" onclick="selectDropdownOption('landing-chain-select', 'SOL', 'https://cryptologos.cc/logos/solana-sol-logo.svg', 'Solana (SOL)')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-200 hover:bg-slate-700 transition"><img src="https://cryptologos.cc/logos/solana-sol-logo.svg" class="w-4 h-4 object-contain"><span>Solana (SOL)</span></button>
+                                            <button type="button" onclick="selectDropdownOption('landing-chain-select', 'BTC', 'https://cryptologos.cc/logos/bitcoin-btc-logo.svg', 'Bitcoin (BTC)')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-200 hover:bg-slate-700 transition"><img src="https://cryptologos.cc/logos/bitcoin-btc-logo.svg" class="w-4 h-4 object-contain"><span>Bitcoin (BTC)</span></button>
+                                            <button type="button" onclick="selectDropdownOption('landing-chain-select', 'TRX', 'https://cryptologos.cc/logos/tron-trx-logo.svg', 'Tron (TRX)')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-200 hover:bg-slate-700 transition"><img src="https://cryptologos.cc/logos/tron-trx-logo.svg" class="w-4 h-4 object-contain"><span>Tron (TRX)</span></button>
+                                            <button type="button" onclick="selectDropdownOption('landing-chain-select', 'XRP', 'https://cryptologos.cc/logos/xrp-xrp-logo.svg', 'Ripple (XRP)')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-200 hover:bg-slate-700 transition"><img src="https://cryptologos.cc/logos/xrp-xrp-logo.svg" class="w-4 h-4 object-contain"><span>Ripple (XRP)</span></button>
+                                            <button type="button" onclick="selectDropdownOption('landing-chain-select', 'AVAX', 'https://cryptologos.cc/logos/avalanche-avax-logo.svg', 'Avalanche (AVAX)')" class="flex items-center gap-2 w-full text-left px-4 py-2 text-[11px] font-bold text-slate-200 hover:bg-slate-700 transition"><img src="https://cryptologos.cc/logos/avalanche-avax-logo.svg" class="w-4 h-4 object-contain"><span>Avalanche (AVAX)</span></button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Right Side: Action Button -->
-                            <div class="flex items-stretch">
-                                <button class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-xl transition-all hover:scale-[1.02] flex flex-col justify-center items-center gap-2 p-4 border border-slate-700" onclick="initiateLandingTrace()">
-                                    <i class="fa-solid fa-radar text-2xl text-blue-400"></i>
-                                    <span class="font-black tracking-widest uppercase text-sm text-center">Start Omnichain Trace &rarr;</span>
-                                    <span class="text-[10px] text-slate-400 text-center">Initialize deep forensic engine</span>
+                            <div class="flex items-stretch mt-4 md:mt-0">
+                                <button class="landing-btn-primary w-full flex flex-col justify-center items-center gap-2" onclick="initiateLandingTrace()">
+                                    <i class="fa-solid fa-radar text-2xl text-blue-300"></i>
+                                    <span class="font-black tracking-widest text-sm text-center">Start Omnichain Trace &rarr;</span>
+                                    <span class="text-[10px] text-blue-200 text-center normal-case font-normal">Initialize deep forensic engine</span>
                                 </button>
                             </div>
                         </div>
@@ -348,10 +350,10 @@
                         <div class="h-px bg-slate-200 w-full my-4"></div>
                         
                         <div>
-                            <label class="block text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-2">Trace ID / Nemesis ID Retrieval</label>
+                            <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-2">Trace ID / Nemesis ID Retrieval</label>
                             <div class="flex gap-2">
-                                <input type="text" id="landing-search-trace" placeholder="e.g. NID-XXXX or Trace ID" class="flex-grow w-full bg-white/80 border border-slate-200/40 text-slate-700 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 p-3 rounded-lg shadow-sm">
-                                <button class="bg-slate-800 hover:bg-slate-700 text-white font-bold text-[11px] tracking-widest uppercase px-6 py-3 rounded-lg shadow-md transition" onclick="fetchHistoricalTrace()">Retrieve</button>
+                                <input type="text" id="landing-search-trace" placeholder="e.g. NID-XXXX or Trace ID" class="flex-grow w-full bg-slate-900/60 border border-slate-600/40 text-slate-200 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 p-3 rounded-lg shadow-sm placeholder-slate-500">
+                                <button class="bg-slate-800 hover:bg-slate-700 text-white font-bold text-[11px] tracking-widest uppercase px-6 py-3 rounded-lg shadow-md transition border border-slate-600" onclick="fetchHistoricalTrace()">Retrieve</button>
                             </div>
                         </div>
                     </div>
@@ -1068,7 +1070,8 @@
                 <table class="w-full text-left text-xs text-slate-700 border-collapse">
                     <thead class="bg-slate-200 sticky top-0 border-b border-slate-300 font-bold text-slate-700 z-10 shadow-sm">
                         <tr>
-                            <th class="p-2 pl-4 whitespace-nowrap">Date/Time (UTC)</th>
+                            <th class="p-2 pl-4 whitespace-nowrap">CEX or Custodial</th>
+                            <th class="p-2 whitespace-nowrap">Date/Time (UTC)</th>
                             <th class="p-2 whitespace-nowrap">Type of Transaction Correlation</th>
                             <th class="p-2 whitespace-nowrap">TX Hash</th>
                             <th class="p-2 whitespace-nowrap">From Wallet(Entity)</th>
@@ -1559,12 +1562,11 @@
                 { id: 'profile', label: '1. Wallet Profile' },
                 { id: 'counterparties', label: '2. Counterparties' },
                 { id: 'assets', label: '3. Assets' },
-                { id: 'history', label: '4. Transactions' },
-                { id: 'graph', label: '5. Trace Graph' },
-                { id: 'aml', label: '6. AML' },
-                { id: 'osint', label: '7. Intelligence' },
-                { id: 'ai', label: '8. AI Insights' },
-                { id: 'report', label: '9. Generate Report' }
+                { id: 'graph', label: '4. Trace Graph' },
+                { id: 'aml', label: '5. AML' },
+                { id: 'osint', label: '6. Intelligence' },
+                { id: 'ai', label: '7. AI Insights' },
+                { id: 'report', label: '8. Generate Report' }
             ];
 
             function renderNemesisTabs() {
@@ -1852,24 +1854,7 @@
                     </div>`;
                     setTimeout(() => { fetchLiveBalances(); }, 100);
                 }
-                else if (tabId === 'history') {
-                    let txs = window.exportedDataRows.filter(r => r.from.toLowerCase() === addr || r.to.toLowerCase() === addr);
-                    let tableRows = txs.map(row => {
-                        return `<tr class="border-b border-slate-200 hover:bg-slate-50/50">
-                            <td class="p-2 whitespace-nowrap text-slate-500">${row.timestamp}</td>
-                            <td class="p-2 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-600 border border-slate-200">${row.intent_action || 'TRANSFER'}</span></td>
-                            <td class="p-2 max-w-[150px] truncate text-blue-600 cursor-pointer hover:underline" onclick="openTxPanel('${row.from}-${row.to}-${row.tx}')">${row.tx}</td>
-                            <td class="p-2 max-w-[150px] truncate"><div class="flex items-center gap-1"><span class="text-xs font-mono cursor-pointer hover:text-blue-600" onclick="openNemesisModal('${row.from}')">${row.from}</span> <span class="text-[9px] font-bold uppercase text-slate-400">(${row.sender_entity || 'Unknown'})</span></div></td>
-                            <td class="p-2 max-w-[150px] truncate"><div class="flex items-center gap-1"><span class="text-xs font-mono cursor-pointer hover:text-blue-600" onclick="openNemesisModal('${row.to}')">${row.to}</span> <span class="text-[9px] font-bold uppercase text-slate-400">(${row.receiver_entity || 'Unknown'})</span></div></td>
-                            <td class="p-2 max-w-[100px] truncate font-bold text-slate-700 text-[10px]">${row.receiver_entity || ''}</td>
-                            <td class="p-2 text-right font-bold text-emerald-600 whitespace-nowrap">${window.formatAmountByMode(row.amount, row.usd || row.amount, row.ticker)}</td>
-                            <td class="p-2 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[9px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-200">${row.edge_type || 'NORMAL'}</span></td>
-                            <td class="p-2 max-w-[100px] truncate text-slate-500 text-[9px] font-bold">${row.cluster || 'UNCLUSTERED'}</td>
-                        </tr>`;
-                    }).join('');
-                    html = `<div class="bg-white border border-slate-200 p-4 rounded shadow-sm mb-4 flex justify-between items-center"><h3 class="text-slate-800 font-bold uppercase tracking-wider text-xs">Total Related Volume</h3><div class="text-lg font-black text-emerald-600">${window.formatAmountByMode(inboundAmt+outboundAmt, inboundUsd+outboundUsd, 'USD')}</div></div>
-                            <div class="overflow-x-auto"><table class="w-full text-left text-[11px]"><thead class="bg-slate-100 text-slate-600 border-b border-slate-300 shadow-sm font-bold"><tr><th class="p-2 whitespace-nowrap">Date/Time (UTC)</th><th class="p-2 whitespace-nowrap">Correlation</th><th class="p-2 whitespace-nowrap">TX Hash</th><th class="p-2 whitespace-nowrap">From Wallet(Entity)</th><th class="p-2 whitespace-nowrap">To Wallet(Entity)</th><th class="p-2 whitespace-nowrap">To Receiver Entity</th><th class="p-2 text-right whitespace-nowrap">Amount</th><th class="p-2 whitespace-nowrap">Tx Type</th><th class="p-2 whitespace-nowrap">Cluster</th></tr></thead><tbody class="text-slate-700 bg-white divide-y divide-slate-100">${tableRows}</tbody></table></div>`;
-                }
+
                 else if (tabId === 'aml') {
                     let nodeData = allNodesMap.get(activeNemesisWallet);
                     let l = nodeData ? nodeData.label.toUpperCase() : "";
@@ -1951,8 +1936,34 @@
                         toolsHTML += `</div>`;
                     }
 
+                    let txs = window.exportedDataRows.filter(r => r.from.toLowerCase() === addr || r.to.toLowerCase() === addr);
+                    let tableRows = txs.map(row => {
+                        let edgeType = (row.edge_type || 'TRANSFERS').toUpperCase();
+                        let edgeBadgeClass = "bg-slate-100 text-slate-600 border-slate-200";
+                        if (['MIXER'].includes(edgeType)) edgeBadgeClass = "bg-red-100 text-red-700 border-red-300";
+                        else if (['BRIDGE', 'CROSS-CHAINS'].includes(edgeType)) edgeBadgeClass = "bg-purple-100 text-purple-700 border-purple-300";
+                        else if (['CEX_DEPOSIT', 'WITHDRAWAL', 'FIAT'].includes(edgeType)) edgeBadgeClass = "bg-amber-100 text-amber-700 border-amber-300";
+                        else if (['SWAP', 'WRAP', 'MINT', 'NFT', 'TOKENS'].includes(edgeType)) edgeBadgeClass = "bg-blue-100 text-blue-700 border-blue-300";
+                        else if (['INTERNAL'].includes(edgeType)) edgeBadgeClass = "bg-emerald-100 text-emerald-700 border-emerald-300";
+
+                        return `<tr class="border-b border-slate-200 hover:bg-slate-50/50">
+                            <td class="p-2 whitespace-nowrap text-slate-500">${row.timestamp}</td>
+                            <td class="p-2 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-600 border border-slate-200">${row.intent_action || 'TRANSFER'}</span></td>
+                            <td class="p-2 max-w-[150px] truncate text-blue-600 cursor-pointer hover:underline" onclick="openTxPanel('${row.from}-${row.to}-${row.tx}')">${row.tx}</td>
+                            <td class="p-2 max-w-[150px] truncate"><div class="flex items-center gap-1"><span class="text-xs font-mono cursor-pointer hover:text-blue-600" onclick="openNemesisModal('${row.from}')">${row.from}</span> <span class="text-[9px] font-bold uppercase text-slate-400">(${row.sender_entity || 'Unknown'})</span></div></td>
+                            <td class="p-2 max-w-[150px] truncate"><div class="flex items-center gap-1"><span class="text-xs font-mono cursor-pointer hover:text-blue-600" onclick="openNemesisModal('${row.to}')">${row.to}</span> <span class="text-[9px] font-bold uppercase text-slate-400">(${row.receiver_entity || 'Unknown'})</span></div></td>
+                            <td class="p-2 max-w-[100px] truncate font-bold text-slate-700 text-[10px]">${row.receiver_entity || ''}</td>
+                            <td class="p-2 text-right font-bold text-emerald-600 whitespace-nowrap">${window.formatAmountByMode(row.amount, row.usd || row.amount, row.ticker)}</td>
+                            <td class="p-2 whitespace-nowrap"><span class="px-2 py-0.5 rounded text-[9px] font-bold border ${edgeBadgeClass}">${edgeType}</span></td>
+                            <td class="p-2 max-w-[100px] truncate text-slate-500 text-[9px] font-bold">${row.cluster || 'UNCLUSTERED'}</td>
+                        </tr>`;
+                    }).join('');
+
                     html = `<div class="space-y-4">
-                        <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+                        <div class="bg-white border border-slate-200 p-4 rounded shadow-sm mb-4 flex justify-between items-center"><h3 class="text-slate-800 font-bold uppercase tracking-wider text-xs">Total Related Volume</h3><div class="text-lg font-black text-emerald-600">${window.formatAmountByMode(inboundAmt+outboundAmt, inboundUsd+outboundUsd, 'USD')}</div></div>
+                        <div class="overflow-x-auto"><table class="w-full text-left text-[11px]"><thead class="bg-slate-100 text-slate-600 border-b border-slate-300 shadow-sm font-bold"><tr><th class="p-2 whitespace-nowrap">Date/Time (UTC)</th><th class="p-2 whitespace-nowrap">Correlation</th><th class="p-2 whitespace-nowrap">TX Hash</th><th class="p-2 whitespace-nowrap">From Wallet(Entity)</th><th class="p-2 whitespace-nowrap">To Wallet(Entity)</th><th class="p-2 whitespace-nowrap">To Receiver Entity</th><th class="p-2 text-right whitespace-nowrap">Amount</th><th class="p-2 whitespace-nowrap">Tx Type</th><th class="p-2 whitespace-nowrap">Cluster</th></tr></thead><tbody class="text-slate-700 bg-white divide-y divide-slate-100">${tableRows}</tbody></table></div>
+                        
+                        <div class="flex justify-between items-center border-b border-slate-200 pb-2 mt-6">
                             <h3 class="text-blue-700 font-bold uppercase tracking-wider text-xs flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg> Active Threat Intel Signals</h3>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
@@ -2131,9 +2142,10 @@
 
             function exportLiveLogCSV(traceId = window.currentTraceId || "NEMESIS_TRACE_ID") {
                 if (window.exportedDataRows.length === 0) return showToast("No data to export.");
-                let csvContent = "data:text/csv;charset=utf-8,Date/Time (UTC),Type of Transaction Correlation,TX Hash,From Wallet(Entity),To Wallet(Entity),To Receiver Entity,Amount,Transaction Type,Behavioral Cluster,Clustered address{root}ENTITY,Confidence,Transaction Attributions,Transaction intelligence\n";
+                let csvContent = "data:text/csv;charset=utf-8,CEX or Custodial,Date/Time (UTC),Type of Transaction Correlation,TX Hash,From Wallet(Entity),To Wallet(Entity),To Receiver Entity,Amount,Transaction Type,Behavioral Cluster,Clustered address{root}ENTITY,Confidence,Transaction Attributions,Transaction intelligence\n";
                 window.exportedDataRows.forEach(row => {
                     let fields = [
+                        `"${(row.receiver_entity && row.receiver_entity.toUpperCase().includes('EXCHANGE')) || row.is_terminal ? 'CEX/Custodial' : 'Private'}"`,
                         `"${row.timestamp}"`,
                         `"${row.intent_action || ''}"`,
                         `"${row.tx}"`,
@@ -2159,6 +2171,7 @@
             function exportLiveLogJSON(traceId = window.currentTraceId || "NEMESIS_TRACE_ID") {
                 if (window.exportedDataRows.length === 0) return showToast("No data to export.");
                 let unifiedData = window.exportedDataRows.map(row => ({
+                    "CEX or Custodial": (row.receiver_entity && row.receiver_entity.toUpperCase().includes('EXCHANGE')) || row.is_terminal ? 'CEX/Custodial' : 'Private',
                     "Date/Time (UTC)": row.timestamp,
                     "Type of Transaction Correlation": row.intent_action || "",
                     "TX Hash": row.tx,
@@ -3576,15 +3589,16 @@ NEMESIS_ROOT/
             }, 500);
 
             var pulseOffset = 0;
-            var lastPulseTime = Date.now();
+            var lastPulseTime = performance.now();
             function animationLoop() {
-                requestAnimationFrame(() => {
-                    let now = Date.now();
-                    let interval = allNodesMap.size > 500 ? 500 : 100;
+                requestAnimationFrame((now) => {
+                    let dt = now - lastPulseTime;
+                    let interval = allNodesMap.size > 500 ? 100 : 16;
                     if (window.isTracePaused || allNodesMap.size > 5000) {
                         // skip drawing completely to save CPU
-                    } else if (now - lastPulseTime >= interval) {
-                        pulseOffset += 1;
+                        lastPulseTime = now;
+                    } else if (dt >= interval) {
+                        pulseOffset += dt * 0.05; // smooth movement
                         network.redraw();
                         lastPulseTime = now;
                     }
@@ -3610,14 +3624,29 @@ NEMESIS_ROOT/
                     let px = fromPos.x + (dx/dist) * particleOffset;
                     let py = fromPos.y + (dy/dist) * particleOffset;
                     
+                    let particleColor = (e.color && e.color.color) ? e.color.color : '#10b981';
+                    
+                    // Draw Pulse Particle
                     ctx.beginPath();
                     ctx.arc(px, py, 4, 0, 2 * Math.PI, false);
-                    let particleColor = (e.color && e.color.color) ? e.color.color : '#10b981';
                     ctx.fillStyle = particleColor; 
                     ctx.shadowColor = particleColor;
                     ctx.shadowBlur = 8;
                     ctx.fill();
                     ctx.shadowBlur = 0;
+
+                    // Draw moving directional arrow near particle
+                    let angle = Math.atan2(dy, dx);
+                    let arrowSize = 8;
+                    let ax = px - (dx/dist)*10;
+                    let ay = py - (dy/dist)*10;
+                    ctx.beginPath();
+                    ctx.moveTo(ax, ay);
+                    ctx.lineTo(ax - arrowSize * Math.cos(angle - Math.PI/6), ay - arrowSize * Math.sin(angle - Math.PI/6));
+                    ctx.lineTo(ax - arrowSize * Math.cos(angle + Math.PI/6), ay - arrowSize * Math.sin(angle + Math.PI/6));
+                    ctx.closePath();
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                    ctx.fill();
                 });
                 
                 let scale = 1 + 0.1 * Math.sin(pulseOffset / 5);
@@ -3963,7 +3992,7 @@ NEMESIS_ROOT/
                     window.autoComputedAmount = 0.0;
                     
                     document.getElementById("status").innerHTML = `<span class="text-blue-600 font-bold"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Tracing Active... (Hybrid Parallel Fetching)</span>`;
-                    const backendUrl = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') ? '' : 'https://nemesis-local.onrender.com';
+                    const backendUrl = '';
                     const response = await fetch(`${backendUrl}/api/start_trace`, {
                         method: 'POST', headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({ 
@@ -4604,7 +4633,9 @@ NEMESIS_ROOT/
             function connectWebSocket(traceId) {
                 if (!traceId) return;
                 let protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
-                ws = new WebSocket("wss://nemesis-local.onrender.com/ws/" + traceId);
+                let host = window.location.host;
+                let wsUrl = protocol + host + "/ws/" + traceId;
+                ws = new WebSocket(wsUrl);
                 
                 ws.onopen = () => {
                     wsReconnectDelay = 1000;
@@ -4964,9 +4995,20 @@ NEMESIS_ROOT/
                     
                     let formattedAmtStr = window.formatAmountByMode ? window.formatAmountByMode(d.amount, d.usd, d.ticker) : (amtStr + " " + d.ticker);
                     
+                    let cexCustodialBadge = (d.receiver_entity && d.receiver_entity.toUpperCase().includes('EXCHANGE')) || d.is_terminal ? '<span class="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[10px] font-bold border border-red-200">CEX/Custodial</span>' : '<span class="text-slate-400 text-[10px]">Private</span>';
+
+                    let edgeType = (d.edge_type || 'TRANSFERS').toUpperCase();
+                    let edgeBadgeClass = "bg-slate-100 text-slate-600 border-slate-200";
+                    if (['MIXER'].includes(edgeType)) edgeBadgeClass = "bg-red-100 text-red-700 border-red-300";
+                    else if (['BRIDGE', 'CROSS-CHAINS'].includes(edgeType)) edgeBadgeClass = "bg-purple-100 text-purple-700 border-purple-300";
+                    else if (['CEX_DEPOSIT', 'WITHDRAWAL', 'FIAT'].includes(edgeType)) edgeBadgeClass = "bg-amber-100 text-amber-700 border-amber-300";
+                    else if (['SWAP', 'WRAP', 'MINT', 'NFT', 'TOKENS'].includes(edgeType)) edgeBadgeClass = "bg-blue-100 text-blue-700 border-blue-300";
+                    else if (['INTERNAL'].includes(edgeType)) edgeBadgeClass = "bg-emerald-100 text-emerald-700 border-emerald-300";
+
                     let docRow = `<tr class="hover:bg-blue-50 cursor-pointer transition-colors" onclick="window.openTxDetailsModal(${rowIndex})">
-                        <td class="p-2 pl-4 text-slate-500 whitespace-nowrap" title="${d.timestamp}">${d.timestamp}</td>
-                        <td class="p-2 text-slate-700 whitespace-nowrap"><span class="bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded font-bold">${d.edge_type}</span></td>
+                        <td class="p-2 pl-4 whitespace-nowrap">${cexCustodialBadge}</td>
+                        <td class="p-2 text-slate-500 whitespace-nowrap" title="${d.timestamp}">${d.timestamp}</td>
+                        <td class="p-2 text-slate-600 whitespace-nowrap">${intentActionStr}</td>
                         <td class="p-2 text-blue-600 font-mono whitespace-nowrap" title="${d.tx}">${safeTx}...${chainBadge}</td>
                         <td class="p-2 text-slate-900 font-mono whitespace-nowrap" title="${d.from}">
                             <div class="flex items-center gap-2">
@@ -4987,7 +5029,7 @@ NEMESIS_ROOT/
                             </div>
                         </td>
                         <td class="p-2 text-right pr-4 font-bold ${amtColorClass} whitespace-nowrap"><div class="flex items-center justify-end gap-1.5">${tokenDisplay} <span>${formattedAmtStr}</span></div></td>
-                        <td class="p-2 text-slate-600 whitespace-nowrap">${intentActionStr}</td>
+                        <td class="p-2 text-slate-700 whitespace-nowrap"><span class="border px-1.5 py-0.5 rounded font-bold ${edgeBadgeClass}">${edgeType}</span></td>
                         <td class="p-2 text-slate-600 whitespace-nowrap">${clusterStr}</td>
                         <td class="p-2 text-slate-500 font-mono text-[10px] whitespace-nowrap">${d.origin_seed}</td>
                         <td class="p-2 ${confColor}"><div class="font-bold whitespace-nowrap">${d.confidence}</div><div class="text-[9px] text-slate-500 mt-1 max-w-[150px] leading-tight">${proofText}</div></td>
