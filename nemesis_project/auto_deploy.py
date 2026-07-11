@@ -241,8 +241,8 @@ def main():
     # Also apply locally for dev
     run_cmd("npx wrangler d1 execute nemesis_audit_db --file=database/schema.sql --local", exit_on_error=False)
     
-    # 2. GIT DEPLOY (RENDER)
-    print_log("\n>>> [2/4] Syncing to Global Repository (Render Backend)")
+    # 2. GIT DEPLOY
+    print_log("\n>>> [2/4] Syncing to Global Repository")
     
     # Safely add files
     run_cmd("git add .", exit_on_error=False)
@@ -250,13 +250,6 @@ def main():
     success, log = run_cmd('git commit -m "Auto-Deploy from Nemesis Command Center"', exit_on_error=False)
     run_cmd("git push origin main", exit_on_error=False)
     print_log("    -> GitHub sync complete.")
-
-    print_log("    -> Triggering Render Deploy Hook...")
-    try:
-        urllib.request.urlopen("https://api.render.com/deploy/srv-d932a7uq1p3s73eaauf0?key=ksDcebRkWzg")
-        print_log("    -> Render backend is building!")
-    except Exception as e:
-        print_log(f"    -> [WARNING] Failed to trigger Render hook: {e}")
 
     # 3. CLOUDFLARE DEPLOY (EDGE PROXY WORKER)
     print_log("\n>>> [3/4] Deploying Edge Architecture (Cloudflare Worker)")

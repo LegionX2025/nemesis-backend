@@ -118,51 +118,7 @@ async def run_boot_diagnostics():
     logger.info("   NEMESIS ENGINE READY FOR OMNICHAIN OPERATIONS  ")
     logger.info("==================================================")
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    await run_boot_diagnostics()
-    import asyncio
-    
-    # Ensure Playwright browsers are installed before starting the engine
-    
-    
-    # Run MongoDB and Scraper initialization in the background so they don't block the web server from starting
-    async def init_background():
-        await init_mongodb()
-        from services.scraper_engine import scraper_instance
-        await scraper_instance.start()
-        
-        # Darknet crawler will be run independently by the user in a separate terminal.
-        # Run Threat Intel Ingestion
-        try:
-            from services.threat_intel_engine import threat_intel_engine
-            
-            # Start APScheduler for every 24 hours
-                        app.state.scheduler = AsyncIOScheduler()
-            app.state.scheduler.add_job(threat_intel_engine.run_ingestion_cycle, 'interval', hours=24)
-            
-            from services.darknet_crawler import darknet_crawler_engine
-            app.state.scheduler.add_job(darknet_crawler_engine.run_crawler_cycle, 'interval', hours=6)
-            
-            app.state.scheduler.start()
-            logger.info("    [OK] APScheduler started: Threat Intel (24h), Darknet Crawler (6h).")
-            
-            # Check if DB is empty to run initial fetch immediately
-            from services.database_connector import db_engine
-            count = await db_engine.db.threat_intel.count_documents({})
-            if count == 0:
-                logger.info("    [INFO] Threat Intel DB is empty. Running initial ingestion...")
-                asyncio.create_task(threat_intel_engine.run_ingestion_cycle())
-        except Exception as e:
-            logger.error(f"    [FAIL] Failed to initialize Threat Intel Engine: {e}")
-            
-    asyncio.create_task(init_background())
-    
-    yield
-    from services.scraper_engine import scraper_instance
-    await scraper_instance.stop()
-
-app = FastAPI(title="Nemesis OmniChain API", description="Lionsgate OmniChain Forensic Engine", lifespan=lifespan)
+app = FastAPI(title="Nemesis Edge API")
 
 import traceback
 from fastapi.responses import JSONResponse
@@ -185,17 +141,10 @@ async def global_exception_handler(request: Request, exc: Exception):
         status_code=500,
         content={"message": "Internal Server Error", "details": str(exc), "healed": False}
     )
+    
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://nemesis-id-frontend.pages.dev", 
-        "https://nemesis-local.onrender.com",
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:3001"
-    ],
-    allow_origin_regex=r"https://.*\.pages\.dev",
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

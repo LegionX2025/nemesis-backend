@@ -1,6 +1,7 @@
-name = "nemesis-edge-proxy"
-main = "cloudflare_worker/src/index.ts"
+name = "nemesis-python-worker"
+main = "main.py"
 compatibility_date = "2024-12-01"
+compatibility_flags = ["python_workers"]
 
 [observability]
 enabled = true
@@ -20,10 +21,4 @@ binding = "NEMESIS_STORAGE"
 bucket_name = "nemesis-assets"
 
 [vars]
-BACKEND_API_URL = "https://nemesis-local.onrender.com"
-
-[[hyperdrive]]
-binding = "HYPERDRIVE"
-id = "2bf62864eaf64708b5a349169d6efc7e"
-localConnectionString = "postgresql://admin:!Nemesis2026@ep-morning-glitter-adpz0uqn-pooler.c-2.us-east-1.aws.neon.tech:5432/intelligence?sslmode=require"
-
+BACKEND_API_URL = "https://nemesis-python-worker.legionxgaming2021.workers.dev"
