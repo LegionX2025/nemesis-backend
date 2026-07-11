@@ -455,15 +455,8 @@
                                 <th>Intelligence Details</th>
                             </tr>
                         </thead>
-                        <tbody class="font-mono text-xs">
-                            <tr class="cursor-pointer hover:bg-slate-50 transition" onclick="openDossier('intel', 'Counterparty Profile')">
-                                <td class="text-slate-600">2026-05-27 08:14</td>
-                                <td><img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-4 h-4 inline"> ETH</td>
-                                <td class="text-blue-600">0xab12...89ef</td>
-                                <td><span class="font-bold text-slate-900">CLS-88921 (Binance Hot)</span></td>
-                                <td class="text-slate-700">0x28c...d60</td>
-                                <td class="text-slate-600 text-[10px]">CEX Custodial Cashout endpoint.</td>
-                            </tr>
+                        <tbody class="font-mono text-xs" id="dynamic-counterparties-tbody">
+                            <tr><td colspan="6" class="text-center py-4 text-slate-600"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Fetching Live Data...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -794,7 +787,8 @@
                     if (addrCont) addrCont.onclick = () => copyToClipboard(address);
 
                     try {
-                        let res = await fetch(`http://127.0.0.1:8088/api/nemesis_id/intel/${address}`);
+                        const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '' ? 'http://127.0.0.1:8088' : 'https://nemesis-api.legionxgaming2021.workers.dev';
+                        let res = await fetch(`${API_BASE}/api/nemesis_id/intel/${address}`);
                         let data = await res.json();
                         
                         document.getElementById('intel-id-custodial').innerText = data.custodial_entry || 'Unknown';

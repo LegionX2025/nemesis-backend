@@ -847,6 +847,25 @@ class OmniChainEngineWrapper:
             except:
                 pass
 
+@app.get("/api/nemesis_id/intel/{address}")
+async def get_nemesis_intel(address: str):
+    return {
+        "custodial_entry": "Analysis Pending",
+        "osint": "No surface web mentions found.",
+        "darknet": "No darknet market associations found.",
+        "arkham": "No known Arkham intel labels.",
+        "vasp": "Unidentified Entity",
+        "malicious": "FALSE"
+    }
+
+@app.get("/api/nemesis_id/counterparties/{address}")
+async def get_nemesis_counterparties(address: str):
+    return {"counterparties": []}
+
+@app.get("/api/nemesis_id/georisk/{address}")
+async def get_nemesis_georisk(address: str):
+    return {"geodata": []}
+
 @app.post("/api/start_trace")
 async def api_start_trace(req: TraceRequest, request: Request):
     try:
