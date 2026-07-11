@@ -22,7 +22,8 @@ class ApiRotator:
             "ANKR": os.getenv("ANKR_API_KEY", "").split(","),
             "TATUM": os.getenv("TATUM_API_KEY", "").split(","),
             "ETHPLORER": os.getenv("ETHPLORER_API_KEY", "").split(","),
-            "BITQUERY": os.getenv("BITQUERY_API_TOKEN", "").split(",")
+            "BITQUERY": os.getenv("BITQUERY_API_TOKEN", "").split(","),
+            "SHARED_EVM_KEY": os.getenv("SHARED_EVM_KEY", "5HVRJGR3D1FGAG1VQXEIPN5HE7WU399CDY").split(",")
         }
         
         # Strip empty strings
@@ -58,6 +59,46 @@ class ApiRotator:
             "OPTIMISM": {
                 "api": ["https://api-optimistic.etherscan.io/api"],
                 "rpc": ["https://mainnet.optimism.io", "https://optimism.drpc.org", "https://1rpc.io/op", "https://rpc.ankr.com/optimism/{}"]
+            },
+            "AVALANCHE": {
+                "api": ["https://api.snowtrace.io/api"],
+                "rpc": ["https://avalanche.public-rpc.com", "https://1rpc.io/avax/c", "https://avalanche-mainnet.infura.io/v3/{}", "https://rpc.ankr.com/avalanche/{}"]
+            },
+            "CELO": {
+                "api": ["https://api.celoscan.io/api"],
+                "rpc": ["https://forno.celo.org", "https://celo-mainnet.infura.io/v3/{}"]
+            },
+            "LINEA": {
+                "api": ["https://api.lineascan.build/api"],
+                "rpc": ["https://rpc.linea.build", "https://linea-mainnet.infura.io/v3/{}"]
+            },
+            "ZKSYNC": {
+                "api": ["https://api-era.zksync.network/api"],
+                "rpc": ["https://mainnet.era.zksync.io", "https://zksync-mainnet.infura.io/v3/{}"]
+            },
+            "STARKNET": {
+                "api": [],
+                "rpc": ["https://starknet-mainnet.public.blastapi.io", "https://starknet-mainnet.infura.io/v3/{}"]
+            },
+            "BITCOIN": {
+                "api": ["NON_EVM_BITQUERY_OKLINK"],
+                "rpc": ["https://bitcoin-rpc.publicnode.com/2e205385fca28313ff402d43d319ccdf36f176c64c35ada6d5c9bb52c509b720"]
+            },
+            "SOLANA": {
+                "api": ["NON_EVM_BITQUERY_OKLINK"],
+                "rpc": ["https://api.mainnet-beta.solana.com"]
+            },
+            "TRON": {
+                "api": ["NON_EVM_BITQUERY_OKLINK"],
+                "rpc": ["https://tron-rpc.publicnode.com/2e205385fca28313ff402d43d319ccdf36f176c64c35ada6d5c9bb52c509b720"]
+            },
+            "RIPPLE": {
+                "api": ["NON_EVM_BITQUERY_OKLINK", "https://api.xrpscan.com/api/v1"],
+                "rpc": []
+            },
+            "TERRA": {
+                "api": ["NON_EVM_BITQUERY_OKLINK"],
+                "rpc": []
             }
         }
         

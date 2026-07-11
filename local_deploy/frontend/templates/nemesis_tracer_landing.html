@@ -128,12 +128,19 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono">Asset Type</label>
                         <select id="asset_type" class="w-full px-4 py-3 rounded-xl transition text-slate-700">
-                            <option value="USD">USD ($)</option>
-                            <option value="ALL_TOKENS">All Tokens</option>
+                            <option value="ALL_TOKENS" selected>All Tokens & Native Assets</option>
+                            <option value="USD">USD Value ($)</option>
+                            <option value="STABLECOINS">All Stablecoins (USDT, USDC, DAI)</option>
                             <option value="BTC">Bitcoin (BTC)</option>
                             <option value="ETH">Ethereum (ETH)</option>
                             <option value="USDT">Tether (USDT)</option>
-                            <option value="USDC">USDC</option>
+                            <option value="USDC">USD Coin (USDC)</option>
+                            <option value="DAI">Dai (DAI)</option>
+                            <option value="BNB">BNB (BSC)</option>
+                            <option value="SOL">Solana (SOL)</option>
+                            <option value="XRP">Ripple (XRP)</option>
+                            <option value="MATIC">Polygon (MATIC)</option>
+                            <option value="AVAX">Avalanche (AVAX)</option>
                         </select>
                     </div>
                 </div>
@@ -141,18 +148,24 @@
                 <!-- Chains / Networks -->
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono">Networks to Trace</label>
-                    <select id="networks" class="w-full px-4 py-3 rounded-xl transition text-slate-700" multiple size="3">
+                    <select id="networks" class="w-full px-4 py-3 rounded-xl transition text-slate-700" multiple size="4">
                         <option value="ALL" selected>OmniChain (Auto-Detect All)</option>
-                        <option value="ETHEREUM">Ethereum</option>
-                        <option value="BSC">Binance Smart Chain</option>
-                        <option value="POLYGON">Polygon</option>
-                        <option value="ARBITRUM">Arbitrum</option>
-                        <option value="OPTIMISM">Optimism</option>
+                        <option value="ETHEREUM">Ethereum (ETH)</option>
+                        <option value="BITCOIN">Bitcoin (BTC)</option>
+                        <option value="SOLANA">Solana (SOL)</option>
+                        <option value="TRON">Tron (TRX)</option>
+                        <option value="BSC">Binance Smart Chain (BSC)</option>
+                        <option value="POLYGON">Polygon (MATIC)</option>
+                        <option value="ARBITRUM">Arbitrum (ARB)</option>
+                        <option value="OPTIMISM">Optimism (OP)</option>
                         <option value="BASE">Base</option>
-                        <option value="AVALANCHE">Avalanche</option>
-                        <option value="SOLANA">Solana</option>
-                        <option value="TRON">Tron</option>
-                        <option value="BITCOIN">Bitcoin</option>
+                        <option value="AVALANCHE">Avalanche (AVAX)</option>
+                        <option value="RIPPLE">Ripple (XRP)</option>
+                        <option value="CELO">Celo</option>
+                        <option value="LINEA">Linea</option>
+                        <option value="TERRA">Terra</option>
+                        <option value="ZKSYNC">zkSync</option>
+                        <option value="STARKNET">Starknet</option>
                     </select>
                     <p class="text-[10px] text-slate-400 font-mono mt-1 ml-1">Hold Ctrl (Windows) or Command (Mac) to select multiple.</p>
                 </div>
@@ -180,10 +193,11 @@
 
     <script>
         const CHAINS = {
-            ETH: { regex: /^0x[a-fA-F0-9]{40}$/, name: 'Ethereum / EVM', logo: 'https://cryptologos.cc/logos/ethereum-eth-logo.png' },
             BTC: { regex: /^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,39}$/, name: 'Bitcoin', logo: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png' },
+            ETH: { regex: /^0x[a-fA-F0-9]{40}$/, name: 'Ethereum / EVM', logo: 'https://cryptologos.cc/logos/ethereum-eth-logo.png' },
             SOL: { regex: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/, name: 'Solana', logo: 'https://cryptologos.cc/logos/solana-sol-logo.png' },
-            TRX: { regex: /^T[A-Za-z1-9]{33}$/, name: 'Tron', logo: 'https://cryptologos.cc/logos/tron-trx-logo.png' }
+            TRX: { regex: /^T[A-Za-z1-9]{33}$/, name: 'Tron', logo: 'https://cryptologos.cc/logos/tron-trx-logo.png' },
+            XRP: { regex: /^r[0-9a-zA-Z]{24,34}$/, name: 'Ripple', logo: 'https://cryptologos.cc/logos/xrp-xrp-logo.png' }
         };
 
         function detectChain(address) {

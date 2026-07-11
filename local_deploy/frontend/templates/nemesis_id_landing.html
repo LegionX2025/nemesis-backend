@@ -135,10 +135,11 @@
 
     <script>
         const CHAINS = {
-            ETH: { regex: /^0x[a-fA-F0-9]{40}$/, name: 'Ethereum / EVM', logo: 'https://cryptologos.cc/logos/ethereum-eth-logo.png' },
             BTC: { regex: /^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,39}$/, name: 'Bitcoin', logo: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png' },
+            ETH: { regex: /^0x[a-fA-F0-9]{40}$/, name: 'Ethereum / EVM', logo: 'https://cryptologos.cc/logos/ethereum-eth-logo.png' },
             SOL: { regex: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/, name: 'Solana', logo: 'https://cryptologos.cc/logos/solana-sol-logo.png' },
-            TRX: { regex: /^T[A-Za-z1-9]{33}$/, name: 'Tron', logo: 'https://cryptologos.cc/logos/tron-trx-logo.png' }
+            TRX: { regex: /^T[A-Za-z1-9]{33}$/, name: 'Tron', logo: 'https://cryptologos.cc/logos/tron-trx-logo.png' },
+            XRP: { regex: /^r[0-9a-zA-Z]{24,34}$/, name: 'Ripple', logo: 'https://cryptologos.cc/logos/xrp-xrp-logo.png' }
         };
 
         function detectChain(address) {
