@@ -235,17 +235,9 @@ def main():
     
     # 2. GIT DEPLOY (RENDER)
     print_log("\n>>> [2/4] Syncing to Global Repository (Render Backend)")
-    run_cmd("git rm -r --cached .", exit_on_error=False)
     
-    core_files = [
-        "cloudflare_worker/", "cf_pages_build/",
-        "render_backend/", "services/", "templates/", "static/", "scraper_service/", "graph/",
-        "database/", "requirements.txt", "render.yaml", "auto_deploy.py", "deploy_all.py", 
-        "build_nemesis_id.py", "app.py", "main.py", "Dockerfile", ".gitignore", "wrangler.toml", "vercel.json"
-    ]
-    for f in core_files:
-        if os.path.exists(os.path.join(os.getcwd(), f.strip("/"))):
-            run_cmd(f"git add -f {f}")
+    # Safely add files
+    run_cmd("git add .", exit_on_error=False)
     
     success, log = run_cmd('git commit -m "Auto-Deploy from Nemesis Command Center"', exit_on_error=False)
     run_cmd("git push origin main", exit_on_error=False)

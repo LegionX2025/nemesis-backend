@@ -1,0 +1,29 @@
+🚀 OKLINK AUTO-LABEL RESULTS
+{
+  "chain": "BSC",
+  "address": "0x3b5d17e2236f4d773da87ee10b71d80c5e5b5772",
+  "attributionTags": [
+    "transfer",
+    "79127658",
+    "0.000105",
+    "0x4aa6d59ce34287325c0a9dc9541c70384d02a4a96bfbe99ad4c500a5d7523462",
+    "< +0.00000001",
+    "$5.53",
+    "+0.0113913",
+    "0xb11c1e3b841884d13bf33f9d91e0bd67f6b88fb3c58e71dc0670271e496aa029",
+    "0.00017785",
+    "78887590",
+    "0.00154449",
+    "0x49d31d3050735d103af94f75a2d802cafba36b5a3f86ae9ba6c306eeba2d92bf",
+    "0x77a37877a0a4770f04207e9f598b1027ef4864aa8499e797a1947f7e7394eee3",
+    "approve",
+    "73593448",
+    "0.00966894",
+    "0.0113",
+    "BNB transfer",
+    "73591533",
+    "0x361f1a06fa9daab752dc8f90091c294b81e5f245af4e0069257ed9cb099a85f7",
+    "79127662",
+    "0.0000011"
+  ]
+}

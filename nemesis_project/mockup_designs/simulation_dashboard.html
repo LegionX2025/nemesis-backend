@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEMESIS | Live Trace Simulation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/force-graph@1.43.3/dist/force-graph.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; overflow: hidden; margin:0; padding:0; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        
+        .stat-card { background: white; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 1rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .stat-icon { width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; }
+        
+        table th { position: sticky; top: 0; z-index: 10; background: #f8fafc; box-shadow: 0 1px 0 #e2e8f0; }
+        .ledger-container { transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .ledger-minimized { height: 40px !important; overflow: hidden; }
+
+        .graph-wrapper canvas { border-radius: 0.5rem; outline: none; }
+        
+        /* Pulse dot for live simulation */
+        .live-dot { height: 8px; width: 8px; background-color: #ef4444; border-radius: 50%; display: inline-block; animation: pulseRed 1.5s infinite; }
+        @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+    </style>
+</head>
+<body class="flex flex-col h-screen antialiased text-sm">
+
+    <!-- GLOBAL HEADER -->
+    <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0 z-50">
+        <div class="flex items-center gap-3 w-64">
+            <i class="fa-solid fa-lion text-3xl text-slate-900"></i>
+            <div class="flex flex-col">
+                <span class="font-black text-xl tracking-tight leading-none text-slate-900 uppercase">NEMESIS</span>
+                <span class="text-[8px] text-slate-500 font-bold tracking-widest uppercase mt-0.5">By Lionsgate Network</span>
+            </div>
+        </div>
+
+        <div class="flex-1 flex justify-center px-8">
+            <div class="relative w-full max-w-2xl">
+                <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" class="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-brand-500 focus:bg-white transition-colors" placeholder="Search by Address, Txn Hash, Entity...">
+            </div>
+        </div>
+
+        <div class="flex items-center gap-5 text-slate-500 w-64 justify-end">
+            <button class="hover:text-slate-800 transition-colors"><i class="fa-regular fa-bell text-lg"></i></button>
+            <div class="h-6 w-px bg-slate-200 mx-1"></div>
+            <div class="flex items-center gap-2 cursor-pointer">
+                <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-white text-xs font-bold">AN</div>
+                <div class="hidden md:block text-left leading-tight">
+                    <div class="text-xs font-bold text-slate-800">Analyst</div>
+                    <div class="text-[9px] text-slate-500 font-semibold">Lionsgate Network</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 flex overflow-hidden bg-slate-50">
+        <!-- LEFT SIDEBAR -->
+        <aside class="w-56 bg-white border-r border-slate-200 flex flex-col flex-shrink-0 z-20 overflow-y-auto custom-scrollbar">
+            <nav class="p-3 space-y-0.5 flex-1 text-[13px] font-medium text-slate-600">
+                <a href="#" class="flex items-center gap-3 px-3 py-2 bg-blue-50 text-blue-600 rounded-md font-semibold"><i class="fa-solid fa-house w-4 text-center"></i> Dashboard</a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 hover:text-slate-900 rounded-md transition"><i class="fa-solid fa-network-wired w-4 text-center"></i> Graph Explorer</a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 hover:text-slate-900 rounded-md transition"><i class="fa-regular fa-bell w-4 text-center"></i> Alerts</a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 hover:text-slate-900 rounded-md transition"><i class="fa-solid fa-briefcase w-4 text-center"></i> Cases</a>
+            </nav>
+            <div class="p-4 mt-auto border-t border-slate-100">
+                <button onclick="startSimulation()" id="sim-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow mb-4 flex items-center justify-center gap-2 transition"><i class="fa-solid fa-play"></i> Run Simulation</button>
+                <div class="text-[10px] font-bold text-slate-800 tracking-widest uppercase">LIONSGATE NETWORK</div>
+                <div class="text-[9px] text-slate-400 mt-1">Version 2.5.0</div>
+            </div>
+        </aside>
+
+        <!-- CENTER CONTENT -->
+        <div class="flex-1 flex flex-col min-w-0 overflow-y-auto custom-scrollbar p-6 space-y-6">
+            
+            <div class="flex gap-6 h-[400px]">
+                
+                <!-- Graph Flow Visualization -->
+                <div class="flex-1 bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col overflow-hidden">
+                    <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <div class="flex items-center gap-3">
+                            <h2 class="font-bold text-slate-800">Live Tracing Engine</h2>
+                            <span id="sim-badge" class="bg-slate-200 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-slate-400"></div> Idle</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="text-xs font-bold text-slate-500 mr-2 flex items-center"><i class="fa-solid fa-mouse-pointer text-blue-500 mr-1"></i> Click nodes/lines to inspect</span>
+                        </div>
+                    </div>
+                    
+                    <div id="graph-container" class="flex-1 w-full bg-slate-50/30 relative graph-wrapper cursor-pointer"></div>
+                </div>
+
+                <!-- Right Details Sidebar (Dynamic) -->
+                <div id="details-panel" class="w-80 bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col overflow-hidden relative">
+                    <!-- Default Empty State -->
+                    <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 bg-slate-50/50 z-10">
+                        <i class="fa-solid fa-hand-pointer text-4xl mb-3 text-slate-300"></i>
+                        <p class="text-xs font-bold uppercase tracking-wider">Select a Node or Line</p>
+                    </div>
+
+                    <!-- Header -->
+                    <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-start">
+                        <div>
+                            <h2 id="panel-title" class="font-bold text-slate-800 text-[10px] uppercase tracking-widest mb-1 text-blue-600">Entity Inspector</h2>
+                            <div id="panel-main-id" class="text-base font-black text-slate-800 mono tracking-tight break-all leading-tight">--</div>
+                        </div>
+                        <span id="panel-badge" class="bg-slate-200 text-slate-600 border border-slate-300 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase mt-1">--</span>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto custom-scrollbar p-4 text-xs bg-white">
+                        
+                        <!-- Dynamic Content Container -->
+                        <div id="panel-content" class="space-y-4">
+                            <!-- Populated by JS -->
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOTTOM LEDGER SECTION -->
+            <div id="ledger-panel" class="bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col ledger-container flex-1 min-h-[300px]">
+                
+                <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center shrink-0 cursor-pointer" onclick="toggleLedger()">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-list-ol text-blue-600"></i>
+                        <span class="font-bold text-slate-800">Real-Time Resolution Ledger</span>
+                        <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold border border-blue-200" id="ledger-count">0 Records</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <button class="text-slate-400 hover:text-slate-800 transition"><i id="ledger-toggle-icon" class="fa-solid fa-chevron-down"></i></button>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-auto custom-scrollbar">
+                    <table class="w-full text-left text-xs border-collapse whitespace-nowrap">
+                        <thead>
+                            <tr class="text-[10px] uppercase tracking-wider text-slate-500 font-bold bg-white">
+                                <th class="px-4 py-3 border-b border-slate-200">Date/Time (UTC)</th>
+                                <th class="px-4 py-3 border-b border-slate-200">Correlation</th>
+                                <th class="px-4 py-3 border-b border-slate-200">TX Hash</th>
+                                <th class="px-4 py-3 border-b border-slate-200">From Wallet</th>
+                                <th class="px-4 py-3 border-b border-slate-200">To Receiver</th>
+                                <th class="px-4 py-3 border-b border-slate-200 text-right">Amount</th>
+                                <th class="px-4 py-3 border-b border-slate-200">Confidence</th>
+                                <th class="px-4 py-3 border-b border-slate-200 min-w-[250px]">Intelligence Attributions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ledger-body" class="text-slate-700 font-medium font-mono text-[11px] divide-y divide-slate-100">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // --- UI Toggles ---
+        let isLedgerMinimized = false;
+        function toggleLedger() {
+            const panel = document.getElementById('ledger-panel');
+            const icon = document.getElementById('ledger-toggle-icon');
+            if (isLedgerMinimized) { panel.classList.remove('ledger-minimized'); icon.classList.replace('fa-chevron-up', 'fa-chevron-down'); } 
+            else { panel.classList.add('ledger-minimized'); icon.classList.replace('fa-chevron-down', 'fa-chevron-up'); }
+            isLedgerMinimized = !isLedgerMinimized;
+            setTimeout(() => { if(window.Graph) { window.Graph.width(document.getElementById('graph-container').clientWidth).height(document.getElementById('graph-container').clientHeight); } }, 350);
+        }
+
+        // --- Mock Data Sequence ---
+        const imgs = {
+            binance: new Image(), usdt: new Image(), wallet: new Image(), eth: new Image(), uniswap: new Image()
+        };
+        imgs.binance.src = 'https://cryptologos.cc/logos/bnb-bnb-logo.png';
+        imgs.usdt.src = 'https://cryptologos.cc/logos/tether-usdt-logo.png';
+        imgs.wallet.src = 'https://cdn-icons-png.flaticon.com/512/855/855279.png';
+        imgs.eth.src = 'https://cryptologos.cc/logos/ethereum-eth-logo.png';
+        imgs.uniswap.src = 'https://cryptologos.cc/logos/uniswap-uni-logo.png';
+
+        const sequenceData = [
+            {
+                type: 'node',
+                node: { id: 'N1', name: '0x1A2B...9C8D', type: 'PRIVATE WALLET', val: 'HACKER ORIGIN', icon: imgs.wallet, isCEX: false, badge: 'question', bg: '#eff6ff', 
+                        details: { cluster: 'Lazarus Group (Suspected)', firstSeen: 'Jan 12, 2026', balance: '0.00 ETH', labels: ['Exploiter', 'High Risk', 'Sanctioned'] } }
+            },
+            {
+                type: 'link',
+                link: { source: 'N1', target: 'N2', label: 'ETH (ERC20)', amount: '1,450.00 ETH', hash: '0xabc123...def4', tag: 'TRANSFER', time: '06:05:12' },
+                node: { id: 'N2', name: 'UNISWAP V2', type: 'DEX MIXER', val: '$4,350,000.00', icon: imgs.uniswap, isCEX: false, badge: 'swap', bg: '#fdf4ff',
+                        details: { cluster: 'DeFi Router', firstSeen: 'May 04, 2020', balance: '14,234 ETH', labels: ['DEX', 'High Volume', 'Mixing'] } },
+                ledger: { time: '06:05:12', corr: 'Direct Transfer', hash: '0xabc123...def4', from: '0x1A2B...9C8D', to: 'Uniswap V2', amt: '1,450.00 ETH', conf: '99%', intel: 'Initial extraction payload to DEX.' }
+            },
+            {
+                type: 'link',
+                link: { source: 'N2', target: 'N3', label: 'USDT (ERC20)', amount: '$4,345,100.00', hash: '0x8899aa...bbcc', tag: 'SWAP', time: '06:08:44' },
+                node: { id: 'N3', name: 'BINANCE 14', type: 'EXCHANGE', val: '$4,345,100.00', icon: imgs.binance, isCEX: true, badge: 'check', bg: '#f8fafc',
+                        details: { cluster: 'Binance Hot Wallet', firstSeen: 'Oct 11, 2019', balance: '$1.4B', labels: ['CEX', 'Deposit', 'KYC Required'] } },
+                ledger: { time: '06:08:44', corr: 'DEX Swap', hash: '0x8899aa...bbcc', from: 'Uniswap V2', to: 'Binance 14', amt: '$4,345,100', conf: '100%', intel: 'ETH swapped to USDT and consolidated to Exchange.' }
+            }
+        ];
+
+        // --- State ---
+        let gData = { nodes: [], links: [] };
+        let selectedNode = null;
+        let selectedLink = null;
+        let simInterval = null;
+
+        // --- ForceGraph Init ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('graph-container');
+            
+            window.Graph = ForceGraph()(container)
+                .graphData(gData)
+                .backgroundColor('transparent')
+                .d3AlphaDecay(0.02) // Smooth physics
+                .d3VelocityDecay(0.3)
+                .enableZoomPanInteraction(true)
+                
+                // --- ON CLICK NODE ---
+                .onNodeClick(node => {
+                    selectedNode = node;
+                    selectedLink = null;
+                    updateSidebar('node', node);
+                })
+                
+                // --- ON CLICK LINE (LINK) ---
+                .onLinkClick(link => {
+                    selectedLink = link;
+                    selectedNode = null;
+                    updateSidebar('link', link);
+                })
+
+                // --- NODE RENDERING ---
+                .nodeCanvasObject((node, ctx, globalScale) => {
+                    const isSelected = (node === selectedNode);
+                    const w = 130; const h = 150;
+                    
+                    ctx.save();
+                    
+                    // Selection Glow
+                    if (isSelected) {
+                        ctx.shadowColor = '#3b82f6';
+                        ctx.shadowBlur = 20;
+                    } else {
+                        ctx.shadowColor = 'rgba(0,0,0,0.08)';
+                        ctx.shadowBlur = 10;
+                    }
+
+                    // Base Card
+                    ctx.fillStyle = node.bg || '#ffffff';
+                    ctx.beginPath(); ctx.roundRect(node.x - w/2, node.y - h/2, w, h, 8); ctx.fill();
+                    
+                    // Border (Thick blue if selected)
+                    ctx.shadowColor = 'transparent';
+                    ctx.lineWidth = isSelected ? 3 / globalScale : 1 / globalScale;
+                    ctx.strokeStyle = isSelected ? '#3b82f6' : '#e2e8f0';
+                    ctx.stroke();
+
+                    // Icon Circle
+                    const r = 26;
+                    ctx.beginPath(); ctx.arc(node.x, node.y - 25, r, 0, 2*Math.PI);
+                    ctx.fillStyle = '#ffffff'; ctx.fill();
+                    ctx.lineWidth = 2 / globalScale;
+                    ctx.strokeStyle = '#cbd5e1'; ctx.stroke();
+
+                    if (node.icon && node.icon.complete) {
+                        ctx.drawImage(node.icon, node.x - 18, node.y - 43, 36, 36);
+                    }
+
+                    // Badges
+                    if (node.badge === 'check') {
+                        ctx.beginPath(); ctx.arc(node.x + 18, node.y - 5, 9, 0, 2*Math.PI); ctx.fillStyle = '#10b981'; ctx.fill();
+                        ctx.font = '900 9px "Font Awesome 6 Free"'; ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('\uf00c', node.x + 18, node.y - 5);
+                    } else if (node.badge === 'question') {
+                        ctx.beginPath(); ctx.arc(node.x + 18, node.y - 5, 9, 0, 2*Math.PI); ctx.fillStyle = '#ef4444'; ctx.fill();
+                        ctx.font = '900 9px "Font Awesome 6 Free"'; ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('\uf128', node.x + 18, node.y - 5);
+                    } else if (node.badge === 'swap') {
+                        ctx.beginPath(); ctx.arc(node.x + 18, node.y - 5, 9, 0, 2*Math.PI); ctx.fillStyle = '#a855f7'; ctx.fill();
+                        ctx.font = '900 9px "Font Awesome 6 Free"'; ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('\uf0ec', node.x + 18, node.y - 5);
+                    }
+
+                    // Typography
+                    ctx.textAlign = 'center';
+                    ctx.font = 'black 14px Inter';
+                    ctx.fillStyle = '#1e293b';
+                    ctx.fillText(node.val, node.x, node.y + 20);
+
+                    // Pill
+                    ctx.font = 'bold 9px JetBrains Mono';
+                    const textWidth = ctx.measureText(node.name).width;
+                    ctx.fillStyle = '#e2e8f0';
+                    ctx.beginPath(); ctx.roundRect(node.x - textWidth/2 - 6, node.y + 35, textWidth + 12, 16, 4); ctx.fill();
+                    ctx.fillStyle = '#334155';
+                    ctx.fillText(node.name, node.x, node.y + 46);
+
+                    ctx.font = 'bold 9px Inter';
+                    ctx.fillStyle = '#64748b';
+                    ctx.fillText(node.type, node.x, node.y + 65);
+
+                    ctx.restore();
+                })
+                
+                // --- LINK RENDERING ---
+                .linkCanvasObjectMode(() => 'after')
+                .linkCanvasObject((link, ctx, globalScale) => {
+                    const start = link.source; const end = link.target;
+                    if(typeof start !== 'object' || typeof end !== 'object') return;
+                    
+                    const midX = start.x + (end.x - start.x) / 2;
+                    const midY = start.y + (end.y - start.y) / 2;
+                    
+                    const isSelected = (link === selectedLink);
+
+                    ctx.save(); ctx.translate(midX, midY - 15);
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+                    // Selection Background for Link Tag
+                    if (isSelected) {
+                        ctx.fillStyle = '#eff6ff';
+                        ctx.beginPath(); ctx.roundRect(-50, -25, 100, 75, 8); ctx.fill();
+                        ctx.lineWidth = 1/globalScale; ctx.strokeStyle = '#3b82f6'; ctx.stroke();
+                    }
+
+                    // Label Top
+                    ctx.font = 'bold 10px Inter'; ctx.fillStyle = '#475569';
+                    ctx.fillText(link.label, 0, -15);
+                    
+                    // Outflow & Amount
+                    ctx.font = 'bold 9px Inter'; ctx.fillStyle = '#64748b';
+                    ctx.fillText('OUTFLOW', 0, -2);
+                    ctx.font = 'bold 12px Inter'; ctx.fillStyle = '#ef4444';
+                    ctx.fillText('↓ ' + link.amount, 0, 10);
+
+                    // Hash
+                    ctx.font = 'bold 10px JetBrains Mono'; ctx.fillStyle = isSelected ? '#2563eb' : '#64748b';
+                    ctx.fillText(link.hash, 0, 32);
+                    
+                    // Tag bottom
+                    ctx.font = 'bold 9px Inter'; ctx.fillStyle = '#e0e7ff';
+                    const tw = ctx.measureText(link.tag).width;
+                    ctx.beginPath(); ctx.roundRect(-tw/2 - 4, 42, tw + 8, 14, 2); ctx.fill();
+                    ctx.fillStyle = '#4338ca'; ctx.fillText(link.tag, 0, 49);
+
+                    ctx.restore();
+                })
+                .linkColor(link => (link === selectedLink) ? '#3b82f6' : '#94a3b8')
+                .linkWidth(link => (link === selectedLink) ? 4 : 2)
+                .linkDirectionalArrowLength(6)
+                .linkDirectionalArrowRelPos(1);
+
+            // Handle resize
+            window.addEventListener('resize', () => { Graph.width(container.clientWidth).height(container.clientHeight); });
+        });
+
+        // --- Sidebar Updater ---
+        function updateSidebar(type, data) {
+            document.getElementById('empty-state').style.display = 'none';
+            const title = document.getElementById('panel-title');
+            const mainId = document.getElementById('panel-main-id');
+            const badge = document.getElementById('panel-badge');
+            const content = document.getElementById('panel-content');
+
+            if (type === 'node') {
+                title.innerText = 'Entity Inspector';
+                title.className = 'font-bold text-[10px] uppercase tracking-widest mb-1 text-blue-600';
+                mainId.innerText = data.val; // e.g. BINANCE 14
+                badge.innerText = data.type; // EXCHANGE
+                badge.className = 'bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase mt-1';
+                
+                let labelsHtml = data.details.labels.map(l => `<span class="px-2 py-1 bg-slate-100 text-slate-700 border border-slate-200 rounded text-[10px] font-semibold">${l}</span>`).join('');
+
+                content.innerHTML = `
+                    <div class="flex justify-between border-b border-slate-100 pb-2"><span class="text-slate-500">Address</span><span class="font-semibold text-slate-800 mono">${data.name}</span></div>
+                    <div class="flex justify-between border-b border-slate-100 pb-2"><span class="text-slate-500">Cluster</span><span class="font-semibold text-purple-600">${data.details.cluster}</span></div>
+                    <div class="flex justify-between border-b border-slate-100 pb-2"><span class="text-slate-500">First Seen</span><span class="font-semibold text-slate-800 mono">${data.details.firstSeen}</span></div>
+                    <div class="flex justify-between border-b border-slate-100 pb-2"><span class="text-slate-500">Known Balance</span><span class="font-semibold text-slate-800 mono">${data.details.balance}</span></div>
+                    <div class="mt-4"><div class="font-bold text-slate-800 mb-2">Applied Labels</div><div class="flex flex-wrap gap-2">${labelsHtml}</div></div>
+                    <div class="mt-4"><button class="w-full bg-slate-800 text-white py-2 rounded shadow-sm text-xs font-bold hover:bg-slate-900"><i class="fa-solid fa-magnifying-glass-plus mr-1"></i> Expand Entity Trace</button></div>
+                `;
+
+            } else if (type === 'link') {
+                title.innerText = 'Transaction Edge';
+                title.className = 'font-bold text-[10px] uppercase tracking-widest mb-1 text-emerald-600';
+                mainId.innerText = data.amount;
+                badge.innerText = data.tag; // TRANSFER/SWAP
+                badge.className = 'bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase mt-1';
+
+                content.innerHTML = `
+                    <div class="flex justify-between border-b border-slate-100 pb-2"><span class="text-slate-500">Tx Hash</span><span class="font-semibold text-blue-600 mono underline cursor-pointer">${data.hash}</span></div>
+                    <div class="flex justify-between border-b border-slate-100 pb-2"><span class="text-slate-500">Time (UTC)</span><span class="font-semibold text-slate-800 mono">${data.time}</span></div>
+                    <div class="flex justify-between border-b border-slate-100 pb-2"><span class="text-slate-500">Asset</span><span class="font-semibold text-slate-800">${data.label}</span></div>
+                    
+                    <div class="mt-4 bg-slate-50 p-3 rounded border border-slate-100">
+                        <div class="text-[10px] font-bold text-slate-400 uppercase mb-2">Flow Pathway</div>
+                        <div class="flex items-center justify-between text-xs font-bold">
+                            <span class="text-red-500 truncate w-24">${data.source.name || data.source}</span>
+                            <i class="fa-solid fa-arrow-right text-slate-300"></i>
+                            <span class="text-emerald-500 truncate w-24 text-right">${data.target.name || data.target}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4"><button class="w-full bg-emerald-50 text-emerald-700 border border-emerald-200 py-2 rounded shadow-sm text-xs font-bold hover:bg-emerald-100"><i class="fa-solid fa-file-invoice mr-1"></i> View Blockchain Receipt</button></div>
+                `;
+            }
+
+            // Force graph to re-render to update selection highlights
+            Graph.nodeRelSize(4); 
+        }
+
+        // --- Simulation Engine ---
+        function startSimulation() {
+            if (simInterval) return; // Already running
+            
+            // Reset state
+            gData = { nodes: [], links: [] };
+            Graph.graphData(gData);
+            document.getElementById('ledger-body').innerHTML = '';
+            document.getElementById('ledger-count').innerText = '0 Records';
+            document.getElementById('empty-state').style.display = 'flex';
+            selectedNode = null; selectedLink = null;
+            
+            const btn = document.getElementById('sim-btn');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Tracing...';
+            btn.classList.replace('bg-blue-600', 'bg-red-600');
+            btn.classList.replace('hover:bg-blue-700', 'hover:bg-red-700');
+            
+            const badge = document.getElementById('sim-badge');
+            badge.innerHTML = '<span class="live-dot"></span> Active Simulation';
+            badge.className = 'bg-red-50 text-red-600 border border-red-200 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider flex items-center gap-1.5';
+
+            let step = 0;
+            
+            simInterval = setInterval(() => {
+                if (step >= sequenceData.length) {
+                    clearInterval(simInterval);
+                    simInterval = null;
+                    btn.innerHTML = '<i class="fa-solid fa-play"></i> Re-Run Simulation';
+                    btn.classList.replace('bg-red-600', 'bg-blue-600');
+                    btn.classList.replace('hover:bg-red-700', 'hover:bg-blue-700');
+                    badge.innerHTML = '<div class="w-2 h-2 rounded-full bg-emerald-500"></div> Trace Complete';
+                    badge.className = 'bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider flex items-center gap-1.5';
+                    Graph.zoomToFit(1000, 100);
+                    return;
+                }
+
+                const item = sequenceData[step];
+                const newNodes = [...gData.nodes];
+                const newLinks = [...gData.links];
+
+                if (item.type === 'node') {
+                    newNodes.push(item.node);
+                } else if (item.type === 'link') {
+                    newNodes.push(item.node);
+                    newLinks.push(item.link);
+                    appendLedgerRow(item.ledger);
+                }
+
+                gData = { nodes: newNodes, links: newLinks };
+                Graph.graphData(gData);
+                
+                // Keep layout linear
+                Graph.d3Force('collide', d3.forceCollide(80));
+                Graph.d3Force('charge').strength(-400);
+                
+                step++;
+            }, 1500); // Add node/link every 1.5 seconds
+        }
+
+        function appendLedgerRow(row) {
+            const tbody = document.getElementById('ledger-body');
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-blue-50 transition cursor-pointer animate-[fadeIn_0.5s_ease-out] bg-white';
+            tr.innerHTML = `
+                <td class="px-4 py-2 text-slate-500">${row.time}</td>
+                <td class="px-4 py-2"><span class="bg-blue-50 text-blue-600 border border-blue-100 px-1.5 py-0.5 rounded text-[9px] uppercase font-bold">${row.corr}</span></td>
+                <td class="px-4 py-2 text-blue-600 hover:underline">${row.hash}</td>
+                <td class="px-4 py-2 font-semibold text-red-500">${row.from}</td>
+                <td class="px-4 py-2 font-semibold text-emerald-600">${row.to}</td>
+                <td class="px-4 py-2 text-right font-black text-slate-800">${row.amt}</td>
+                <td class="px-4 py-2"><span class="text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-bold text-[9px]">${row.conf}</span></td>
+                <td class="px-4 py-2 text-slate-500 font-sans text-[10px] leading-tight truncate max-w-[250px]" title="${row.intel}">${row.intel}</td>
+            `;
+            tbody.prepend(tr);
+            
+            // Update count
+            const rows = tbody.getElementsByTagName('tr').length;
+            document.getElementById('ledger-count').innerText = `${rows} Records`;
+        }
+    </script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</body>
+</html>
