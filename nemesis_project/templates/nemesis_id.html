@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEMESIS ID | Corporate Intelligence & Entity Reconstruction</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Syncopate:wght@700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['Inter', 'sans-serif'], 
+                        mono: ['JetBrains Mono', 'monospace'],
+                        serif: ['Playfair Display', 'serif'],
+                        cyber: ['Syncopate', 'sans-serif']
+                    },
+                    colors: { 
+                        nemesis: { light: '#f8fafc', panel: '#ffffff', border: '#e2e8f0', accent: '#2563eb', glow: '#bfdbfe' },
+                        danger: { 50: '#fef2f2', 500: '#ef4444', 600: '#dc2626', 900: '#7f1d1d' }
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'scanline': 'scanline 8s linear infinite',
+                        'data-stream': 'dataStream 0.5s infinite alternate'
+                    },
+                    keyframes: {
+                        dataStream: { '0%': { opacity: 0.3 }, '100%': { opacity: 1 } }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Base Transparent to show Canvas */
+        body { background-color: #f8fafc; color: #1e293b; overflow-x: hidden; position: relative; }
+        #quantum-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+
+        /* Global Loader */
+        #global-loader { position: fixed; inset: 0; background: rgba(248, 250, 252, 0.98); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease; }
+        .cyber-ring { width: 100px; height: 100px; border: 3px solid transparent; border-top-color: #2563eb; border-right-color: #7c3aed; border-radius: 50%; animation: spin 1s linear infinite; box-shadow: 0 0 30px rgba(37, 99, 235, 0.1); position: relative; }
+        .cyber-ring::before { content:''; position:absolute; inset: 10px; border: 3px solid transparent; border-left-color: #e11d48; border-bottom-color: #059669; border-radius: 50%; animation: spin 2s linear infinite reverse; }
+
+        /* UI Elements */
+        .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(25px); border-bottom: 1px solid rgba(226, 232, 240, 0.8); box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
+        .data-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(226, 232, 240, 0.8); border-radius: 0.75rem; padding: 1.5rem; box-shadow: 0 2px 15px rgba(0,0,0,0.03); transition: all 0.2s ease; position: relative; overflow: hidden; }
+        .data-card:hover { border-color: #93c5fd; box-shadow: 0 8px 30px rgba(37, 99, 235, 0.08); transform: translateY(-2px); }
+        
+        /* Context Menu */
+        #custom-context-menu { display: none; position: absolute; z-index: 1000; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 0.5rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 0.5rem 0; min-width: 220px; }
+        .context-menu-item { padding: 0.5rem 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #334155; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 0.5rem; }
+        .context-menu-item:hover { background: #f1f5f9; color: #2563eb; }
+
+        /* Alerts & Sync */
+        @keyframes flash-critical { 0%, 100% { background-color: rgba(239, 68, 68, 0.05); border-color: #fca5a5; box-shadow: 0 0 15px rgba(239, 68, 68, 0.1); color: #b91c1c; } 50% { background-color: rgba(239, 68, 68, 0.15); border-color: #ef4444; box-shadow: 0 0 25px rgba(239, 68, 68, 0.3); color: #dc2626; } }
+        .alert-flashing { animation: flash-critical 1.5s infinite; border-width: 1px; }
+        .live-dot { height: 8px; width: 8px; background-color: #10b981; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px #10b981; animation: pulse 2s infinite; }
+
+        /* Tabs & Nav */
+        .tab-content { display: none; animation: fadeIn 0.4s ease-out; }
+        .tab-content.active { display: block; }
+        
+        .icon-3d {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), inset 0 2px 4px rgba(255, 255, 255, 0.3), 0 1px 2px rgba(0,0,0,0.1);
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .tab-btn.active .icon-3d { ring: 2px; ring-offset: 2px; box-shadow: 0 0 15px rgba(37,99,235,0.4); }
+        .tab-btn.active .nav-text { color: #2563eb; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Vis Network Container */
+        #trace-network { width: 100%; height: 600px; background: rgba(255,255,255,0.8); border-radius: 0.5rem; outline: none; border: 1px solid #e2e8f0; }
+        
+        /* Side Panel */
+        #side-panel { position: fixed; top: 0; right: -600px; width: 550px; height: 100vh; background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(20px); box-shadow: -10px 0 40px rgba(0,0,0,0.1); transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 999; border-left: 1px solid #e2e8f0; overflow-y: auto; }
+        #side-panel.open { right: 0; }
+        
+        /* Tables */
+        .cyber-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        .cyber-table th { background: rgba(248, 250, 252, 0.8); border-bottom: 2px solid #e2e8f0; padding: 0.75rem; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: #475569; }
+        .cyber-table td { border-bottom: 1px solid #f1f5f9; padding: 0.75rem; font-size: 0.75rem; }
+        .cyber-table tr:hover td { background-color: rgba(241, 245, 249, 0.5); }
+        
+        .native-value { display: none; }
+        body.show-native .native-value { display: inline-block; }
+        body.show-native .usd-value { display: none; }
+        
+        /* Document Style */
+        .doc-style { background-color: rgba(255, 255, 255, 0.9); border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03); padding: 2rem; }
+        
+        /* Flip Card Logic */
+        .flip-card { background-color: transparent; perspective: 1000px; height: 120px; width: 100%; }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
+        .flip-card:hover .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 0.5rem; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 1rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        .flip-card-front { background-color: rgba(255,255,255,0.9); }
+        .flip-card-back { background-color: rgba(248, 250, 252, 0.95); transform: rotateY(180deg); border-color: #93c5fd; }
+    </style>
+</head>
+<body class="h-screen flex flex-col show-usd">
+
+    <!-- Quantum Web3GL Background -->
+    <canvas id="quantum-bg"></canvas>
+
+    <div id="global-loader">
+        <div class="cyber-ring mb-6"></div>
+        <h2 class="text-slate-900 font-cyber text-2xl tracking-widest animate-pulse">NEMESIS ID ENGINE</h2>
+        <p class="text-blue-600 font-mono text-[10px] uppercase tracking-widest mt-2" id="loader-text">Fusing Blockchain, OSINT & Identity Graphs...</p>
+    </div>
+
+    <!-- Side Panel Data Dossier -->
+    <div id="side-panel" class="flex flex-col">
+        <div class="bg-slate-50/90 backdrop-blur-md border-b border-slate-200 text-slate-900 p-4 flex justify-between items-center sticky top-0 z-10 shadow-sm">
+            <h3 class="font-black tracking-widest uppercase text-sm flex items-center gap-2 font-mono"><i class="fa-solid fa-folder-open text-blue-600"></i> Intelligence Dossier</h3>
+            <button onclick="closeSidePanel()" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+        <div class="p-5" id="side-panel-content"></div>
+    </div>
+
+    <!-- Custom Context Menu for Graph -->
+    <div id="custom-context-menu">
+        <div class="px-4 py-2 border-b border-slate-200 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Graph Actions</div>
+        <div class="context-menu-item" onclick="alertAction('trigger AI Insights', 'Generating AI Explanation...')"><i class="fa-solid fa-brain text-purple-500"></i> Trigger AI Insights</div>
+        <div class="context-menu-item" onclick="alertAction('OSINT lookup', 'Scanning Clear/Dark Web...')"><i class="fa-solid fa-globe text-blue-500"></i> OSINT Lookup</div>
+        <div class="context-menu-item" onclick="alertAction('Trace CEX', 'Resolving Custodial Endpoints...')"><i class="fa-solid fa-building-columns text-amber-500"></i> Trace CEX Hubs</div>
+        <div class="context-menu-item" onclick="alertAction('Mixing Analysis', 'De-obfuscating Layers...')"><i class="fa-solid fa-mask text-slate-700"></i> Mixing Analysis</div>
+        <div class="context-menu-item border-t border-slate-200 mt-1 pt-2" onclick="closeContextMenu()"><i class="fa-solid fa-xmark"></i> Close Menu</div>
+    </div>
+
+    <!-- Landing State -->
+    <div id="id-landing" class="fixed inset-0 flex flex-col items-center justify-center z-[70] bg-slate-50/90 backdrop-blur-md">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
+        <div class="max-w-3xl mx-auto flex flex-col items-center justify-center h-full w-full relative z-10">
+            <div class="mb-8 relative">
+                <div class="absolute inset-0 bg-blue-500 blur-3xl opacity-20 rounded-full animate-pulse-fast"></div>
+                <i class="fa-solid fa-fingerprint text-6xl text-blue-600 relative z-10 drop-shadow-md"></i>
+            </div>
+            
+            <h2 class="text-4xl md:text-5xl font-black text-slate-800 tracking-tighter mb-4 font-cyber text-center">
+                NEMESIS <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">ID</span>
+            </h2>
+            <p class="text-slate-500 text-lg mb-10 max-w-2xl text-center font-serif italic">
+                Omnichain Entity Reconstruction & Intelligence Dossier.
+            </p>
+            
+            <div class="w-full max-w-2xl bg-white/90 backdrop-blur-xl p-8 rounded-3xl shadow-[0_20px_60px_rgba(37,99,235,0.15)] border border-blue-100 relative group overflow-hidden">
+                <!-- Glowing Border Effect -->
+                <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 via-cyan-400 to-purple-600 rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                
+                <div class="relative flex flex-col gap-5 bg-white p-2 rounded-2xl">
+                    
+                    <!-- Drag & Drop Zone -->
+                    <div id="id-file-upload-zone" class="border-2 border-dashed border-slate-300 rounded-xl p-6 flex flex-col items-center justify-center gap-2 transition-all hover:bg-slate-50 hover:border-blue-400 cursor-pointer" ondragover="this.classList.add('bg-blue-50', 'border-blue-500'); event.preventDefault();" ondragleave="this.classList.remove('bg-blue-50', 'border-blue-500');" ondrop="window.handleIdFileDrop(event)" onclick="document.getElementById('id-file-input').click()">
+                        <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 mb-2 shadow-sm">
+                            <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+                        </div>
+                        <p class="text-sm font-bold text-slate-700 font-mono text-center">Drag & Drop Intel Files<br><span class="text-xs font-normal text-slate-500">PDF, CSV, TXT, JSON, EML</span></p>
+                        <input type="file" id="id-file-input" class="hidden" multiple onchange="window.handleIdFileSelect(event)">
+                    </div>
+
+                    <!-- AI Processing Container (Hidden) -->
+                    <div id="id-ai-processing-container" class="hidden flex-col items-center justify-center p-6 bg-slate-900 rounded-xl border border-slate-800 shadow-inner relative overflow-hidden">
+                        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
+                        <div class="w-16 h-16 border-4 border-slate-700 border-t-cyan-400 rounded-full animate-spin mb-4 shadow-[0_0_20px_rgba(34,211,238,0.3)]"></div>
+                        <h3 class="text-cyan-400 font-cyber tracking-widest text-lg animate-pulse">LLM EXTRACTING ENTITIES...</h3>
+                        <p id="id-processing-log" class="text-slate-400 font-mono text-[10px] mt-2 text-center h-8 overflow-hidden">> Analyzing structural data...</p>
+                    </div>
+
+                    <!-- Extracted Summary (Hidden) -->
+                    <div id="id-extracted-summary" class="hidden bg-gradient-to-br from-slate-50 to-blue-50/50 p-5 rounded-xl border border-blue-200 shadow-sm relative">
+                        <div class="absolute top-3 right-3 text-emerald-500 flex items-center gap-1 text-[10px] font-bold font-mono tracking-widest bg-emerald-50 px-2 py-1 rounded shadow-sm border border-emerald-200">
+                            <i class="fa-solid fa-check-circle"></i> AI EXTRACTED
+                        </div>
+                        <h4 class="font-bold text-slate-800 text-sm mb-3 uppercase tracking-widest font-mono border-b border-slate-200 pb-2"><i class="fa-solid fa-list-check text-blue-600 mr-2"></i> Master Data Goals</h4>
+                        <div id="id-summary-content" class="grid grid-cols-2 gap-x-4 gap-y-3 text-[11px] font-mono text-slate-700">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Text Input -->
+                    <div class="relative" id="id-input-container">
+                        <div id="id-chain-logo-container" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 overflow-hidden shadow-sm z-10 transition-all">
+                            <i class="fa-solid fa-link text-slate-400 text-sm"></i>
+                        </div>
+                        <textarea id="id-search-input" oninput="detectIdChainID()" placeholder="Enter Wallet Address, TX Hash, or paste raw intelligence logs..." rows="2" class="w-full border border-slate-200 rounded-xl pl-16 pr-4 py-4 text-base font-mono focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 shadow-inner bg-slate-50/50 resize-none transition-all placeholder:text-slate-400"></textarea>
+                    </div>
+                    
+                    <button onclick="executeNemesisID()" id="id-execute-btn" class="w-full bg-slate-900 hover:bg-black text-white py-4 rounded-xl font-bold text-lg shadow-[0_8px_20px_rgba(0,0,0,0.2)] transition-all transform hover:-translate-y-1 flex items-center justify-center gap-3 relative overflow-hidden group">
+                        <div class="absolute inset-0 w-1/4 h-full bg-white/20 skew-x-12 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                        <i class="fa-solid fa-bolt text-yellow-400"></i> <span class="tracking-widest font-mono">RECONSTRUCT PROFILE</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Container (Initially Hidden) -->
+    <div id="id-dashboard" class="hidden h-full flex-col w-full">
+
+    <!-- Left Side 3D Animated Quantum Menu -->
+    <div id="quantum-nav" class="fixed left-4 top-1/2 -translate-y-1/2 z-[60] bg-white/60 backdrop-blur-xl border border-white/50 shadow-[0_10px_40px_rgba(37,99,235,0.15)] rounded-2xl p-2 flex flex-col gap-2 transition-all duration-500 w-16 overflow-y-auto max-h-[90vh] hide-scrollbar group hover:w-64">
+        
+        <button onclick="toggleNavLock()" id="nav-lock-btn" class="w-12 h-12 flex items-center justify-center rounded-xl bg-gradient-to-br from-slate-50 to-slate-200 border border-slate-300 shadow-sm text-slate-700 hover:text-blue-600 transition-all shrink-0 mx-auto sticky top-0 z-10">
+            <i id="nav-toggle-icon" class="fa-solid fa-expand text-xl"></i>
+        </button>
+        <div class="h-px w-full bg-slate-300/50 my-1 shrink-0"></div>
+        
+        <!-- Tab Buttons (With 3D Icons & Gradients) -->
+        <button class="tab-btn active flex items-center gap-3 w-full text-left text-slate-600 font-bold p-1 rounded-xl hover:bg-white/80 hover:shadow-md transition-all" onclick="switchTab('tab-profile')">
+            <div class="icon-3d bg-gradient-to-br from-blue-400 to-blue-600 w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ml-1">
+                <i class="fa-solid fa-id-card"></i>
+            </div>
+            <span class="nav-text opacity-0 w-0 overflow-hidden transition-all duration-300 text-xs uppercase tracking-widest font-black group-hover:opacity-100 group-hover:w-auto ml-2">Wallet Profile</span>
+        </button>
+
+        <button class="tab-btn flex items-center gap-3 w-full text-left text-slate-600 font-bold p-1 rounded-xl hover:bg-white/80 hover:shadow-md transition-all" onclick="switchTab('tab-counterparties')">
+            <div class="icon-3d bg-gradient-to-br from-teal-400 to-teal-600 w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ml-1">
+                <i class="fa-solid fa-users-viewfinder"></i>
+            </div>
+            <span class="nav-text opacity-0 w-0 overflow-hidden transition-all duration-300 text-xs uppercase tracking-widest font-black group-hover:opacity-100 group-hover:w-auto ml-2">Counterparties</span>
+        </button>
+
+        <button class="tab-btn flex items-center gap-3 w-full text-left text-slate-600 font-bold p-1 rounded-xl hover:bg-white/80 hover:shadow-md transition-all" onclick="switchTab('tab-assets')">
+            <div class="icon-3d bg-gradient-to-br from-green-400 to-emerald-600 w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ml-1">
+                <i class="fa-solid fa-wallet"></i>
+            </div>
+            <span class="nav-text opacity-0 w-0 overflow-hidden transition-all duration-300 text-xs uppercase tracking-widest font-black group-hover:opacity-100 group-hover:w-auto ml-2">Assets</span>
+        </button>
+
+        <button class="tab-btn flex items-center gap-3 w-full text-left text-slate-600 font-bold p-1 rounded-xl hover:bg-white/80 hover:shadow-md transition-all" onclick="switchTab('tab-chains')">
+            <div class="icon-3d bg-gradient-to-br from-indigo-400 to-indigo-600 w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ml-1">
+                <i class="fa-solid fa-link"></i>
+            </div>
+            <span class="nav-text opacity-0 w-0 overflow-hidden transition-all duration-300 text-xs uppercase tracking-widest font-black group-hover:opacity-100 group-hover:w-auto ml-2">Chains</span>
+        </button>
+
+        <button class="tab-btn flex items-center gap-3 w-full text-left text-slate-600 font-bold p-1 rounded-xl hover:bg-white/80 hover:shadow-md transition-all" onclick="switchTab('tab-transactions')">
+            <div class="icon-3d bg-gradient-to-br from-purple-400 to-fuchsia-600 w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ml-1">
+                <i class="fa-solid fa-list-ul"></i>
+            </div>
+            <span class="nav-text opacity-0 w-0 overflow-hidden transition-all duration-300 text-xs uppercase tracking-widest font-black group-hover:opacity-100 group-hover:w-auto ml-2">Transactions</span>
+        </button>
+
+        <button class="tab-btn flex items-center gap-3 w-full text-left text-slate-600 font-bold p-1 rounded-xl hover:bg-white/80 hover:shadow-md transition-all" onclick="switchTab('tab-balances')">
+            <div class="icon-3d bg-gradient-to-br from-pink-400 to-rose-600 w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ml-1">
+                <i class="fa-solid fa-chart-pie"></i>
+            </div>
+            <span class="nav-text opacity-0 w-0 overflow-hidden transition-all duration-300 text-xs uppercase tracking-widest font-black group-hover:opacity-100 group-hover:w-auto ml-2">Balances</span>
+        </button>
+
+        <button class="tab-btn flex items-center gap-3 w-full text-left text-slate-600 font-bold p-1 rounded-xl hover:bg-white/80 hover:shadow-md transition-all" onclick="switchTab('tab-graph')">
+            <div class="icon-3d bg-gradient-to-br from-cyan-400 to-cyan-600 w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ml-1">
+                <i class="fa-solid fa-project-diagram"></i>
+            </div>
+            <span class="nav-text opacity-0 w-0 overflow-hidden transition-all duration-300 text-xs uppercase tracking-widest font-black group-hover:opacity-100 group-hover:w-auto ml-2">Trace Graph</span>
+        </button>
+
+        <button class="tab-btn flex items-center gap-3 w-full text-left text-slate-600 font-bold p-1 rounded-xl hover:bg-white/80 hover:shadow-md transition-all" onclick="switchTab('tab-aml')">
+            <div class="icon-3d bg-gradient-to-br from-red-400 to-red-600 w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ml-1">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <span class="nav-text opacity-0 w-0 overflow-hidden transition-all duration-300 text-xs uppercase tracking-widest font-black group-hover:opacity-100 group-hover:w-auto ml-2">AML</span>
+        </button>
+
+        <button class="tab-btn flex items-center gap-3 w-full text-left text-slate-600 font-bold p-1 rounded-xl hover:bg-white/80 hover:shadow-md transition-all" onclick="switchTab('tab-georisk')">
+            <div class="icon-3d bg-gradient-to-br from-amber-400 to-orange-600 w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ml-1">
+                <i class="fa-solid fa-earth-americas"></i>
+            </div>
+            <span class="nav-text opacity-0 w-0 overflow-hidden transition-all duration-300 text-xs uppercase tracking-widest font-black group-hover:opacity-100 group-hover:w-auto ml-2">GeoRisk</span>
+        </button>
+
+        <button class="tab-btn flex items-center gap-3 w-full text-left text-slate-600 font-bold p-1 rounded-xl hover:bg-white/80 hover:shadow-md transition-all" onclick="switchTab('tab-intelligence')">
+            <div class="icon-3d bg-gradient-to-br from-slate-600 to-slate-800 w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ml-1">
+                <i class="fa-solid fa-user-secret"></i>
+            </div>
+            <span class="nav-text opacity-0 w-0 overflow-hidden transition-all duration-300 text-xs uppercase tracking-widest font-black group-hover:opacity-100 group-hover:w-auto ml-2">Intelligence</span>
+        </button>
+
+        <button class="tab-btn flex items-center gap-3 w-full text-left text-slate-600 font-bold p-1 rounded-xl hover:bg-white/80 hover:shadow-md transition-all" onclick="switchTab('tab-ai-insights')">
+            <div class="icon-3d bg-gradient-to-br from-violet-400 to-purple-600 w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ml-1">
+                <i class="fa-solid fa-brain"></i>
+            </div>
+            <span class="nav-text opacity-0 w-0 overflow-hidden transition-all duration-300 text-xs uppercase tracking-widest font-black group-hover:opacity-100 group-hover:w-auto ml-2">AI Insights</span>
+        </button>
+
+        <button class="tab-btn flex items-center gap-3 w-full text-left text-slate-600 font-bold p-1 rounded-xl hover:bg-white/80 hover:shadow-md transition-all" onclick="switchTab('tab-report')">
+            <div class="icon-3d bg-gradient-to-br from-rose-400 to-red-600 w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ml-1">
+                <i class="fa-solid fa-file-pdf"></i>
+            </div>
+            <span class="nav-text opacity-0 w-0 overflow-hidden transition-all duration-300 text-xs uppercase tracking-widest font-black group-hover:opacity-100 group-hover:w-auto ml-2">Report</span>
+        </button>
+    </div>
+
+    <!-- Header Panel (Adjusted with left padding) -->
+    <header class="glass-panel pr-6 pl-20 md:pl-24 py-4 flex-shrink-0 z-50 sticky top-0">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div class="flex items-start gap-4">
+                <div class="relative w-14 h-14 bg-white rounded-xl border border-slate-200 flex items-center justify-center shadow-sm">
+                    <i class="fa-solid fa-fingerprint text-blue-600 text-3xl animate-pulse"></i>
+                </div>
+                
+                <div>
+                    <div class="flex items-center gap-3 mb-1">
+                        <div class="flex -space-x-2">
+                            <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-6 h-6 rounded-full bg-white p-1 border border-slate-200 relative z-30 shadow-sm" title="Ethereum" onerror="this.style.display='none'">
+                            <img src="https://cryptologos.cc/logos/polygon-matic-logo.png" class="w-6 h-6 rounded-full bg-white p-1 border border-slate-200 relative z-20 shadow-sm" title="Polygon" onerror="this.style.display='none'">
+                            <img src="https://cryptologos.cc/logos/solana-sol-logo.png" class="w-6 h-6 rounded-full bg-white p-1 border border-slate-200 relative z-10 shadow-sm" title="Solana" onerror="this.style.display='none'">
+                        </div>
+                        <h1 class="text-xl font-mono font-bold text-slate-900 tracking-tight flex items-center gap-2 hover:text-blue-600 cursor-pointer transition" onclick="copyToClipboard('0x742d35Cc6634C0532925a3b844Bc454e4438f44e')">
+                            0x742d35Cc6634C0532925a3b844Bc454e4438f44e <i class="fa-solid fa-copy text-xs text-slate-400"></i>
+                        </h1>
+                    </div>
+                    
+                    <div class="flex items-center gap-4 text-sm font-mono mt-1">
+                        <span class="text-slate-500 uppercase text-[10px] tracking-widest font-bold">NEMESIS ID: NMS-WALLET-ETH-00093231 | SUBJECT WALLET ENTITY</span>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 mt-2 text-[9px] font-bold uppercase tracking-wider font-mono">
+                        <span class="bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded shadow-sm cursor-pointer hover:bg-red-100 transition" onclick="openDossier('geo', 'Sanction Match')">HIGH RISK / LAZARUS LINKED</span>
+                        <span class="bg-slate-100 text-slate-700 border border-slate-300 px-2 py-0.5 rounded shadow-sm">CORPORATE SHELL</span>
+                        <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded shadow-sm">LAYER 4: OBFUSCATION DETECTED</span>
+                        <div class="flex items-center gap-1.5 text-emerald-600 ml-2">
+                            <span class="live-dot"></span> STATUS: ACTIVE
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col items-end gap-3 w-full md:w-auto">
+                <div class="alert-flashing px-5 py-2.5 rounded-lg flex items-center gap-3 w-full md:w-auto shadow-sm cursor-pointer hover:bg-red-50 transition" onclick="openDossier('alert', 'CEX_EXPOSURE')">
+                    <i class="fa-solid fa-building-columns text-2xl"></i>
+                    <div>
+                        <p class="text-[9px] font-black uppercase tracking-widest mb-0.5 font-mono">CEX / CUSTODIAL ALERT</p>
+                        <p class="text-xs font-black tracking-tight">BINANCE HOT WALLET 14</p>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="toggleCurrency()" class="bg-white hover:bg-slate-50 border border-slate-300 text-blue-600 font-mono font-bold py-2 px-4 rounded shadow-sm transition text-[10px] uppercase tracking-widest">
+                        <i class="fa-solid fa-retweet"></i> Toggle USD / Crypto
+                    </button>
+                    <button onclick="switchTab('tab-report')" class="w-full md:w-auto bg-slate-900 hover:bg-slate-800 text-white font-mono font-bold py-2 px-5 rounded shadow-md transition text-[10px] uppercase tracking-widest flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-file-export"></i> Export DOSSIER
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content (Adjusted with left padding for left-nav) -->
+    <main class="flex-grow overflow-y-auto p-4 md:p-6 pl-20 lg:pl-24 relative z-10">
+
+        <!-- =====================================
+             TAB 1: WALLET PROFILE
+        ====================================== -->
+        <div id="tab-profile" class="tab-content active space-y-6 max-w-[1600px] mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Executive Identity Reconstruction -->
+                <div class="data-card lg:col-span-2 border-t-4 border-t-blue-600 doc-style bg-white/90 backdrop-blur-md">
+                    <h2 class="text-lg font-black text-slate-900 uppercase tracking-widest flex items-center gap-2 font-serif border-b border-slate-300 pb-3 mb-4">
+                        Executive Identity Reconstruction
+                    </h2>
+                    <p class="text-sm text-slate-700 font-serif leading-relaxed mb-6 text-justify">
+                        <strong>Summary:</strong> Using Advanced NLP LLM analytics, this wallet functions as a primary Tier-2 consolidation node explicitly tied to state-sponsored operations (APT38). It exhibits high-velocity, automated laundering patterns bridging EVM and non-EVM networks, evading sanctions before executing CEX/Custodial deposits.
+                    </p>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono text-[10px] mb-6">
+                        <div class="bg-slate-50/80 p-3 rounded border border-slate-200">
+                            <span class="text-slate-500 block mb-1">Wallet Type (LLM)</span><span class="text-slate-900 font-bold text-xs block">EOA / Smart Contract</span>
+                        </div>
+                        <div class="bg-slate-50/80 p-3 rounded border border-slate-200">
+                            <span class="text-slate-500 block mb-1">Classification</span><span class="text-red-600 font-bold text-xs block">Mixer / Exchange Exposed</span>
+                        </div>
+                        <div class="bg-slate-50/80 p-3 rounded border border-slate-200">
+                            <span class="text-slate-500 block mb-1">ENS</span><span class="text-slate-900 font-bold text-xs block">lazarus-proxy.eth</span>
+                        </div>
+                        <div class="bg-slate-50/80 p-3 rounded border border-slate-200">
+                            <span class="text-slate-500 block mb-1">Malicious Tag</span><span class="bg-red-600 text-white px-2 py-0.5 rounded inline-block mt-1">YES</span>
+                        </div>
+                    </div>
+
+                    <!-- Chronological Fund Flow (Flip Cards) -->
+                    <h3 class="font-mono text-xs font-bold text-slate-600 uppercase mb-3">Chronological Fund Flow (Advanced Asset Lifecycle)</h3>
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-4 font-mono text-[10px]">
+                        <div class="flip-card cursor-pointer" onclick="openDossier('intel', 'INGRESS')">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front bg-emerald-50/90 border-emerald-200">
+                                    <span class="bg-emerald-600 text-white px-2 py-0.5 rounded text-[8px] mb-2 font-bold">INBOUND</span>
+                                    <i class="fa-solid fa-mask text-2xl text-emerald-700 mb-1"></i>
+                                    <span class="font-bold text-emerald-900">Tornado Cash Router</span>
+                                </div>
+                                <div class="flip-card-back">
+                                    <strong class="text-blue-600 text-xs block mb-1">Obfuscation Entry</strong>
+                                    <span>Type: Internal</span>
+                                    <span>100 ETH deposited to break tracing heuristics.</span>
+                                </div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-arrow-right-long text-blue-400 text-2xl animate-pulse"></i>
+                        
+                        <div class="flip-card cursor-pointer" onclick="openDossier('intel', 'SUBJECT')">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front bg-blue-50/90 border-blue-200">
+                                    <span class="bg-blue-600 text-white px-2 py-0.5 rounded text-[8px] mb-2 font-bold">SUBJECT WALLET</span>
+                                    <i class="fa-solid fa-wallet text-2xl text-blue-700 mb-1"></i>
+                                    <span class="font-bold text-blue-900">0x742d...44e (ETH)</span>
+                                </div>
+                                <div class="flip-card-back">
+                                    <strong class="text-blue-600 text-xs block mb-1">Consolidation</strong>
+                                    <span>Type: Normal</span>
+                                    <span>Automated programmatic aggregation of mixer funds.</span>
+                                </div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-arrow-right-long text-red-400 text-2xl animate-pulse"></i>
+                        
+                        <div class="flip-card cursor-pointer" onclick="openDossier('intel', 'EGRESS')">
+                            <div class="flip-card-inner">
+                                <div class="flip-card-front bg-red-50/90 border-red-200">
+                                    <span class="bg-red-600 text-white px-2 py-0.5 rounded text-[8px] mb-2 font-bold">OUTBOUND</span>
+                                    <i class="fa-solid fa-building-columns text-2xl text-red-700 mb-1"></i>
+                                    <span class="font-bold text-red-900">Binance Hot 14</span>
+                                </div>
+                                <div class="flip-card-back">
+                                    <strong class="text-red-600 text-xs block mb-1">Terminal CEX</strong>
+                                    <span>Type: Token Transfer</span>
+                                    <span>Depositing funds into KYC exchange for fiat off-ramp.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Wallet Metadata -->
+                <div class="data-card border-t-4 border-t-emerald-500 bg-white/90 backdrop-blur-md">
+                    <h2 class="text-xs font-black text-slate-800 uppercase tracking-widest mb-4 border-b border-slate-200 pb-2">Profile Metadata</h2>
+                    <div class="space-y-4 font-mono text-[10px] text-slate-600">
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-500">First Activity</span><span class="text-slate-900 font-bold" id="val-first-activity">...</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-500">Last Activity</span><span class="text-slate-900 font-bold" id="val-last-activity">...</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-500">Total Transactions</span><span class="text-slate-900 font-black" id="val-total-tx">...</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-500">Total Inbound</span><span class="text-emerald-600 font-bold" id="val-total-inbound">...</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-500">Total Outbound</span><span class="text-red-600 font-bold" id="val-total-outbound">...</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-500">Current Balance</span><span class="text-blue-600 font-bold" id="val-net-balance">...</span></div>
+                        <div class="flex justify-between pt-2">
+                            <span class="text-slate-500">Funded By:</span>
+                            <div class="text-right">
+                                <span class="text-purple-600 font-bold cursor-pointer hover:underline" onclick="openDossier('wallet', '0xd90e...31b')">0xd90e...31b (Mixer)</span><br>
+                                <span class="text-[8px]">TX: 0xab8f...9c1a</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interacted With / Clustered -->
+            <div class="data-card p-0 shadow-sm border-slate-200 mt-6 border-t-4 border-t-slate-800 bg-white/90 backdrop-blur-md">
+                <div class="p-4 border-b border-slate-200 bg-slate-50/50 flex justify-between items-center">
+                    <h3 class="text-xs font-black uppercase text-slate-800 tracking-widest"><i class="fa-solid fa-network-wired text-slate-500 mr-2"></i> Interacted With & Clustered Wallets</h3>
+                    <div class="flex gap-2">
+                        <button class="bg-blue-600 text-white px-3 py-1 rounded text-[10px] font-mono shadow-sm">Ethereum</button>
+                        <button class="bg-white border border-slate-300 text-slate-600 px-3 py-1 rounded text-[10px] font-mono hover:bg-slate-50 shadow-sm">Solana</button>
+                        <button class="bg-white border border-slate-300 text-slate-600 px-3 py-1 rounded text-[10px] font-mono hover:bg-slate-50 shadow-sm">Polygon</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="cyber-table whitespace-nowrap w-full">
+                        <thead>
+                            <tr>
+                                <th>Wallet Address</th>
+                                <th>Classification</th>
+                                <th class="text-center">Flow</th>
+                                <th class="text-right">Amount</th>
+                                <th>Chain</th>
+                            </tr>
+                        </thead>
+                        <tbody class="font-mono text-xs">
+                            <tr class="cursor-pointer" onclick="openDossier('wallet', '0x28c...d60')">
+                                <td class="text-blue-600 hover:underline font-bold">0x28c6c06298d514db089934071355e5743bf21d60</td>
+                                <td><span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-[9px] font-bold border border-amber-200">CUSTODIAL (Binance)</span></td>
+                                <td class="text-center text-red-600 font-black"><i class="fa-solid fa-arrow-up"></i> OUTBOUND</td>
+                                <td class="text-right font-black text-slate-900"><span class="val-usd">$1,200,000</span><span class="val-native">400 ETH</span></td>
+                                <td><img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-4 h-4 inline" onerror="this.style.display='none'"> ETH</td>
+                            </tr>
+                            <tr class="cursor-pointer" onclick="openDossier('wallet', '0xd90...31b')">
+                                <td class="text-blue-600 hover:underline font-bold">0xd90e2f925da726b50c4ed8d0fb90ad053324f31b</td>
+                                <td><span class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-[9px] font-bold border border-purple-200">MIXER (Tornado Cash)</span></td>
+                                <td class="text-center text-emerald-600 font-black"><i class="fa-solid fa-arrow-down"></i> INBOUND</td>
+                                <td class="text-right font-black text-slate-900"><span class="val-usd">$10,000,000</span><span class="val-native">3,125 ETH</span></td>
+                                <td><img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-4 h-4 inline" onerror="this.style.display='none'"> ETH</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- =====================================
+             TAB 2: COUNTERPARTIES
+        ====================================== -->
+        <div id="tab-counterparties" class="tab-content space-y-6 max-w-[1600px] mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="data-card border-t-4 border-t-emerald-500 bg-white/90 backdrop-blur-md">
+                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Total Inbound Volume</p>
+                    <p class="font-mono text-3xl font-black text-emerald-600" id="val-large-usd">...</p>
+                    <p class="font-mono text-3xl font-black text-emerald-600 val-native">26,500 ETH</p>
+                </div>
+                <div class="data-card border-t-4 border-t-red-500 bg-white/90 backdrop-blur-md">
+                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Total Outbound Volume</p>
+                    <p class="font-mono text-3xl font-black text-red-600 val-usd">$83,047,109</p>
+                    <p class="font-mono text-3xl font-black text-red-600 val-native">26,047 ETH</p>
+                </div>
+            </div>
+
+            <div class="data-card border-t-4 border-t-purple-500 bg-white/90 backdrop-blur-md">
+                <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4">Counterparty Intelligence</h2>
+                <div class="overflow-x-auto rounded border border-slate-200 shadow-sm">
+                    <table class="cyber-table whitespace-nowrap">
+                        <thead>
+                            <tr>
+                                <th>Date/Time</th>
+                                <th>Network</th>
+                                <th>Tx Hash</th>
+                                <th>Entity / Clustered ID</th>
+                                <th>Wallet Address</th>
+                                <th>Intelligence Details</th>
+                            </tr>
+                        </thead>
+                        <tbody class="font-mono text-xs">
+                            <tr class="cursor-pointer hover:bg-slate-50 transition" onclick="openDossier('intel', 'Counterparty Profile')">
+                                <td class="text-slate-500">2026-05-27 08:14</td>
+                                <td><img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-4 h-4 inline" onerror="this.style.display='none'"> ETH</td>
+                                <td class="text-blue-600">0xab12...89ef</td>
+                                <td><span class="font-bold text-slate-800">CLS-88921 (Binance Hot)</span></td>
+                                <td class="text-slate-600">0x28c...d60</td>
+                                <td class="text-slate-500 text-[10px]">CEX Custodial Cashout endpoint.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- =====================================
+             TAB 3: ASSETS
+        ====================================== -->
+        <div id="tab-assets" class="tab-content space-y-6 max-w-[1600px] mx-auto">
+            <div class="data-card border-t-4 border-t-blue-500 flex flex-col md:flex-row justify-between items-center gap-4 bg-white/90 backdrop-blur-md">
+                <div>
+                    <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest">Global Multi-Chain Portfolio</h2>
+                    <p class="text-[10px] font-mono text-slate-500 mt-1">Tracking all tokens, NFTs, and cross-chain holdings.</p>
+                </div>
+                <div class="flex gap-2 font-mono text-[10px]">
+                    <button class="bg-blue-600 text-white px-3 py-1.5 rounded font-bold shadow-sm">ALL CHAINS</button>
+                    <button class="bg-white text-slate-600 border border-slate-300 px-3 py-1.5 rounded hover:bg-slate-50 shadow-sm">ETH</button>
+                    <button class="bg-white text-slate-600 border border-slate-300 px-3 py-1.5 rounded hover:bg-slate-50 shadow-sm">SOL</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="data-card border border-slate-200 shadow-sm bg-white/90 backdrop-blur-md">
+                    <h3 class="text-xs font-black uppercase text-slate-600 mb-4 border-b border-slate-200 pb-2">Balance Analytics</h3>
+                    <div class="h-64 relative w-full"><canvas id="chartBalances"></canvas></div>
+                </div>
+                <div class="data-card border border-slate-200 shadow-sm bg-white/90 backdrop-blur-md">
+                    <h3 class="text-xs font-black uppercase text-slate-600 mb-4 border-b border-slate-200 pb-2">Holdings Distribution</h3>
+                    <div class="h-64 relative w-full"><canvas id="chartChains"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =====================================
+             TAB 4: CHAINS
+        ====================================== -->
+        <div id="tab-chains" class="tab-content max-w-[1600px] mx-auto">
+            <div class="data-card border-t-4 border-t-indigo-500 bg-white/90 backdrop-blur-md">
+                <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b border-slate-200 pb-2">Supported Blockchain Networks</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="p-4 border border-slate-200 rounded flex flex-col items-center justify-center gap-2 hover:border-blue-400 hover:shadow-md transition cursor-pointer bg-white">
+                        <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-10 h-10" onerror="this.style.display='none'">
+                        <span class="font-bold font-mono text-xs text-slate-700">Ethereum</span>
+                    </div>
+                    <div class="p-4 border border-slate-200 rounded flex flex-col items-center justify-center gap-2 hover:border-blue-400 hover:shadow-md transition cursor-pointer bg-white">
+                        <img src="https://cryptologos.cc/logos/polygon-matic-logo.png" class="w-10 h-10" onerror="this.style.display='none'">
+                        <span class="font-bold font-mono text-xs text-slate-700">Polygon</span>
+                    </div>
+                    <div class="p-4 border border-slate-200 rounded flex flex-col items-center justify-center gap-2 hover:border-blue-400 hover:shadow-md transition cursor-pointer bg-white">
+                        <img src="https://cryptologos.cc/logos/bnb-bnb-logo.png" class="w-10 h-10" onerror="this.style.display='none'">
+                        <span class="font-bold font-mono text-xs text-slate-700">BSC</span>
+                    </div>
+                    <div class="p-4 border border-slate-200 rounded flex flex-col items-center justify-center gap-2 hover:border-blue-400 hover:shadow-md transition cursor-pointer bg-white">
+                        <img src="https://cryptologos.cc/logos/solana-sol-logo.png" class="w-10 h-10" onerror="this.style.display='none'">
+                        <span class="font-bold font-mono text-xs text-slate-700">Solana</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =====================================
+             TAB 5: TRANSACTIONS
+        ====================================== -->
+        <div id="tab-transactions" class="tab-content max-w-[1600px] mx-auto space-y-6">
+            
+            <div class="data-card border-l-4 border-l-blue-600 bg-white/90 backdrop-blur-md shadow-sm">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4 border-b border-slate-200 pb-4 mb-4">
+                    <div>
+                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Total Value Volume Transactions</p>
+                        <div class="flex gap-4">
+                            <span class="font-mono text-lg font-black text-emerald-600">IN: <span class="val-usd">$84.5M</span><span class="val-native">26.5k ETH</span></span>
+                            <span class="font-mono text-lg font-black text-red-600">OUT: <span class="val-usd">$83.0M</span><span class="val-native">26.0k ETH</span></span>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="bg-blue-600 text-white px-3 py-1.5 rounded text-[10px] font-mono font-bold shadow-sm">Multi-Chain</button>
+                        <button class="bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded text-[10px] font-mono hover:bg-slate-50 shadow-sm">Bridging</button>
+                        <button class="bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded text-[10px] font-mono hover:bg-slate-50 shadow-sm">Tokens/NFT</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 font-mono text-[10px] mb-6">
+                    <div class="bg-white p-3 rounded border border-slate-200 shadow-sm flex flex-col items-center"><span class="text-slate-500 font-bold mb-1">SWAPS</span><span class="text-blue-600 font-black text-sm">3,402</span></div>
+                    <div class="bg-white p-3 rounded border border-slate-200 shadow-sm flex flex-col items-center"><span class="text-slate-500 font-bold mb-1">BRIDGES</span><span class="text-indigo-600 font-black text-sm">845</span></div>
+                    <div class="bg-white p-3 rounded border border-slate-200 shadow-sm flex flex-col items-center"><span class="text-slate-500 font-bold mb-1">WRAPS/UNWRAPS</span><span class="text-slate-700 font-black text-sm">1,200</span></div>
+                    <div class="bg-white p-3 rounded border border-slate-200 shadow-sm flex flex-col items-center"><span class="text-slate-500 font-bold mb-1">MIXERS</span><span class="text-purple-600 font-black text-sm">142</span></div>
+                    <div class="bg-white p-3 rounded border border-slate-200 shadow-sm flex flex-col items-center"><span class="text-slate-500 font-bold mb-1">CEX_DEPOSIT</span><span class="text-red-600 font-black text-sm">38</span></div>
+                </div>
+            </div>
+
+            </div>
+        </div>
+
+        <!-- =====================================
+             TAB 6: BALANCES
+        ====================================== -->
+        <div id="tab-balances" class="tab-content max-w-[1600px] mx-auto">
+            <div class="data-card text-center py-32 text-slate-500 font-mono border-dashed border-2 border-slate-300 bg-white/90 backdrop-blur-md">
+                Balances intelligence successfully merged into <a href="#" onclick="switchTab('tab-assets')" class="text-blue-600 font-bold hover:underline">Assets</a> tab.
+            </div>
+        </div>
+
+        <!-- =====================================
+             TAB 7: TRACE GRAPH (Vis.js Enhanced)
+        ====================================== -->
+        <div id="tab-graph" class="tab-content h-full max-w-[1600px] mx-auto space-y-6">
+            <div class="data-card p-4 flex flex-col md:flex-row justify-between items-center gap-4 border-t-4 border-t-blue-600 bg-white/90 backdrop-blur-md shadow-sm">
+                <h2 class="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2"><i class="fa-solid fa-diagram-project text-blue-600"></i> Autonomous Trace Graph</h2>
+                
+                <div class="flex flex-wrap items-center gap-3">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase">Layout:</span>
+                    <select id="graph-layout-selector" onchange="changeGraphLayout()" class="bg-white border border-slate-300 text-slate-800 text-xs font-mono px-3 py-1.5 rounded outline-none focus:border-blue-500 shadow-sm">
+                        <option value="hierarchical_lr">Hierarchical Tree (LR)</option>
+                        <option value="hierarchical_ud">Hierarchical (UD)</option>
+                        <option value="force">Force-Directed Physics</option>
+                    </select>
+                    
+                    <button class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-1.5 rounded text-[10px] uppercase font-bold font-mono transition shadow-sm flex items-center gap-2" onclick="alertAction('Generating AI Report', 'Processing Infographics')"><i class="fa-solid fa-robot"></i> Generate AI Infographics</button>
+                </div>
+            </div>
+            
+            <div class="flex flex-col lg:flex-row gap-4 relative">
+                <div class="flex-grow shadow-sm relative w-full lg:w-3/4">
+                    <div class="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur px-3 py-2 rounded border border-slate-200 text-[10px] font-mono font-bold text-slate-600 shadow-sm flex flex-col gap-1 pointer-events-none">
+                        <div class="flex items-center gap-2 text-blue-600"><i class="fa-solid fa-circle animate-pulse text-[8px]"></i> GRAPH ENGINE ACTIVE</div>
+                        <div class="text-slate-500">Nodes movable | Right-click for options</div>
+                    </div>
+                    <div id="trace-network" class="graph-container h-[700px] bg-white/80 backdrop-blur-md"></div>
+                </div>
+
+                <div class="data-card h-[700px] border border-slate-200 shadow-sm w-full lg:w-1/4 flex flex-col bg-white/90 backdrop-blur-md">
+                    <h3 class="text-xs font-black uppercase text-slate-800 tracking-widest border-b border-slate-200 pb-3 mb-4"><i class="fa-solid fa-palette mr-1 text-slate-500"></i> Color Legends</h3>
+                    <ul class="space-y-3 font-mono text-[10px] text-slate-700 flex-grow">
+                        <li class="flex items-center gap-2"><span class="w-3 h-3 bg-[#ef4444] rounded-full border border-slate-300"></span> Subject Wallet</li>
+                        <li class="flex items-center gap-2"><span class="w-3 h-3 bg-[#3b82f6] rounded-full border border-slate-300"></span> Regular Wallets</li>
+                        <li class="flex items-center gap-2"><span class="w-3 h-3 bg-[#8b5cf6] rounded-full border border-slate-300"></span> Smart Contracts</li>
+                        <li class="flex items-center gap-2"><span class="w-3 h-3 bg-[#f59e0b] rounded-full border border-slate-300"></span> Exchanges / Custodial</li>
+                        <li class="flex items-center gap-2"><span class="w-3 h-3 bg-[#10b981] rounded-full border border-slate-300"></span> DApps</li>
+                        <li class="flex items-center gap-2"><span class="w-3 h-3 bg-[#64748b] rounded-full border border-slate-300"></span> Mixers</li>
+                        <li class="flex items-center gap-2"><span class="w-3 h-3 bg-[#be123c] rounded-full border border-slate-300"></span> High-risk addresses</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- =====================================
+             TAB 8: AML & OBFUSCATION
+        ====================================== -->
+        <div id="tab-aml" class="tab-content space-y-6 max-w-[1600px] mx-auto">
+            <div class="data-card border-t-4 border-t-red-600 bg-white/90 backdrop-blur-md">
+                <h2 class="text-sm font-black text-slate-900 uppercase tracking-widest mb-6">AML / CFT Compliance Report</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="alert-flashing rounded-xl flex flex-col items-center justify-center py-8">
+                        <div class="text-7xl font-black font-mono text-red-600 drop-shadow-sm">94<span class="text-3xl text-red-400">.2</span></div>
+                        <div class="text-xs font-bold uppercase tracking-widest text-red-700 mt-2">Critical AML Risk</div>
+                    </div>
+                    
+                    <div class="col-span-2 bg-white p-5 rounded-xl border border-slate-200 shadow-sm cursor-pointer hover:border-red-400 transition" onclick="openDossier('math', 'Weighted AML Score')">
+                        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-widest border-b border-slate-200 pb-2 mb-4">Risk Exposure Breakdown (Weighted)</h3>
+                        <div class="space-y-3 font-mono text-[10px]">
+                            <div class="flex justify-between items-center"><span class="text-slate-600">Exposure Rate</span><span class="text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded border border-red-200">94.2%</span></div>
+                            <div class="flex justify-between items-center"><span class="text-slate-600">Sanctions Overlap (OFAC)</span><span class="text-red-600 font-bold">Critical (35%)</span></div>
+                            <div class="flex justify-between items-center"><span class="text-slate-600">Mixer Exposure</span><span class="text-red-600 font-bold">High (20%)</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =====================================
+             TAB 9: GEORISK
+        ====================================== -->
+        <div id="tab-georisk" class="tab-content h-full max-w-[1600px] mx-auto space-y-6">
+            <div class="data-card h-[500px] p-0 relative overflow-hidden flex flex-col border-slate-300 border-t-4 border-t-emerald-500 bg-white/90 backdrop-blur-md">
+                <div class="p-4 bg-white/90 backdrop-blur border-b border-slate-200 flex justify-between items-center z-10 absolute top-0 w-full shadow-sm">
+                    <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest"><i class="fa-solid fa-earth-americas text-emerald-500 mr-2"></i> Global GeoRisk Map</h2>
+                </div>
+                
+                <div class="flex-grow bg-[#e2e8f0]/50 relative overflow-hidden mt-[50px]">
+                    <div class="absolute inset-0 opacity-40" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg'); background-size: cover; background-position: center; filter: invert(0.2) sepia(1) hue-rotate(180deg) saturate(100%);"></div>
+                    
+                    <div class="absolute top-[35%] left-[75%] group cursor-pointer z-20" onclick="openDossier('geo', 'DPRK Node')">
+                        <div class="w-3 h-3 bg-red-500 rounded-full animate-ping absolute"></div>
+                        <div class="w-3 h-3 bg-red-600 rounded-full relative z-10 shadow-[0_0_10px_rgba(220,38,38,0.5)] border border-white"></div>
+                        <div class="hidden group-hover:block bg-white border border-red-200 text-[10px] font-mono p-3 rounded mt-2 absolute top-2 w-64 z-30 shadow-xl">
+                            <strong class="text-red-700 block mb-1 text-xs">Primary Operations: DPRK</strong>
+                            <span class="text-slate-600">IP: <span class="text-slate-900 font-bold">175.45.176.x</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =====================================
+             TAB 10: INTELLIGENCE
+        ====================================== -->
+        <div id="tab-intelligence" class="tab-content max-w-[1600px] mx-auto space-y-6">
+            <div class="data-card p-0 shadow-sm border-slate-200 mt-6 border-t-4 border-t-slate-800 bg-white/90 backdrop-blur-md">
+                <div class="p-4 border-b border-slate-200 bg-slate-50/80 flex justify-between items-center">
+                    <h3 class="text-xs font-black uppercase text-slate-800 tracking-widest"><i class="fa-solid fa-list text-slate-500 mr-2"></i> Transaction History (Attributions & Patterns)</h3>
+                    <div class="flex gap-2">
+                        <input type="text" placeholder="Search Hash/Entity..." class="border border-slate-300 rounded px-2 py-1 text-xs font-mono outline-none focus:border-blue-500 shadow-sm">
+                        <button class="bg-slate-800 text-white px-3 py-1 rounded text-xs font-mono font-bold shadow-sm"><i class="fa-solid fa-filter"></i></button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="cyber-table whitespace-nowrap">
+                        <thead>
+                            <tr>
+                                <th>Date/Time (UTC)</th>
+                                <th>Type of Transaction Correlation</th>
+                                <th>TX Hash</th>
+                                <th>From Wallet(Entity)</th>
+                                <th>To Wallet(Entity)</th>
+                                <th>To Receiver Entity</th>
+                                <th class="text-right">Amount</th>
+                                <th>Transaction Type</th>
+                                <th>Behavioral Cluster</th>
+                                <th>Clustered address{root}ENTITY</th>
+                                <th>Confidence</th>
+                                <th>Transaction Attributions</th>
+                                <th>Transaction intelligence</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tx-history-body" class="font-mono text-[10px]">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="data-card border-t-4 border-t-slate-800 bg-white/90 backdrop-blur-md">
+                <h2 class="text-sm font-black text-slate-900 uppercase tracking-widest mb-6 flex items-center gap-2"><i class="fa-solid fa-user-secret text-slate-800"></i> OSINT & Reconnaissance Summary</h2>
+                
+                <div class="bg-amber-50 border border-amber-200 p-4 rounded mb-6 font-mono text-xs text-amber-900 shadow-sm">
+                    <strong>Custodial Wallet Entry:</strong> Binance Deposit Address 0x28c6c06298d514db089934071355e5743bf21d60
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 font-mono text-xs">
+                    <div class="bg-white p-4 rounded border border-slate-200 shadow-sm cursor-pointer hover:border-blue-400 transition" onclick="openDossier('intel', 'Telegram Signal')">
+                        <span class="text-slate-500 font-bold block mb-1">Social Media</span>
+                        <span class="text-blue-600 font-bold block">Telegram: @laundromat_rx</span>
+                    </div>
+                    <div class="bg-white p-4 rounded border border-slate-200 shadow-sm cursor-pointer hover:border-red-400 transition" onclick="openDossier('intel', 'Darknet Signal')">
+                        <span class="text-slate-500 font-bold block mb-1">Darknet</span>
+                        <span class="text-red-600 font-bold block">XSS.is / Exploit.in</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =====================================
+             TAB 11: AI INSIGHTS
+        ====================================== -->
+        <div id="tab-ai-insights" class="tab-content max-w-[1600px] mx-auto">
+            <div class="data-card border-t-4 border-t-purple-600 bg-white/90 backdrop-blur-md shadow-sm doc-style">
+                <div class="flex justify-between items-center border-b border-slate-300 pb-4 mb-6">
+                    <h2 class="text-lg font-black text-slate-900 uppercase tracking-widest flex items-center gap-3 font-serif"><i class="fa-solid fa-brain text-purple-600 text-xl"></i> AI Insights Report</h2>
+                    <button onclick="switchTab('tab-report')" class="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2 rounded text-xs font-bold font-mono uppercase tracking-widest transition shadow-md"><i class="fa-solid fa-file-export mr-2"></i> Export</button>
+                </div>
+                
+                <div class="space-y-6 font-serif text-sm text-slate-700 leading-relaxed">
+                    <p><strong>Summary:</strong> The "discontinuity problem" represents the holy grail of modern crypto forensics. When an asset moves from Ethereum, enters a decentralized bridge or a mixer, and emerges on Solana, the native ledger link is physically and cryptographically severed.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- =====================================
+             TAB 12: REPORT
+        ====================================== -->
+        <div id="tab-report" class="tab-content bg-slate-200/80 backdrop-blur-md p-4 md:p-8 rounded-xl overflow-y-auto max-h-[85vh]">
+            <div class="max-w-[8.5in] mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 bg-white p-4 rounded-lg shadow-sm border border-slate-300">
+                <div class="flex-grow">
+                    <p class="text-slate-800 text-sm font-bold flex items-center gap-2"><i class="fa-solid fa-file-contract text-blue-600 text-xl"></i> Law Enforcement Evidentiary Document</p>
+                    <div class="mt-2 flex items-center gap-2 font-mono text-xs">
+                        <label for="zip-code" class="text-slate-500 font-bold">Enter Client Zip Code:</label>
+                        <input type="text" id="zip-code" placeholder="e.g., 90210" class="border border-slate-300 rounded px-2 py-1 outline-none w-24 focus:border-blue-500 transition" onkeyup="updateZipCode()">
+                    </div>
+                </div>
+                <button onclick="downloadReport()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-6 rounded-lg transition text-xs uppercase tracking-widest shadow-md flex items-center gap-2 w-full md:w-auto justify-center">
+                    <i class="fa-solid fa-download"></i> Export as PDF
+                </button>
+            </div>
+
+            <!-- THE ACTUAL PRINTABLE CONTAINER -->
+            <div id="printable-area" class="print-doc-container active relative bg-white shadow-xl p-8">
+                <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; margin: auto; width: 60%; opacity: 0.03; pointer-events: none; z-index: 0; background-image: url('https://lionsgate.network/wp-content/uploads/2025/09/cropped-lionsgate-logo-head.png'); background-repeat: no-repeat; background-position: center; background-size: contain;"></div>
+                
+                <div style="position: relative; z-index: 10;">
+                    <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px;">
+                        <img src="https://lionsgate.network/wp-content/uploads/2025/09/cropped-lionsgate-logo-head.png" alt="LIONSGATE" style="height: 60px; margin: 0 auto 10px auto; filter: grayscale(100%);" onerror="this.style.display='none'">
+                        <h1 style="font-size: 24px; font-weight: 900; text-transform: uppercase; margin: 0; letter-spacing: 2px; color: #000;">Cyber Intelligence & Forensic Report</h1>
+                        <p style="font-size: 12px; font-family: monospace; margin-top: 15px; color: #000;">NEMESIS ID: <span style="font-weight: bold;">NMS-WALLET-ETH-00093231</span> | DATE: May 27, 2026</p>
+                    </div>
+
+                    <h2 style="font-size: 16px; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-bottom: 10px;">Executive Summary & Recovery Probability</h2>
+                    <p style="font-size: 12px; margin-bottom: 10px;">Lionsgate Network's NEMESIS engine has successfully mapped the omni-chain flow of assets. The deterministic algorithm resolved the terminal destination of funds to a KYC-regulated Centralized Exchange (CEX).</p>
+                    <div style="background: #f8fafc; padding: 10px; border-left: 3px solid #000; margin-bottom: 15px; font-size: 12px;">
+                        <strong>Recovery Probability: 98%</strong><br>
+                        Terminal Custodial Entity Identified: <strong>Binance Hot Wallet 14</strong>
+                    </div>
+
+                    <div class="page-break"></div>
+
+                    <h2 style="font-size: 16px; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-bottom: 10px;">Crypto Victims Guidelines</h2>
+                    <div style="background: #f8fafc; padding: 15px; border: 1px solid #ccc; font-family: monospace; font-size: 11px; margin-bottom: 20px;">
+                        <strong>Local & Federal Field Office Mapping [Target Zip: <span id="display-zip" style="color: red; font-weight: bold;">Not Entered</span>]:</strong><br><br>
+                        > <strong>Federal Bureau of Investigation (Cyber Division):</strong> www.ic3.gov | Phone: (202) 324-3000<br>
+                        > <strong>US Secret Service (Digital Asset Task Force):</strong> www.secretservice.gov<br>
+                        > <strong>State/Local Police Dept (Cybercrimes Unit):</strong> Contact non-emergency dispatch utilizing the provided ZIP code logic.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+    </div>
+
+    <script>
+        window.NEMESIS_ENV = { APP_NAME: "nemesis-platform", APP_MODE: "production" };
+        let networkGraph = null;
+
+        function detectIdChainID() {
+            const CHAIN_LOGOS = {
+                'ETH': '<img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-full h-full object-contain">',
+                'BTC': '<img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" class="w-full h-full object-contain">',
+                'TRX': '<img src="https://cryptologos.cc/logos/tron-trx-logo.png" class="w-full h-full object-contain">',
+                'SOL': '<img src="https://cryptologos.cc/logos/solana-sol-logo.png" class="w-full h-full object-contain">',
+                'XRP': '<img src="https://cryptologos.cc/logos/xrp-xrp-logo.png" class="w-full h-full object-contain">',
+                'STELLAR': '<img src="https://cryptologos.cc/logos/stellar-xlm-logo.png" class="w-full h-full object-contain">',
+                'UNKNOWN': '<i class="fa-solid fa-link text-slate-400 text-sm"></i>'
+            };
+            let address = document.getElementById('id-search-input').value.trim();
+            let logoContainer = document.getElementById('id-chain-logo-container');
+            if(!address) {
+                logoContainer.innerHTML = CHAIN_LOGOS['UNKNOWN'];
+                return;
+            }
+            if (address.length === 42 && address.toLowerCase().startsWith("0x")) {
+                logoContainer.innerHTML = CHAIN_LOGOS['ETH'];
+            } else if (address.startsWith("T") && address.length === 34) {
+                logoContainer.innerHTML = CHAIN_LOGOS['TRX'];
+            } else if (/^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/.test(address) || /^bc1[ac-hj-np-z02-9]{11,71}$/.test(address)) {
+                logoContainer.innerHTML = CHAIN_LOGOS['BTC'];
+            } else if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address) && !address.toLowerCase().startsWith("0x") && !address.toLowerCase().startsWith("bc1")) {
+                logoContainer.innerHTML = CHAIN_LOGOS['SOL'];
+            } else if (/^r[1-9A-HJ-NP-Za-km-z]{24,34}$/.test(address)) {
+                logoContainer.innerHTML = CHAIN_LOGOS['XRP'];
+            } else if (address.startsWith("G") && address.length === 56) {
+                logoContainer.innerHTML = CHAIN_LOGOS['STELLAR'];
+            } else {
+                logoContainer.innerHTML = CHAIN_LOGOS['UNKNOWN'];
+            }
+        }
+
+        async function executeNemesisID() {
+            let address = document.getElementById('id-search-input').value.trim();
+            if(!address) {
+                alert("Please enter a wallet address");
+                return;
+            }
+            
+            triggerLoader("Reconstructing Profile & Gathering Intel...");
+            
+            try {
+                const backendUrl = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') ? '' : 'https://nemesis-local.onrender.com';
+                const response = await fetch(`${backendUrl}/api/nemesis_id/profile/${address}`);
+                if (!response.ok) throw new Error("Backend connection failed");
+                const result = await response.json();
+                const data = result.data || result;
+                
+                // Store globally for Side Panel Dossier generator
+                window.profileData = data;
+                
+                document.getElementById('id-landing').classList.add('hidden');
+                let dash = document.getElementById('id-dashboard');
+                dash.classList.remove('hidden');
+                dash.classList.add('flex');
+                
+                // Populate Address
+                let addrFields = document.querySelectorAll("h1.font-mono");
+                if(addrFields.length > 0) {
+                    addrFields[0].innerHTML = (data.address || address) + ` <i class="fa-solid fa-copy text-xs text-slate-400"></i>`;
+                }
+                
+                // Set USD/Native Values
+                if(document.getElementById("val-total-inbound")) document.getElementById("val-total-inbound").innerText = "$" + (data.total_inbound || 0).toLocaleString();
+                if(document.getElementById("val-total-outbound")) document.getElementById("val-total-outbound").innerText = "$" + (data.total_outbound || 0).toLocaleString();
+                if(document.getElementById("val-net-balance")) document.getElementById("val-net-balance").innerText = "$" + (data.balance || 0).toLocaleString();
+                if(document.getElementById("val-large-usd")) document.getElementById("val-large-usd").innerText = "$" + (data.total_inbound || 0).toLocaleString();
+                
+                if(document.getElementById("val-total-tx")) document.getElementById("val-total-tx").innerText = (data.total_transactions || "0");
+                if(document.getElementById("val-first-activity")) document.getElementById("val-first-activity").innerText = (data.first_activity || "N/A");
+                if(document.getElementById("val-last-activity")) document.getElementById("val-last-activity").innerText = (data.last_activity || "N/A");
+                
+                // Set AI Insights & Headers
+                let aiSummaryNodes = document.querySelectorAll(".text-justify");
+                if(aiSummaryNodes.length > 0 && data.ai_summary) {
+                    aiSummaryNodes[0].innerHTML = `<strong>Summary:</strong> ${data.ai_summary}`;
+                }
+                
+                // Update Graph if available
+                if (data.graph && data.graph.nodes) {
+                    window.NEMESIS_GRAPH_DATA = data.graph;
+                }
+                
+                // Fetch Transaction History
+                try {
+                    const txResponse = await fetch(`${backendUrl}/api/nemesis_id/tx_history/${address}`);
+                    if (txResponse.ok) {
+                        const txData = await txResponse.json();
+                        const txBody = document.getElementById('tx-history-body');
+                        if (txBody) {
+                            txBody.innerHTML = '';
+                            if (txData.transactions && txData.transactions.length > 0) {
+                                txData.transactions.forEach(tx => {
+                                    let html = `<tr class="cursor-pointer hover:bg-blue-50 transition" onclick="openDossier('tx', '${tx.tx}')">
+                                        <td class="text-slate-600">${tx.timestamp || 'Unknown'}</td>
+                                        <td><span class="bg-indigo-100 text-indigo-800 border border-indigo-300 px-1.5 py-0.5 rounded font-bold">${tx.intent_action || 'TRANSFER'}</span></td>
+                                        <td class="text-blue-600 hover:underline" onclick="event.stopPropagation(); verifyOnExplorer('${tx.tx}')">${(tx.tx || '').substring(0,6)}...${(tx.tx || '').substring((tx.tx || '').length-4)}</td>
+                                        <td class="font-bold text-slate-800">${(tx.from || '').substring(0,5)}...<br><span class="text-[9px] font-normal text-slate-500">${tx.sender_entity || 'Unknown'}</span></td>
+                                        <td class="font-bold text-slate-800">${(tx.to || '').substring(0,5)}...<br><span class="text-[9px] font-normal text-slate-500">${tx.receiver_entity || 'Unknown'}</span></td>
+                                        <td class="text-amber-700 font-bold">${tx.receiver_entity || 'Unknown'}</td>
+                                        <td class="text-right font-black text-slate-900"><span class="val-usd text-red-600">${tx.amount || 0} ${tx.ticker || ''}</span></td>
+                                        <td><span class="bg-amber-100 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded font-bold">${tx.edge_type || 'TRANSFERS'}</span></td>
+                                        <td class="text-slate-700 font-bold">${tx.cluster || 'N/A'}</td>
+                                        <td class="text-slate-600">${tx.origin_seed || 'N/A'}</td>
+                                        <td><span class="text-emerald-600 font-black">${tx.confidence || '90%'}</span></td>
+                                        <td class="text-slate-600">${tx.attributions || 'N/A'}</td>
+                                        <td class="text-slate-500 italic">${tx.intelligence || 'Standard transfer behavior detected'}</td>
+                                    </tr>`;
+                                    txBody.innerHTML += html;
+                                });
+                            } else {
+                                txBody.innerHTML = `<tr><td colspan="13" class="text-center py-4 text-slate-500 font-bold">No transaction history found for this address.</td></tr>`;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error("Failed to fetch tx history:", e);
+                }
+                
+                
+            } catch (err) {
+                console.error(err);
+                alert("Failed to load dossier from backend. Showing offline profile.");
+                setTimeout(() => {
+                    document.getElementById('id-landing').classList.add('hidden');
+                    let dash = document.getElementById('id-dashboard');
+                    dash.classList.remove('hidden');
+                    dash.classList.add('flex');
+                    let addrFields = document.querySelectorAll("h1.font-mono");
+                    if(addrFields.length > 0) {
+                        addrFields[0].innerHTML = address + ` <i class="fa-solid fa-copy text-xs text-slate-400"></i>`;
+                    }
+                }, 800);
+            }
+        }
+
+        // Init UI
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.getElementById('global-loader').style.opacity = '0';
+                setTimeout(() => document.getElementById('global-loader').style.display = 'none', 400);
+            }, 1000);
+            
+            document.addEventListener('click', (e) => {
+                if(!e.target.closest('#custom-context-menu')) closeContextMenu();
+            });
+            
+            initQuantumBackground();
+        });
+
+        // Loaders
+        function triggerLoader(text = "Fusing Multi-Domain Intelligence...") {
+            const loader = document.getElementById('global-loader');
+            document.getElementById('loader-text').innerText = text;
+            loader.style.display = 'flex';
+            setTimeout(() => loader.style.opacity = '1', 10);
+            setTimeout(() => { loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 400); }, 1200);
+        }
+
+        // Tabs
+        function switchTab(tabId) {
+            triggerLoader("Accessing Secure Sector Module...");
+            setTimeout(() => {
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+                
+                const btns = document.querySelectorAll('.tab-btn');
+                for(let btn of btns) {
+                    if(btn.getAttribute('onclick').includes(tabId)) {
+                        btn.classList.add('active');
+                        break;
+                    }
+                }
+                if(tabId === 'tab-graph' && !networkGraph) initTraceGraph();
+            }, 300);
+        }
+
+        // Toggle Nav
+        let isNavLocked = false;
+        function toggleNavLock() {
+            const nav = document.getElementById('quantum-nav');
+            const icon = document.getElementById('nav-toggle-icon');
+            if (isNavLocked) {
+                nav.classList.remove('w-64');
+                nav.classList.add('w-16');
+                icon.classList.remove('fa-compress');
+                icon.classList.add('fa-expand');
+                isNavLocked = false;
+            } else {
+                nav.classList.remove('w-16');
+                nav.classList.add('w-64');
+                icon.classList.remove('fa-expand');
+                icon.classList.add('fa-compress');
+                isNavLocked = true;
+            }
+        }
+
+        // Currency Toggle
+        function toggleCurrency() {
+            if(document.body.classList.contains('show-usd')) {
+                document.body.classList.remove('show-usd');
+                document.body.classList.add('show-native');
+            } else {
+                document.body.classList.remove('show-native');
+                document.body.classList.add('show-usd');
+            }
+        }
+
+        // Utilities
+        function verifyOnExplorer(address) { window.open(`https://etherscan.io/address/${address}`, '_blank'); }
+        function copyToClipboard(text) { navigator.clipboard.writeText(text); alert("Address copied to secure clipboard."); }
+        function updateZipCode() {
+            const val = document.getElementById('zip-code').value;
+            document.getElementById('display-zip').innerText = val || "Not Entered";
+            document.getElementById('display-zip').style.color = val ? "black" : "red";
+        }
+
+        // Side Panels (Data Dossier Generation)
+        function openSidePanel(contentHtml) { document.getElementById('side-panel-content').innerHTML = contentHtml; document.getElementById('side-panel').classList.add('open'); }
+        function closeSidePanel() { document.getElementById('side-panel').classList.remove('open'); }
+        
+        function openContextMenu(x, y) { const menu = document.getElementById('custom-context-menu'); menu.style.display = 'block'; menu.style.left = x + 'px'; menu.style.top = y + 'px'; }
+        function closeContextMenu() { document.getElementById('custom-context-menu').style.display = 'none'; }
+        function alertAction(type, msg) { triggerLoader(msg); closeContextMenu(); }
+
+        function openDossier(type, context) {
+            triggerLoader(`Generating Nemesis ID Profile...`);
+            
+            // Mock dynamic data based on context
+            let risk = "HIGH RISK";
+            let riskClass = "bg-red-50 text-red-600 border-red-300";
+            let volume = "N/A";
+            let chain = "ETHEREUM";
+            let labels = ["Seed Wallet", "Launderer"];
+            let entityType = "Externally Owned Account";
+            
+            if (context.includes('Mixer') || context.includes('Tornado')) {
+                risk = "CRITICAL";
+                volume = "N/A";
+                labels = ["Mixer", "Sanctioned"];
+                entityType = "Smart Contract";
+            } else if (context.includes('Bridge')) {
+                risk = "MEDIUM";
+                riskClass = "bg-yellow-50 text-yellow-600 border-yellow-300";
+                volume = "N/A";
+                chain = "CROSS-CHAIN";
+                labels = ["Infrastructure", "Bridge"];
+                entityType = "Smart Contract";
+            } else if (context.includes('Binance')) {
+                risk = "LOW";
+                riskClass = "bg-green-50 text-green-600 border-green-300";
+                volume = "N/A";
+                labels = ["CEX", "Custodial", "KYC Required"];
+                entityType = "Exchange Hot Wallet";
+            }
+
+            let labelsHtml = labels.map(l => `<span class="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-bold text-slate-600">${l}</span>`).join('');
+
+            setTimeout(() => {
+                let html = `
+                    <div class="flex items-center gap-3 mb-6 border-b border-slate-200 pb-4">
+                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-black text-xl border-2 border-blue-200 shadow-sm">
+                            <i class="fa-solid fa-fingerprint"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-black tracking-widest text-slate-900 font-cyber">NEMESIS ID</h2>
+                            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest font-mono">${entityType}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6 flex justify-between items-center">
+                        <span class="text-xs font-black text-slate-700 uppercase tracking-widest">Risk Assessment</span>
+                        <span class="border px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest animate-pulse shadow-sm ${riskClass}">${risk}</span>
+                    </div>
+                    
+                    <div class="bg-slate-50/80 backdrop-blur-sm rounded-lg p-4 border border-slate-200 mb-6 shadow-sm">
+                        <div class="flex justify-between py-2 border-b border-slate-200/60"><span class="text-slate-500 font-bold text-xs uppercase">Address / ID</span><span class="font-mono text-xs font-bold text-slate-900 truncate w-48 text-right">${context.split('\\n')[1] || context}</span></div>
+                        <div class="flex justify-between py-2 border-b border-slate-200/60"><span class="text-slate-500 font-bold text-xs uppercase">Chain / Network</span><span class="font-black text-xs text-blue-600 uppercase">${chain}</span></div>
+                        <div class="flex justify-between py-2 border-b border-slate-200/60"><span class="text-slate-500 font-bold text-xs uppercase">Total Volume (USD)</span><span class="font-mono font-black text-xs text-slate-900">${volume}</span></div>
+                        <div class="flex justify-between py-2"><span class="text-slate-500 font-bold text-xs uppercase">Last Active</span><span class="font-mono text-xs font-bold text-slate-900">2026-07-03</span></div>
+                    </div>
+                    
+                    ${profileData.threat_intel ? `
+                    <div class="bg-red-50/80 backdrop-blur-sm rounded-lg p-4 border border-red-200 mb-6 shadow-sm">
+                        <h3 class="text-xs font-black text-red-800 uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Global Sanctions & Threat Intel
+                        </h3>
+                        <div class="flex flex-col gap-2 font-mono text-[10px] text-slate-700">
+                            <div class="flex justify-between border-b border-red-100 pb-1">
+                                <span class="font-bold uppercase text-red-600">Source Database</span>
+                                <span class="font-black bg-red-100 text-red-800 px-2 rounded">${profileData.threat_intel.source}</span>
+                            </div>
+                            <div class="flex justify-between border-b border-red-100 pb-1">
+                                <span class="font-bold uppercase text-red-600">Registered Entity</span>
+                                <span class="font-black text-slate-900">${profileData.threat_intel.entity_name}</span>
+                            </div>
+                            <div class="flex justify-between border-b border-red-100 pb-1">
+                                <span class="font-bold uppercase text-red-600">Severity</span>
+                                <span class="font-black text-red-600">${profileData.threat_intel.severity}</span>
+                            </div>
+                            <div class="mt-1 text-red-700 text-[9px] italic border-l-2 border-red-400 pl-2">
+                                "${profileData.threat_intel.description}"
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <h3 class="text-[10px] font-black text-slate-800 mb-3 uppercase tracking-widest border-b border-slate-200 pb-1">Identified Labels</h3>
+                    <div class="flex flex-wrap gap-2 mb-8">
+                        ${labelsHtml}
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black tracking-widest uppercase py-3 rounded text-xs shadow-md transition-colors flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-network-wired"></i> Launch Deep Trace
+                        </button>
+                        <button class="w-full bg-slate-800 hover:bg-slate-900 text-white font-black tracking-widest uppercase py-3 rounded text-xs shadow-md transition-colors flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-file-pdf"></i> Generate PDF Dossier
+                        </button>
+                    </div>
+                `;
+                openSidePanel(html);
+            }, 600);
+        }
+
+        // PDF Generation
+        function downloadReport() {
+            const element = document.getElementById('printable-area');
+            const opt = { margin: 0, filename: 'Lionsgate_Nemesis_Dossier.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        // Vis.js Trace Graph Init (Tree Layout + Color Coding + Arrows)
+        function initTraceGraph() {
+            const container = document.getElementById('trace-network');
+            
+            const nodes = new vis.DataSet([
+                { id: 1, label: 'SUBJECT EOA\n0x742...', color: { background: '#ef4444', border: '#b91c1c' }, font: { color: '#ffffff' }, size: 30, level: 2 },
+                { id: 2, label: 'Tornado Cash\nMixer', color: { background: '#64748b', border: '#475569' }, font: { color: '#ffffff' }, size: 25, level: 1 },
+                { id: 3, label: 'Stargate Router\nBridge/Contract', color: { background: '#8b5cf6', border: '#6d28d9' }, font: { color: '#ffffff' }, size: 25, level: 3 },
+                { id: 4, label: 'Binance Hot 14\nCEX/Custodial', color: { background: '#f59e0b', border: '#d97706' }, font: { color: '#ffffff' }, size: 35, level: 4 }
+            ]);
+
+            const edges = new vis.DataSet([
+                { id: 'e1', from: 2, to: 1, label: '🟢 100 ETH', font: { color: '#1e293b', align: 'horizontal', background: 'rgba(255,255,255,0.8)' }, width: 3, color: { color: '#ef4444' } },
+                { id: 'e3', from: 1, to: 3, label: '🟣 5.5M USDC', font: { color: '#1e293b', align: 'horizontal', background: 'rgba(255,255,255,0.8)' }, width: 3, color: { color: '#8b5cf6' } },
+                { id: 'e4', from: 1, to: 4, label: '🟠 400 ETH', font: { color: '#1e293b', align: 'horizontal', background: 'rgba(255,255,255,0.8)' }, width: 4, color: { color: '#f59e0b' } }
+            ]);
+
+            const data = { nodes: nodes, edges: edges };
+            
+            const options = {
+                layout: { hierarchical: { enabled: true, direction: 'LR', sortMethod: 'directed', levelSeparation: 250 } },
+                physics: { enabled: false },
+                interaction: { hover: true, tooltipDelay: 200, dragNodes: true },
+                edges: { smooth: { type: 'cubicBezier', forceDirection: 'horizontal', roundness: 0.4 }, arrows: { to: { enabled: true, scaleFactor: 1.2, type: 'arrow' } } },
+                nodes: { shape: 'dot', borderWidth: 2, shadow: true }
+            };
+
+            networkGraph = new vis.Network(container, data, options);
+
+            networkGraph.on("oncontext", function (params) {
+                params.event.preventDefault();
+                const nodeId = this.getNodeAt(params.pointer.DOM);
+                if (nodeId) openContextMenu(params.pointer.DOM.x + container.getBoundingClientRect().left, params.pointer.DOM.y + container.getBoundingClientRect().top);
+            });
+
+            networkGraph.on("click", function (params) {
+                if (params.nodes.length > 0) openDossier('graph_node', nodes.get(params.nodes[0]).label);
+                else if (params.edges.length > 0) openDossier('graph_edge', edges.get(params.edges[0]).label);
+                else closeSidePanel();
+            });
+
+            let offset = 0;
+            function animateEdges() {
+                offset -= 1;
+                const e = edges.get();
+                const updates = e.map(edge => ({ id: edge.id, dashes: [5, 5], dashOffset: offset }));
+                edges.update(updates);
+                requestAnimationFrame(animateEdges);
+            }
+            animateEdges();
+        }
+
+        // Web3GL Quantum Background
+        function initQuantumBackground() {
+            const canvas = document.getElementById('quantum-bg');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let particles = [];
+
+            function resize() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * width;
+                    this.y = Math.random() * height;
+                    this.vx = (Math.random() - 0.5) * 1.0;
+                    this.vy = (Math.random() - 0.5) * 1.0;
+                    this.radius = Math.random() * 2 + 1;
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    if (this.x < 0 || this.x > width) this.vx *= -1;
+                    if (this.y < 0 || this.y > height) this.vy *= -1;
+                }
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(37, 99, 235, 0.4)';
+                    ctx.fill();
+                }
+            }
+
+            for (let i = 0; i < 90; i++) {
+                particles.push(new Particle());
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+                
+                for (let i = 0; i < particles.length; i++) {
+                    particles[i].update();
+                    particles[i].draw();
+                    
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (dist < 130) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(37, 99, 235, ${0.15 - dist/800})`;
+                            ctx.lineWidth = 1;
+                            ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        // NEMESIS ID AI extraction simulation logic
+        window.handleIdFileDrop = function(e) {
+            e.preventDefault();
+            const zone = document.getElementById('id-file-upload-zone');
+            zone.classList.remove('bg-blue-50', 'border-blue-500');
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                simulateIdExtraction(e.dataTransfer.files[0].name);
+            }
+        };
+
+        window.handleIdFileSelect = function(e) {
+            if (e.target.files && e.target.files.length > 0) {
+                simulateIdExtraction(e.target.files[0].name);
+            }
+        };
+
+        function simulateIdExtraction(filename) {
+            // Hide input UI, show processing
+            document.getElementById('id-file-upload-zone').classList.add('hidden');
+            document.getElementById('id-input-container').classList.add('hidden');
+            document.getElementById('id-execute-btn').classList.add('hidden');
+            
+            const aiContainer = document.getElementById('id-ai-processing-container');
+            aiContainer.classList.remove('hidden');
+            aiContainer.classList.add('flex');
+            
+            const logEl = document.getElementById('id-processing-log');
+            const logs = [
+                "> Analyzing structural data from " + filename + "...",
+                "> NLP parsing intelligence narrative...",
+                "> Extracting IOCs and wallet addresses...",
+                "> Correlating with Master Entity Graph...",
+                "> Generating Trace Goals..."
+            ];
+            
+            let logIdx = 0;
+            const logInterval = setInterval(() => {
+                logIdx++;
+                if (logIdx < logs.length) {
+                    logEl.innerText = logs[logIdx];
+                } else {
+                    clearInterval(logInterval);
+                    finishIdExtraction();
+                }
+            }, 800);
+        }
+
+        function finishIdExtraction() {
+            document.getElementById('id-ai-processing-container').classList.remove('flex');
+            document.getElementById('id-ai-processing-container').classList.add('hidden');
+            
+            const summary = document.getElementById('id-extracted-summary');
+            summary.classList.remove('hidden');
+            summary.classList.add('block');
+            
+            const executeBtn = document.getElementById('id-execute-btn');
+            executeBtn.classList.remove('hidden');
+            executeBtn.innerHTML = '<div class="absolute inset-0 w-1/4 h-full bg-white/20 skew-x-12 -translate-x-full hover:animate-[shimmer_1.5s_infinite]"></div><i class="fa-solid fa-play text-emerald-400"></i> <span class="tracking-widest font-mono">EXECUTE IDENTITY RECONSTRUCTION</span>';
+            executeBtn.classList.remove('bg-slate-900');
+            executeBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            
+            const content = document.getElementById('id-summary-content');
+            content.innerHTML = `
+                <div class="col-span-2 flex justify-between items-center border-b border-blue-100 pb-2">
+                    <span class="text-slate-500 font-bold">PRIMARY TARGET:</span>
+                    <span class="text-blue-700 font-black bg-blue-100/50 px-2 rounded">0x742d35Cc6634C0532925a3b844Bc454e4438f44e</span>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <span class="text-slate-400 text-[9px] uppercase tracking-wider">Network</span>
+                    <span class="font-bold flex items-center gap-1"><i class="fa-brands fa-ethereum text-indigo-500"></i> Ethereum (EVM)</span>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <span class="text-slate-400 text-[9px] uppercase tracking-wider">Known Aliases</span>
+                    <span class="font-bold text-slate-800">Lazarus Group (Suspected)</span>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <span class="text-slate-400 text-[9px] uppercase tracking-wider">Initial Seed Assets</span>
+                    <span class="font-bold text-rose-600">~12,500 ETH</span>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <span class="text-slate-400 text-[9px] uppercase tracking-wider">Timeline</span>
+                    <span class="font-bold text-slate-800">March 2024 - Present</span>
+                </div>
+            `;
+            
+            // Auto-fill the invisible input if they still click execute
+            document.getElementById('id-search-input').value = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e";
+        }
+    </script>
+</body>
+</html>
