@@ -825,83 +825,96 @@
             triggerLoader("Reconstructing Profile & Gathering Intel...");
             
             try {
-                const backendUrl = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') ? '' : 'https://nemesis-local.onrender.com';
-                const response = await fetch(`${backendUrl}/api/nemesis_id/profile/${address}`);
-                if (!response.ok) throw new Error("Backend connection failed");
-                const result = await response.json();
-                const data = result.data || result;
+                const backendUrl = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') ? '' : 'https://nemesis-python-worker.legionxgaming2021.workers.dev';
                 
-                // Store globally for Side Panel Dossier generator
-                window.profileData = data;
-                
+                // Fetch all data streams concurrently
+                const [profileRes, networkRes, tokensRes, chainsRes, txRes, balRes, riskRes, intelRes] = await Promise.allSettled([
+                    fetch(`${backendUrl}/api/nemesis_id/profile/${address}`).then(r => r.json()),
+                    fetch(`${backendUrl}/api/nemesis_id/network/${address}`).then(r => r.json()),
+                    fetch(`${backendUrl}/api/nemesis_id/tokens/${address}`).then(r => r.json()),
+                    fetch(`${backendUrl}/api/nemesis_id/chains/${address}`).then(r => r.json()),
+                    fetch(`${backendUrl}/api/nemesis_id/transactions/${address}`).then(r => r.json()),
+                    fetch(`${backendUrl}/api/nemesis_id/balances/${address}`).then(r => r.json()),
+                    fetch(`${backendUrl}/api/nemesis_id/risk/${address}`).then(r => r.json()),
+                    fetch(`${backendUrl}/api/nemesis_id/intelligence/${address}`).then(r => r.json())
+                ]);
+
                 document.getElementById('id-landing').classList.add('hidden');
                 let dash = document.getElementById('id-dashboard');
                 dash.classList.remove('hidden');
                 dash.classList.add('flex');
                 
-                // Populate Address
-                let addrFields = document.querySelectorAll("h1.font-mono");
-                if(addrFields.length > 0) {
-                    addrFields[0].innerHTML = (data.address || address) + ` <i class="fa-solid fa-copy text-xs text-slate-400"></i>`;
+                // --- Tab 1: Profile ---
+                if (profileRes.status === "fulfilled") {
+                    const p = profileRes.value;
+                    let addrFields = document.querySelectorAll("h1.font-mono");
+                    if(addrFields.length > 0) addrFields[0].innerHTML = (p.address || address) + ` <i class="fa-solid fa-copy text-xs text-slate-400"></i>`;
+                    
+                    if(document.getElementById("val-net-balance")) document.getElementById("val-net-balance").innerText = "$" + (p.total_balance_usd || 0).toLocaleString();
+                    if(document.getElementById("val-first-activity")) document.getElementById("val-first-activity").innerText = (p.first_active || "N/A");
+                    if(document.getElementById("val-last-activity")) document.getElementById("val-last-activity").innerText = (p.last_active || "N/A");
                 }
-                
-                // Set USD/Native Values
-                if(document.getElementById("val-total-inbound")) document.getElementById("val-total-inbound").innerText = "$" + (data.total_inbound || 0).toLocaleString();
-                if(document.getElementById("val-total-outbound")) document.getElementById("val-total-outbound").innerText = "$" + (data.total_outbound || 0).toLocaleString();
-                if(document.getElementById("val-net-balance")) document.getElementById("val-net-balance").innerText = "$" + (data.balance || 0).toLocaleString();
-                if(document.getElementById("val-large-usd")) document.getElementById("val-large-usd").innerText = "$" + (data.total_inbound || 0).toLocaleString();
-                
-                if(document.getElementById("val-total-tx")) document.getElementById("val-total-tx").innerText = (data.total_transactions || "0");
-                if(document.getElementById("val-first-activity")) document.getElementById("val-first-activity").innerText = (data.first_activity || "N/A");
-                if(document.getElementById("val-last-activity")) document.getElementById("val-last-activity").innerText = (data.last_activity || "N/A");
-                
-                // Set AI Insights & Headers
-                let aiSummaryNodes = document.querySelectorAll(".text-justify");
-                if(aiSummaryNodes.length > 0 && data.ai_summary) {
-                    aiSummaryNodes[0].innerHTML = `<strong>Summary:</strong> ${data.ai_summary}`;
-                }
-                
-                // Update Graph if available
-                if (data.graph && data.graph.nodes) {
-                    window.NEMESIS_GRAPH_DATA = data.graph;
-                }
-                
-                // Fetch Transaction History
-                try {
-                    const txResponse = await fetch(`${backendUrl}/api/nemesis_id/tx_history/${address}`);
-                    if (txResponse.ok) {
-                        const txData = await txResponse.json();
-                        const txBody = document.getElementById('tx-history-body');
-                        if (txBody) {
-                            txBody.innerHTML = '';
-                            if (txData.transactions && txData.transactions.length > 0) {
-                                txData.transactions.forEach(tx => {
-                                    let html = `<tr class="cursor-pointer hover:bg-blue-50 transition" onclick="openDossier('tx', '${tx.tx}')">
-                                        <td class="text-slate-600">${tx.timestamp || 'Unknown'}</td>
-                                        <td><span class="bg-indigo-100 text-indigo-800 border border-indigo-300 px-1.5 py-0.5 rounded font-bold">${tx.intent_action || 'TRANSFER'}</span></td>
-                                        <td class="text-blue-600 hover:underline" onclick="event.stopPropagation(); verifyOnExplorer('${tx.tx}')">${(tx.tx || '').substring(0,6)}...${(tx.tx || '').substring((tx.tx || '').length-4)}</td>
-                                        <td class="font-bold text-slate-800">${(tx.from || '').substring(0,5)}...<br><span class="text-[9px] font-normal text-slate-500">${tx.sender_entity || 'Unknown'}</span></td>
-                                        <td class="font-bold text-slate-800">${(tx.to || '').substring(0,5)}...<br><span class="text-[9px] font-normal text-slate-500">${tx.receiver_entity || 'Unknown'}</span></td>
-                                        <td class="text-amber-700 font-bold">${tx.receiver_entity || 'Unknown'}</td>
-                                        <td class="text-right font-black text-slate-900"><span class="val-usd text-red-600">${tx.amount || 0} ${tx.ticker || ''}</span></td>
-                                        <td><span class="bg-amber-100 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded font-bold">${tx.edge_type || 'TRANSFERS'}</span></td>
-                                        <td class="text-slate-700 font-bold">${tx.cluster || 'N/A'}</td>
-                                        <td class="text-slate-600">${tx.origin_seed || 'N/A'}</td>
-                                        <td><span class="text-emerald-600 font-black">${tx.confidence || '90%'}</span></td>
-                                        <td class="text-slate-600">${tx.attributions || 'N/A'}</td>
-                                        <td class="text-slate-500 italic">${tx.intelligence || 'Standard transfer behavior detected'}</td>
-                                    </tr>`;
-                                    txBody.innerHTML += html;
-                                });
-                            } else {
-                                txBody.innerHTML = `<tr><td colspan="13" class="text-center py-4 text-slate-500 font-bold">No transaction history found for this address.</td></tr>`;
-                            }
+
+                // --- Tab 5: Transactions ---
+                if (txRes.status === "fulfilled") {
+                    const txData = txRes.value;
+                    const txBody = document.getElementById('tx-history-body');
+                    if (txBody) {
+                        txBody.innerHTML = '';
+                        if (txData.transactions && txData.transactions.length > 0) {
+                            txData.transactions.forEach(tx => {
+                                let html = `<tr class="cursor-pointer hover:bg-blue-50 transition" onclick="verifyOnExplorer('${tx.hash}')">
+                                    <td class="text-slate-600">${tx.timestamp || 'Unknown'}</td>
+                                    <td><span class="bg-indigo-100 text-indigo-800 border border-indigo-300 px-1.5 py-0.5 rounded font-bold">${tx.method || 'TRANSFER'}</span></td>
+                                    <td class="text-blue-600 hover:underline">${(tx.hash || '').substring(0,6)}...${(tx.hash || '').substring((tx.hash || '').length-4)}</td>
+                                    <td class="font-bold text-slate-800">${(tx.from || '').substring(0,5)}...</td>
+                                    <td class="font-bold text-slate-800">${(tx.to || '').substring(0,5)}...</td>
+                                    <td class="text-amber-700 font-bold">Unknown</td>
+                                    <td class="text-right font-black text-slate-900"><span class="val-usd text-red-600">${tx.value_eth || 0} ETH</span></td>
+                                    <td><span class="bg-amber-100 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded font-bold">TRANSFERS</span></td>
+                                    <td class="text-slate-700 font-bold">N/A</td>
+                                    <td class="text-slate-600">N/A</td>
+                                    <td><span class="text-emerald-600 font-black">90%</span></td>
+                                    <td class="text-slate-600">N/A</td>
+                                    <td class="text-slate-500 italic">Standard transfer</td>
+                                </tr>`;
+                                txBody.innerHTML += html;
+                            });
                         }
                     }
-                } catch (e) {
-                    console.error("Failed to fetch tx history:", e);
                 }
-                
+
+                // --- Tab 8 & 9: Risk & AML ---
+                if (riskRes.status === "fulfilled") {
+                    const r = riskRes.value;
+                    const amlScore = document.getElementById('aml-score-display');
+                    const amlRisk = document.getElementById('aml-risk-level');
+                    if (amlScore && r.aml) amlScore.innerHTML = `${r.aml.risk_score || 0}<span class="text-3xl text-red-400">.0</span>`;
+                    if (amlRisk && r.aml) amlRisk.innerText = r.aml.risk_level || "UNKNOWN";
+                    
+                    const flagsContainer = document.getElementById('aml-flags-container');
+                    if (flagsContainer && r.aml && r.aml.flags) {
+                        flagsContainer.innerHTML = r.aml.flags.map(f => `<div class="flex items-center gap-2 text-red-700"><i class="fa-solid fa-triangle-exclamation"></i> ${f}</div>`).join('');
+                    }
+
+                    const geoLoc = document.getElementById('georisk-location');
+                    if (geoLoc && r.georisk) {
+                        geoLoc.innerHTML = `Primary Region: ${r.georisk.primary_region}<br>Activity Zones: ${r.georisk.activity_zones.join(', ')}`;
+                    }
+                }
+
+                // --- Tab 11: AI Insights ---
+                if (intelRes.status === "fulfilled") {
+                    const intel = intelRes.value;
+                    const aiText = document.getElementById('ai-insights-text');
+                    if (aiText && intel.ai_insights) {
+                        aiText.innerHTML = `
+                            <p><strong>Behavioral Insights:</strong> ${intel.ai_insights.insights}</p>
+                            <p><strong>Psychological Profile:</strong> ${intel.ai_insights.psychological_profile}</p>
+                            <p><strong>Anomalies:</strong> ${(intel.ai_insights.behavioral_anomalies || []).join(', ')}</p>
+                        `;
+                    }
+                }
                 
             } catch (err) {
                 console.error(err);
@@ -1017,7 +1030,7 @@
                 if (!address) address = context;
                 
                 const isLocal = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1');
-                const backendUrl = isLocal ? '' : 'https://nemesis-local.onrender.com';
+                const backendUrl = isLocal ? '' : 'https://nemesis-python-worker.legionxgaming2021.workers.dev';
                 const response = await fetch(`${backendUrl}/api/nemesis_id/profile/${address}`);
                 if (!response.ok) throw new Error('Profile not found');
                 const profileData = await response.json();

@@ -3117,7 +3117,7 @@ NEMESIS_ROOT/
                     window.autoComputedAmount = 0.0;
                     
                     document.getElementById("status").innerHTML = `<span class="text-blue-600 font-bold"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Tracing Active... (Hybrid Parallel Fetching)</span>`;
-                    const backendUrl = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') ? '' : 'https://nemesis-local.onrender.com';
+                    const backendUrl = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') ? '' : 'https://nemesis-python-worker.legionxgaming2021.workers.dev';
                     const response = await fetch(`${backendUrl}/api/start_trace`, {
                         method: 'POST', headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({ 
@@ -4871,7 +4871,7 @@ NEMESIS_ROOT/
                         end_date: document.getElementById('tracer-end-date').value || ""
                     };
                     
-                    const backendUrl = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') ? '' : 'https://nemesis-local.onrender.com';
+                    const backendUrl = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') ? '' : 'https://nemesis-python-worker.legionxgaming2021.workers.dev';
                     const response = await fetch(`${backendUrl}/api/start_trace`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -5135,7 +5135,7 @@ NEMESIS_ROOT/
                 
                 try {
                     // Make sure URL points to the backend
-                    let backendUrl = "https://nemesis-local.onrender.com";
+                    let backendUrl = "https://nemesis-python-worker.legionxgaming2021.workers.dev";
                     if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
                         backendUrl = window.location.protocol + "//" + window.location.host;
                     }

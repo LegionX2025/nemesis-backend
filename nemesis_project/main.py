@@ -343,6 +343,45 @@ Ensure output is pure JSON. Do not use markdown blocks like ```json.
         logger.error(f"Error in analyze_case_files: {e}")
         return {"status": "error", "message": str(e)}
 
+from services.omni_aggregator import omni_aggregator
+
+@app.get("/api/nemesis_id/profile/{address}")
+async def get_nemesis_id_profile(address: str):
+    return await omni_aggregator.fetch_profile(address)
+
+@app.get("/api/nemesis_id/network/{address}")
+async def get_nemesis_id_network(address: str):
+    return await omni_aggregator.fetch_counterparties(address)
+
+@app.get("/api/nemesis_id/tokens/{address}")
+async def get_nemesis_id_tokens(address: str):
+    return await omni_aggregator.fetch_assets(address)
+
+@app.get("/api/nemesis_id/chains/{address}")
+async def get_nemesis_id_chains(address: str):
+    return await omni_aggregator.fetch_chains(address)
+
+@app.get("/api/nemesis_id/transactions/{address}")
+async def get_nemesis_id_transactions(address: str):
+    return await omni_aggregator.fetch_transactions(address)
+
+@app.get("/api/nemesis_id/balances/{address}")
+async def get_nemesis_id_balances(address: str):
+    return await omni_aggregator.fetch_balances(address)
+
+@app.get("/api/nemesis_id/risk/{address}")
+async def get_nemesis_id_risk(address: str):
+    aml = await omni_aggregator.fetch_aml(address)
+    georisk = await omni_aggregator.fetch_georisk(address)
+    intel = await omni_aggregator.fetch_intelligence(address)
+    return {"address": address, "aml": aml, "georisk": georisk, "intelligence": intel}
+
+@app.get("/api/nemesis_id/intelligence/{address}")
+async def get_nemesis_id_intelligence(address: str):
+    insights = await omni_aggregator.generate_ai_insights(address)
+    report = await omni_aggregator.fetch_report(address)
+    return {"address": address, "ai_insights": insights, "report": report}
+
 @app.get("/")
 async def dashboard(request: Request):
     return templates.TemplateResponse(request=request, name="index.html")

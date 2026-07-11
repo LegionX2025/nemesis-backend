@@ -3,3 +3,6 @@ cloudflare_worker/node_modules/
 venv/
 __pycache__/
 .env
+
+.wrangler/
+cf_pages_build/
