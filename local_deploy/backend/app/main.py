@@ -393,6 +393,73 @@ async def api_ml_ontology():
     except Exception as e:
         return {"error": str(e)}
 
+@app.get("/api/nemesis_id/profile/{address}")
+async def api_nemesis_id_profile(address: str):
+    from services.database import db_instance
+    
+    entity = None
+    if db_instance.db is not None:
+        try:
+            entity = db_instance.get_mongo_collection("entities").find_one({"address": address})
+        except Exception:
+            pass
+            
+    if entity:
+        return {
+            "address": address,
+            "nemesis_id": f"NEM-{address[:6].upper()}",
+            "first_activity": entity.get("first_activity", "Unknown"),
+            "last_activity": entity.get("last_activity", "Unknown"),
+            "total_transactions": entity.get("tx_count", 0),
+            "total_received": str(entity.get("total_received", 0)),
+            "total_sent": str(entity.get("total_sent", 0)),
+            "balance": f"${entity.get('usd_value', 0):,.2f}",
+            "entity": {"name": entity.get("name", "Unknown Entity")},
+            "tx_categories": entity.get("categories", {})
+        }
+
+    return {
+        "address": address,
+        "nemesis_id": f"NEM-{address[:6].upper()}",
+        "first_activity": "No Data",
+        "last_activity": "No Data",
+        "total_transactions": 0,
+        "total_received": "0.00",
+        "total_sent": "0.00",
+        "balance": "$0.00",
+        "entity": {"name": "Unidentified Wallet"},
+        "tx_categories": {}
+    }
+
+@app.get("/api/nemesis_id/aml/{address}")
+async def api_nemesis_id_aml(address: str):
+    return {
+        "risk_score": 0,
+        "classification": "Scan Required"
+    }
+
+@app.get("/api/nemesis_id/tx_history/{address}")
+async def api_nemesis_id_tx_history(address: str):
+    from services.database import db_instance
+    txs = []
+    if db_instance.db is not None:
+        try:
+            txs = list(db_instance.get_mongo_collection("transactions").find({"$or": [{"from": address}, {"to": address}]}).sort("timestamp", -1).limit(50))
+            for t in txs:
+                t["_id"] = str(t["_id"])
+        except Exception:
+            pass
+    return {"transactions": txs}
+
+@app.get("/api/wallet_profile/{address}")
+async def api_wallet_profile(address: str):
+    return {"usd_value": 0.00}
+
+@app.get("/api/live_intel/{address}")
+async def api_live_intel(address: str):
+    return {"osint": 0, "darknet": 0, "arkham": 0}
+
+
 from fastapi import BackgroundTasks
 
 class DataIngestionRequest(BaseModel):

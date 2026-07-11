@@ -253,11 +253,11 @@
             </div>
 
             <div class="flex flex-col items-end gap-3 w-full md:w-auto">
-                <div class="alert-flashing px-5 py-2.5 rounded-lg flex items-center gap-3 w-full md:w-auto shadow-lg shadow-black/20 cursor-pointer hover:bg-red-50 transition" onclick="openDossier('alert', 'CEX_EXPOSURE')">
-                    <i class="fa-solid fa-building-columns text-2xl"></i>
+                <div class="px-5 py-2.5 rounded-lg flex items-center gap-3 w-full md:w-auto shadow-lg shadow-black/20 transition bg-slate-50 border border-slate-200">
+                    <i class="fa-solid fa-shield-blank text-2xl text-slate-400"></i>
                     <div>
-                        <p class="text-[9px] font-black uppercase tracking-widest mb-0.5 font-mono">CEX / CUSTODIAL ALERT</p>
-                        <p class="text-xs font-black tracking-tight">BINANCE HOT WALLET 14</p>
+                        <p class="text-[9px] font-black uppercase tracking-widest mb-0.5 font-mono text-slate-500">ENTITY STATUS</p>
+                        <p class="text-xs font-black tracking-tight text-slate-700" id="header-alert">Monitoring Active</p>
                     </div>
                 </div>
                 <div class="flex gap-2">
@@ -300,8 +300,8 @@
                     <h2 class="text-lg font-black text-slate-900 uppercase tracking-widest flex items-center gap-2 font-serif border-b border-slate-600 pb-3 mb-4">
                         Executive Identity Reconstruction
                     </h2>
-                    <p class="text-sm text-slate-700 font-serif leading-relaxed mb-6 text-justify">
-                        <strong>Summary:</strong> Using Advanced NLP LLM analytics, this wallet functions as a primary Tier-2 consolidation node explicitly tied to state-sponsored operations (APT38). It exhibits high-velocity, automated laundering patterns bridging EVM and non-EVM networks, evading sanctions before executing CEX/Custodial deposits.
+                    <p class="text-sm text-slate-700 font-serif leading-relaxed mb-6 text-justify" id="ml-executive-summary">
+                        <strong>Summary:</strong> Awaiting advanced NLP LLM analytics and structural profiling for this identity.
                     </p>
                     
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono text-[10px] mb-6">
@@ -367,28 +367,8 @@
 
                     <!-- Timeline Intelligence -->
                     <h3 class="font-mono text-xs font-bold text-slate-700 uppercase mb-3 border-b border-slate-200 pb-2"><i class="fa-solid fa-clock text-emerald-400 mr-2"></i> Timeline Intelligence</h3>
-                    <div class="space-y-3 font-mono text-[10px] mb-6 border-l-2 border-slate-200 pl-4 ml-2 relative">
-                        <!-- Timeline items -->
-                        <div class="relative">
-                            <div class="absolute -left-[21px] top-1 w-2 h-2 rounded-full bg-emerald-500 border border-slate-900"></div>
-                            <span class="text-emerald-400 font-bold mr-2">2015-07-30</span>
-                            <span class="text-slate-900">Wallet Address Created (Ethereum Genesis)</span>
-                        </div>
-                        <div class="relative">
-                            <div class="absolute -left-[21px] top-1 w-2 h-2 rounded-full bg-blue-500 border border-slate-900"></div>
-                            <span class="text-blue-400 font-bold mr-2">2018-10-14</span>
-                            <span class="text-slate-900">GitHub Commit <a href="#" class="text-slate-600 hover:text-blue-300 underline">(ethereum/EIPs)</a> signing txs from this wallet.</span>
-                        </div>
-                        <div class="relative">
-                            <div class="absolute -left-[21px] top-1 w-2 h-2 rounded-full bg-purple-500 border border-slate-900"></div>
-                            <span class="text-purple-400 font-bold mr-2">2021-08-01</span>
-                            <span class="text-slate-900">Twitter Profile update mentioning wallet public key.</span>
-                        </div>
-                        <div class="relative">
-                            <div class="absolute -left-[21px] top-1 w-2 h-2 rounded-full bg-amber-500 border border-slate-900"></div>
-                            <span class="text-amber-400 font-bold mr-2">2023-01-15</span>
-                            <span class="text-slate-900">ENS Name `vitalik.eth` mapped to this address.</span>
-                        </div>
+                    <div class="space-y-3 font-mono text-[10px] mb-6 border-l-2 border-slate-200 pl-4 ml-2 relative" id="timeline-intelligence">
+                        <div class="text-slate-500 italic">No timeline data available.</div>
                     </div>
                 </div>
                 
@@ -434,20 +414,9 @@
                                 <th>Chain</th>
                             </tr>
                         </thead>
-                        <tbody class="font-mono text-xs">
-                            <tr class="cursor-pointer" onclick="openDossier('wallet', '0x28c...d60')">
-                                <td class="text-blue-600 hover:underline font-bold">0x28c6c06298d514db089934071355e5743bf21d60</td>
-                                <td><span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-[9px] font-bold border border-amber-200">CUSTODIAL (Binance)</span></td>
-                                <td class="text-center text-red-600 font-black"><i class="fa-solid fa-arrow-up"></i> OUTBOUND</td>
-                                <td class="text-right font-black text-slate-900"><span class="val-usd">$1,200,000</span><span class="val-native">400 ETH</span></td>
-                                <td><img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-4 h-4 inline"> ETH</td>
-                            </tr>
-                            <tr class="cursor-pointer" onclick="openDossier('wallet', '0xd90...31b')">
-                                <td class="text-blue-600 hover:underline font-bold">0xd90e2f925da726b50c4ed8d0fb90ad053324f31b</td>
-                                <td><span class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-[9px] font-bold border border-purple-200">MIXER (Tornado Cash)</span></td>
-                                <td class="text-center text-emerald-600 font-black"><i class="fa-solid fa-arrow-down"></i> INBOUND</td>
-                                <td class="text-right font-black text-slate-900"><span class="val-usd">$10,000,000</span><span class="val-native">3,125 ETH</span></td>
-                                <td><img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-4 h-4 inline"> ETH</td>
+                        <tbody class="font-mono text-xs" id="clustered-wallets-tbody">
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-slate-500">Awaiting graph clustering analysis.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -1219,6 +1188,17 @@
                             if(v > maxCat) { maxCat = v; highestPattern = k; }
                         }
                         document.getElementById('ml-transfer-pattern') && (document.getElementById('ml-transfer-pattern').innerText = highestPattern.toUpperCase());
+                    }
+                    
+                    document.getElementById('header-alert') && (document.getElementById('header-alert').innerText = profileData.alert || 'No Active Alerts');
+                    if (document.getElementById('ml-executive-summary')) {
+                        document.getElementById('ml-executive-summary').innerHTML = `<strong>Summary:</strong> ${profileData.summary || 'Awaiting advanced NLP LLM analytics and structural profiling for this identity.'}`;
+                    }
+                    if (document.getElementById('timeline-intelligence')) {
+                        document.getElementById('timeline-intelligence').innerHTML = '<div class="text-slate-500 italic">No timeline data available yet. Waiting for ML pipeline ingestion.</div>';
+                    }
+                    if (document.getElementById('clustered-wallets-tbody')) {
+                        document.getElementById('clustered-wallets-tbody').innerHTML = '<tr><td colspan="5" class="text-center py-4 text-slate-500">No clusters found for this entity.</td></tr>';
                     }
                 }
 
