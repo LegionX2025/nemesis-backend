@@ -25,9 +25,22 @@ def main():
         run_command('git commit -m "Auto-deploy: GBEO v3 architecture" && git push origin main', "Committing and Pushing to GitHub")
     else:
         print("✅ No new changes to commit. Proceeding...")
-    # 2. Build Render Backend
-    # Assumes Render is connected to GitHub and triggers on push, but we could also hit a deploy hook if provided.
-    print("\n🚀 Render Backend build triggered automatically via GitHub Push...")
+    # 2. Attempt Cloudflare Python Backend Deployment
+    print("\n🚀 Attempting to deploy FastAPI Backend directly to Cloudflare Workers...")
+    backend_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "backend")
+    cf_backend_success = False
+    if os.path.exists(backend_dir):
+        print("   [!] Note: Cloudflare Pyodide has strict limits on C-extensions (Playwright, Motor, Neo4j).")
+        result = subprocess.run("npx wrangler deploy", shell=True, cwd=backend_dir)
+        if result.returncode == 0:
+            print("✅ Success: Backend deployed to Cloudflare!")
+            cf_backend_success = True
+        else:
+            print("❌ Cloudflare Backend deployment failed (likely due to Pyodide C-extension limits).")
+            print("   => FALLING BACK TO RENDER BACKUP DEPLOYMENT...")
+
+    if not cf_backend_success:
+        print("\n🚀 Render Backend build triggered automatically via GitHub Push (Backup)...")
 
     # 3. Deploy Cloudflare Pages Frontend
     # Assumes wrangler is installed and authenticated
