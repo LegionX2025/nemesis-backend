@@ -2309,7 +2309,9 @@
                 btn.innerText = "LOADING...";
                 
                 try {
-                    let response = await fetch('/api/nemesis_id/search?query=' + encodeURIComponent(traceId));
+                    const isLocal = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1');
+                    const backendUrl = isLocal ? '' : 'https://nemesis-local.onrender.com';
+                    let response = await fetch(`${backendUrl}/api/nemesis_id/search?query=` + encodeURIComponent(traceId));
                     let data = await response.json();
                     
                     if(data.error) {
@@ -3792,29 +3794,9 @@ NEMESIS_ROOT/
             };
 
             var GLOBAL_TRACE_ID = "";
-
-            async function fetchHistoricalTrace() {
-                const searchVal = document.getElementById("landing-search-trace") ? document.getElementById("landing-search-trace").value : null;
-                if(!searchVal) return showToast("Please enter a Nemesis ID or Trace ID.");
-                
-                let lp = document.getElementById('landing-page');
-                let mu = document.getElementById('main-ui');
-                if(lp) lp.classList.add('hidden');
-                if(mu) {
-                    mu.classList.remove('hidden');
-                    mu.classList.add('flex');
-                }
-                
-                let searchInput = document.getElementById("search-node-input");
-                if (searchInput) searchInput.value = searchVal;
-                
-                showToast("Retrieving Historical Trace: " + searchVal);
-            }
-
             async function submitTrace() {
                 try {
                     const seedEl = document.getElementById("seed-input");
-                    const amountEl = document.getElementById("target-amount");
                     const startEl = document.getElementById("start-date");
                     const endEl = document.getElementById("end-date");
                     const currencyEl = document.getElementById("target-currency");
@@ -3836,7 +3818,8 @@ NEMESIS_ROOT/
                     window.autoComputedAmount = 0.0;
                     
                     document.getElementById("status").innerHTML = `<span class="text-blue-600 font-bold"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Tracing Active... (Hybrid Parallel Fetching)</span>`;
-                    const backendUrl = '';
+                    const isLocal = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1');
+                    const backendUrl = isLocal ? '' : 'https://nemesis-local.onrender.com';
                     const response = await fetch(`${backendUrl}/api/start_trace`, {
                         method: 'POST', headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({ 
@@ -4476,8 +4459,9 @@ NEMESIS_ROOT/
 
             function connectWebSocket(traceId) {
                 if (!traceId) return;
+                const isLocal = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1');
                 let protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
-                let host = window.location.host;
+                let host = isLocal ? window.location.host : "nemesis-local.onrender.com";
                 let wsUrl = protocol + host + "/ws/" + traceId;
                 ws = new WebSocket(wsUrl);
                 

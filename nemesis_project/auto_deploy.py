@@ -111,10 +111,10 @@ import re
 
 def update_wrangler_ids():
     print_log("    -> [AUTO-DEPLOY] Autonomously linking Cloudflare IDs to wrangler.toml...")
-    d1_out = subprocess.check_output("npx wrangler d1 list --json", shell=True, text=True, stderr=subprocess.STDOUT)
     d1_id = None
-    if d1_out:
-        try:
+    try:
+        d1_out = subprocess.check_output("npx wrangler d1 list --json", shell=True, text=True, stderr=subprocess.STDOUT)
+        if d1_out:
             json_str = d1_out[d1_out.find('['):d1_out.rfind(']')+1]
             d1_list = json.loads(json_str)
             for db in d1_list:
@@ -122,13 +122,13 @@ def update_wrangler_ids():
                     d1_id = db.get('uuid')
                     print_log(f"    -> [AUTO-DEPLOY] Found D1 'nemesis_audit_db' ID: {d1_id}")
                     break
-        except Exception as e:
-            pass
+    except Exception as e:
+        print_log(f"    -> [WARNING] Failed to list D1 databases: {e}")
 
-    kv_out = subprocess.check_output("npx wrangler kv namespace list", shell=True, text=True, stderr=subprocess.STDOUT)
     kv_id = None
-    if kv_out:
-        try:
+    try:
+        kv_out = subprocess.check_output("npx wrangler kv namespace list", shell=True, text=True, stderr=subprocess.STDOUT)
+        if kv_out:
             json_str = kv_out[kv_out.find('['):kv_out.rfind(']')+1]
             kv_list = json.loads(json_str)
             for kv in kv_list:
@@ -136,10 +136,17 @@ def update_wrangler_ids():
                     kv_id = kv.get('id')
                     print_log(f"    -> [AUTO-DEPLOY] Found KV 'NEMESIS_KV' ID: {kv_id}")
                     break
-        except Exception as e:
-            pass
+    except Exception as e:
+        print_log(f"    -> [WARNING] Failed to list KV namespaces: {e}")
 
     if d1_id or kv_id:
+        if not os.path.exists("wrangler.toml"):
+            if os.path.exists("wrangler_proxy.toml"):
+                import shutil
+                shutil.copy("wrangler_proxy.toml", "wrangler.toml")
+            else:
+                with open("wrangler.toml", "w") as f:
+                    f.write('name = "nemesis-edge-proxy"\nmain = "cloudflare_worker/src/index.ts"\ncompatibility_date = "2024-12-01"\n')
         with open("wrangler.toml", "r") as f:
             toml = f.read()
 

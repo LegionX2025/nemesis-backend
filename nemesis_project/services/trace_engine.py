@@ -26,12 +26,16 @@ from services.privacy_engine import privacy_engine
 from services.cex_intelligence import cex_intelligence
 from services.graph_neural_intent import graph_intent_engine
 
-from motor.motor_asyncio import AsyncIOMotorClient
-from pymongo.errors import DuplicateKeyError
-import pandas as pd
-import numpy as np
-from sklearn.cluster import DBSCAN
-from sklearn.preprocessing import StandardScaler
+try:
+    import pandas as pd
+    import numpy as np
+    from sklearn.cluster import DBSCAN
+    from sklearn.preprocessing import StandardScaler
+except ImportError:
+    pd = None
+    np = None
+    DBSCAN = None
+    StandardScaler = None
 
 from adapters.evm import EVMAdapter
 from adapters.solana import SolanaAdapter
@@ -219,19 +223,6 @@ mongo_db = None
 async def init_mongodb():
     global mongo_client, mongo_db
     try:
-        if mongo_client is None:
-            mongo_url = CONFIG.get("MONGO_URI") or os.getenv("DATABASE_MONGO_URL") or os.getenv("MONGO_URI")
-            if not mongo_url:
-                raise ValueError("MongoDB URI is not configured in .env (DATABASE_MONGO_URL or MONGO_URI)")
-            mongo_client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=15000)
-            
-            try:
-                # Attempt to use the database provided in the URI (e.g., 'blockchain')
-                mongo_db = mongo_client.get_default_database()
-            except Exception:
-                mongo_db = mongo_client["nemesis_traces"]
-            
-            # Basic UI / Old Trace Schemas
             try:
                 await mongo_db.edges.create_index([("trace_id", 1), ("from", 1), ("to", 1)])
                 await mongo_db.traces.create_index([("trace_id", 1)], unique=True)
@@ -1057,13 +1048,7 @@ class TraceEngine:
         # -------------------------------------------------------------
         if not all_txs:
             logger.warning(f"Swarm API fetch returned 0 txs for {addr}. Initiating Playwright DOM Scraper Fallback.")
-            try:
-                from services.playwright_scraper import scraper_engine
-                scrape_res = await scraper_engine.scrape_transactions(actual_chain, addr, max_pages=3)
-                for tx in scrape_res:
-                    all_txs.append(tx)
-            except Exception as e:
-                logger.error(f"Playwright fallback failed: {e}")
+            logger.warning("Playwright Scraper Fallback disabled for Cloudflare Workers.")
 
         logger.info(f"Swarm fetch completed for {addr}: Aggregated {len(all_txs)} unique txs")
         return {"type": "evm", "data": all_txs, "actual_chain": actual_chain}
@@ -1673,6 +1658,9 @@ class TraceEngine:
             except: self.clients.discard(ws)
 
     async def execute_dbscan_clustering(self):
+        if pd is None:
+            logger.warning("ML libraries (pandas/scikit-learn) not found. Skipping DBSCAN clustering on Edge.")
+            return
         if len(self.node_stats) < 2: return
         
         try:
@@ -1781,10 +1769,7 @@ class TraceEngine:
         if EVM_API_SEMAPHORE is None:
             EVM_API_SEMAPHORE = asyncio.Semaphore(CONCURRENCY_LIMIT)
         try:
-            import ssl
-            ssl_ctx = ssl.create_default_context(cafile=certifi.where())
-            connector = aiohttp.TCPConnector(ssl=ssl_ctx)
-            async with aiohttp.ClientSession(connector=connector) as session:
+            async with aiohttp.ClientSession() as session:
                 logger.info(f"🚀 [MULTI-CHAIN TRACE {self.trace_id} INITIALIZED]")
                 logger.info(f"🔍 Queue size: {self.queue.qsize()} | Seeds: {self.seed_chains}")
 

@@ -1,8 +1,12 @@
 import os
 import json
 import logging
-from google import genai
-from google.genai import types
+try:
+    from google import genai
+    from google.genai import types
+except ImportError:
+    genai = None
+    types = None
 
 logger = logging.getLogger(__name__)
 

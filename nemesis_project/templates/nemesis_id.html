@@ -1009,40 +1009,32 @@
         function closeContextMenu() { document.getElementById('custom-context-menu').style.display = 'none'; }
         function alertAction(type, msg) { triggerLoader(msg); closeContextMenu(); }
 
-        function openDossier(type, context) {
-            triggerLoader(`Generating Nemesis ID Profile...`);
+        async function openDossier(type, context) {
+            triggerLoader(`Fetching Nemesis ID Profile...`);
             
-            // Mock dynamic data based on context
-            let risk = "HIGH RISK";
-            let riskClass = "bg-red-50 text-red-600 border-red-300";
-            let volume = "N/A";
-            let chain = "ETHEREUM";
-            let labels = ["Seed Wallet", "Launderer"];
-            let entityType = "Externally Owned Account";
-            
-            if (context.includes('Mixer') || context.includes('Tornado')) {
-                risk = "CRITICAL";
-                volume = "N/A";
-                labels = ["Mixer", "Sanctioned"];
-                entityType = "Smart Contract";
-            } else if (context.includes('Bridge')) {
-                risk = "MEDIUM";
-                riskClass = "bg-yellow-50 text-yellow-600 border-yellow-300";
-                volume = "N/A";
-                chain = "CROSS-CHAIN";
-                labels = ["Infrastructure", "Bridge"];
-                entityType = "Smart Contract";
-            } else if (context.includes('Binance')) {
-                risk = "LOW";
-                riskClass = "bg-green-50 text-green-600 border-green-300";
-                volume = "N/A";
-                labels = ["CEX", "Custodial", "KYC Required"];
-                entityType = "Exchange Hot Wallet";
-            }
+            try {
+                let address = context.includes('\\n') ? context.split('\\n')[1] : context;
+                if (!address) address = context;
+                
+                const isLocal = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1');
+                const backendUrl = isLocal ? '' : 'https://nemesis-local.onrender.com';
+                const response = await fetch(`${backendUrl}/api/nemesis_id/profile/${address}`);
+                if (!response.ok) throw new Error('Profile not found');
+                const profileData = await response.json();
+                
+                let risk = profileData.risk || "UNKNOWN";
+                let riskClass = "bg-slate-50 text-slate-600 border-slate-300";
+                if (risk === "CRITICAL") riskClass = "bg-red-50 text-red-600 border-red-300";
+                else if (risk === "HIGH RISK") riskClass = "bg-orange-50 text-orange-600 border-orange-300";
+                else if (risk === "MEDIUM") riskClass = "bg-yellow-50 text-yellow-600 border-yellow-300";
+                else if (risk === "LOW") riskClass = "bg-green-50 text-green-600 border-green-300";
 
-            let labelsHtml = labels.map(l => `<span class="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-bold text-slate-600">${l}</span>`).join('');
+                let volume = profileData.volume || "N/A";
+                let chain = profileData.chain || "UNKNOWN";
+                let labels = profileData.labels || [];
+                let entityType = profileData.entityType || "Unknown Entity";
+                let labelsHtml = labels.map(l => `<span class="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded text-xs font-bold text-slate-600">${l}</span>`).join('');
 
-            setTimeout(() => {
                 let html = `
                     <div class="flex items-center gap-3 mb-6 border-b border-slate-200 pb-4">
                         <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-black text-xl border-2 border-blue-200 shadow-sm">
@@ -1060,10 +1052,10 @@
                     </div>
                     
                     <div class="bg-slate-50/80 backdrop-blur-sm rounded-lg p-4 border border-slate-200 mb-6 shadow-sm">
-                        <div class="flex justify-between py-2 border-b border-slate-200/60"><span class="text-slate-500 font-bold text-xs uppercase">Address / ID</span><span class="font-mono text-xs font-bold text-slate-900 truncate w-48 text-right">${context.split('\\n')[1] || context}</span></div>
+                        <div class="flex justify-between py-2 border-b border-slate-200/60"><span class="text-slate-500 font-bold text-xs uppercase">Address / ID</span><span class="font-mono text-xs font-bold text-slate-900 truncate w-48 text-right">${address}</span></div>
                         <div class="flex justify-between py-2 border-b border-slate-200/60"><span class="text-slate-500 font-bold text-xs uppercase">Chain / Network</span><span class="font-black text-xs text-blue-600 uppercase">${chain}</span></div>
                         <div class="flex justify-between py-2 border-b border-slate-200/60"><span class="text-slate-500 font-bold text-xs uppercase">Total Volume (USD)</span><span class="font-mono font-black text-xs text-slate-900">${volume}</span></div>
-                        <div class="flex justify-between py-2"><span class="text-slate-500 font-bold text-xs uppercase">Last Active</span><span class="font-mono text-xs font-bold text-slate-900">2026-07-03</span></div>
+                        <div class="flex justify-between py-2"><span class="text-slate-500 font-bold text-xs uppercase">Last Active</span><span class="font-mono text-xs font-bold text-slate-900">${profileData.last_active || 'N/A'}</span></div>
                     </div>
                     
                     ${profileData.threat_intel ? `
@@ -1106,7 +1098,10 @@
                     </div>
                 `;
                 openSidePanel(html);
-            }, 600);
+            } catch (error) {
+                console.error("Error fetching dossier:", error);
+                openSidePanel(`<div class="p-4 text-red-600 font-bold">Failed to load profile data. Please try again.</div>`);
+            }
         }
 
         // PDF Generation

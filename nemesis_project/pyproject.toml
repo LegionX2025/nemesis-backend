@@ -1,0 +1,15 @@
+[project]
+name = "nemesis-python-worker"
+version = "0.1.0"
+description = "NEMESIS backend running on Cloudflare Edge"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "pydantic"
+]
+
+[dependency-groups]
+dev = [
+  "workers-py",
+  "workers-runtime-sdk"
+]

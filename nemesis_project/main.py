@@ -20,7 +20,7 @@ def auto_install_dependencies():
 if not os.environ.get("RENDER"):
     auto_install_dependencies()
 os.environ["LOKY_MAX_CPU_COUNT"] = "4"
-os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "0"
+
 import re
 from dotenv import load_dotenv
 load_dotenv()
@@ -29,7 +29,7 @@ import logging
 import datetime
 from collections import defaultdict
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket, Request, BackgroundTasks, Response, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi import FastAPI, Request, WebSocket, Request, BackgroundTasks, Response, Depends, HTTPException, status, UploadFile, File, Form
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -124,11 +124,7 @@ async def lifespan(app: FastAPI):
     import asyncio
     
     # Ensure Playwright browsers are installed before starting the engine
-    try:
-        subprocess.run(["playwright", "install", "chromium"], check=True)
-        logger.info("    [OK] Playwright chromium installed successfully.")
-    except Exception as e:
-        logger.error(f"    [FAIL] Failed to install Playwright browsers: {e}")
+    
     
     # Run MongoDB and Scraper initialization in the background so they don't block the web server from starting
     async def init_background():
@@ -142,8 +138,7 @@ async def lifespan(app: FastAPI):
             from services.threat_intel_engine import threat_intel_engine
             
             # Start APScheduler for every 24 hours
-            from apscheduler.schedulers.asyncio import AsyncIOScheduler
-            app.state.scheduler = AsyncIOScheduler()
+                        app.state.scheduler = AsyncIOScheduler()
             app.state.scheduler.add_job(threat_intel_engine.run_ingestion_cycle, 'interval', hours=24)
             
             from services.darknet_crawler import darknet_crawler_engine
@@ -1400,3 +1395,11 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 3001))
     uvicorn.run(app, host="0.0.0.0", port=port)
+
+# --- CLOUDFLARE WORKERS ASGI WRAPPER ---
+from javascript import asgi
+from workers import WorkerEntrypoint
+
+class Default(WorkerEntrypoint):
+    async def fetch(self, request):
+        return await asgi.fetch(app, request, self.env)
