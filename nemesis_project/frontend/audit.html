@@ -3,7 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <title>NEMESIS | Enterprise Audit Report</title>
-    {% include 'includes/head_assets.html' %}
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lionsgate Omni-Chain Forensics | Case LGN-US-2026-0172</title>
+    <script>
+        if (!window.originalWarn) {
+            window.originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) return;
+                window.originalWarn.apply(console, args);
+            };
+        }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.halo.min.js"></script>
+    <script src="https://unpkg.com/force-graph@1.43.3/dist/force-graph.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc; 
+            color: #0f172a; 
+            margin: 0; 
+            min-height: 100vh; 
+        }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Vanta Background Container */
+        #vanta-bg {
+            position: fixed;
+            z-index: -1;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .nemesis-effect { background: linear-gradient(to right, #3b82f6 20%, #a855f7 50%, #3b82f6 80%); background-size: 200% auto; color: #fff; background-clip: text; text-fill-color: transparent; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shine 5s linear infinite; }
+        @keyframes shine { to { background-position: 200% center; } }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    </style>
+</head>
+<body class="flex bg-slate-50 min-h-screen relative">
+    <!-- Vanta Background -->
+    <div id="vanta-bg"></div>
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.VANTA) {
+                window.vantaEffect = VANTA.HALO({
+                    el: "#vanta-bg",
+                    mouseControls: true,
+                    touchControls: true,
+                    gyroControls: false,
+                    minHeight: 200.00,
+                    minWidth: 200.00,
+                    baseColor: 0xffffff,
+                    backgroundColor: 0xf8fafc,
+                    amplitudeFactor: 1.5,
+                    size: 1.5
+                });
+            }
+        });
+    </script>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .glass-card {
@@ -30,7 +101,94 @@
 </head>
 <body class="antialiased overflow-x-hidden">
     
-    {% include 'includes/global_nav.html' %}
+    <!-- Sidebar Navigation -->
+<aside class="w-72 bg-white/90 backdrop-blur-md border-r border-slate-200 h-screen sticky top-0 flex flex-col py-10 z-50 shrink-0 shadow-lg shadow-slate-200/50">
+    <div class="mb-14 flex flex-col items-center px-4 text-center">
+        <img src="/static/logo_nemesis.jpeg" alt="Nemesis Logo" class="h-16 w-16 rounded-xl border border-slate-200 shadow-[0_8px_16px_rgba(0,0,0,0.15)] mb-4 transition-transform hover:scale-105 duration-300">
+        <h1 class="text-base font-black uppercase tracking-widest text-slate-900 leading-tight">LIONSGATE</h1>
+        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mt-2">INTELLIGENCE NETWORK</p>
+    </div>
+    
+    <style>
+        .nav-link { position: relative; overflow: hidden; }
+        .nav-link::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: linear-gradient(180deg, #3b82f6, #0ea5e9); transform: scaleY(0); transition: transform 0.3s ease; transform-origin: left; }
+        .nav-link:hover::before { transform: scaleY(1); }
+        .nav-link.active::before { transform: scaleY(1); }
+        
+        .icon-3d {
+            display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.4), 0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .nav-link:hover .icon-3d { transform: translateY(-2px) scale(1.05); box-shadow: inset 0 2px 4px rgba(255,255,255,0.6), 0 8px 12px rgba(0,0,0,0.15), 0 3px 6px rgba(0,0,0,0.1); }
+        
+        /* Specific Icon Colors */
+        .icon-home { background: linear-gradient(135deg, #f8fafc, #cbd5e1); color: #334155; }
+        .icon-tracer { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #ffffff; }
+        .icon-id { background: linear-gradient(135deg, #a855f7, #7e22ce); color: #ffffff; }
+        .icon-audit { background: linear-gradient(135deg, #10b981, #047857); color: #ffffff; }
+        .icon-docs { background: linear-gradient(135deg, #f59e0b, #b45309); color: #ffffff; }
+    </style>
+
+    <nav class="flex flex-col w-full gap-2 px-4">
+        <a href="/" class="nav-link px-4 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-4 {% if active_page == 'home' %}active bg-slate-50 text-slate-900{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-700{% endif %}">
+            <div class="icon-3d icon-home"><i class="fa-solid fa-house"></i></div>
+            HOME
+        </a>
+        
+        <a href="/nemesis_tracer" class="nav-link px-4 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-4 {% if active_page == 'tracer' %}active bg-blue-50/50 text-blue-700{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-700{% endif %}">
+            <div class="icon-3d icon-tracer"><i class="fa-solid fa-network-wired"></i></div>
+            NEMESIS TRACER
+        </a>
+        
+        <a href="/nemesis_id" class="nav-link px-4 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-4 {% if active_page == 'id' %}active bg-purple-50/50 text-purple-700{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-700{% endif %}">
+            <div class="icon-3d icon-id"><i class="fa-solid fa-fingerprint"></i></div>
+            NEMESIS ID
+        </a>
+        
+        <a href="/audit" class="nav-link px-4 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-4 {% if active_page == 'audit' %}active bg-emerald-50/50 text-emerald-700{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-700{% endif %}">
+            <div class="icon-3d icon-audit"><i class="fa-solid fa-shield-halved"></i></div>
+            ENTERPRISE AUDIT
+        </a>
+        
+        <a href="/darknet_search" class="nav-link px-4 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-4 {% if active_page == 'darknet' %}active bg-red-50/50 text-red-700{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-700{% endif %}">
+            <div class="icon-3d" style="background: linear-gradient(135deg, #ef4444, #991b1b); color: #ffffff;"><i class="fa-solid fa-skull"></i></div>
+            DARKNET CRAWLER
+        </a>
+
+        <a href="/docs" class="nav-link px-4 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-4 {% if active_page == 'docs' %}active bg-amber-50/50 text-amber-700{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-700{% endif %}">
+            <div class="icon-3d icon-docs"><i class="fa-solid fa-book"></i></div>
+            API DOCS
+        </a>
+
+        <a href="/admin" class="nav-link px-4 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-4 {% if active_page == 'admin' %}active bg-slate-800 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-700{% endif %}">
+            <div class="icon-3d" style="background: linear-gradient(135deg, #1e293b, #0f172a); color: #ffffff;"><i class="fa-solid fa-lock"></i></div>
+            ADMIN SYSTEM
+        </a>
+    </nav>
+    
+    <div class="mt-auto px-4 text-center relative group w-full">
+        <div class="mb-4 bg-slate-900/5 border border-slate-200/50 rounded-xl p-3 shadow-inner">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles text-purple-500 text-xs"></i>
+                    <span class="text-[10px] font-bold text-slate-700 tracking-wider">AUTO-PILOT</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="godmodeToggle" class="sr-only peer">
+                    <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-500 peer-checked:to-emerald-500 shadow-inner"></div>
+                </label>
+            </div>
+        </div>
+
+        <div class="absolute inset-0 bg-emerald-500/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <p class="text-[9px] text-slate-400 font-mono uppercase tracking-widest relative z-10">
+            System Online<br>
+            <span class="text-emerald-500 animate-pulse drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]"><i class="fa-solid fa-circle text-[6px] mr-1 align-middle"></i>Node Secure</span>
+        </p>
+    </div>
+</aside>
+
 
     <!-- Main Content -->
     <main class="relative z-10 pt-32 pb-20 px-8 max-w-7xl mx-auto space-y-12">
@@ -328,6 +486,131 @@
             document.getElementById('content-modal').classList.remove('flex');
         };
     </script>
-    {% include 'includes/footer.html' %}
+        <!-- Global AJAX Loader -->
+    <div id="global-loader" class="hidden fixed inset-0 bg-white/90 backdrop-blur-sm z-[9999] flex-col items-center justify-center transition-opacity">
+        <div class="w-24 h-24 border-4 border-slate-200 border-t-fuchsia-600 rounded-full animate-spin mb-6 shadow-[0_0_30px_rgba(217,70,239,0.3)]"></div>
+        <h2 class="text-slate-800 font-black text-2xl tracking-widest animate-pulse">NEMESIS ENGINE</h2>
+        <p id="loader-text" class="text-fuchsia-600 font-mono text-xs uppercase tracking-widest mt-2">Fusing Blockchain, OSINT & Identity Graphs...</p>
+    </div>
+
+    <!-- Chain Detection Logic (Shared) -->
+    <script>
+        const CHAIN_LOGOS = {
+            'EVM': '<img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-full h-full object-cover">',
+            'BTC': '<img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" class="w-full h-full object-cover">',
+            'SOL': '<img src="https://cryptologos.cc/logos/solana-sol-logo.png" class="w-full h-full object-cover">',
+            'UNKNOWN': '<i class="fa-solid fa-link text-slate-400 text-sm"></i>'
+        };
+
+        function identifyChain(address) {
+            if (/^0x[a-fA-F0-9]{40}$/.test(address)) return 'EVM';
+            if (/^(1|3)[a-zA-HJ-NP-Z0-9]{25,39}$/.test(address) || /^bc1[a-zA-HJ-NP-Z0-9]{39,59}$/.test(address)) return 'BTC';
+            if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address) && !address.startsWith('0x')) return 'SOL';
+            return 'UNKNOWN';
+        }
+
+        function showGlobalLoader(text) {
+            const loader = document.getElementById('global-loader');
+            if (document.getElementById('loader-text')) {
+                document.getElementById('loader-text').innerText = text;
+            }
+            loader.classList.remove('hidden');
+            loader.classList.add('flex');
+        }
+
+        function hideGlobalLoader() {
+            const loader = document.getElementById('global-loader');
+            loader.classList.add('hidden');
+            loader.classList.remove('flex');
+        }
+
+        // GodMode WebSocket & UI Logic
+        const godmodeToggle = document.getElementById('godmodeToggle');
+        const godmodeTerminal = document.getElementById('godmode-terminal');
+        const godmodeContent = document.getElementById('godmode-content');
+        let godmodeWs = null;
+
+        if (godmodeToggle) {
+            godmodeToggle.addEventListener('change', async (e) => {
+                const enabled = e.target.checked;
+                
+                // Toggle server state
+                try {
+                    await fetch('/api/godmode/toggle', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({enabled: enabled})
+                    });
+                } catch(err) {
+                    console.error("Failed to toggle Godmode", err);
+                }
+
+                if (enabled) {
+                    connectGodmode();
+                } else {
+                    if (godmodeWs) godmodeWs.close();
+                    godmodeTerminal.classList.add('translate-y-full', 'opacity-0');
+                    godmodeTerminal.classList.remove('translate-y-0', 'opacity-100');
+                }
+            });
+        }
+
+        function connectGodmode() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            godmodeWs = new WebSocket(`${protocol}//${window.location.host}/api/godmode/stream`);
+            
+            godmodeWs.onopen = () => {
+                godmodeTerminal.classList.remove('translate-y-full', 'opacity-0');
+                godmodeTerminal.classList.add('translate-y-0', 'opacity-100');
+                godmodeContent.innerHTML += `<div class="text-emerald-400">Connected to GodMode Streaming API...</div>`;
+            };
+
+            godmodeWs.onmessage = (event) => {
+                // Ensure terminal is visible
+                godmodeTerminal.classList.remove('translate-y-full', 'opacity-0');
+                godmodeTerminal.classList.add('translate-y-0', 'opacity-100');
+                
+                // Append text with rudimentary markdown/newline formatting
+                let text = event.data;
+                text = text.replace(/
+/g, '<br>');
+                if (text.includes("```python")) {
+                    text = text.replace(/```python/g, '<div class="bg-slate-900/50 p-2 rounded mt-2 border border-slate-700 font-mono text-[10px] text-blue-300">');
+                    text = text.replace(/```/g, '</div>');
+                }
+                
+                godmodeContent.innerHTML += `<div class="mb-1">${text}</div>`;
+                godmodeContent.scrollTop = godmodeContent.scrollHeight;
+            };
+
+            godmodeWs.onclose = () => {
+                godmodeContent.innerHTML += `<div class="text-red-400">Connection lost. Reconnecting...</div>`;
+                if(godmodeToggle && godmodeToggle.checked) {
+                    setTimeout(connectGodmode, 3000);
+                }
+            };
+        }
+    </script>
+
+    <!-- GodMode Floating Terminal Overlay -->
+    <div id="godmode-terminal" class="fixed bottom-4 right-4 w-96 max-w-[90vw] h-80 bg-slate-900/95 backdrop-blur-xl border border-purple-500/30 rounded-xl shadow-[0_10px_40px_-10px_rgba(168,85,247,0.5)] z-[9999] transform translate-y-full opacity-0 transition-all duration-500 flex flex-col overflow-hidden group">
+        <div class="h-8 bg-slate-800/80 border-b border-purple-500/20 flex items-center px-4 justify-between shrink-0">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-wand-magic-sparkles text-purple-400 text-xs"></i>
+                <span class="text-[10px] font-black tracking-widest text-purple-200">GODMODE TERMINAL</span>
+            </div>
+            <div class="flex gap-1.5">
+                <div class="w-2.5 h-2.5 rounded-full bg-slate-600"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-slate-600"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
+            </div>
+        </div>
+        <div id="godmode-content" class="flex-1 overflow-y-auto p-4 text-[11px] font-mono leading-relaxed text-slate-300 scrollbar-thin scrollbar-thumb-purple-500/30 scrollbar-track-transparent">
+            <!-- Messages stream here -->
+        </div>
+    </div>
+</body>
+</html>
+
 </body>
 </html>
