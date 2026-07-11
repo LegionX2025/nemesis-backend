@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+import shutil
 
 def run_command(command, description):
     print(f"\n🚀 {description}...")
@@ -32,8 +33,6 @@ def main():
     # Assumes wrangler is installed and authenticated
     frontend_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "frontend")
     if os.path.exists(frontend_dir):
-        import shutil
-        import os
         static_src = os.path.join(frontend_dir, "static")
         static_dst = os.path.join(frontend_dir, "templates", "static")
         if os.path.exists(static_src):
