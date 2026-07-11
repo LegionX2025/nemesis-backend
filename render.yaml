@@ -1,24 +1,498 @@
-services:
-  - type: web
-    name: nemesis-backend
-    env: python
-    buildCommand: "pip install -r requirements.txt && playwright install --with-deps chromium"
-    startCommand: "uvicorn api.server:app --host 0.0.0.0 --port $PORT"
-    region: oregon
-    plan: starter # Can be changed to 'free' if preferred
-    healthCheckPath: /
-    envVars:
-      - key: PORT
-        value: 3001
-      - key: DATABASE_MONGO_URL
-        sync: false # User must provide this securely in the Render dashboard
-      - key: ETHERSCAN_API_KEY
+# Exported from Render on 2026-07-11T14:42:42Z
+version: "1"
+projects:
+- name: EAGLE INTELLIGEMCE
+  environments:
+  - name: Production
+    services:
+    - type: web
+      name: nemesis-backend
+      runtime: python
+      repo: https://github.com/LegionX2025/nemesis-backend
+      plan: free
+      envVars:
+      - key: VITE_AIML_API_KEY_LLAMA
         sync: false
-      - key: POLYGONSCAN_API_KEY
+      - key: OKLINK_CHAIN_ADDRESS_URL
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_SERVER
+        sync: false
+      - key: SCRAPE_URL_TERRA
+        sync: false
+      - key: RENDER_API_KEY
+        sync: false
+      - key: VITE_RETRY_BASE_DELAY_MS
+        sync: false
+      - key: AIML_API_KEY_BAGOODEX
+        sync: false
+      - key: VITE_CELOSCAN_API_KEY
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: VITE_LINEASCAN_API_KEY
+        sync: false
+      - key: VITE_POLYGONSCAN_API_KEY
+        sync: false
+      - key: APP_MODE
+        sync: false
+      - key: POSTGRES_URI
+        sync: false
+      - key: VALIDATION_BTC
+        sync: false
+      - key: VITE_GETBLOCK_XRP_KEY
+        sync: false
+      - key: TATUM_ENABLE_NFTS
+        sync: false
+      - key: BINANCE_API_SECRET
+        sync: false
+      - key: VITE_ENABLE_COURT_EXPORT
+        sync: false
+      - key: SCRAPER_PROXY_ENABLED
+        sync: false
+      - key: NODE_ENV
+        sync: false
+      - key: SCRAPE_URL_ZKSYNC
+        sync: false
+      - key: CRAWLER_MAX_THREADS
+        sync: false
+      - key: VITE_BSCSCAN_API_KEY
+        sync: false
+      - key: VITE_ETHPLORER_API_KEY
+        sync: false
+      - key: VITE_ENABLE_EXHIBIT_HASHING
+        sync: false
+      - key: VITE_OPTIMISMSCAN_API_KEY
+        sync: false
+      - key: PUBLICNODE_BITCOIN_RPC
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: VITE_XRPSCAN_BASE_URL
+        sync: false
+      - key: VITE_ENABLE_AFFIDAVIT_GENERATION
+        sync: false
+      - key: APP_NAME
+        sync: false
+      - key: INFURA_LINEA_MAINNET
+        sync: false
+      - key: AUTO_SCRAPE_ENTITIES
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: RETRY_BASE_DELAY_MS
+        sync: false
+      - key: AUTO_LABEL_WALLETS
+        sync: false
+      - key: RETRY_STRATEGY
+        sync: false
+      - key: OKLINK_STATE_JSON_PATH
+        sync: false
+      - key: VITE_AIML_API_KEY_DEEPSEEK
+        sync: false
+      - key: VITE_CENSYS_API_KEY
+        sync: false
+      - key: VITE_INFURA_STARKNET_MAINNET
+        sync: false
+      - key: VITE_ADMIN_USERNAME
+        sync: false
+      - key: VITE_TATUM_ENABLE_NFTS
+        sync: false
+      - key: AUTO_FAILOVER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: ANKR_API_KEY
+        sync: false
+      - key: CELOSCAN_API_KEY
+        sync: false
+      - key: AI_MODEL_ORDER
+        sync: false
+      - key: ETHPLORER_API_KEY
+        sync: false
+      - key: SHODAN_API_KEY
+        sync: false
+      - key: TRACE_MAX_HOPS
         sync: false
       - key: GEMINI_API_KEYS
         sync: false
+      - key: SCRAPER_TARGET_EXPLORERS
+        sync: false
+      - key: GETBLOCK_BTC_KEY
+        sync: false
+      - key: NORMALIZE_ALL_NETWORKS
+        sync: false
+      - key: SCRAPE_URL_TRX
+        sync: false
+      - key: VITE_ANKR_MULTICHAIN_RPC
+        sync: false
+      - key: ARBISCAN_API_KEY
+        sync: false
+      - key: VITE_TRACE_MAX_HOPS
+        sync: false
+      - key: VITE_CRAWLER_TIMEOUT_SECONDS
+        sync: false
+      - key: VITE_INFURA_BASE_MAINNET
+        sync: false
+      - key: REPORT_EMAIL
+        sync: false
+      - key: VITE_GETBLOCK_SOL_KEY
+        sync: false
+      - key: VITE_AUTO_FAILOVER
+        sync: false
+      - key: VITE_BASESCAN_API_KEY
+        sync: false
+      - key: CRAWLER_MAX_RECORDS_BUFFER
+        sync: false
+      - key: VITE_TATUM_RATE_LIMIT
+        sync: false
+      - key: ANKR_MULTICHAIN_RPC
+        sync: false
+      - key: INFURA_AVALANCHE_MAINNET
+        sync: false
+      - key: VITE_ARBISCAN_API_KEY
+        sync: false
+      - key: VITE_GETBLOCK_TRON_KEY
+        sync: false
+      - key: VITE_CRAWLER_EXPORT_FORMAT
+        sync: false
+      - key: OKLINK_DOM_REGEX_MATCH
+        sync: false
+      - key: VITE_BINANCE_API_SECRET
+        sync: false
+      - key: VITE_PUBLICNODE_BASE_WSS
+        sync: false
+      - key: OKLINK_STATE_SCRIPT_KEYWORD
+        sync: false
+      - key: BSCSCAN_API_KEY
+        sync: false
+      - key: TATUM_ENABLE_SECURITY_CHECK
+        sync: false
+      - key: TRONSCAN_API_KEY
+        sync: false
+      - key: VITE_REDACT_WALLETS_IN_PRELIMINARY
+        sync: false
+      - key: ENABLE_EXHIBIT_HASHING
+        sync: false
+      - key: VITE_INFURA_BSC_MAINNET
+        sync: false
+      - key: SCRAPE_URL_LINEA
+        sync: false
+      - key: VITE_CRAWLER_ENABLED
+        sync: false
+      - key: INFURA_STARKNET_MAINNET
+        sync: false
+      - key: POLYGONSCAN_API_KEY
+        sync: false
+      - key: DATABASE_MONGO_URL
+        sync: false
+      - key: VITE_ADMIN_PASSWORD
+        sync: false
+      - key: VITE_INFURA_CELO_MAINNET
+        sync: false
+      - key: OKLINK_MULTI_SEARCH_URL
+        sync: false
+      - key: TOR_CONTROL_PORT
+        sync: false
+      - key: VITE_STRIPE_SECRET_KEY
+        sync: false
+      - key: REDACT_WALLETS_IN_PRELIMINARY
+        sync: false
+      - key: VITE_WHATSAPP_API_KEY
+        sync: false
+      - key: VITE_RETRY_STRATEGY
+        sync: false
+      - key: LINEASCAN_API_KEY
+        sync: false
+      - key: CRAWLER_DB_TYPE
+        sync: false
+      - key: VITE_DATABASE_MONGO_URL
+        sync: false
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ICF_USE_BROWSER_SCRAPER
+        sync: false
+      - key: SCRAPER_TIMEOUT_MS
+        sync: false
+      - key: INFURA_BSC_MAINNET
+        sync: false
+      - key: INFURA_ARBITRUM_MAINNET
+        sync: false
+      - key: PARALLEL_FETCH_LIMIT
+        sync: false
+      - key: HUNTER_API_KEY
+        sync: false
+      - key: PUBLICNODE_TRON_RPC
+        sync: false
+      - key: SCRAPE_URL_OP
+        sync: false
+      - key: VITE_PUBLICNODE_SOLANA_WSS
+        sync: false
+      - key: VITE_AUTO_LABEL_WALLETS
+        sync: false
+      - key: VITE_INFURA_API_KEY
+        sync: false
+      - key: SCRAPER_ENGINE
+        sync: false
+      - key: TRACE_MAX_DEPTH
+        sync: false
+      - key: VITE_PUBLICNODE_TRON_RPC
+        sync: false
+      - key: INFURA_CELO_MAINNET
+        sync: false
+      - key: AUTO_RETRY
+        sync: false
+      - key: VITE_SCRAPER_ENGINE
+        sync: false
+      - key: SOLANA_RPC
+        sync: false
+      - key: AIML_API_KEY_LLAMA
+        sync: false
+      - key: OKLINK_LABEL_CONFIDENCE_THRESHOLD
+        sync: false
+      - key: WHATSAPP_API_KEY
+        sync: false
+      - key: TATUM_RATE_LIMIT
+        sync: false
+      - key: VITE_AIML_API_KEY_BAGOODEX
+        sync: false
+      - key: VITE_NODE_ENV
+        sync: false
+      - key: SCRAPER_PROXY_URL
+        sync: false
+      - key: GETBLOCK_ETH_KEY
+        sync: false
+      - key: SCRAPE_URL_POLYGON
+        sync: false
+      - key: VITE_AI_MODEL_ORDER
+        sync: false
+      - key: VITE_INFURA_POLYGON_MAINNET
+        sync: false
+      - key: VITE_FLASK_SECRET_KEY
+        sync: false
+      - key: SCRAPE_URL_SOL
+        sync: false
+      - key: VITE_MAX_RETRIES
+        sync: false
+      - key: VITE_AI_ROTATION_ENABLED
+        sync: false
+      - key: VITE_HUNTER_API_KEY
+        sync: false
+      - key: VITE_GETBLOCK_ETH_KEY
+        sync: false
+      - key: VITE_CRAWLER_ENABLE_ENTITY_EXTRACTION
+        sync: false
+      - key: VITE_CHAIN_OF_CUSTODY_STRICT
+        sync: false
+      - key: BINANCE_API_KEY
+        sync: false
+      - key: VITE_APP_NAME
+        sync: false
+      - key: ENABLE_AFFIDAVIT_GENERATION
+        sync: false
+      - key: VALIDATION_SOL
+        sync: false
+      - key: SCRAPE_URL_STARKNET
+        sync: false
+      - key: VITE_TOR_CONTROL_PORT
+        sync: false
+      - key: ENABLE_COURT_EXPORT
+        sync: false
+      - key: VITE_SCRAPER_STEALTH_MODE
+        sync: false
+      - key: INFURA_OPTIMISM_MAINNET
+        sync: false
+      - key: FLASK_SECRET_KEY
+        sync: false
+      - key: SCRAPER_STEALTH_MODE
+        sync: false
+      - key: PUBLICNODE_TERRA_WSS
+        sync: false
+      - key: MAX_RETRIES
+        sync: false
+      - key: VITE_PUBLICNODE_TERRA_WSS
+        sync: false
+      - key: SCRAPE_URL_CELO
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: VITE_AUTO_SCRAPE_ENTITIES
+        sync: false
+      - key: SCRAPER_BYPASS_CLOUDFLARE
+        sync: false
+      - key: VITE_AUTO_RETRY
+        sync: false
+      - key: VITE_INFURA_ZKSYNC_MAINNET
+        sync: false
+      - key: VITE_PARALLEL_FETCH_LIMIT
+        sync: false
+      - key: VITE_TATUM_API_KEY
+        sync: false
+      - key: BASESCAN_API_KEY
+        sync: false
+      - key: VITE_AIML_API_KEY_CHATGPT
+        sync: false
+      - key: VITE_INFURA_ETHEREUM_MAINNET
+        sync: false
+      - key: VITE_TRACE_MAX_DEPTH
+        sync: false
+      - key: VITE_CRAWLER_DB_TYPE
+        sync: false
+      - key: GENEZIO_LOGIN_TOKEN
+        sync: false
+      - key: VITE_INFURA_LINEA_MAINNET
+        sync: false
+      - key: CRAWLER_EXPORT_FORMAT
+        sync: false
+      - key: VITE_TRONSCAN_API_KEY
+        sync: false
+      - key: GETBLOCK_SOL_KEY
+        sync: false
+      - key: TOR_SOCKS_PORT
+        sync: false
+      - key: VITE_CRAWLER_RATE_LIMIT_MS
+        sync: false
+      - key: INFURA_ZKSYNC_MAINNET
+        sync: false
+      - key: SCRAPE_URL_BTC
+        sync: false
+      - key: VITE_OKLINK_API_KEY
+        sync: false
+      - key: VITE_BINANCE_API_KEY
+        sync: false
+      - key: VITE_POSTGRES_URI
+        sync: false
+      - key: SCRAPE_URL_XRP
+        sync: false
+      - key: VITE_GETBLOCK_BTC_KEY
+        sync: false
+      - key: OKLINK_SUPPORTED_CHAINS
+        sync: false
+      - key: VITE_CRAWLER_MAX_THREADS
+        sync: false
+      - key: VITE_NORMALIZE_ALL_NETWORKS
+        sync: false
+      - key: GETBLOCK_XRP_KEY
+        sync: false
+      - key: CRAWLER_ENABLED
+        sync: false
+      - key: CRAWLER_ENABLE_ENTITY_EXTRACTION
+        sync: false
+      - key: CHAINSTACK_ETHEREUM_MAINNET
+        sync: false
+      - key: SCRAPE_URL_BSC
+        sync: false
+      - key: ETHERSCAN_API_KEY
+        sync: false
+      - key: VITE_CRAWLER_WEBSOCKET_ENDPOINT
+        sync: false
+      - key: VITE_TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: SCRAPE_URL_ETH
+        sync: false
+      - key: VITE_CRAWLER_USER_AGENT_ROTATION
+        sync: false
+      - key: MONGO_URI
+        sync: false
+      - key: INFURA_POLYGON_MAINNET
+        sync: false
+      - key: INFURA_API_KEY
+        sync: false
+      - key: VITE_ETHERSCAN_API_KEY
+        sync: false
+      - key: AIML_API_KEY_DEEPSEEK
+        sync: false
+      - key: CHAIN_OF_CUSTODY_STRICT
+        sync: false
+      - key: VITE_SNOWTRACE_API_KEY
+        sync: false
+      - key: XRPSCAN_BASE_URL
+        sync: false
+      - key: VITE_TATUM_ENABLE_SECURITY_CHECK
+        sync: false
+      - key: VITE_GEMINI_API_KEYS
+        sync: false
+      - key: VITE_CHAINSTACK_ETHEREUM_MAINNET
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: SCRAPE_URL_ARB
+        sync: false
+      - key: AI_ROTATION_ENABLED
+        sync: false
+      - key: CRAWLER_WEBSOCKET_ENDPOINT
+        sync: false
+      - key: VITE_INFURA_OPTIMISM_MAINNET
+        sync: false
+      - key: TOR_AUTO_START
+        sync: false
+      - key: CRAWLER_RATE_LIMIT_MS
+        sync: false
+      - key: VITE_CRAWLER_ENABLE_OSINT_LOOKUP
+        sync: false
+      - key: VITE_SHODAN_API_KEY
+        sync: false
+      - key: OPTIMISMSCAN_API_KEY
+        sync: false
+      - key: SNOWTRACE_API_KEY
+        sync: false
+      - key: VITE_TOR_SOCKS_PORT
+        sync: false
+      - key: VITE_PUBLICNODE_BITCOIN_RPC
+        sync: false
+      - key: SCRAPER_HEADLESS
+        sync: false
+      - key: PUBLICNODE_BASE_WSS
+        sync: false
+      - key: VITE_TOR_AUTO_START
+        sync: false
+      - key: CRAWLER_USER_AGENT_ROTATION
+        sync: false
+      - key: CRAWLER_TIMEOUT_SECONDS
+        sync: false
+      - key: INFURA_ETHEREUM_MAINNET
+        sync: false
+      - key: PUBLICNODE_SOLANA_WSS
+        sync: false
+      - key: CENSYS_API_KEY
+        sync: false
+      - key: SCRAPE_URL_AVAX
+        sync: false
+      - key: VALIDATION_ETH
+        sync: false
+      - key: VITE_INFURA_ARBITRUM_MAINNET
+        sync: false
+      - key: OKLINK_BASE_URL
+        sync: false
+      - key: VITE_APP_MODE
+        sync: false
       - key: OKLINK_API_KEY
+        sync: false
+      - key: GETBLOCK_TRON_KEY
+        sync: false
+      - key: SCRAPER_ROTATING_SESSIONS
+        sync: false
+      - key: OKLINK_DOM_CLASS_SELECTOR
+        sync: false
+      - key: VITE_INFURA_AVALANCHE_MAINNET
+        sync: false
+      - key: CRAWLER_ENABLE_OSINT_LOOKUP
+        sync: false
+      - key: VITE_CRAWLER_MAX_RECORDS_BUFFER
         sync: false
       - key: TATUM_API_KEY
         sync: false
+      - key: VITE_GENEZIO_LOGIN_TOKEN
+        sync: false
+      - key: INFURA_BASE_MAINNET
+        sync: false
+      - key: VITE_SOLANA_RPC
+        sync: false
+      - key: AIML_API_KEY_CHATGPT
+        sync: false
+      region: oregon
+      buildCommand: pip install --upgrade pip & pip install -r requirements.txt && playwright install chromium --with-deps
+      startCommand: python main.py
+      autoDeployTrigger: commit
+      rootDir: local_deploy
