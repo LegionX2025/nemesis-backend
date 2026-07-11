@@ -94,27 +94,38 @@ class HeadlessExplorerScraper:
                 labels = await self.extract_wallet_labels(page)
                 
                 try:
-                    # Generic selector that might match typical explorer rows
-                    rows = await page.query_selector_all("table tbody tr")
-                    for row in rows[:50]: # Scrape up to 50 txs per page
-                        text = await row.inner_text()
-                        cols = text.split('\n')
-                        if len(cols) > 3:
-                            # Mocking extraction logic
-                            raw_to = cols[2] if len(cols) > 2 else "Unknown"
-                            # Map to label if discovered
-                            mapped_to = labels.get(raw_to, raw_to)
-                            
-                            results.append({
-                                "hash": cols[0][:15] + "...", 
-                                "from": address,
-                                "to": mapped_to,
-                                "value": cols[3] if len(cols) > 3 else "0",
-                                "timeStamp": str(int(datetime.now(timezone.utc).timestamp())),
-                                "_source": "playwright_dom_scraper"
-                            })
+                    for page_num in range(1, max_pages + 1):
+                        logger.info(f"Scraping page {page_num} of {max_pages}...")
+                        # Generic selector that might match typical explorer rows
+                        rows = await page.query_selector_all("table tbody tr")
+                        for row in rows[:50]: # Scrape up to 50 txs per page
+                            text = await row.inner_text()
+                            cols = text.split('\n')
+                            if len(cols) > 3:
+                                # Mocking extraction logic
+                                raw_to = cols[2] if len(cols) > 2 else "Unknown"
+                                # Map to label if discovered
+                                mapped_to = labels.get(raw_to, raw_to)
+                                
+                                results.append({
+                                    "hash": cols[0][:15] + "...", 
+                                    "from": address,
+                                    "to": mapped_to,
+                                    "value": cols[3] if len(cols) > 3 else "0",
+                                    "timeStamp": str(int(datetime.now(timezone.utc).timestamp())),
+                                    "_source": "playwright_dom_scraper"
+                                })
+                        
+                        if page_num < max_pages:
+                            # Try to find and click the next button
+                            next_btn = await page.query_selector('a:has-text("Next"), button:has-text("Next"), .page-link:has-text(">")')
+                            if next_btn:
+                                await next_btn.click(timeout=5000)
+                                await asyncio.sleep(2) # Wait for page load
+                            else:
+                                break # No next button found
                 except Exception as e:
-                    logger.error(f"DOM parsing failed: {e}")
+                    logger.error(f"DOM parsing or pagination failed: {e}")
                 
                 await browser.close()
         except Exception as e:

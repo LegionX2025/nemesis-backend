@@ -854,11 +854,18 @@ class TraceEngine:
                 logger.error(f"Solana fetch failed for {addr}: {e}")
             return {"type": "solana", "data": all_txs, "actual_chain": "SOLANA"}
             
+        def get_rotated_key(key_name, default_val=""):
+            import random
+            val = CONFIG.get(key_name, default_val)
+            if val and ',' in val:
+                return random.choice([k.strip() for k in val.split(',') if k.strip()])
+            return val
+
         actual_chain = chain if chain in EVM_DOMAINS else "ETHEREUM"
         
         # For V2, Etherscan API keys work for all chains, but free tier requires network-specific keys.
         key_var = f"{actual_chain}SCAN_API_KEY" if actual_chain != "ETHEREUM" else "ETHERSCAN_API_KEY"
-        api_key = CONFIG.get(key_var, CONFIG.get("ETHERSCAN_API_KEY", "YourApiKeyToken"))
+        api_key = get_rotated_key(key_var, get_rotated_key("ETHERSCAN_API_KEY", "YourApiKeyToken"))
         
         all_txs = []
         seen_hashes = set()
@@ -910,7 +917,7 @@ class TraceEngine:
             results = []
             ankr_map = {"ETHEREUM": "eth", "BSC": "bsc", "POLYGON": "polygon", "BASE": "base", "ARBITRUM": "arbitrum", "OPTIMISM": "optimism"}
             ankr_chain = ankr_map.get(actual_chain)
-            ankr_key = CONFIG.get("ANKR_API_KEY")
+            ankr_key = get_rotated_key("ANKR_API_KEY")
             if ankr_chain and ankr_key:
                 ankr_url = f"https://rpc.ankr.com/multichain/{ankr_key}"
                 for method in ["ankr_getTransactionsByAddress", "ankr_getTokenTransfers"]:
@@ -968,7 +975,7 @@ class TraceEngine:
             results = []
             tatum_chain_map = {"ETHEREUM": "ethereum", "BSC": "bsc", "POLYGON": "polygon"}
             t_chain = tatum_chain_map.get(actual_chain)
-            tatum_key = CONFIG.get("TATUM_API_KEY")
+            tatum_key = get_rotated_key("TATUM_API_KEY")
             if t_chain and tatum_key:
                 url_tatum = f"https://api.tatum.io/v3/{t_chain}/account/transaction/{addr}?pageSize=50"
                 try:
@@ -984,7 +991,7 @@ class TraceEngine:
 
         async def fetch_bitquery():
             results = []
-            bq_key = CONFIG.get("BITQUERY_V2_TOKEN") or CONFIG.get("BITQUERY_API_TOKEN")
+            bq_key = get_rotated_key("BITQUERY_V2_TOKEN") or get_rotated_key("BITQUERY_API_TOKEN")
             if bq_key and actual_chain in ["ETHEREUM", "BSC", "POLYGON"]:
                 bq_url = "https://streaming.bitquery.io/graphql"
                 headers = {"Content-Type": "application/json", "Authorization": f"Bearer {bq_key}"}
@@ -1052,7 +1059,7 @@ class TraceEngine:
             logger.warning(f"Swarm API fetch returned 0 txs for {addr}. Initiating Playwright DOM Scraper Fallback.")
             try:
                 from services.playwright_scraper import scraper_engine
-                scrape_res = await scraper_engine.scrape_transactions(actual_chain, addr)
+                scrape_res = await scraper_engine.scrape_transactions(actual_chain, addr, max_pages=3)
                 for tx in scrape_res:
                     all_txs.append(tx)
             except Exception as e:

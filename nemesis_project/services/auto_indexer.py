@@ -4,14 +4,31 @@ import asyncio
 import os
 import re
 
+from dotenv import load_dotenv
+load_dotenv()
+
 class AutoDynamicIndexer:
     def __init__(self):
         self.default_docs = [
             "https://developers.cloudflare.com/fundamentals/api/get-started/",
             "https://docs.render.com/api",
-            "https://docs.github.com/en/rest",
-            "https://docs.bitquery.io/docs/category/graphql-api/"
+            "https://docs.github.com/en/rest"
         ]
+        
+        API_DOC_MAP = {
+            "ETHERSCAN_API_KEY": "https://docs.etherscan.io/",
+            "OKLINK_API_KEY": "https://www.oklink.com/docs/en/",
+            "TATUM_API_KEY": "https://apidoc.tatum.io/",
+            "ANKR_API_KEY": "https://www.ankr.com/docs/advanced-api/",
+            "INFURA_API_KEY": "https://docs.infura.io/api/",
+            "BITQUERY_API_TOKEN": "https://docs.bitquery.io/docs/category/graphql-api/",
+            "BITQUERY_V2_TOKEN": "https://docs.bitquery.io/docs/category/graphql-api/",
+            "GETBLOCK_ETH_KEY": "https://getblock.io/docs/"
+        }
+        
+        for key, doc_url in API_DOC_MAP.items():
+            if os.environ.get(key) and doc_url not in self.default_docs:
+                self.default_docs.append(doc_url)
         self.kb_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "knowledge_base")
         os.makedirs(self.kb_dir, exist_ok=True)
 
