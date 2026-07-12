@@ -1,0 +1,613 @@
+# 🧠 NEMESIS INTELLIGENCE OS v3.2
+
+# Unified Global Entity Taxonomy (UGET) v1.0
+
+## Core Principle
+
+Every object in the system is an Entity.
+
+Every Entity can:
+
+* Own
+* Control
+* Operate
+* Communicate
+* Transact
+* Host
+* Register
+* Create
+* Influence
+* Appear
+
+All entities inherit from the same master ontology and participate in the Unified Intelligence Entity Graph (UIEG).
+
+---
+
+# 🌍 LEVEL 0 — ROOT ENTITY MODEL
+
+```text
+ENTITY
+│
+├── Human Intelligence
+├── Corporate Intelligence
+├── Financial Intelligence
+├── Blockchain Intelligence
+├── Infrastructure Intelligence
+├── Digital Intelligence
+├── AI Intelligence
+├── Regulatory Intelligence
+├── Physical Intelligence
+├── Threat Intelligence
+├── Evidence Intelligence
+```
+
+---
+
+# 👤 HUMAN INTELLIGENCE DOMAIN
+
+## PERSON
+
+```text
+Person
+├── Individual
+├── Retail User
+├── Customer
+├── Trader
+├── Investor
+├── Employee
+├── Executive
+├── Director
+├── Founder
+├── UBO
+├── Beneficiary
+├── Developer
+├── Administrator
+├── Operator
+├── Moderator
+├── Influencer
+├── Journalist
+├── Researcher
+├── Government Official
+├── Politician
+├── Regulator
+├── Law Enforcement
+├── Attorney
+├── Accountant
+├── Auditor
+├── High Risk Actor
+├── Threat Actor
+├── Fraudster
+├── Hacker
+├── Exploiter
+├── Scam Operator
+├── Money Mule
+├── Sanctioned Individual
+├── Terrorist Entity
+```
+
+---
+
+## IDENTITY
+
+```text
+Identity
+├── Username
+├── Handle
+├── Alias
+├── Nickname
+├── Gamer Tag
+├── Forum Account
+├── Email
+├── Phone Number
+├── PGP Key
+├── SSH Key
+├── Government ID
+├── Passport
+├── Driver License
+├── National ID
+├── Tax ID
+├── Employee ID
+├── Biometric Identity
+├── Facial Signature
+├── Voice Print
+```
+
+---
+
+# 🏢 CORPORATE INTELLIGENCE DOMAIN
+
+## ORGANIZATION
+
+```text
+Organization
+├── Corporation
+├── Public Company
+├── Private Company
+├── Startup
+├── Holding Company
+├── Parent Company
+├── Subsidiary
+├── Shell Company
+├── SPV
+├── Foundation
+├── Trust
+├── Nonprofit
+├── NGO
+├── Government Agency
+├── Municipality
+├── State Enterprise
+├── Bank
+├── Credit Union
+├── Fintech
+├── Exchange
+├── Broker
+├── Dealer
+├── Custodian
+├── Asset Manager
+├── Hedge Fund
+├── Venture Capital
+├── Family Office
+├── DAO
+├── Protocol Foundation
+├── AI Company
+├── SaaS Company
+├── Infrastructure Provider
+├── Telecom Provider
+├── Hosting Provider
+├── Cloud Provider
+├── ISP
+```
+
+---
+
+## LEGAL ENTITY
+
+```text
+Legal Entity
+├── Registration
+├── Business License
+├── Tax Registration
+├── Regulatory Filing
+├── Court Filing
+├── Legal Proceeding
+├── Consent Order
+├── Settlement
+├── Enforcement Action
+├── Judgment
+├── Bankruptcy
+├── Trademark
+├── Patent
+├── Copyright
+```
+
+---
+
+# ⛓️ BLOCKCHAIN INTELLIGENCE DOMAIN
+
+## WALLET
+
+```text
+Wallet
+├── EOA Wallet
+├── Smart Contract Wallet
+├── Multisig Wallet
+├── Exchange Wallet
+├── Custodial Wallet
+├── Non-Custodial Wallet
+├── Treasury Wallet
+├── DAO Treasury
+├── Bridge Wallet
+├── Router Wallet
+├── Liquidity Wallet
+├── Validator Wallet
+├── Staking Wallet
+├── Mining Wallet
+├── NFT Wallet
+├── Cold Storage Wallet
+├── Hot Wallet
+├── Burner Wallet
+├── Mixer Wallet
+├── Exploiter Wallet
+├── Scam Wallet
+├── Bot Wallet
+├── MEV Wallet
+├── Arbitrage Wallet
+├── Institutional Wallet
+├── Government Wallet
+├── Sanctioned Wallet
+```
+
+---
+
+## SMART CONTRACT
+
+```text
+Smart Contract
+├── ERC20 Contract
+├── ERC721 Contract
+├── ERC1155 Contract
+├── Proxy Contract
+├── Upgradeable Contract
+├── Governance Contract
+├── Treasury Contract
+├── DeFi Contract
+├── DEX Contract
+├── Lending Contract
+├── Borrowing Contract
+├── Yield Contract
+├── Staking Contract
+├── Bridge Contract
+├── Router Contract
+├── Oracle Contract
+├── Vault Contract
+├── Escrow Contract
+├── NFT Contract
+├── Marketplace Contract
+├── Token Factory
+├── Launchpad Contract
+├── Exploited Contract
+├── Malicious Contract
+```
+
+---
+
+## DIGITAL ASSET
+
+```text
+Digital Asset
+├── Cryptocurrency
+├── Stablecoin
+├── CBDC
+├── Wrapped Asset
+├── Governance Token
+├── Utility Token
+├── Security Token
+├── NFT
+├── NFT Collection
+├── LP Token
+├── Synthetic Asset
+├── Derivative Token
+├── Meme Coin
+├── RWA Token
+```
+
+---
+
+# 🌐 INFRASTRUCTURE INTELLIGENCE DOMAIN
+
+## DOMAIN
+
+```text
+Domain
+├── Root Domain
+├── Subdomain
+├── Brand Domain
+├── Corporate Domain
+├── Government Domain
+├── Exchange Domain
+├── Phishing Domain
+├── Malicious Domain
+├── Onion Domain
+```
+
+---
+
+## NETWORK
+
+```text
+Network Asset
+├── IP Address
+├── IPv4
+├── IPv6
+├── ASN
+├── BGP Prefix
+├── DNS Record
+├── Nameserver
+├── Mail Server
+├── Reverse DNS
+├── SSL Certificate
+├── TLS Certificate
+├── API Endpoint
+├── WebSocket Endpoint
+├── RPC Endpoint
+├── CDN Node
+├── Edge Node
+```
+
+---
+
+## COMPUTE
+
+```text
+Infrastructure
+├── Server
+├── VM
+├── Container
+├── Kubernetes Cluster
+├── Cloud Account
+├── AWS Account
+├── Azure Subscription
+├── GCP Project
+├── Database
+├── Storage Bucket
+├── Message Queue
+├── Kafka Cluster
+├── Redis Cluster
+```
+
+---
+
+# 💻 DIGITAL INTELLIGENCE DOMAIN
+
+## DEVICE
+
+```text
+Device
+├── Desktop
+├── Laptop
+├── Mobile Phone
+├── Tablet
+├── Smart TV
+├── IoT Device
+├── ATM
+├── POS Terminal
+├── Hardware Wallet
+├── Network Appliance
+├── Router
+├── Firewall
+├── Server
+```
+
+---
+
+## SOFTWARE
+
+```text
+Software
+├── Application
+├── Mobile App
+├── Desktop App
+├── Web App
+├── API
+├── Browser Extension
+├── SaaS Platform
+├── Operating System
+├── Malware
+├── Ransomware
+├── Trojan
+├── Backdoor
+├── Botnet Client
+```
+
+---
+
+# 🤖 AI INTELLIGENCE DOMAIN
+
+## AI SYSTEM
+
+```text
+AI System
+├── LLM Provider
+├── Foundation Model
+├── AI Agent
+├── Multi-Agent System
+├── Autonomous Agent
+├── Trading Agent
+├── Treasury Agent
+├── Compliance Agent
+├── Fraud Detection Agent
+├── Risk Engine
+├── ML Pipeline
+├── Recommendation Engine
+├── Autonomous Workflow
+├── AI Copilot
+├── AI Research System
+├── Synthetic Identity Generator
+```
+
+---
+
+## AI ARTIFACT
+
+```text
+AI Artifact
+├── Model
+├── Prompt
+├── Agent Memory
+├── Tool
+├── Workflow
+├── Dataset
+├── Embedding Index
+├── Vector Store
+├── Knowledge Base
+```
+
+---
+
+# ⚖️ REGULATORY INTELLIGENCE DOMAIN
+
+## REGULATORY ENTITY
+
+```text
+Regulatory Entity
+├── SEC
+├── DOJ
+├── CFTC
+├── OFAC
+├── FinCEN
+├── FCA
+├── MAS
+├── ASIC
+├── ESMA
+├── FATF
+├── Interpol
+├── Europol
+├── Local Regulator
+```
+
+---
+
+## COMPLIANCE OBJECT
+
+```text
+Compliance Object
+├── License
+├── Registration
+├── Permit
+├── Filing
+├── Disclosure
+├── AML Program
+├── KYC Record
+├── SAR
+├── STR
+├── Audit Record
+├── Compliance Report
+```
+
+---
+
+# 🕵️ THREAT INTELLIGENCE DOMAIN
+
+## THREAT ACTOR
+
+```text
+Threat Actor
+├── Nation State
+├── APT Group
+├── Cybercriminal Group
+├── Ransomware Group
+├── Hacktivist Group
+├── Insider Threat
+├── Fraud Ring
+├── Scam Network
+├── Terrorist Group
+├── Extremist Group
+```
+
+---
+
+## THREAT OBJECT
+
+```text
+Threat Object
+├── IOC
+├── Malware Sample
+├── C2 Server
+├── Exploit
+├── Vulnerability
+├── CVE
+├── TTP
+├── Campaign
+├── Attack Infrastructure
+```
+
+---
+
+# 🌍 PHYSICAL INTELLIGENCE DOMAIN
+
+## LOCATION
+
+```text
+Location
+├── Country
+├── State
+├── Province
+├── City
+├── Municipality
+├── Address
+├── Building
+├── Office
+├── Datacenter
+├── GPS Coordinate
+├── Region
+├── Geofence
+```
+
+---
+
+## ASSET
+
+```text
+Physical Asset
+├── Vehicle
+├── Aircraft
+├── Vessel
+├── Property
+├── Facility
+├── Warehouse
+├── Office
+├── ATM
+├── Mining Facility
+```
+
+---
+
+# 📄 EVIDENCE INTELLIGENCE DOMAIN
+
+## EVIDENCE
+
+```text
+Evidence
+├── Transaction
+├── Block
+├── Smart Contract Event
+├── API Response
+├── Document
+├── PDF
+├── Email
+├── Chat Message
+├── Screenshot
+├── Image
+├── Video
+├── Audio
+├── Log Entry
+├── Database Record
+├── Registry Filing
+├── Court Record
+├── Regulatory Filing
+├── Blockchain Snapshot
+```
+
+---
+
+# 🧠 FINAL ENTITY COUNT
+
+### Human Intelligence
+
+~50+ entity classes
+
+### Corporate Intelligence
+
+~40+ entity classes
+
+### Blockchain Intelligence
+
+~80+ entity classes
+
+### Infrastructure Intelligence
+
+~50+ entity classes
+
+### AI Intelligence
+
+~25+ entity classes
+
+### Regulatory Intelligence
+
+~20+ entity classes
+
+### Threat Intelligence
+
+~25+ entity classes
+
+### Physical Intelligence
+
+~20+ entity classes
+
+### Evidence Intelligence
+
+~30+ entity classes
+
+## Total Unified Taxonomy
+
+**~350–450 entity and sub-entity classes**, all participating in a single Unified Intelligence Entity Graph (UIEG), Dossier Engine, Risk Engine, AML Engine, OSINT Engine, Graph Engine, and Chain-of-Custody framework.

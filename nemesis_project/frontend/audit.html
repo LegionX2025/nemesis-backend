@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NEMESIS | Enterprise Audit Report</title>
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lionsgate Omni-Chain Forensics | Case LGN-US-2026-0172</title>
+    <script>
+        if (!window.originalWarn) {
+            window.originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) return;
+                window.originalWarn.apply(console, args);
+            };
+        }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.halo.min.js"></script>
+    <script src="https://unpkg.com/force-graph@1.43.3/dist/force-graph.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc; 
+            color: #0f172a; 
+            margin: 0; 
+            min-height: 100vh; 
+        }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Vanta Background Container */
+        #vanta-bg {
+            position: fixed;
+            z-index: -1;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .nemesis-effect { background: linear-gradient(to right, #3b82f6 20%, #a855f7 50%, #3b82f6 80%); background-size: 200% auto; color: #fff; background-clip: text; text-fill-color: transparent; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shine 5s linear infinite; }
+        @keyframes shine { to { background-position: 200% center; } }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    </style>
+</head>
+<body class="flex bg-slate-50 min-h-screen relative">
+    <!-- Vanta Background -->
+    <div id="vanta-bg"></div>
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.VANTA) {
+                window.vantaEffect = VANTA.HALO({
+                    el: "#vanta-bg",
+                    mouseControls: true,
+                    touchControls: true,
+                    gyroControls: false,
+                    minHeight: 200.00,
+                    minWidth: 200.00,
+                    baseColor: 0xffffff,
+                    backgroundColor: 0xf8fafc,
+                    amplitudeFactor: 1.5,
+                    size: 1.5
+                });
+            }
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(15, 23, 42, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .phase-card {
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .phase-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(59, 130, 246, 0.4);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Overrides for Light Web3GL Theme */
+        main { background: transparent !important; }
+    </style>
+</head>
+<body class="antialiased overflow-x-hidden">
+    
+    <!-- Sidebar Navigation -->
+<aside class="w-72 bg-white/90 backdrop-blur-md border-r border-slate-200 h-screen sticky top-0 flex flex-col py-10 z-50 shrink-0 shadow-lg shadow-slate-200/50">
+    <div class="mb-14 flex flex-col items-center px-4 text-center">
+        <img src="/static/logo_nemesis.jpeg" alt="Nemesis Logo" class="h-16 w-16 rounded-xl border border-slate-200 shadow-[0_8px_16px_rgba(0,0,0,0.15)] mb-4 transition-transform hover:scale-105 duration-300">
+        <h1 class="text-base font-black uppercase tracking-widest text-slate-900 leading-tight">LIONSGATE</h1>
+        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mt-2">INTELLIGENCE NETWORK</p>
+    </div>
+    
+    <style>
+        .nav-link { position: relative; overflow: hidden; }
+        .nav-link::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: linear-gradient(180deg, #3b82f6, #0ea5e9); transform: scaleY(0); transition: transform 0.3s ease; transform-origin: left; }
+        .nav-link:hover::before { transform: scaleY(1); }
+        .nav-link.active::before { transform: scaleY(1); }
+        
+        .icon-3d {
+            display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.4), 0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .nav-link:hover .icon-3d { transform: translateY(-2px) scale(1.05); box-shadow: inset 0 2px 4px rgba(255,255,255,0.6), 0 8px 12px rgba(0,0,0,0.15), 0 3px 6px rgba(0,0,0,0.1); }
+        
+        /* Specific Icon Colors */
+        .icon-home { background: linear-gradient(135deg, #f8fafc, #cbd5e1); color: #334155; }
+        .icon-tracer { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #ffffff; }
+        .icon-id { background: linear-gradient(135deg, #a855f7, #7e22ce); color: #ffffff; }
+        .icon-audit { background: linear-gradient(135deg, #10b981, #047857); color: #ffffff; }
+        .icon-docs { background: linear-gradient(135deg, #f59e0b, #b45309); color: #ffffff; }
+    </style>
+
+    <nav class="flex flex-col w-full gap-2 px-4">
+        <a href="/" class="nav-link px-4 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-4 {% if active_page == 'home' %}active bg-slate-50 text-slate-900{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-700{% endif %}">
+            <div class="icon-3d icon-home"><i class="fa-solid fa-house"></i></div>
+            HOME
+        </a>
+        
+        <a href="/nemesis_tracer" class="nav-link px-4 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-4 {% if active_page == 'tracer' %}active bg-blue-50/50 text-blue-700{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-700{% endif %}">
+            <div class="icon-3d icon-tracer"><i class="fa-solid fa-network-wired"></i></div>
+            NEMESIS TRACER
+        </a>
+        
+        <a href="/nemesis_id" class="nav-link px-4 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-4 {% if active_page == 'id' %}active bg-purple-50/50 text-purple-700{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-700{% endif %}">
+            <div class="icon-3d icon-id"><i class="fa-solid fa-fingerprint"></i></div>
+            NEMESIS ID
+        </a>
+        
+        <a href="/audit" class="nav-link px-4 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-4 {% if active_page == 'audit' %}active bg-emerald-50/50 text-emerald-700{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-700{% endif %}">
+            <div class="icon-3d icon-audit"><i class="fa-solid fa-shield-halved"></i></div>
+            ENTERPRISE AUDIT
+        </a>
+        
+        <a href="/darknet_search" class="nav-link px-4 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-4 {% if active_page == 'darknet' %}active bg-red-50/50 text-red-700{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-700{% endif %}">
+            <div class="icon-3d" style="background: linear-gradient(135deg, #ef4444, #991b1b); color: #ffffff;"><i class="fa-solid fa-skull"></i></div>
+            DARKNET CRAWLER
+        </a>
+
+        <a href="/docs" class="nav-link px-4 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-4 {% if active_page == 'docs' %}active bg-amber-50/50 text-amber-700{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-700{% endif %}">
+            <div class="icon-3d icon-docs"><i class="fa-solid fa-book"></i></div>
+            API DOCS
+        </a>
+
+        <a href="/admin" class="nav-link px-4 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-4 {% if active_page == 'admin' %}active bg-slate-800 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-700{% endif %}">
+            <div class="icon-3d" style="background: linear-gradient(135deg, #1e293b, #0f172a); color: #ffffff;"><i class="fa-solid fa-lock"></i></div>
+            ADMIN SYSTEM
+        </a>
+    </nav>
+    
+    <div class="mt-auto px-4 text-center relative group w-full">
+        <div class="mb-4 bg-slate-900/5 border border-slate-200/50 rounded-xl p-3 shadow-inner">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles text-purple-500 text-xs"></i>
+                    <span class="text-[10px] font-bold text-slate-700 tracking-wider">AUTO-PILOT</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="godmodeToggle" class="sr-only peer">
+                    <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-purple-500 peer-checked:to-emerald-500 shadow-inner"></div>
+                </label>
+            </div>
+        </div>
+
+        <div class="absolute inset-0 bg-emerald-500/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <p class="text-[9px] text-slate-400 font-mono uppercase tracking-widest relative z-10">
+            System Online<br>
+            <span class="text-emerald-500 animate-pulse drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]"><i class="fa-solid fa-circle text-[6px] mr-1 align-middle"></i>Node Secure</span>
+        </p>
+    </div>
+</aside>
+
+
+    <!-- Main Content -->
+    <main class="relative z-10 pt-32 pb-20 px-8 max-w-7xl mx-auto space-y-12">
+        
+        <!-- Header Section -->
+        <section class="text-center space-y-6 mb-16">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-50 text-emerald-600 text-xs font-bold uppercase tracking-widest mb-4">
+                <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                Audit Complete
+            </div>
+            <div class="glass-text-container">
+                <h1 class="text-5xl md:text-7xl font-black tracking-tighter text-slate-900">Master Software <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Audit Report</span></h1>
+            </div>
+            <div class="glass-text-container mx-auto">
+                <p class="text-lg text-slate-700 max-w-2xl mx-auto font-semibold">An exhaustive 22-phase enterprise security, architecture, and compliance assessment of the NEMESIS OmniChain Forensics Engine.</p>
+            </div>
+        </section>
+
+        <!-- Executive Summary & Scores -->
+        <section id="executive" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 glass-card p-8">
+                <h2 class="text-2xl font-bold mb-6 flex items-center gap-3 text-slate-900"><i class="fa-solid fa-file-signature text-blue-600"></i> Executive Summary</h2>
+                <div class="space-y-4 text-slate-700 leading-relaxed">
+                    <p>The NEMESIS Engine is a high-throughput, horizontally scalable intelligence extraction platform built on FastAPI and asynchronous Python queues. The frontend leverages Vanilla HTML5, Tailwind CSS, and vis-network for interactive graph rendering.</p>
+                    <p>This audit evaluates the system against strict enterprise and government readiness standards, examining its internal architecture, API security posture, code quality, horizontal scalability, and forensic capabilities.</p>
+                </div>
+                <div class="mt-8 grid grid-cols-3 gap-4 border-t border-slate-700/50 pt-8">
+                    <div class="text-center">
+                        <div class="text-3xl font-black text-emerald-400">72<span class="text-sm text-slate-500">/100</span></div>
+                        <div class="text-[10px] uppercase tracking-widest text-slate-400 mt-2">Enterprise Ready</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-black text-amber-400">65<span class="text-sm text-slate-500">/100</span></div>
+                        <div class="text-[10px] uppercase tracking-widest text-slate-400 mt-2">Gov Ready</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-black text-blue-400">75<span class="text-sm text-slate-500">/100</span></div>
+                        <div class="text-[10px] uppercase tracking-widest text-slate-400 mt-2">Health Score</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="glass-card p-8 flex flex-col justify-center items-center">
+                <h3 class="text-sm font-bold uppercase tracking-widest text-slate-400 mb-4 w-full text-center">System Vectors</h3>
+                <div class="relative w-full aspect-square">
+                    <canvas id="radarChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Audit Phases Grid -->
+        <h2 class="text-2xl font-bold mt-16 mb-8 flex items-center gap-3"><i class="fa-solid fa-microchip text-indigo-400"></i> Comprehensive Phase Findings</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Phase 1 & 2 -->
+            <div class="glass-card p-6 phase-card">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-lg font-bold text-white">1 & 2. Architecture & Inventory</h3>
+                    <span class="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-1 rounded border border-blue-500/30">ASYNC MONOLITH</span>
+                </div>
+                <p class="text-sm text-slate-400 mb-4">Uses Python's `asyncio` combined with `Semaphore` structures to achieve high concurrency without crashing RPC nodes.</p>
+                <div class="bg-slate-900/50 p-4 rounded-lg border border-slate-800">
+                    <div class="text-xs font-mono text-slate-300">
+                        <span class="text-emerald-400">✔</span> motor.motor_asyncio<br>
+                        <span class="text-emerald-400">✔</span> WebSockets (Full Duplex)<br>
+                        <span class="text-amber-400">⚠</span> Tightly coupled Controllers
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 3 & 8 -->
+            <div class="glass-card p-6 phase-card">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-lg font-bold text-white">3 & 8. Source & Frontend</h3>
+                    <span class="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-1 rounded border border-amber-500/30">REFACTOR NEEDED</span>
+                </div>
+                <p class="text-sm text-slate-400 mb-4">The `index.html` file is over 4,000 lines long, mixing templates, CSS, and WebSocket logic. Violates Separation of Concerns.</p>
+                <div class="w-full bg-slate-800 rounded-full h-1.5 mb-2">
+                    <div class="bg-amber-500 h-1.5 rounded-full" style="width: 45%"></div>
+                </div>
+                <div class="text-[10px] text-slate-500 uppercase tracking-wider text-right">Maintainability Index: 45%</div>
+            </div>
+
+            <!-- Phase 4 & 6 -->
+            <div id="security" class="glass-card p-6 phase-card border-rose-500/30">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-lg font-bold text-white">4 & 6. API Security</h3>
+                    <span class="text-[10px] bg-rose-500/20 text-rose-400 px-2 py-1 rounded border border-rose-500/30">CRITICAL</span>
+                </div>
+                <p class="text-sm text-slate-400 mb-4">Broken Access Control. The `/api/start_trace` and `/admin` endpoints currently lack OAuth2, JWT, or Basic Auth barriers.</p>
+                <div class="bg-rose-950/30 p-3 rounded border border-rose-500/20 text-xs text-rose-300 flex items-start gap-2">
+                    <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
+                    <div>Anyone with network access can hammer the tracing queue. Immediate implementation of FastAPI JWT Auth required.</div>
+                </div>
+            </div>
+
+            <!-- Phase 5 & 7 -->
+            <div class="glass-card p-6 phase-card">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-lg font-bold text-white">5 & 7. Data & Databases</h3>
+                    <span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded border border-emerald-500/30">STABLE</span>
+                </div>
+                <p class="text-sm text-slate-400 mb-4">MongoDB indexes have been fixed (`tx_hash` unique index). Schema-less design supports multiple chain topologies.</p>
+                <p class="text-xs text-slate-500 italic">Recommendation: Migrate to Neo4j or Amazon Neptune for native Cypher query BFS support above depth 12.</p>
+            </div>
+
+        </div>
+
+        <!-- Action Plan Table -->
+        <section class="glass-card p-8 mt-12 overflow-hidden">
+            <h2 class="text-2xl font-bold mb-6 flex items-center gap-3"><i class="fa-solid fa-list-check text-emerald-400"></i> Prioritized Action Plan</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-700/50">
+                            <th class="py-4 px-4 text-slate-400 font-bold uppercase tracking-wider text-xs">Priority</th>
+                            <th class="py-4 px-4 text-slate-400 font-bold uppercase tracking-wider text-xs">Phase</th>
+                            <th class="py-4 px-4 text-slate-400 font-bold uppercase tracking-wider text-xs">Finding</th>
+                            <th class="py-4 px-4 text-slate-400 font-bold uppercase tracking-wider text-xs">Recommendation</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/50 text-slate-300">
+                        <tr class="hover:bg-slate-800/20 transition">
+                            <td class="py-4 px-4"><span class="px-2 py-1 rounded text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">P0 - IMMEDIATE</span></td>
+                            <td class="py-4 px-4 font-mono text-xs">Security</td>
+                            <td class="py-4 px-4">Open API Endpoints</td>
+                            <td class="py-4 px-4">Implement `fastapi.security.OAuth2PasswordBearer` and JWT.</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/20 transition">
+                            <td class="py-4 px-4"><span class="px-2 py-1 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">P1 - HIGH</span></td>
+                            <td class="py-4 px-4 font-mono text-xs">Blockchain</td>
+                            <td class="py-4 px-4">Missing XRP/SOL/XLM</td>
+                            <td class="py-4 px-4">Develop native `async` fetchers for Helius, XRPSCAN, and Horizon APIs.</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/20 transition">
+                            <td class="py-4 px-4"><span class="px-2 py-1 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">P1 - HIGH</span></td>
+                            <td class="py-4 px-4 font-mono text-xs">Architecture</td>
+                            <td class="py-4 px-4">Monolithic Frontend</td>
+                            <td class="py-4 px-4">Extract `index.html` JS logic into dedicated ES6 modules or React.</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/20 transition">
+                            <td class="py-4 px-4"><span class="px-2 py-1 rounded text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">P2 - MED</span></td>
+                            <td class="py-4 px-4 font-mono text-xs">Database</td>
+                            <td class="py-4 px-4">BFS RAM Limits</td>
+                            <td class="py-4 px-4">Transition to Neo4j graph database for recursive mapping.</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/20 transition">
+                            <td class="py-4 px-4"><span class="px-2 py-1 rounded text-[10px] font-bold bg-slate-500/20 text-slate-400 border border-slate-500/30">P3 - LOW</span></td>
+                            <td class="py-4 px-4 font-mono text-xs">DevOps</td>
+                            <td class="py-4 px-4">Basic zip backups</td>
+                            <td class="py-4 px-4">Containerize via Docker & deploy with Kubernetes ConfigMaps.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Init Scripts -->
+    <script>
+        // Init Vanta.js NET effect
+        VANTA.NET({
+            el: "#vanta-bg",
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.00,
+            minWidth: 200.00,
+            scale: 1.00,
+            scaleMobile: 1.00,
+            color: 0x38bdf8,
+            backgroundColor: 0x020617,
+            points: 12.00,
+            maxDistance: 22.00,
+            spacing: 16.00
+        });
+
+        // Init Chart.js Radar
+        const ctx = document.getElementById('radarChart').getContext('2d');
+        
+        Chart.defaults.color = 'rgba(148, 163, 184, 0.8)';
+        Chart.defaults.font.family = "'Inter', sans-serif";
+
+        new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['Security', 'Architecture', 'Performance', 'Code Quality', 'Compliance', 'AI Safety'],
+                datasets: [{
+                    label: 'Current Score',
+                    data: [40, 75, 85, 45, 60, 90],
+                    backgroundColor: 'rgba(56, 189, 248, 0.2)',
+                    borderColor: 'rgba(56, 189, 248, 1)',
+                    pointBackgroundColor: '#020617',
+                    pointBorderColor: 'rgba(56, 189, 248, 1)',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(56, 189, 248, 1)',
+                    borderWidth: 2
+                }, {
+                    label: 'Enterprise Target',
+                    data: [95, 90, 90, 85, 95, 95],
+                    backgroundColor: 'rgba(52, 211, 153, 0.1)',
+                    borderColor: 'rgba(52, 211, 153, 0.5)',
+                    borderDash: [5, 5],
+                    pointBackgroundColor: 'transparent',
+                    pointBorderColor: 'transparent',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: { color: 'rgba(148, 163, 184, 0.2)' },
+                        grid: { color: 'rgba(148, 163, 184, 0.1)' },
+                        pointLabels: {
+                            font: { size: 10, weight: 'bold' },
+                            color: 'rgba(148, 163, 184, 0.8)'
+                        },
+                        ticks: {
+                            display: false,
+                            min: 0,
+                            max: 100
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            boxWidth: 6,
+                            padding: 20,
+                            font: { size: 10 }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+        <!-- CONTENT MODAL -->
+        <div id="content-modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[9999] items-center justify-center font-sans text-left">
+            <div class="bg-white rounded-xl shadow-2xl w-[800px] border border-slate-200 overflow-hidden flex flex-col max-h-[85vh]">
+                <div class="bg-indigo-600 text-white px-6 py-4 flex justify-between items-center shadow-sm">
+                    <h2 class="text-lg font-bold flex items-center gap-2" id="content-modal-title">
+                        Title
+                    </h2>
+                    <button onclick="closeContentPage()" class="text-indigo-200 hover:text-white transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                </div>
+                <div class="p-6 overflow-y-auto text-slate-700 text-sm" id="content-modal-body">
+                </div>
+            </div>
+        </div>
+
+    <script>
+        window.openContentPage = function(page) {
+            const titles = {
+                'terms': 'Terms of Service',
+                'privacy': 'Privacy Policy',
+                'license': 'Software License',
+                'api': 'API Documentation',
+                'about': 'About Lionsgate Nemesis',
+                'roadmap': 'Product Roadmap',
+                'capabilities': 'Platform Capabilities',
+                'content': 'Content & Technical Details',
+                'workflow': 'Operational Workflow',
+                'architecture': 'System Architecture',
+                'tracing_engine': 'Tracing Engine Core'
+            };
+            
+            const contents = {
+                'terms': '<p class="mb-4">This Software is for authorized law enforcement and authorized financial institutions only.</p><p>By accessing the Nemesis platform, you agree to handle all extracted data in compliance with relevant jurisdictional laws (e.g., GDPR, CCPA, BSA).</p>',
+                'privacy': '<p class="mb-4">All trace queries and seed data are strictly confidential and encrypted at rest.</p><p>We do not store PII associated with trace results unless explicitly requested via subpoena mechanisms.</p>',
+                'license': '<p class="mb-4">Commercial License - All Rights Reserved.</p><p>Unauthorized distribution, reverse engineering, or scraping of the trace engine is strictly prohibited.</p>',
+                'api': '<p class="mb-4 text-slate-800">The Nemesis REST and WebSocket API allows for headless trace generation.</p><div class="space-y-4"><div class="bg-slate-50 p-3 rounded border border-slate-200"><h3 class="font-bold text-blue-800 mb-1">POST /api/start_trace</h3><p class="text-xs font-mono text-slate-600 mb-2">Payload: { "seeds": "0x...", "target_amount": "100", "target_currency": "USD", "chain_override": "AUTO", "max_depth": 12, "max_hops": 1000 }</p><p class="text-xs text-slate-700">Initializes a new OmniChain trace and returns a trace_id for WebSocket connection.</p></div><div class="bg-slate-50 p-3 rounded border border-slate-200"><h3 class="font-bold text-blue-800 mb-1">GET /ws/{trace_id}</h3><p class="text-xs text-slate-700">WebSocket connection for real-time streaming of trace data blocks and graph visualization payloads.</p></div><div class="bg-slate-50 p-3 rounded border border-slate-200"><h3 class="font-bold text-blue-800 mb-1">GET /api/wallet_profile/{address}</h3><p class="text-xs text-slate-700">Retrieves the current token balances (Native/ERC20) across supported EVM chains for the specified wallet.</p></div><div class="bg-slate-50 p-3 rounded border border-slate-200"><h3 class="font-bold text-blue-800 mb-1">GET /api/nemesis_id/search?query={id}</h3><p class="text-xs text-slate-700">Fetches a completed historical trace ledger by Nemesis Trace ID.</p></div><div class="bg-slate-50 p-3 rounded border border-slate-200"><h3 class="font-bold text-blue-800 mb-1">POST /api/deep_evidence</h3><p class="text-xs font-mono text-slate-600 mb-2">Payload: { "tx": "0x...", "chain": "ETH", "signature_hash": "0x...", "contract_method": "swap", "raw_input_data": "0x...", "sender": "0x...", "receiver": "0x...", "amount": "1.0" }</p><p class="text-xs text-slate-700">Executes a deep AI-assisted forensic analysis on a specific transaction utilizing Gemini 2.5 Flash and 4byte signature directory.</p></div></div>',
+                'about': '<div class="space-y-4"><p class="text-lg font-bold text-slate-800">Lionsgate Nemesis Intelligence Network</p><p class="text-slate-600">A specialized omni-chain intelligence platform designed for rapid forensic attribution across the global cryptocurrency ecosystem. Built by elite cybersecurity and intelligence experts, Nemesis powers high-stakes investigations for top-tier law enforcement and institutional auditing firms worldwide.</p><p class="text-slate-600">Our mission is to illuminate the dark web and dismantle obfuscated threat actor syndicates with military-grade behavioral attribution.</p></div>',
+                'roadmap': '<p class="mb-4"><b>Q3 2026:</b> Advanced ML behavioral clustering for obfuscated cross-chain hops.</p><p><b>Q4 2026:</b> Native TRM Labs and Chainalysis graph ingestion.</p><p><b>Q1 2027:</b> Automated subpoena packet generation for 50+ jurisdictions.</p>',
+                'capabilities': '<div class="space-y-4"><div class="p-4 bg-emerald-50 rounded-lg border border-emerald-100"><h3 class="font-bold text-emerald-800 flex items-center gap-2"><i class="fa-solid fa-bolt"></i> Real-time Omni-Chain Tracing</h3><p class="text-sm text-slate-600 mt-2">Simultaneously trace funds across EVM (Ethereum, BSC, Polygon, etc.) and Non-EVM (Bitcoin, Solana, Tron, Ripple, Stellar) networks without manual bridge inference.</p></div><div class="p-4 bg-blue-50 rounded-lg border border-blue-100"><h3 class="font-bold text-blue-800 flex items-center gap-2"><i class="fa-solid fa-brain"></i> Deep AI Evidence Generation</h3><p class="text-sm text-slate-600 mt-2">Leverages Gemini 2.5 Flash to automatically reverse-engineer smart contract calls, decode 4byte signatures, and generate human-readable forensic reports on the fly.</p></div><div class="p-4 bg-purple-50 rounded-lg border border-purple-100"><h3 class="font-bold text-purple-800 flex items-center gap-2"><i class="fa-solid fa-network-wired"></i> Graph Neural Visualization</h3><p class="text-sm text-slate-600 mt-2">High-performance physics-based node rendering via Vis.js capable of visualizing thousands of wallet interactions instantly.</p></div></div>',
+                'content': '<div class="space-y-4 text-slate-600"><p>The Nemesis Platform aggregates and cross-references data from:</p><ul class="list-disc pl-5 space-y-2"><li><strong>Public Ledgers:</strong> Direct RPC node integration for unfiltered transaction mempool and ledger access.</li><li><strong>Proprietary Threat Intel:</strong> Over 45 million clustered wallet labels mapping to CEXs, mixers, sanctions lists (OFAC), and known threat actors.</li><li><strong>Bridge Liquidity Pools:</strong> Automated mapping of Thorchain, LayerZero, Stargate, and Symbiosis cross-chain transfers.</li><li><strong>Smart Contract ABIs:</strong> Integration with 4byte.directory for raw bytecode decompilation.</li></ul><p class="italic text-sm mt-4 border-l-4 border-slate-300 pl-4">Note: All generated content is chronologically hashed and signed to ensure chain of custody for legal proceedings.</p></div>',
+                'workflow': '<div class="space-y-4 text-slate-600"><ol class="list-decimal pl-5 space-y-2"><li><strong>Seed Ingestion:</strong> Analyst provides one or more suspected wallet addresses or transaction hashes.</li><li><strong>Heuristic Expansion:</strong> Engine autonomously queries historical ledgers up to N hops depth, clustering related change-addresses and consolidating liquidity.</li><li><strong>Behavioral Scoring:</strong> Identifies wash trading, mixing patterns, and high-velocity hops.</li><li><strong>De-obfuscation:</strong> AI analyzes unverified contract calls and identifies probable routing logic.</li><li><strong>Reporting:</strong> A comprehensive, chronologically ordered evidentiary log is generated, detailing the path from origin to fiat off-ramp.</li></ol></div>',
+                'architecture': '<div class="space-y-4 text-slate-600"><p><strong>Backend:</strong> High-performance Python AsyncIO (FastAPI/Flask) routing cluster.</p><p><strong>Data Layer:</strong> Distributed Postgres ledger cache with Redis pub/sub for real-time WebSocket events.</p><p><strong>Tracing Engine:</strong> C++ optimized graph traversal nodes interacting with Erigon/Geth full nodes.</p><p><strong>Frontend:</strong> Native Vanilla JS with HTML5 Canvas/WebGL for unstructured physics graph rendering (Vis.js).</p></div>',
+                'tracing_engine': '<div class="space-y-4 text-slate-600"><p>The core tracing engine operates on a multi-threaded parallel breadth-first search (BFS) algorithm, augmented with heuristic pruning.</p><ul class="list-disc pl-5 space-y-2"><li>Prunes dust transactions (&lt; $0.50 equivalent) to reduce noise.</li><li>Consolidates known CEX hot wallets into single logical nodes.</li><li>Automatically unwraps WETH/WBTC/WBNB to track underlying asset flow.</li><li>Follows ERC20/ERC721 transfer events alongside native value transfers.</li></ul></div>'
+            };
+            
+            document.getElementById('content-modal-title').innerText = titles[page] || 'Information';
+            document.getElementById('content-modal-body').innerHTML = contents[page] || 'Content not found.';
+            document.getElementById('content-modal').classList.remove('hidden');
+            document.getElementById('content-modal').classList.add('flex');
+        };
+
+        window.closeContentPage = function() {
+            document.getElementById('content-modal').classList.add('hidden');
+            document.getElementById('content-modal').classList.remove('flex');
+        };
+    </script>
+        <!-- Global AJAX Loader -->
+    <div id="global-loader" class="hidden fixed inset-0 bg-white/90 backdrop-blur-sm z-[9999] flex-col items-center justify-center transition-opacity">
+        <div class="w-24 h-24 border-4 border-slate-200 border-t-fuchsia-600 rounded-full animate-spin mb-6 shadow-[0_0_30px_rgba(217,70,239,0.3)]"></div>
+        <h2 class="text-slate-800 font-black text-2xl tracking-widest animate-pulse">NEMESIS ENGINE</h2>
+        <p id="loader-text" class="text-fuchsia-600 font-mono text-xs uppercase tracking-widest mt-2">Fusing Blockchain, OSINT & Identity Graphs...</p>
+    </div>
+
+    <!-- Chain Detection Logic (Shared) -->
+    <script>
+        const CHAIN_LOGOS = {
+            'EVM': '<img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-full h-full object-cover">',
+            'BTC': '<img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" class="w-full h-full object-cover">',
+            'SOL': '<img src="https://cryptologos.cc/logos/solana-sol-logo.png" class="w-full h-full object-cover">',
+            'UNKNOWN': '<i class="fa-solid fa-link text-slate-400 text-sm"></i>'
+        };
+
+        function identifyChain(address) {
+            if (/^0x[a-fA-F0-9]{40}$/.test(address)) return 'EVM';
+            if (/^(1|3)[a-zA-HJ-NP-Z0-9]{25,39}$/.test(address) || /^bc1[a-zA-HJ-NP-Z0-9]{39,59}$/.test(address)) return 'BTC';
+            if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address) && !address.startsWith('0x')) return 'SOL';
+            return 'UNKNOWN';
+        }
+
+        function showGlobalLoader(text) {
+            const loader = document.getElementById('global-loader');
+            if (document.getElementById('loader-text')) {
+                document.getElementById('loader-text').innerText = text;
+            }
+            loader.classList.remove('hidden');
+            loader.classList.add('flex');
+        }
+
+        function hideGlobalLoader() {
+            const loader = document.getElementById('global-loader');
+            loader.classList.add('hidden');
+            loader.classList.remove('flex');
+        }
+
+        // GodMode WebSocket & UI Logic
+        const godmodeToggle = document.getElementById('godmodeToggle');
+        const godmodeTerminal = document.getElementById('godmode-terminal');
+        const godmodeContent = document.getElementById('godmode-content');
+        let godmodeWs = null;
+
+        if (godmodeToggle) {
+            godmodeToggle.addEventListener('change', async (e) => {
+                const enabled = e.target.checked;
+                
+                // Toggle server state
+                try {
+                    await fetch('/api/godmode/toggle', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({enabled: enabled})
+                    });
+                } catch(err) {
+                    console.error("Failed to toggle Godmode", err);
+                }
+
+                if (enabled) {
+                    connectGodmode();
+                } else {
+                    if (godmodeWs) godmodeWs.close();
+                    godmodeTerminal.classList.add('translate-y-full', 'opacity-0');
+                    godmodeTerminal.classList.remove('translate-y-0', 'opacity-100');
+                }
+            });
+        }
+
+        function connectGodmode() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            godmodeWs = new WebSocket(`${protocol}//${window.location.host}/api/godmode/stream`);
+            
+            godmodeWs.onopen = () => {
+                godmodeTerminal.classList.remove('translate-y-full', 'opacity-0');
+                godmodeTerminal.classList.add('translate-y-0', 'opacity-100');
+                godmodeContent.innerHTML += `<div class="text-emerald-400">Connected to GodMode Streaming API...</div>`;
+            };
+
+            godmodeWs.onmessage = (event) => {
+                // Ensure terminal is visible
+                godmodeTerminal.classList.remove('translate-y-full', 'opacity-0');
+                godmodeTerminal.classList.add('translate-y-0', 'opacity-100');
+                
+                // Append text with rudimentary markdown/newline formatting
+                let text = event.data;
+                text = text.replace(/
+/g, '<br>');
+                if (text.includes("```python")) {
+                    text = text.replace(/```python/g, '<div class="bg-slate-900/50 p-2 rounded mt-2 border border-slate-700 font-mono text-[10px] text-blue-300">');
+                    text = text.replace(/```/g, '</div>');
+                }
+                
+                godmodeContent.innerHTML += `<div class="mb-1">${text}</div>`;
+                godmodeContent.scrollTop = godmodeContent.scrollHeight;
+            };
+
+            godmodeWs.onclose = () => {
+                godmodeContent.innerHTML += `<div class="text-red-400">Connection lost. Reconnecting...</div>`;
+                if(godmodeToggle && godmodeToggle.checked) {
+                    setTimeout(connectGodmode, 3000);
+                }
+            };
+        }
+    </script>
+
+    <!-- GodMode Floating Terminal Overlay -->
+    <div id="godmode-terminal" class="fixed bottom-4 right-4 w-96 max-w-[90vw] h-80 bg-slate-900/95 backdrop-blur-xl border border-purple-500/30 rounded-xl shadow-[0_10px_40px_-10px_rgba(168,85,247,0.5)] z-[9999] transform translate-y-full opacity-0 transition-all duration-500 flex flex-col overflow-hidden group">
+        <div class="h-8 bg-slate-800/80 border-b border-purple-500/20 flex items-center px-4 justify-between shrink-0">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-wand-magic-sparkles text-purple-400 text-xs"></i>
+                <span class="text-[10px] font-black tracking-widest text-purple-200">GODMODE TERMINAL</span>
+            </div>
+            <div class="flex gap-1.5">
+                <div class="w-2.5 h-2.5 rounded-full bg-slate-600"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-slate-600"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
+            </div>
+        </div>
+        <div id="godmode-content" class="flex-1 overflow-y-auto p-4 text-[11px] font-mono leading-relaxed text-slate-300 scrollbar-thin scrollbar-thumb-purple-500/30 scrollbar-track-transparent">
+            <!-- Messages stream here -->
+        </div>
+    </div>
+</body>
+</html>
+
+</body>
+</html>

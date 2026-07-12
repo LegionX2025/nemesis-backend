@@ -1,0 +1,27 @@
+name = "nemesis-python-worker"
+main = "main.py"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["python_workers"]
+
+[observability]
+enabled = true
+
+[[kv_namespaces]]
+binding = "NEMESIS_KV"
+id = "556aa273aeac4b009b559bb215346ce3"
+preview_id = "556aa273aeac4b009b559bb215346ce3"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "nemesis_audit_db"
+database_id = "80acedab-33c2-4637-bee7-6b9a1176a463"
+
+[[r2_buckets]]
+binding = "NEMESIS_STORAGE"
+bucket_name = "nemesis-assets"
+
+[vars]
+BACKEND_API_URL = "https://nemesis-python-worker.legionxgaming2021.workers.dev"
+
+[assets]
+directory = "frontend"

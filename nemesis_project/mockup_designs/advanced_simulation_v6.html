@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEMESIS | Advanced Orbital Tracing Simulation V6 (Actions)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/force-graph@1.43.3/dist/force-graph.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; overflow: hidden; margin:0; padding:0; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        
+        table th { position: sticky; top: 0; z-index: 10; background: #f8fafc; box-shadow: 0 1px 0 #e2e8f0; }
+        .ledger-container { transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .ledger-minimized { height: 40px !important; overflow: hidden; }
+
+        .graph-wrapper { position: relative; }
+        .graph-wrapper canvas { border-radius: 0.5rem; outline: none; }
+        
+        #html-node-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; }
+        
+        .html-node { position: absolute; transform: translate(-50%, -50%); pointer-events: auto; transition: transform 0.1s linear; cursor: pointer; z-index: 10; }
+
+        .glass-sphere {
+            width: 70px; height: 70px; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95) 0%, rgba(241,245,249,0.85) 40%, rgba(203,213,225,0.95) 100%);
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.1), inset 5px 5px 15px rgba(255,255,255,1), 0 10px 20px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.9); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center; position: relative; z-index: 2;
+        }
+
+        .html-node.selected .glass-sphere {
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.1), inset 5px 5px 15px rgba(255,255,255,1), 0 0 40px rgba(59, 130, 246, 0.8);
+            border: 2px solid #3b82f6;
+        }
+
+        .orbit-ring {
+            position: absolute; top: 50%; left: 50%; width: 150px; height: 150px; margin-top: -75px; margin-left: -75px;
+            border: 1px dashed rgba(59, 130, 246, 0.4); border-radius: 50%; animation: spin 20s linear infinite; z-index: 1;
+        }
+        
+        .orbit-pill {
+            position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+            background: #1e293b; border: 1px solid #334155; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            border-radius: 9999px; padding: 3px 10px; font-size: 8px; font-weight: 900; color: #f8fafc;
+            white-space: nowrap; letter-spacing: 0.5px; animation: spin-reverse 20s linear infinite;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes spin-reverse { 100% { transform: translateX(-50%) rotate(-360deg); } }
+
+        .node-label-container { position: absolute; top: calc(100% + 25px); left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none; width: max-content; }
+        .node-value { font-weight: 900; font-size: 14px; color: #1e293b; letter-spacing: -0.5px; text-shadow: 0 2px 4px rgba(255,255,255,0.8); }
+        .node-name { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 4px; padding: 2px 6px; font-size: 9px; font-weight: 800; margin-top: 2px; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+        .data-row { display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 8px; align-items: center; }
+        .data-label { color: #64748b; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .data-val { color: #0f172a; font-size: 11px; font-weight: 700; text-align: right; }
+        
+        .intel-box { background: #0f172a; color: #f8fafc; border-radius: 6px; padding: 12px; position: relative; overflow: hidden; }
+        .intel-box::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: #3b82f6; }
+        
+        .layout-btn { padding: 4px 10px; font-size: 10px; font-weight: 700; border-radius: 4px; border: 1px solid #cbd5e1; background: white; color: #64748b; cursor: pointer; transition: all 0.2s; }
+        .layout-btn.active { background: #eff6ff; border-color: #3b82f6; color: #2563eb; }
+        .layout-btn:hover:not(.active) { background: #f8fafc; border-color: #94a3b8; color: #334155; }
+        
+        /* Actions button styles */
+        .action-btn { width: 100%; text-align: left; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s; cursor: pointer; border: 1px solid transparent; }
+        .action-btn i { width: 16px; text-align: center; margin-right: 8px; }
+        .action-btn.primary { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+        .action-btn.primary:hover { background: #dbeafe; }
+        .action-btn.danger { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+        .action-btn.danger:hover { background: #fee2e2; }
+        .action-btn.outline { background: white; color: #475569; border-color: #cbd5e1; }
+        .action-btn.outline:hover { background: #f8fafc; border-color: #94a3b8; color: #1e293b; }
+        
+        /* Custom animation for action click */
+        @keyframes actionFlash { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.98); } 100% { opacity: 1; transform: scale(1); } }
+        .animate-click { animation: actionFlash 0.3s ease-out; }
+    </style>
+</head>
+<body class="flex flex-col h-screen antialiased text-sm">
+
+    <!-- GLOBAL HEADER -->
+    <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0 z-50">
+        <div class="flex items-center gap-3 w-64">
+            <i class="fa-solid fa-lion text-3xl text-slate-900"></i>
+            <div class="flex flex-col">
+                <span class="font-black text-xl tracking-tight leading-none text-slate-900 uppercase">NEMESIS</span>
+                <span class="text-[8px] text-slate-500 font-bold tracking-widest uppercase mt-0.5">By Lionsgate Network</span>
+            </div>
+        </div>
+        <div class="flex-1 flex justify-center px-8">
+            <div class="relative w-full max-w-2xl">
+                <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" class="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-brand-500 focus:bg-white transition-colors" placeholder="Search by Nemesis ID, Hash, Address...">
+            </div>
+        </div>
+        <div class="flex items-center gap-5 text-slate-500 w-64 justify-end">
+            <div class="flex items-center gap-2 cursor-pointer">
+                <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-white text-xs font-bold">AN</div>
+                <div class="hidden md:block text-left leading-tight">
+                    <div class="text-xs font-bold text-slate-800">Analyst</div>
+                    <div class="text-[9px] text-slate-500 font-semibold">Lionsgate Network</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 flex overflow-hidden bg-slate-50">
+        <!-- LEFT SIDEBAR -->
+        <aside class="w-56 bg-white border-r border-slate-200 flex flex-col flex-shrink-0 z-20 overflow-y-auto custom-scrollbar">
+            <nav class="p-3 space-y-0.5 flex-1 text-[13px] font-medium text-slate-600">
+                <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 hover:text-slate-900 rounded-md transition"><i class="fa-solid fa-house w-4 text-center"></i> Dashboard</a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 bg-blue-50 text-blue-600 rounded-md font-semibold"><i class="fa-solid fa-network-wired w-4 text-center"></i> Graph Explorer</a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 hover:text-slate-900 rounded-md transition"><i class="fa-regular fa-bell w-4 text-center"></i> Alerts</a>
+            </nav>
+            <div class="p-4 mt-auto border-t border-slate-100">
+                <button onclick="startSimulation()" id="sim-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow mb-4 flex items-center justify-center gap-2 transition"><i class="fa-solid fa-satellite-dish"></i> Stream Trace</button>
+            </div>
+        </aside>
+
+        <!-- CENTER CONTENT -->
+        <div class="flex-1 flex flex-col min-w-0 overflow-y-auto custom-scrollbar p-6 space-y-6">
+            
+            <div class="flex gap-6 h-[480px]">
+                
+                <!-- Graph Flow Visualization -->
+                <div class="flex-1 bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col overflow-hidden">
+                    <div class="p-3 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <div class="flex items-center gap-3">
+                            <h2 class="font-bold text-slate-800 ml-2">Advanced Trace Simulation</h2>
+                            <span id="sim-badge" class="bg-slate-200 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-slate-400"></div> Standby</span>
+                        </div>
+                        
+                        <div class="flex items-center gap-2 bg-white p-1 rounded-md border border-slate-200 shadow-sm">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-2"><i class="fa-solid fa-diagram-project mr-1"></i> Layout</span>
+                            <button class="layout-btn active" onclick="setLayout('force', this)">Force Directed</button>
+                            <button class="layout-btn" onclick="setLayout('td', this)">Hierarchical (TD)</button>
+                            <button class="layout-btn" onclick="setLayout('radial', this)">Radial Out</button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 w-full bg-slate-50/30 relative graph-wrapper">
+                        <div id="graph-container" class="absolute inset-0"></div>
+                        <div id="html-node-layer"></div>
+                    </div>
+                </div>
+
+                <!-- Right Details Sidebar (Dynamic) -->
+                <div id="details-panel" class="w-[380px] bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col overflow-hidden relative">
+                    <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 bg-slate-50/50 z-10">
+                        <i class="fa-solid fa-microchip text-4xl mb-3 text-slate-300"></i>
+                        <p class="text-xs font-bold uppercase tracking-wider text-center px-6">Select a Node or Line<br>to view Nemesis Data & Actions</p>
+                    </div>
+
+                    <!-- Panel Header -->
+                    <div class="p-4 border-b border-slate-100 bg-slate-50">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center gap-2">
+                                <i id="panel-icon" class="fa-solid fa-cube text-blue-600"></i>
+                                <h2 id="panel-title" class="font-bold text-slate-800 text-[10px] uppercase tracking-widest text-blue-600">Entity Inspector</h2>
+                            </div>
+                            <span id="panel-badge" class="bg-slate-200 text-slate-600 border border-slate-300 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase">--</span>
+                        </div>
+                        <div id="panel-main-id" class="text-xl font-black text-slate-900 tracking-tight leading-tight">--</div>
+                        <div id="panel-sub-id" class="text-xs font-mono text-slate-500 mt-1 break-all">--</div>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto custom-scrollbar p-4 bg-white flex flex-col justify-between">
+                        <div id="panel-content"></div>
+                        <!-- Action Buttons Section -->
+                        <div id="panel-actions" class="mt-6 pt-4 border-t border-slate-100 hidden">
+                            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Entity Actions</div>
+                            <div class="space-y-2" id="action-buttons-container">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOTTOM LEDGER SECTION -->
+            <div id="ledger-panel" class="bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col ledger-container flex-1 min-h-[300px]">
+                
+                <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center shrink-0 cursor-pointer" onclick="toggleLedger()">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-table-list text-blue-600"></i>
+                        <span class="font-bold text-slate-800">Real-Time Resolution Ledger</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <button class="text-slate-400 hover:text-slate-800 transition"><i id="ledger-toggle-icon" class="fa-solid fa-chevron-down"></i></button>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-auto custom-scrollbar">
+                    <table class="w-full text-left text-xs border-collapse whitespace-nowrap">
+                        <thead>
+                            <tr class="text-[9px] uppercase tracking-wider text-slate-500 font-bold bg-white">
+                                <th class="px-3 py-3 border-b border-slate-200">Date/Time (UTC)</th>
+                                <th class="px-3 py-3 border-b border-slate-200">Type of Transaction Correlation</th>
+                                <th class="px-3 py-3 border-b border-slate-200">TX Hash</th>
+                                <th class="px-3 py-3 border-b border-slate-200">From Wallet(Entity)</th>
+                                <th class="px-3 py-3 border-b border-slate-200">To Wallet(Entity)</th>
+                                <th class="px-3 py-3 border-b border-slate-200">To Receiver Entity</th>
+                                <th class="px-3 py-3 border-b border-slate-200 text-right">Amount</th>
+                                <th class="px-3 py-3 border-b border-slate-200">Transaction Type</th>
+                                <th class="px-3 py-3 border-b border-slate-200">Behavioral Cluster</th>
+                                <th class="px-3 py-3 border-b border-slate-200">Clustered address{root}ENTITY</th>
+                                <th class="px-3 py-3 border-b border-slate-200">Confidence</th>
+                                <th class="px-3 py-3 border-b border-slate-200">Transaction Attributions</th>
+                                <th class="px-3 py-3 border-b border-slate-200">Transaction intelligence</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ledger-body" class="text-slate-700 font-medium font-mono text-[10px] divide-y divide-slate-100">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Global Notification Toast for Mock Actions -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-4 py-3 rounded shadow-lg font-bold text-xs flex items-center gap-3 transition-all duration-300 transform translate-y-20 opacity-0 z-[100]">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toast-msg">Action Successful</span>
+    </div>
+
+    <script>
+        // UI Helpers
+        let isLedgerMinimized = false;
+        function toggleLedger() {
+            const panel = document.getElementById('ledger-panel');
+            const icon = document.getElementById('ledger-toggle-icon');
+            if (isLedgerMinimized) { panel.classList.remove('ledger-minimized'); icon.classList.replace('fa-chevron-up', 'fa-chevron-down'); } 
+            else { panel.classList.add('ledger-minimized'); icon.classList.replace('fa-chevron-down', 'fa-chevron-up'); }
+            isLedgerMinimized = !isLedgerMinimized;
+            setTimeout(() => { if(window.Graph) { window.Graph.width(document.getElementById('graph-container').clientWidth).height(document.getElementById('graph-container').clientHeight); } }, 350);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 2500);
+        }
+
+        function triggerAction(btnElement, actionName) {
+            btnElement.classList.remove('animate-click');
+            void btnElement.offsetWidth; // trigger reflow
+            btnElement.classList.add('animate-click');
+            
+            // Mock backend processing delay
+            const originalHtml = btnElement.innerHTML;
+            btnElement.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Executing...`;
+            
+            setTimeout(() => {
+                btnElement.innerHTML = originalHtml;
+                showToast(`Action Completed: ${actionName}`);
+                // If it was expand trace, pretend we are loading nodes
+                if(actionName === 'Expand Trace (+1 Hop)') {
+                    startSimulation(); // just replay sim for visual effect
+                }
+            }, 800);
+        }
+
+        const imgs = {
+            binance: 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
+            usdt: 'https://cryptologos.cc/logos/tether-usdt-logo.png',
+            wallet: 'https://cdn-icons-png.flaticon.com/512/855/855279.png',
+            eth: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
+            uniswap: 'https://cryptologos.cc/logos/uniswap-uni-logo.png'
+        };
+
+        const sequenceData = [
+            {
+                type: 'node',
+                node: { id: 'N1', name: '0x1A2B...9C8D', type: 'PRIVATE WALLET', val: 'HACKER ORIGIN', icon: imgs.wallet, orbitLabel: 'Suspected Origin', 
+                        details: { nemesisId: 'NMS-842-X9-ORG', riskScore: '99.8 / 100 (CRITICAL)', root: '0x1A2B...{Hacker}', cluster: 'Lazarus Group', conf: '99%', intel: 'Identified as the primary extraction point connected to the bridge exploit on Jan 12. Highly sophisticated automated wallet architecture detected.' } }
+            },
+            {
+                type: 'link',
+                link: { source: 'N1', target: 'N2', label: 'ETH (ERC20)', amount: '1,450.00 ETH', hash: '0xabc123...def4',
+                        details: { nemesisTxId: 'TX-NMS-441-A', pathScore: 'High Certainty (99.9%)', traceMethod: 'Direct Taint Tracking via Smart Contract Execution', intel: 'High velocity payload transfer directly calling DEX router contract. Heuristic match for automated wash trading setup.' } },
+                node: { id: 'N2', name: 'UNISWAP V2', type: 'DEX MIXER', val: '$4,350,000.00', icon: imgs.uniswap, orbitLabel: 'DeFi Router',
+                        details: { nemesisId: 'NMS-DEX-UNI-02', riskScore: '45.0 / 100 (MEDIUM)', root: 'Uniswap{DEX}', cluster: 'DeFi Mixing / Liquidity', conf: '100%', intel: 'Decentralized exchange smart contract heavily utilized for obfuscating origin tokens via liquidity pools. No KYC verified.' } },
+                ledger: { time: '06:05:12', corr: 'Direct Transfer', hash: '0xabc123...def4', from: '0x1A2B...9C8D', toWallet: 'Uniswap V2 Router', toRecv: 'DEX Smart Contract', amt: '1,450.00 ETH', txType: 'ERC20 Transfer', cluster: 'Initial Extraction', root: '0x1A2B...{Hacker}', conf: '99%', attr: 'Known Exploit Payload', intel: 'High velocity payload transfer directly calling DEX router.' }
+            },
+            {
+                type: 'link',
+                link: { source: 'N2', target: 'N3', label: 'USDT (ERC20)', amount: '$4,345,100.00', hash: '0x8899aa...bbcc',
+                        details: { nemesisTxId: 'TX-NMS-441-B', pathScore: 'Confirmed Trace (96.5%)', traceMethod: 'Temporal Correlation & Amount Matching', intel: 'Algorithmic correlation confirms USDT out corresponds to ETH in. Slippage calculated at 0.11%. High confidence in continuous ownership.' } },
+                node: { id: 'N3', name: 'BINANCE 14', type: 'EXCHANGE', val: '$4,345,100.00', icon: imgs.binance, orbitLabel: 'Terminal Loss',
+                        details: { nemesisId: 'NMS-CEX-BIN-14', riskScore: '12.0 / 100 (LOW)', root: 'Binance{CEX}', cluster: 'Cashing Out / Fiat Off-Ramp', conf: '100%', intel: 'Centralized Exchange hot wallet where illicit funds were consolidated for fiat off-ramping. Legal subpoena recommended.' } },
+                ledger: { time: '06:08:44', corr: 'DEX Swap', hash: '0x8899aa...bbcc', from: 'Uniswap V2', toWallet: 'Binance Hot 14', toRecv: 'Binance Exchange', amt: '$4,345,100', txType: 'Internal Call', cluster: 'Cashing Out', root: 'Binance{CEX}', conf: '100%', attr: 'Deposit Consolidation', intel: 'Temporal correlation confirms USDT out corresponds to ETH in.' }
+            },
+            {
+                type: 'link',
+                link: { source: 'N2', target: 'N4', label: 'WBTC (ERC20)', amount: '12.45 WBTC', hash: '0x123abc...456d',
+                        details: { nemesisTxId: 'TX-NMS-441-C', pathScore: 'Likely Trace (88.2%)', traceMethod: 'Temporal Correlation', intel: 'Secondary routing of funds to bypass main liquidity channels. Moving into wrapped assets.' } },
+                node: { id: 'N4', name: '0x55F1...AA22', type: 'PRIVATE WALLET', val: 'SECONDARY HOP', icon: imgs.wallet, orbitLabel: 'Obfuscation',
+                        details: { nemesisId: 'NMS-842-Y1-SEC', riskScore: '92.4 / 100 (HIGH)', root: '0x1A2B...{Hacker}', cluster: 'Lazarus Group', conf: '88%', intel: 'Secondary holding wallet. Frequent transactions with Tornado Cash observed in history.' } },
+                ledger: { time: '06:12:01', corr: 'Split Transfer', hash: '0x123abc...456d', from: 'Uniswap V2', toWallet: '0x55F1...AA22', toRecv: 'Private Entity', amt: '12.45 WBTC', txType: 'ERC20 Transfer', cluster: 'Obfuscation', root: '0x1A2B...{Hacker}', conf: '88%', attr: 'Fractional Split', intel: 'Secondary routing of funds to bypass main liquidity channels.' }
+            }
+        ];
+
+        let gData = { nodes: [], links: [] };
+        let selectedNodeId = null;
+        let selectedLinkId = null;
+        let simInterval = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('graph-container');
+            
+            window.Graph = ForceGraph()(container)
+                .graphData(gData)
+                .backgroundColor('transparent')
+                .d3AlphaDecay(0.02)
+                .enableZoomPanInteraction(true)
+                .nodeColor(() => 'rgba(0,0,0,0)') 
+                .nodeVal(10)
+                .linkCanvasObjectMode(() => 'after')
+                .linkCanvasObject((link, ctx, globalScale) => {
+                    const start = link.source; const end = link.target;
+                    if(typeof start !== 'object' || typeof end !== 'object') return;
+                    
+                    const midX = start.x + (end.x - start.x) / 2;
+                    const midY = start.y + (end.y - start.y) / 2;
+                    
+                    const isSelected = (link.id === selectedLinkId);
+
+                    ctx.save(); ctx.translate(midX, midY - 10);
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+                    if (isSelected) {
+                        ctx.fillStyle = 'rgba(59, 130, 246, 0.1)';
+                        ctx.beginPath(); ctx.roundRect(-60, -20, 120, 50, 4); ctx.fill();
+                        ctx.lineWidth = 1/globalScale; ctx.strokeStyle = '#3b82f6'; ctx.stroke();
+                    }
+
+                    ctx.font = 'bold 8px Inter'; ctx.fillStyle = '#64748b';
+                    ctx.fillText(link.label, 0, -12);
+                    ctx.font = 'bold 10px Inter'; ctx.fillStyle = '#ef4444';
+                    ctx.fillText('↓ ' + link.amount, 0, 0);
+                    ctx.font = 'bold 8px JetBrains Mono'; ctx.fillStyle = isSelected ? '#2563eb' : '#94a3b8';
+                    ctx.fillText(link.hash, 0, 15);
+
+                    ctx.restore();
+                    link.__hitbox = { x: midX, y: midY - 10, w: 120, h: 50 };
+                })
+                .linkColor(link => (link.id === selectedLinkId) ? '#3b82f6' : '#cbd5e1')
+                .linkWidth(link => (link.id === selectedLinkId) ? 4 : 2)
+                .linkDirectionalParticles(link => (link.id === selectedLinkId) ? 4 : 2)
+                .linkDirectionalParticleWidth(4)
+                .linkDirectionalParticleColor(() => '#0ea5e9')
+                .linkDirectionalParticleSpeed(0.005)
+                .onZoom(() => { }) 
+                .onBackgroundClick(() => {
+                    selectedNodeId = null; selectedLinkId = null;
+                    document.querySelectorAll('.html-node').forEach(el => el.classList.remove('selected'));
+                    document.getElementById('empty-state').style.display = 'flex';
+                    document.getElementById('panel-actions').classList.add('hidden');
+                    Graph.nodeRelSize(4); 
+                })
+                .onRenderFramePre(() => {
+                    gData.nodes.forEach(node => {
+                        const el = document.getElementById(`html-node-${node.id}`);
+                        if (el) {
+                            const { x, y } = Graph.graph2ScreenCoords(node.x, node.y);
+                            el.style.left = `${x}px`; el.style.top = `${y}px`;
+                        }
+                    });
+                });
+
+            container.addEventListener('click', (event) => {
+                if (selectedNodeId) return; 
+
+                const canvas = container.querySelector('canvas');
+                const rect = canvas.getBoundingClientRect();
+                const clickX = event.clientX - rect.left;
+                const clickY = event.clientY - rect.top;
+                const { x: graphX, y: graphY } = Graph.screen2GraphCoords(clickX, clickY);
+
+                let clickedLink = null;
+                for (let link of gData.links) {
+                    if (link.__hitbox) {
+                        const hx = link.__hitbox.x; const hy = link.__hitbox.y;
+                        const hw = link.__hitbox.w; const hh = link.__hitbox.h;
+                        if (graphX > hx - hw/2 && graphX < hx + hw/2 && graphY > hy - hh/2 && graphY < hy + hh/2) {
+                            clickedLink = link; break;
+                        }
+                    }
+                }
+                if (clickedLink) handleLinkClick(clickedLink);
+            });
+
+            window.addEventListener('resize', () => { Graph.width(container.clientWidth).height(container.clientHeight); });
+        });
+
+        // --- Layout Switching Logic ---
+        function setLayout(mode, btn) {
+            document.querySelectorAll('.layout-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            if (mode === 'td') {
+                Graph.dagMode('td').dagLevelDistance(150);
+                Graph.d3Force('collide', d3.forceCollide(100));
+                Graph.d3Force('charge').strength(-200);
+            } else if (mode === 'radial') {
+                Graph.dagMode('radialin').dagLevelDistance(150);
+                Graph.d3Force('collide', d3.forceCollide(100));
+                Graph.d3Force('charge').strength(-300);
+            } else {
+                Graph.dagMode(null);
+                Graph.d3Force('collide', d3.forceCollide(100));
+                Graph.d3Force('charge').strength(-600);
+            }
+            Graph.d3AlphaDecay(0.02);
+            Graph.d3ReheatSimulation();
+        }
+
+        // --- Sidebar Inspectors & ACTIONS ---
+        function handleNodeClick(nodeId) {
+            selectedNodeId = nodeId; selectedLinkId = null;
+            document.querySelectorAll('.html-node').forEach(el => el.classList.remove('selected'));
+            document.getElementById(`html-node-${nodeId}`).classList.add('selected');
+
+            const node = gData.nodes.find(n => n.id === nodeId);
+            
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('panel-actions').classList.remove('hidden');
+            
+            document.getElementById('panel-icon').className = 'fa-solid fa-cube text-blue-600';
+            document.getElementById('panel-title').innerText = 'Entity Inspector';
+            document.getElementById('panel-main-id').innerText = node.val; 
+            document.getElementById('panel-sub-id').innerText = node.name;
+            document.getElementById('panel-badge').innerText = node.type; 
+            
+            document.getElementById('panel-content').innerHTML = `
+                <div class="data-row"><span class="data-label">Nemesis ID</span><span class="data-val text-blue-600 font-black tracking-tight bg-blue-50 px-2 py-0.5 rounded border border-blue-200">${node.details.nemesisId}</span></div>
+                <div class="data-row"><span class="data-label">Threat Score</span><span class="data-val text-red-500">${node.details.riskScore}</span></div>
+                <div class="data-row"><span class="data-label">Root Entity</span><span class="data-val text-purple-600 mono">${node.details.root}</span></div>
+                <div class="data-row"><span class="data-label">Behavioral Cluster</span><span class="data-val">${node.details.cluster}</span></div>
+                <div class="data-row"><span class="data-label">Attribution Confidence</span><span class="data-val text-emerald-600">${node.details.conf}</span></div>
+                <div class="mt-6">
+                    <div class="data-label mb-2"><i class="fa-solid fa-brain mr-1"></i> Nemesis Intelligence Summary</div>
+                    <div class="intel-box text-[11px] leading-relaxed font-mono">${node.details.intel}</div>
+                </div>
+            `;
+            
+            // Populating MOCK ACTIONS for NODE
+            document.getElementById('action-buttons-container').innerHTML = `
+                <button class="action-btn primary" onclick="triggerAction(this, 'Expand Trace (+1 Hop)')">
+                    <span class="flex items-center"><i class="fa-solid fa-code-branch"></i> Expand Trace (+1 Hop)</span>
+                    <i class="fa-solid fa-chevron-right text-slate-300 text-[10px]"></i>
+                </button>
+                <button class="action-btn outline" onclick="triggerAction(this, 'Add to Active Case')">
+                    <span class="flex items-center"><i class="fa-solid fa-briefcase"></i> Add to Active Case</span>
+                </button>
+                <button class="action-btn danger" onclick="triggerAction(this, 'Submit Freeze Request')">
+                    <span class="flex items-center"><i class="fa-solid fa-snowflake"></i> Submit Freeze Request</span>
+                </button>
+            `;
+            
+            Graph.nodeRelSize(4); 
+        }
+
+        function handleLinkClick(link) {
+            selectedLinkId = link.id; selectedNodeId = null;
+            document.querySelectorAll('.html-node').forEach(el => el.classList.remove('selected'));
+
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('panel-actions').classList.remove('hidden');
+            
+            document.getElementById('panel-icon').className = 'fa-solid fa-arrow-right-arrow-left text-emerald-600';
+            document.getElementById('panel-title').innerText = 'Transaction Edge';
+            document.getElementById('panel-main-id').innerText = link.amount; 
+            document.getElementById('panel-sub-id').innerText = link.hash;
+            document.getElementById('panel-badge').innerText = link.label; 
+            
+            document.getElementById('panel-content').innerHTML = `
+                <div class="data-row"><span class="data-label">Nemesis Trace ID</span><span class="data-val text-emerald-600 font-black tracking-tight bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">${link.details.nemesisTxId}</span></div>
+                <div class="data-row"><span class="data-label">Tracing Heuristic</span><span class="data-val">${link.details.traceMethod}</span></div>
+                <div class="data-row"><span class="data-label">Correlation Confidence</span><span class="data-val text-emerald-600">${link.details.pathScore}</span></div>
+                <div class="mt-4 p-3 border border-slate-200 rounded-lg bg-slate-50">
+                    <div class="data-label mb-2">Flow Pathway</div>
+                    <div class="flex items-center justify-between font-mono text-[10px] font-bold">
+                        <span class="text-slate-800 truncate w-24" title="${link.source.name || link.source}">${link.source.name || link.source}</span>
+                        <i class="fa-solid fa-arrow-right text-slate-400"></i>
+                        <span class="text-slate-800 truncate w-24 text-right" title="${link.target.name || link.target}">${link.target.name || link.target}</span>
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <div class="data-label mb-2"><i class="fa-solid fa-satellite-dish mr-1"></i> Edge Intelligence</div>
+                    <div class="intel-box text-[11px] leading-relaxed font-mono">${link.details.intel}</div>
+                </div>
+            `;
+            
+            // Populating MOCK ACTIONS for LINK
+            document.getElementById('action-buttons-container').innerHTML = `
+                <button class="action-btn outline" onclick="triggerAction(this, 'Query Similar Temporal Patterns')">
+                    <span class="flex items-center"><i class="fa-solid fa-magnifying-glass-chart"></i> Query Temporal Pattern</span>
+                </button>
+                <button class="action-btn outline" onclick="triggerAction(this, 'Export Receipt')">
+                    <span class="flex items-center"><i class="fa-solid fa-file-pdf"></i> Generate Court Receipt</span>
+                </button>
+            `;
+            
+            Graph.nodeRelSize(4); 
+        }
+
+        // --- Simulation Engine ---
+        function startSimulation() {
+            if (simInterval) return;
+            
+            gData = { nodes: [], links: [] };
+            Graph.graphData(gData);
+            document.getElementById('html-node-layer').innerHTML = '';
+            document.getElementById('ledger-body').innerHTML = '';
+            document.getElementById('empty-state').style.display = 'flex';
+            document.getElementById('panel-actions').classList.add('hidden');
+            selectedNodeId = null; selectedLinkId = null;
+            
+            const btn = document.getElementById('sim-btn');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Engine Active...';
+            btn.classList.replace('bg-blue-600', 'bg-emerald-600');
+            
+            let step = 0;
+            
+            simInterval = setInterval(() => {
+                if (step >= sequenceData.length) {
+                    clearInterval(simInterval);
+                    simInterval = null;
+                    btn.innerHTML = '<i class="fa-solid fa-satellite-dish"></i> Restart Stream';
+                    btn.classList.replace('bg-emerald-600', 'bg-blue-600');
+                    Graph.zoomToFit(1000, 50);
+                    return;
+                }
+
+                const item = sequenceData[step];
+                const newNodes = [...gData.nodes];
+                const newLinks = [...gData.links];
+
+                if (item.type === 'node') {
+                    newNodes.push(item.node);
+                    createHtmlNode(item.node);
+                } else if (item.type === 'link') {
+                    newNodes.push(item.node);
+                    createHtmlNode(item.node);
+                    item.link.id = 'L' + step; 
+                    newLinks.push(item.link);
+                    appendLedgerRow(item.ledger);
+                }
+
+                gData = { nodes: newNodes, links: newLinks };
+                Graph.graphData(gData);
+                
+                Graph.d3AlphaDecay(0.02);
+                Graph.d3ReheatSimulation();
+                
+                step++;
+            }, 1200); 
+        }
+
+        function createHtmlNode(node) {
+            const layer = document.getElementById('html-node-layer');
+            const el = document.createElement('div');
+            el.id = `html-node-${node.id}`;
+            el.className = 'html-node';
+            
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                handleNodeClick(node.id);
+            });
+            
+            el.innerHTML = `
+                <div class="orbit-ring"><div class="orbit-pill"><i class="fa-solid fa-circle-dot text-blue-400 mr-1"></i>${node.orbitLabel}</div></div>
+                <div class="glass-sphere"><img src="${node.icon}" class="w-8 h-8 rounded-full"></div>
+                <div class="node-label-container">
+                    <div class="node-value">${node.val}</div>
+                    <div class="node-name">${node.name}</div>
+                </div>
+            `;
+            layer.appendChild(el);
+        }
+
+        function appendLedgerRow(row) {
+            const tbody = document.getElementById('ledger-body');
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-blue-50 transition cursor-pointer animate-[fadeIn_0.5s_ease-out] bg-white';
+            tr.innerHTML = `
+                <td class="px-3 py-2 text-slate-500">${row.time}</td>
+                <td class="px-3 py-2"><span class="bg-blue-50 text-blue-600 border border-blue-100 px-1.5 py-0.5 rounded text-[8px] uppercase font-bold">${row.corr}</span></td>
+                <td class="px-3 py-2 text-blue-600 hover:underline cursor-pointer">${row.hash}</td>
+                <td class="px-3 py-2 font-semibold text-slate-700">${row.from}</td>
+                <td class="px-3 py-2 font-semibold text-slate-700">${row.toWallet}</td>
+                <td class="px-3 py-2 font-semibold text-slate-700">${row.toRecv}</td>
+                <td class="px-3 py-2 text-right font-black text-slate-800">${row.amt}</td>
+                <td class="px-3 py-2 text-slate-500 font-sans">${row.txType}</td>
+                <td class="px-3 py-2 text-slate-500 font-sans">${row.cluster}</td>
+                <td class="px-3 py-2 text-purple-600 font-bold">${row.root}</td>
+                <td class="px-3 py-2"><span class="text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-bold text-[9px]">${row.conf}</span></td>
+                <td class="px-3 py-2 text-slate-500 font-sans">${row.attr}</td>
+                <td class="px-3 py-2 text-slate-500 font-sans truncate max-w-[150px]" title="${row.intel}">${row.intel}</td>
+            `;
+            tbody.prepend(tr);
+        }
+    </script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</body>
+</html>
