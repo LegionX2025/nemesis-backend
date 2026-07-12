@@ -54,9 +54,11 @@ def main():
                 shutil.rmtree(static_dst)
             shutil.copytree(static_src, static_dst)
             
-        print(f"\n🚀 Building and Deploying Cloudflare Pages...")
-        subprocess.run("npm install && npm run build", shell=True, cwd=frontend_dir)
-        result = subprocess.run(f"npx wrangler pages deploy dist --project-name nemesis-loc", shell=True, cwd=frontend_dir)
+        print(f"\n🚀 Deploying Cloudflare Pages...")
+        # Set CI=true so wrangler doesn't prompt for project creation
+        env = os.environ.copy()
+        env["CI"] = "true"
+        result = subprocess.run(f"npx wrangler pages deploy templates --project-name nemesis-loc", shell=True, cwd=frontend_dir, env=env)
         if result.returncode == 0:
             print("✅ Success: Deploying Cloudflare Pages")
             cf_frontend_success = True
