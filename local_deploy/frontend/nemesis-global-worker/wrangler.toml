@@ -104,7 +104,7 @@ localConnectionString = "postgresql://admin:nemesis2026@ep-morning-glitter-adpz0
 # ENVIRONMENT VARIABLES (NON-SENSITIVE ONLY)
 # ============================================================================
 [vars]
-PYTHON_BACKEND_URL = "https://nemesis-backend-rwp4.onrender.com"
+PYTHON_BACKEND_URL = "https://nemesis-local.onrender.com"
 NODE_ENV = "production"
 APP_NAME = "nemesis-platform"
 APP_MODE = "production"

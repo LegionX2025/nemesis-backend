@@ -86,7 +86,7 @@ id = "2bf62864eaf64708b5a349169d6efc7e"
 # ENVIRONMENT VARIABLES
 # ============================================================================
 [vars]
-PYTHON_BACKEND_URL = "https://nemesis-backend-rwp4.onrender.com"
+PYTHON_BACKEND_URL = "https://nemesis-local.onrender.com"
 NODE_ENV = "production"
 APP_NAME = "nemesis-platform"
 APP_MODE = "production"
