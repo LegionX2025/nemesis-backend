@@ -17,7 +17,28 @@ except Exception:
     pass  # Allow Cloudflare Workers Pyodide to boot cleanly
 import datetime
 from collections import defaultdict
+import asyncio
+import aiohttp
+import json
 from contextlib import asynccontextmanager
+from fastapi import FastAPI, WebSocket, Request
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+import uvicorn
+import logging
+from datetime import datetime
+import os
+import certifi
+
+# --- CLOUDFLARE/WINDOWS EVENT LOOP FIX ---
+if os.name == 'nt':
+    try:
+        asyncio.WindowsSelectorEventLoopPolicy = asyncio.WindowsProactorEventLoopPolicy
+        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+    except AttributeError:
+        pass
+
+os.environ['SSL_CERT_FILE'] = certifi.where()
 from fastapi import FastAPI, UploadFile, File, BackgroundTasks, Form, HTTPException, Request, Depends, WebSocket, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse, HTMLResponse
@@ -1968,6 +1989,61 @@ async def legacy_trace_post(request: Request):
     except Exception as e:
         return {"error": str(e)}
 
+async def ws_broadcaster(state, ws_list: set):
+    buffer = []
+    while not state.target_reached or not state.broadcast_queue.empty():
+        try:
+            import asyncio
+            edge = await asyncio.wait_for(state.broadcast_queue.get(), timeout=0.25)
+            asset = str(edge.get('asset', 'UNKNOWN')).upper()
+            try: amount_val = float(edge.get('amount', 0))
+            except: amount_val = 0.0
+            
+            ts = edge.get("timestamp")
+            if ts and not isinstance(ts, str):
+                ts_str = ts.strftime("%Y-%m-%d %H:%M:%S")
+            else:
+                ts_str = str(ts) if ts else "Unknown"
+
+            ledger_event = {
+                "type": "LEDGER",
+                "Date/Time (UTC)": ts_str,
+                "Type transcation(mixing,bridging)": edge.get("edge_type", "TRANSFER"),
+                "TX Hash": edge.get("tx_hash", "0x"),
+                "From Wallet(Entity)": edge.get("from", "0x"),
+                "To Wallet(Entity)": edge.get("to", "0x"),
+                "To Receiver Entity": edge.get("receiver_entity", "Unknown Entity"),
+                "Amount": amount_val,
+                "Transaction Type": edge.get("chain", "UNKNOWN"),
+                "Behavioral Cluster": "Pending Analysis",
+                "Clustered address{root}ENTITY": "N/A",
+                "Confidence": edge.get("confidence", 1.0) * 100,
+                "Transaction Attributions": "On-Chain Trace",
+                "Transaction intelligence": "Clean",
+                
+                # Compatibility keys for frontend Graph
+                "from": edge.get("from", "0x"),
+                "to": edge.get("to", "0x"),
+                "tx": edge.get("tx_hash", "0x"),
+                "amount": amount_val,
+                "ticker": asset,
+                "usd": amount_val * 3000.0 if asset == "ETH" else amount_val,
+                "is_terminal": edge.get("edge_type") in ["CEX_DEPOSIT", "MIXER"]
+            }
+            buffer.append(ledger_event)
+            state.broadcast_queue.task_done()
+        except Exception:
+            pass
+
+        if buffer and (len(buffer) >= 50 or state.broadcast_queue.empty()):
+            payload = {"type": "LEDGER_BATCH", "data": buffer}
+            for ws in list(ws_list):
+                try: 
+                    await ws.send_json(payload)
+                except Exception: 
+                    ws_list.discard(ws)
+            buffer.clear()
+
 @app.websocket("/trace")
 async def legacy_trace_websocket(websocket: WebSocket):
     await websocket.accept()
@@ -1980,7 +2056,7 @@ async def legacy_trace_websocket(websocket: WebSocket):
                 network = data.get("network", "AUTO")
                 
                 async def run_legacy_trace():
-                    from services.recursive_tracer import RecursiveTracer
+                    from services.recursive_tracer import RecursiveTracer, SOCState
                     tracer = RecursiveTracer()
                     async def progress_cb(msg):
                         try:
@@ -1988,52 +2064,20 @@ async def legacy_trace_websocket(websocket: WebSocket):
                         except:
                             pass
 
+                    import asyncio
+                    state = SOCState()
+                    ws_list = {websocket}
+                    broadcaster = asyncio.create_task(ws_broadcaster(state, ws_list))
+
                     for seed in seeds_list:
-                        async for edge in tracer.start_omni_trace_bfs(seed, max_depth=100000, progress_callback=progress_cb):
-                            asset = str(edge.get('asset', 'UNKNOWN')).upper()
-                            try: amount_val = float(edge.get('amount', 0))
-                            except: amount_val = 0.0
-                            
-                            ts = edge.get("timestamp")
-                            if ts and not isinstance(ts, str):
-                                ts_str = ts.strftime("%Y-%m-%d %H:%M:%S")
-                            else:
-                                ts_str = str(ts) if ts else "Unknown"
-                                
-                            ledger_event = {
-                                "type": "LEDGER",
-                                "Date/Time (UTC)": ts_str,
-                                "Type transcation(mixing,bridging)": edge.get("edge_type", "TRANSFER"),
-                                "TX Hash": edge.get("tx_hash", "0x"),
-                                "From Wallet(Entity)": edge.get("from", "0x"),
-                                "To Wallet(Entity)": edge.get("to", "0x"),
-                                "To Receiver Entity": edge.get("receiver_entity", "Unknown Entity"),
-                                "Amount": amount_val,
-                                "Transaction Type": edge.get("chain", "UNKNOWN"),
-                                "Behavioral Cluster": "Pending Analysis",
-                                "Clustered address{root}ENTITY": "N/A",
-                                "Confidence": edge.get("confidence", 1.0) * 100,
-                                "Transaction Attributions": "On-Chain Trace",
-                                "Transaction intelligence": "Clean",
-                                
-                                # Compatibility keys for frontend Graph
-                                "from": edge.get("from", "0x"),
-                                "to": edge.get("to", "0x"),
-                                "tx": edge.get("tx_hash", "0x"),
-                                "amount": amount_val,
-                                "ticker": asset,
-                                "usd": amount_val * 3000.0 if asset == "ETH" else amount_val,
-                                "is_terminal": edge.get("edge_type") in ["CEX_DEPOSIT", "MIXER"]
-                            }
-                            try:
-                                await websocket.send_json(ledger_event)
-                            except:
-                                break
-                            
-                    try:
-                        await websocket.send_json({"type": "COMPLETE", "message": "Trace complete."})
-                    except:
-                        pass
+                        await tracer.run_trace_engine(state, seed, 100000, progress_callback=progress_cb)
+                        
+                    await state.broadcast_queue.join()
+                    broadcaster.cancel()
+
+                    for ws in list(ws_list):
+                        try: await ws.send_json({"type": "COMPLETE", "message": "Trace complete."})
+                        except: pass
 
                 import asyncio
                 asyncio.create_task(run_legacy_trace())

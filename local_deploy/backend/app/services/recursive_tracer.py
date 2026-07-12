@@ -423,8 +423,94 @@ class RecursiveTracer:
         async for edge in self.trace_from_entity(suspect_wallet, depth=0, max_depth=max_depth, progress_callback=progress_callback):
             yield edge
 
-    async def start_omni_trace_bfs(self, suspect_wallet: str, max_depth: int = 1000000, progress_callback=None):
-        """Breadth-First Search Orchestrator for tracing."""
+class SOCState:
+    def __init__(self):
+        self.visited = set()
+        self.queue = asyncio.Queue()
+        self.broadcast_queue = asyncio.Queue(maxsize=5000)
+        self.state_lock = asyncio.Lock()
+        self.target_reached = False
+        self.seeds = []
+
+    async def engine_worker(self, state: SOCState, worker_id: int, max_depth: int, progress_callback=None):
+        while not state.target_reached:
+            try:
+                item = await asyncio.wait_for(state.queue.get(), timeout=2.0)
+            except asyncio.TimeoutError:
+                continue
+            except Exception:
+                continue
+                
+            current_entity, depth = item
+            
+            async with state.state_lock:
+                if current_entity in state.visited or depth >= max_depth:
+                    state.queue.task_done()
+                    continue
+                state.visited.add(current_entity)
+
+            try:
+                edges = list(self.edges_col.find({"from": current_entity}))
+                if not edges:
+                    ent = self.entities_col.find_one({"_id": current_entity})
+                    c = ent["chain"] if ent else detect_chain(current_entity)
+                    if c != "INVALID":
+                        await self.ingest_wallet_transactions(current_entity, c, progress_callback)
+                        edges = list(self.edges_col.find({"from": current_entity}))
+                        
+                edges.sort(key=lambda x: float(x.get("amount", 0)), reverse=True)
+                
+                for edge in edges:
+                    if state.target_reached: break
+                    
+                    next_hops = [edge["to"]]
+                    
+                    # 1. Handle Bridges
+                    if edge["edge_type"] in ["MINT", "RELEASE", "BRIDGE_HOP", "LOCK", "BURN"]:
+                        linked = self.find_bridge_symmetry(edge)
+                        if not linked:
+                            linked = await self.bridge_resolver.resolve_cross_chain_hop(
+                                edge["tx_hash"], edge["chain"], float(edge["amount"]), edge["timestamp"]
+                            )
+                        if linked:
+                            next_hops.append(linked["bridge_entity"])
+                            
+                    # 2. Handle Mixers
+                    ent = self.entities_col.find_one({"_id": edge["to"]})
+                    labels = ent.get("labels", []) if ent else []
+                    if "Mixer" in labels or "CoinJoin" in labels or edge["edge_type"] == "MIXER":
+                        mixer_edges = await self.mixer_engine.find_mixer_correlations(
+                            edge["to"], float(edge["amount"]), edge["timestamp"], edge["chain"]
+                        )
+                        for medge in mixer_edges:
+                            await state.broadcast_queue.put(medge)
+                            next_hops.append(medge["to"])
+                            
+                    # 3. Handle Identity Linking
+                    artifacts = self.identity_col.find({"linked_entities": edge["to"]})
+                    for art in artifacts:
+                        for e in art.get("linked_entities", []):
+                            if e != edge["to"]:
+                                next_hops.append(e)
+                                
+                    # 4. Handle CEX Internal Ledgers
+                    if "cex" in labels or "Exchange" in labels:
+                        withdrawals = self.find_cex_withdrawals(edge["to"], float(edge["amount"]), edge["timestamp"])
+                        for w in withdrawals:
+                            next_hops.append(w)
+                            
+                    for nxt in next_hops:
+                        nxt = nxt.lower()
+                        if nxt and nxt not in state.visited:
+                            state.queue.put_nowait((nxt, depth + 1))
+                            
+                    await state.broadcast_queue.put(edge)
+            except Exception as e:
+                logger.error(f"Worker {worker_id} error: {e}")
+            finally:
+                state.queue.task_done()
+
+    async def run_trace_engine(self, state: SOCState, suspect_wallet: str, max_depth: int, progress_callback=None):
         suspect_wallet = suspect_wallet.lower()
         chain = detect_chain(suspect_wallet)
         if chain == "EVM_AUTO":
@@ -434,74 +520,13 @@ class RecursiveTracer:
         elif chain != "INVALID":
             logger.info(f"[BFS] Commencing Single-Chain Ingestion for {chain}...")
             await self.ingest_wallet_transactions(suspect_wallet, chain, progress_callback)
-
-        queue = [(suspect_wallet, 0)]
-        visited = {suspect_wallet}
+            
+        state.queue.put_nowait((suspect_wallet, 0))
+        workers = [asyncio.create_task(self.engine_worker(state, i, max_depth, progress_callback)) for i in range(25)]
         
-        while queue:
-            current_entity, depth = queue.pop(0)
-            
-            if depth >= max_depth:
-                continue
-                
-            logger.info(f"BFS Tracing entity {current_entity} at depth {depth}")
-            
-            edges = list(self.edges_col.find({"from": current_entity}))
-            
-            if not edges:
-                ent = self.entities_col.find_one({"_id": current_entity})
-                c = ent["chain"] if ent else detect_chain(current_entity)
-                if c != "INVALID":
-                    await self.ingest_wallet_transactions(current_entity, c, progress_callback)
-                    edges = list(self.edges_col.find({"from": current_entity}))
-
-            edges.sort(key=lambda x: float(x.get("amount", 0)), reverse=True)
-            
-            for edge in edges:
-                yield edge
-                
-                next_hops = [edge["to"]]
-                
-                # 1. Handle Bridges
-                if edge["edge_type"] in ["MINT", "RELEASE", "BRIDGE_HOP", "LOCK", "BURN"]:
-                    linked = self.find_bridge_symmetry(edge)
-                    if not linked:
-                        linked = await self.bridge_resolver.resolve_cross_chain_hop(
-                            edge["tx_hash"], edge["chain"], float(edge["amount"]), edge["timestamp"]
-                        )
-                    if linked:
-                        next_hops.append(linked["bridge_entity"])
-                        
-                # 2. Handle Mixers
-                ent = self.entities_col.find_one({"_id": edge["to"]})
-                labels = ent.get("labels", []) if ent else []
-                if "Mixer" in labels or "CoinJoin" in labels or edge["edge_type"] == "MIXER":
-                    mixer_edges = await self.mixer_engine.find_mixer_correlations(
-                        edge["to"], float(edge["amount"]), edge["timestamp"], edge["chain"]
-                    )
-                    for medge in mixer_edges:
-                        yield medge
-                        next_hops.append(medge["to"])
-                        
-                # 3. Handle Identity Linking
-                artifacts = self.identity_col.find({"linked_entities": edge["to"]})
-                for art in artifacts:
-                    for e in art.get("linked_entities", []):
-                        if e != edge["to"]:
-                            next_hops.append(e)
-                            
-                # 4. Handle CEX Internal Ledgers
-                if "cex" in labels or "Exchange" in labels:
-                    withdrawals = self.find_cex_withdrawals(edge["to"], float(edge["amount"]), edge["timestamp"])
-                    for w in withdrawals:
-                        next_hops.append(w)
-                        
-                # Queue next hops for BFS
-                for nxt in next_hops:
-                    nxt = nxt.lower()
-                    if nxt and nxt not in visited:
-                        visited.add(nxt)
-                        queue.append((nxt, depth + 1))
+        await state.queue.join()
+        state.target_reached = True
+        for w in workers: w.cancel()
 
     async def trace_from_entity(self, entity_id: str, depth=0, max_depth=2, visited=None, progress_callback=None):
         """Recursive graph traversal for state transitions via async generator."""

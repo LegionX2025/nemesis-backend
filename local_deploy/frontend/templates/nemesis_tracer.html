@@ -952,6 +952,20 @@
                     handleNewNode(d);
                 }
                 
+                if (d.type === "LEDGER_BATCH") {
+                    let loader = document.getElementById('graph-loader');
+                    if (loader) loader.style.display = 'none';
+                    
+                    if (d.data && Array.isArray(d.data)) {
+                        for (let i = 0; i < d.data.length; i++) {
+                            handleNewNode(d.data[i], true);
+                        }
+                        // Batch render at the end
+                        Graph.graphData({ nodes: [...window.graphData.nodes], links: [...window.graphData.links] });
+                        updateMetricsUI();
+                    }
+                }
+                
                 if (d.type === "TRANSFER") {
                     let mapped = {
                         from: d.source,
@@ -1006,7 +1020,7 @@
             return 'https://cdn-icons-png.flaticon.com/512/855/855279.png'; // Generic wallet
         }
 
-        function handleNewNode(d) {
+        function handleNewNode(d, deferRender = false) {
             let edgeId = d.from + "-" + d.to + "-" + d.tx;
             let amountUsd = d.usd || d.amount || 0;
             
@@ -1081,7 +1095,7 @@
                 addLedgerRow(d);
             }
 
-            if(updated) {
+            if(updated && !deferRender) {
                 Graph.graphData({ nodes: [...window.graphData.nodes], links: [...window.graphData.links] });
                 updateMetricsUI();
                 
