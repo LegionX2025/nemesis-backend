@@ -35,7 +35,7 @@ binding = "NEMESIS_STORAGE"
 bucket_name = "nemesis-assets"
 
 [vars]
-BACKEND_API_URL = "http://localhost:3001"
+BACKEND_API_URL = "https://nemesis-local.onrender.com"
 NEMESIS_EDGE_SECRET = "default_dev_secret_override"
 
 [assets]
