@@ -7,7 +7,7 @@ import datetime
 
 try:
     import subprocess
-    os.environ["LOKY_MAX_CPU_COUNT"] = "4"
+    # os.environ["LOKY_MAX_CPU_COUNT"] = "4" # Disabled for Cloudflare Pyodide Isolate limits
     os.environ["PLAYWRIGHT_BROWSERS_PATH"] = "0"
     from dotenv import load_dotenv
     root_env = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env")
@@ -283,7 +283,7 @@ async def lifespan(app: FastAPI):
             else:
                 logger.info("    [SKIP] Darknet crawler disabled via VITE_TOR_AUTO_START=false. Run darknetv2.py in a separate console.")
         except Exception as e:
-            logger.error(f"    [FAIL] Failed to launch Darknet crawler: {e}")
+            logger.error(f"Failed to launch Darknet crawler: {e}")
         
     asyncio.create_task(init_background())
     
@@ -734,7 +734,17 @@ async def api_admin_automated_maintenance(background_tasks: BackgroundTasks):
             logger.info("Maintenance Sequence Complete.")
             
             # Save the report
-            os.makedirs("logs", exist_ok=True)
+            try:
+                # V8 Isolate Read-Only File System compliance
+                os.makedirs("logs", exist_ok=True)
+                file_handler = logging.FileHandler("logs/nemesis_operations.log")
+                file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+                logging.getLogger().addHandler(file_handler)
+            except OSError:
+                # Fallback to stdout for Cloudflare Workers
+                stream_handler = logging.StreamHandler(sys.stdout)
+                stream_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+                logging.getLogger().addHandler(stream_handler)
             report_path = os.path.join("logs", "latest_maintenance_report.md")
             with open(report_path, "w") as f:
                 f.write(report)
@@ -1008,14 +1018,14 @@ async def darknet_ws_stream(websocket: WebSocket):
             # q.get() is blocking, so we run it in an executor or poll with queue.Empty
             import queue
             try:
-                data = await asyncio.to_thread(q.get, timeout=1.0)
-                # data is typically "event: <type>\ndata: {...}\n\n"
-                if data.startswith("event: "):
+                data = q.get_nowait()
+                
+                # If the string contains "event: " and "data: ", parse it.
+                if isinstance(data, str) and data.startswith("event: "):
                     parts = data.split("\ndata: ")
                     if len(parts) == 2:
                         event_type = parts[0].replace("event: ", "").strip()
                         json_str = parts[1].strip()
-                        import json
                         try:
                             parsed = json.loads(json_str)
                             await websocket.send_json({"event": event_type, "data": parsed})
@@ -1023,8 +1033,10 @@ async def darknet_ws_stream(websocket: WebSocket):
                             await websocket.send_json({"event": event_type, "data": json_str})
                     else:
                         await websocket.send_text(data)
+                elif isinstance(data, dict):
+                    await websocket.send_json({"event": "update", "data": data})
                 else:
-                    await websocket.send_text(data)
+                    await websocket.send_text(str(data))
             except queue.Empty:
                 await asyncio.sleep(0.1)
                 continue
@@ -1894,7 +1906,10 @@ async def nemesis_generate_report(req: NemesisReportRequest):
         if req.type == "insights":
             prompt = f"Provide a brief 3-paragraph forensic AI insight for the cryptocurrency address {req.address}. Focus on anomalies, risk factors, and cluster behavior based on the following tracer data: {context_data}. Format it entirely in Markdown."
             
-        response = await asyncio.to_thread(client.models.generate_content, model=model_name, contents=prompt)
+        # V8 Isolates: No multithreading, so we call synchronously, 
+        # but in a true worker environment, this would use fetch API. 
+        # For now, we wrap it in a pseudo-async block if needed, but synchronous is the only option here without a full HTTP rewrite.
+        response = client.models.generate_content(model=model_name, contents=prompt)
         return {"markdown": response.text}
     except Exception as e:
         logger.error(f"Gemini API Error: {traceback.format_exc()}")
@@ -1930,7 +1945,8 @@ async def godmode_generate_fix(req: GodmodeRequest):
     try:
         client = genai.Client(api_key=keys[0])
         prompt = f"You are a Godmode Autonomous AI agent. Analyze the following context or error trace and generate a production-ready fix or refactor for it:\n\n{req.context}\n\nReturn ONLY the markdown code block."
-        response = await asyncio.to_thread(client.models.generate_content, model="gemini-2.5-flash", contents=prompt)
+        # V8 Isolates: Synchronous call to avoid multithreading crash
+        response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
         return {"code_fix": response.text}
     except Exception as e:
         logger.error(f"Gemini API Error in godmode_generate_fix: {traceback.format_exc()}")
