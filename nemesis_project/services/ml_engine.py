@@ -129,4 +129,41 @@ class MachineLearningEngine:
             logger.error(f"Failed to log training error to ML Engine: {e}")
             return False
 
+    async def generate_tactical_summary(self, pipeline_results: list) -> str:
+        """
+        Consumes the entire output of the Intelligence Pipeline and generates
+        a military-grade tactical summary of the Threat Actor's behavior.
+        """
+        if not self.client:
+            return "TACTICAL SUMMARY UNAVAILABLE: Gemini API not connected. Pipeline executed successfully."
+            
+        prompt = f"""
+        You are the NEMESIS TIER-11 ML INTELLIGENCE ENGINE.
+        Analyze the following aggregated pipeline results and provide a concise, high-impact tactical summary.
+        Identify the likely threat actor objective, the primary evasion techniques used (e.g. bridging, mixing), and a final risk assessment.
+        
+        PIPELINE RESULTS:
+        {json.dumps(pipeline_results, indent=2)}
+        
+        FORMAT:
+        1. EXECUTIVE SUMMARY (2 sentences)
+        2. TACTICAL BEHAVIORS (Bullet points)
+        3. RECOMMENDED ACTIONS
+        """
+        
+        import asyncio
+        def _call_gemini():
+            return self.client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt
+            )
+            
+        try:
+            response = await asyncio.to_thread(_call_gemini)
+            return response.text
+        except Exception as e:
+            logger.error(f"Failed to generate tactical summary: {e}")
+            return "TACTICAL SUMMARY GENERATION FAILED. See logs for details."
+
 ml_engine = MachineLearningEngine()
+

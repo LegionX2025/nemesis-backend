@@ -1348,6 +1348,17 @@
             // Auto-fill the invisible input if they still click execute
             document.getElementById('id-search-input').value = "0x742d35Cc6634C0532925a3b844Bc454e4438f44e";
         }
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const walletParam = urlParams.get('wallet');
+            if (walletParam) {
+                document.getElementById('id-search-input').value = walletParam;
+                // Wait briefly for the UI to be ready
+                setTimeout(() => {
+                    executeNemesisID();
+                }, 500);
+            }
+        });
     </script>
 </body>
 </html>

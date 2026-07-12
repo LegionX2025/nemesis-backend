@@ -644,7 +644,7 @@ async def api_trace_autonomous(req: TraceRequest, request: Request):
         logger.error(f"Autonomous trace failed: {e}")
         return {"error": str(e)}
 
-@app.websocket("/ws/{trace_id}")
+@app.websocket("/api/ws/{trace_id}")
 async def ws(websocket: WebSocket, trace_id: str):
     await websocket.accept()
     if trace_id not in active_sessions:

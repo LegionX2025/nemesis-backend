@@ -227,15 +227,15 @@
     </div>
     
     <!-- CONTENT MODAL -->
-    <div id="content-modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[9999] items-center justify-center font-sans">
-        <div class="bg-white rounded-xl shadow-2xl w-[800px] border border-slate-200 overflow-hidden flex flex-col max-h-[85vh]">
-            <div class="bg-indigo-600 text-white px-6 py-4 flex justify-between items-center shadow-sm">
-                <h2 class="text-lg font-bold flex items-center gap-2" id="content-modal-title">
+    <div id="content-modal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[9999] items-center justify-center font-sans transition-all duration-300">
+        <div class="bg-white rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] w-[900px] border border-slate-200 overflow-hidden flex flex-col max-h-[90vh] transform transition-all scale-95" id="content-modal-window">
+            <div class="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200 px-6 py-4 flex justify-between items-center shadow-sm">
+                <h2 class="text-lg font-black uppercase tracking-widest flex items-center gap-3 text-slate-800" id="content-modal-title">
                     Title
                 </h2>
-                <button onclick="closeContentPage()" class="text-indigo-200 hover:text-white transition"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                <button onclick="closeContentPage()" class="text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-full w-8 h-8 flex items-center justify-center transition"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-            <div class="p-6 overflow-y-auto text-slate-700 text-sm" id="content-modal-body">
+            <div class="p-6 overflow-y-auto text-slate-700 text-sm bg-slate-50/50" id="content-modal-body">
             </div>
         </div>
     </div>
@@ -549,13 +549,13 @@
                 interaction: { hover: true, tooltipDelay: 50, zoomView: true, dragView: true },
                 nodes: { 
                     shape: 'circularImage', size: 30,
-                    font: { size: 10, face: 'Inter', color: '#1e293b', multi: true, bold: '12px Inter' }, 
+                    font: { size: 10, face: 'Inter', color: '#1e293b', multi: 'html', bold: { size: 12, face: 'Inter', color: '#1e293b', vadjust: -1 }, ital: { size: 8, face: 'Inter', color: '#94a3b8', vadjust: 1 } }, 
                     borderWidth: 2, 
                     shadow: { color: 'rgba(0,0,0,0.05)', size: 10, x: 0, y: 5 } 
                 },
                 edges: { 
                     arrows: 'to', 
-                    font: { align: 'middle', size: 9, color: '#64748b', background: '#ffffff', strokeWidth: 0, multi: true }, 
+                    font: { align: 'middle', size: 9, color: '#ef4444', background: '#ffffff', strokeWidth: 0, multi: 'html', bold: { color: '#ef4444' }, code: { color: '#94a3b8', face: 'monospace' } }, 
                     smooth: { type: 'cubicBezier', forceDirection: 'horizontal', roundness: 0.4 },
                     color: { color: '#3b82f6', highlight: '#2563eb', hover: '#2563eb' },
                     width: 1.5
@@ -591,9 +591,16 @@
                     let icon = isCex ? '\uf00c' : (isSuspect ? '\uf128' : '\uf3ed'); // Check, Question, Shield
                     ctx.fillText(icon, pos.x + 20, pos.y + 20);
                 });
+                });
             });
 
-            }
+            network.on("click", function (params) {
+                if (params.nodes.length > 0) {
+                    let nodeId = params.nodes[0];
+                    openNemesisIdModal(nodeId);
+                }
+            });
+        }
 
         
         // ==========================================
@@ -601,7 +608,8 @@
         // ==========================================
         const isLocal = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1');
         window.BACKEND_URL = isLocal ? 'http://localhost:3001' : '';
-        window.WS_URL = isLocal ? 'ws://localhost:3001' : 'wss://nemesis-backend.onrender.com';
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        window.WS_URL = isLocal ? 'ws://localhost:3001' : `${wsProtocol}//${window.location.host}`;
         
         let ws = null;
         let wsReconnectDelay = 1000;
@@ -610,7 +618,7 @@
 
         function connectWebSocket(traceId) {
             if (ws) ws.close();
-            const wsUrl = window.WS_URL + "/ws/" + traceId;
+            const wsUrl = window.WS_URL + "/api/ws/" + traceId;
             console.log("Connecting to WS:", wsUrl);
             ws = new WebSocket(wsUrl);
 
@@ -638,7 +646,7 @@
                         if (!allNodesMap.has(d.from)) {
                             let isCexFrom = (d.sender_entity || "").toUpperCase().includes("EXCHANGE");
                             let isSuspectFrom = (d.sender_entity || "").toUpperCase().includes("SUSPECT") || GLOBAL_TRACE_SEEDS.toLowerCase().includes(d.from.toLowerCase());
-                            let labelFrom = `<b>$${(d.usd || d.amount).toLocaleString()}</b>\n<span style="color:#94a3b8; font-size:8px;">${(d.sender_entity || "UNKNOWN ENTITY").toUpperCase()}</span>`;
+                            let labelFrom = `<b>$${(d.usd || d.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</b>\n<i>${(d.sender_entity || "UNKNOWN ENTITY").toUpperCase()}</i>`;
                             
                             let n = { id: d.from, label: labelFrom, image: getSafeIconUrl(d.sender_entity, false, isCexFrom) };
                             nodes.add(n);
@@ -649,7 +657,7 @@
                         if (!allNodesMap.has(d.to)) {
                             let isCexTo = (d.receiver_entity || "").toUpperCase().includes("EXCHANGE");
                             let isSuspectTo = (d.receiver_entity || "").toUpperCase().includes("SUSPECT") || GLOBAL_TRACE_SEEDS.toLowerCase().includes(d.to.toLowerCase());
-                            let labelTo = `<b>$0.00</b>\n<span style="color:#94a3b8; font-size:8px;">${(d.receiver_entity || "UNKNOWN ENTITY").toUpperCase()}</span>`;
+                            let labelTo = `<b>$0.00</b>\n<i>${(d.receiver_entity || "UNKNOWN ENTITY").toUpperCase()}</i>`;
                             
                             let n = { id: d.to, label: labelTo, image: getSafeIconUrl(d.receiver_entity, false, isCexTo) };
                             nodes.add(n);
@@ -659,7 +667,7 @@
                         // Add edge
                         let edgeId = d.tx + "-" + d.from + "-" + d.to;
                         if (!allEdgesMap.has(edgeId)) {
-                            let edgeLabel = `<b><span style="color:#ef4444;">↓ OUTFLOW</span></b>\n<span style="color:#ef4444;">$${(d.usd || d.amount).toLocaleString()}</span>\n<span style="font-family:monospace; color:#94a3b8;">${d.tx.substring(0,10)}...</span>`;
+                            let edgeLabel = `<b>↓ OUTFLOW</b>\n$${(d.usd || d.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}\n<code>${d.tx.substring(0,10)}...</code>`;
                             
                             let isCrossChain = d.state_transition === 'CROSS_CHAIN_ROUTING' || d.edge_type === 'BRIDGE_HOP';
                             let isObfuscation = d.edge_type === 'MIXER';
@@ -742,7 +750,7 @@
                     // Add destination node and edge
                     if (!allNodesMap.has(d.destination_receiver)) {
                         let isSuspect = GLOBAL_TRACE_SEEDS.toLowerCase().includes(d.destination_receiver.toLowerCase());
-                        let labelTo = `<b>$${(d.usd_value || 0).toLocaleString()}</b>\n<span style="color:#94a3b8; font-size:8px;">${d.destination_chain} Receiver</span>`;
+                        let labelTo = `<b>$${(d.usd_value || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</b>\n<i>${d.destination_chain} Receiver</i>`;
                         let n = { id: d.destination_receiver, label: labelTo, image: getSafeIconUrl("Receiver", false, false) };
                         nodes.add(n);
                         allNodesMap.set(d.destination_receiver, n);
@@ -750,7 +758,7 @@
                     
                     let edgeId = "bridge-" + d.origin_tx;
                     if (!allEdgesMap.has(edgeId)) {
-                        let edgeLabel = `<b><span style="color:#db2777;">BRIDGE HOP</span></b>\n<span style="color:#db2777;">${d.bridge}</span>\n<span style="font-family:monospace; color:#94a3b8;">${d.destination_tx.substring(0,10)}...</span>`;
+                        let edgeLabel = `<b>BRIDGE HOP</b>\n${d.bridge}\n<code>${d.destination_tx.substring(0,10)}...</code>`;
                         let e = { 
                             id: edgeId, from: originWallet, to: d.destination_receiver, label: edgeLabel, 
                             color: { color: '#db2777', highlight: '#db2777' },
@@ -848,6 +856,39 @@
                 network.setOptions({ layout: { hierarchical: { enabled: true, direction: 'UD', sortMethod: 'hubsize' } }, physics: { enabled: false } });
             }
             network.fit();
+        }
+
+        // Modal Handling
+        function openContentPage(pageType) {
+            document.getElementById('content-modal-title').innerHTML = `<i class="fa-solid fa-file-lines text-blue-600"></i> ${pageType.toUpperCase()}`;
+            document.getElementById('content-modal-body').innerHTML = `<div class="p-8 text-center text-slate-500"><i class="fa-solid fa-person-digging text-4xl mb-4"></i><br>Module '${pageType}' is under active construction.</div>`;
+            showModal();
+        }
+
+        function openNemesisIdModal(wallet) {
+            document.getElementById('content-modal-title').innerHTML = `<i class="fa-solid fa-id-card text-fuchsia-600"></i> NEMESIS ID: <span class="text-slate-500 font-mono text-sm ml-2">${wallet}</span>`;
+            document.getElementById('content-modal-body').innerHTML = `
+                <div class="flex flex-col h-[650px] w-full relative bg-slate-100 rounded-xl overflow-hidden border border-slate-200">
+                    <iframe src="nemesis_id.html?wallet=${wallet}" class="w-full h-full border-0 absolute inset-0"></iframe>
+                </div>
+            `;
+            showModal();
+        }
+
+        function showModal() {
+            const modal = document.getElementById('content-modal');
+            const win = document.getElementById('content-modal-window');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => { win.classList.remove('scale-95'); win.classList.add('scale-100'); }, 10);
+        }
+
+        function closeContentPage() {
+            const modal = document.getElementById('content-modal');
+            const win = document.getElementById('content-modal-window');
+            win.classList.remove('scale-100');
+            win.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 200);
         }
     </script>
 </body>

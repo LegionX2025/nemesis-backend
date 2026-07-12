@@ -52,6 +52,11 @@ app.all('/api/*', async (c) => {
             body: c.req.method !== 'GET' && c.req.method !== 'HEAD' ? await c.req.arrayBuffer() : null
         })
 
+        // Handle WebSocket Upgrade Native Response
+        if (response.headers.get('Upgrade') === 'websocket') {
+            return response;
+        }
+
         const newResponse = new Response(response.body, response)
         // Add edge-specific headers
         newResponse.headers.set('X-Edge-Served-By', 'Cloudflare Nemesis Worker')

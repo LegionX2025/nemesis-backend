@@ -151,30 +151,187 @@ class UniversalDatabaseConnector:
 
 db_connector = UniversalDatabaseConnector()
 
-class DummyCursor:
-    def sort(self, *args, **kwargs): return self
-    def limit(self, *args, **kwargs): return self
-    async def to_list(self, length=None): return []
+class AtlasCursor:
+    def __init__(self, api_url, api_key, collection_name, filter_query):
+        self.api_url = api_url
+        self.api_key = api_key
+        self.collection_name = collection_name
+        self.filter_query = filter_query
+        self._sort = None
+        self._limit = None
+        
+    def sort(self, field, direction=-1):
+        if isinstance(field, list):
+            # Handle list of tuples like [("block_time", -1)]
+            self._sort = {k: v for k, v in field}
+        elif isinstance(field, str):
+            self._sort = {field: direction}
+        return self
 
-class DummyMongoCollection:
-    async def update_one(self, filter, update, upsert=False): pass
-    async def insert_one(self, document): pass
-    async def find_one(self, filter): return None
-    def find(self, *args, **kwargs): return DummyCursor()
-    async def count_documents(self, filter): return 0
+    def limit(self, length):
+        self._limit = length
+        return self
+
+    async def to_list(self, length=None):
+        if not self.api_url or not self.api_key:
+            return []
+            
+        limit_val = length if length is not None else self._limit
+        
+        headers = {
+            "Content-Type": "application/json",
+            "api-key": self.api_key
+        }
+        
+        payload = {
+            "dataSource": "nemesisdb",
+            "database": "nemesis_intel",
+            "collection": self.collection_name,
+            "filter": self.filter_query
+        }
+        
+        if self._sort:
+            payload["sort"] = self._sort
+        if limit_val:
+            payload["limit"] = limit_val
+            
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(f"{self.api_url}/action/find", json=payload, headers=headers) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        return data.get("documents", [])
+                    else:
+                        logger.error(f"Atlas API find error: {await resp.text()}")
+                        return []
+        except Exception as e:
+            logger.error(f"Atlas API cursor error: {e}")
+            return []
+
+class AtlasCollection:
+    def __init__(self, api_url, api_key, collection_name):
+        self.api_url = api_url
+        self.api_key = api_key
+        self.collection_name = collection_name
+        
+    def find(self, filter_query=None):
+        if filter_query is None: filter_query = {}
+        return AtlasCursor(self.api_url, self.api_key, self.collection_name, filter_query)
+        
+    async def find_one(self, filter_query=None):
+        if not self.api_url or not self.api_key: return None
+        if filter_query is None: filter_query = {}
+        
+        headers = {
+            "Content-Type": "application/json",
+            "api-key": self.api_key
+        }
+        payload = {
+            "dataSource": "nemesisdb",
+            "database": "nemesis_intel",
+            "collection": self.collection_name,
+            "filter": filter_query
+        }
+        
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(f"{self.api_url}/action/findOne", json=payload, headers=headers) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        return data.get("document", None)
+                    return None
+        except Exception as e:
+            logger.error(f"Atlas API findOne error: {e}")
+            return None
+
+    async def insert_one(self, document):
+        if not self.api_url or not self.api_key: return None
+        headers = {
+            "Content-Type": "application/json",
+            "api-key": self.api_key
+        }
+        payload = {
+            "dataSource": "nemesisdb",
+            "database": "nemesis_intel",
+            "collection": self.collection_name,
+            "document": document
+        }
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(f"{self.api_url}/action/insertOne", json=payload, headers=headers) as resp:
+                    pass
+        except Exception as e:
+            logger.error(f"Atlas API insertOne error: {e}")
+
+    async def update_one(self, filter_query, update, upsert=False):
+        if not self.api_url or not self.api_key: return None
+        headers = {
+            "Content-Type": "application/json",
+            "api-key": self.api_key
+        }
+        payload = {
+            "dataSource": "nemesisdb",
+            "database": "nemesis_intel",
+            "collection": self.collection_name,
+            "filter": filter_query,
+            "update": update,
+            "upsert": upsert
+        }
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(f"{self.api_url}/action/updateOne", json=payload, headers=headers) as resp:
+                    pass
+        except Exception as e:
+            logger.error(f"Atlas API updateOne error: {e}")
+            
+    async def count_documents(self, filter_query):
+        if not self.api_url or not self.api_key: return 0
+        headers = {
+            "Content-Type": "application/json",
+            "api-key": self.api_key
+        }
+        payload = {
+            "dataSource": "nemesisdb",
+            "database": "nemesis_intel",
+            "collection": self.collection_name,
+            "pipeline": [
+                {"$match": filter_query},
+                {"$count": "count"}
+            ]
+        }
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(f"{self.api_url}/action/aggregate", json=payload, headers=headers) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        docs = data.get("documents", [])
+                        if docs:
+                            return docs[0].get("count", 0)
+                    return 0
+        except Exception as e:
+            return 0
+
     async def create_index(self, *args, **kwargs): pass
 
-class DummyMongoDB:
-    def __init__(self): self.admin = DummyMongoCollection()
-    def __getattr__(self, name): return DummyMongoCollection()
-    def __getitem__(self, item): return DummyMongoCollection()
+class AtlasDataAPIClient:
+    def __init__(self):
+        self.api_url = os.environ.get("MONGODB_DATA_API_URL")
+        self.api_key = os.environ.get("MONGODB_DATA_API_KEY")
+        self.admin = AtlasCollection(self.api_url, self.api_key, "admin")
+        
+    def __getattr__(self, name):
+        return AtlasCollection(self.api_url, self.api_key, name)
+        
+    def __getitem__(self, name):
+        return AtlasCollection(self.api_url, self.api_key, name)
+        
     async def command(self, *args, **kwargs): pass
 
 class Neo4jProxy:
     def __getattr__(self, name):
         return None
 
-mongo_db = DummyMongoDB()
+mongo_db = AtlasDataAPIClient()
 neo4j_driver = Neo4jProxy()
 
 db_engine = db_connector

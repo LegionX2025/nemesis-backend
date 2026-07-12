@@ -1,7 +1,6 @@
-name = "nemesis-python-worker"
-main = "main.py"
+name = "nemesis-edge-proxy"
+main = "cloudflare_worker/src/index.ts"
 compatibility_date = "2024-12-01"
-compatibility_flags = ["python_workers"]
 
 [observability]
 enabled = true
@@ -16,12 +15,29 @@ binding = "DB"
 database_name = "nemesis_audit_db"
 database_id = "80acedab-33c2-4637-bee7-6b9a1176a463"
 
+[[d1_databases]]
+binding = "NEMESIS_DB_PRIMARY"
+database_name = "nemesis"
+database_id = "73ef6e7d-9499-4d59-a190-ae7220873a71"
+
+[[d1_databases]]
+binding = "NEMESIS_DB_SECONDARY"
+database_name = "nemesis-db"
+database_id = "860655f8-aa37-4d4f-92a9-b5ea49bc101a"
+
+[[hyperdrive]]
+binding = "HYPERDRIVE"
+id = "2bf62864eaf64708b5a349169d6efc7e"
+localConnectionString = "postgresql://admin:!Nemesis2026@ep-morning-glitter-adpz0uqn-pooler.c-2.us-east-1.aws.neon.tech:5432/intelligence"
+
 [[r2_buckets]]
 binding = "NEMESIS_STORAGE"
 bucket_name = "nemesis-assets"
 
 [vars]
-BACKEND_API_URL = "https://nemesis-python-worker.legionxgaming2021.workers.dev"
+BACKEND_API_URL = "http://localhost:3001"
+NEMESIS_EDGE_SECRET = "default_dev_secret_override"
 
 [assets]
 directory = "frontend"
+binding = "ASSETS"
