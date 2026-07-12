@@ -40,7 +40,16 @@ def main():
             print("   => FALLING BACK TO RENDER BACKUP DEPLOYMENT...")
 
     if not cf_backend_success:
-        print("\n🚀 Render Backend build triggered automatically via GitHub Push (Backup)...")
+        print("\n🚀 Cloudflare Backend deployment failed. Triggering Render Backend Backup via Deploy Hook...")
+        import urllib.request
+        try:
+            render_hook_url = "https://api.render.com/deploy/srv-d92fghho3t8c73bg5740?key=YskS46ltPHo"
+            req = urllib.request.Request(render_hook_url, method="POST")
+            urllib.request.urlopen(req)
+            print("✅ Success: Render Backup triggered successfully.")
+        except Exception as e:
+            print(f"⚠️ Warning: Failed to trigger Render Deploy Hook directly: {e}")
+            print("   Render should still build automatically via GitHub Push.")
 
     # 3. Deploy Cloudflare Pages Frontend
     # Assumes wrangler is installed and authenticated

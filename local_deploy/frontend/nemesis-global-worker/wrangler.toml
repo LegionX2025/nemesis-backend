@@ -30,6 +30,16 @@ binding = "DB"
 database_name = "nemesis"
 database_id = "73ef6e7d-9499-4d59-a190-ae7220873a71"
 
+[[d1_databases]]
+binding = "AUDIT_DB"
+database_name = "nemesis_audit_db"
+database_id = "80acedab-33c2-4637-bee7-6b9a1176a463"
+
+[[d1_databases]]
+binding = "NEMESIS_DB"
+database_name = "nemesis-db"
+database_id = "860655f8-aa37-4d4f-92a9-b5ea49bc101a"
+
 # ============================================================================
 # R2 BUCKETS
 # ============================================================================
@@ -98,7 +108,8 @@ deleted_classes = ["TraceSessionDO"]
 [[hyperdrive]]
 binding = "HYPERDRIVE"
 id = "2bf62864eaf64708b5a349169d6efc7e"
-localConnectionString = "postgresql://admin:nemesis2026@ep-morning-glitter-adpz0uqn-pooler.c-2.us-east-1.aws.neon.tech:5432/intelligence"
+localConnectionString = "postgresql://admin:!Nemesis2026@ep-morning-glitter-adpz0uqn-pooler.c-2.us-east-1.aws.neon.tech:5432/intelligence"
+
 
 # ============================================================================
 # ENVIRONMENT VARIABLES (NON-SENSITIVE ONLY)
