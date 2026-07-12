@@ -1,0 +1,6 @@
+name = "nemesis-backend"
+main = "backend/app/main.py"
+compatibility_date = "2026-07-12"
+compatibility_flags = ["python_workers"]
+
+# Add your D1 or KV bindings here if necessary

@@ -20,6 +20,23 @@ UNIVERSAL_VARIABLES = {
     "slot": "Solana Slot"
 }
 
+ENTITY_TYPES = [
+    "Wallet", "Person", "Organization", "Exchange", "Custodian", "Bridge",
+    "Mixer", "Validator", "DAO", "Smart Contract", "NFT Collection",
+    "Token", "Stablecoin", "DeFi Protocol", "Sanction List Entry"
+]
+
+EDGE_TYPES = [
+    "SENT_TO", "RECEIVED_FROM", "MINTED", "BURNED", "WRAPPED_AS", "UNWRAPPED_TO",
+    "LOCKED", "UNLOCKED", "BRIDGED_TO", "BRIDGED_FROM", "MESSAGE_SENT",
+    "MESSAGE_RECEIVED", "SWAPPED_TO", "ADDED_LIQUIDITY", "REMOVED_LIQUIDITY",
+    "STAKED", "UNSTAKED", "BORROWED", "REPAID", "FLASH_LOAN", "LIQUIDATED",
+    "APPROVED", "TRANSFERRED_NFT", "DEPLOYED_CONTRACT", "EXECUTED",
+    "INTERACTED_WITH", "DEPOSITED_TO", "WITHDREW_FROM", "CONSOLIDATED",
+    "HOT_WALLET", "COLD_WALLET", "MIXED", "COINJOIN", "TORNADO",
+    "SANCTIONED", "HIGH_RISK"
+]
+
 WALLET_CLASSIFICATION_ONTOLOGY = [
     "Private Wallet", "Personal Wallet", "Exchange", "Exchange Deposit", 
     "Exchange Hot Wallet", "Exchange Cold Wallet", "Custodial Wallet", 

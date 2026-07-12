@@ -671,6 +671,38 @@ class TraceEngine:
                 self.seed_chains[seed] = chain
                 self.queue.put_nowait((seed, 0, target_amount, "NONE", chain, seed))
 
+    async def run_bitquery_pipeline(self, wallet: str, chain: str, depth: int):
+        from services.collectors.plugins import TransferCollector, DexCollector, BridgeCollector
+        from services.risk_engine import global_risk_engine
+        
+        bitquery_key = CONFIG.get("BITQUERY_API_TOKEN", "")
+        
+        # Initialize collectors
+        transfer_collector = TransferCollector(bitquery_key)
+        dex_collector = DexCollector(bitquery_key)
+        bridge_collector = BridgeCollector(bitquery_key)
+        
+        logger.info(f"Running Bitquery Parallel Pipeline for {wallet} on {chain}...")
+        
+        # Parallel execution
+        results = await asyncio.gather(
+            transfer_collector.fetch(wallet, chain, depth),
+            dex_collector.fetch(wallet, chain, depth),
+            bridge_collector.fetch(wallet, chain, depth),
+            return_exceptions=True
+        )
+        
+        all_edges = []
+        for res in results:
+            if not isinstance(res, Exception):
+                all_edges.extend(res)
+                
+        # Risk Scoring and Entity Resolution
+        for edge in all_edges:
+            edge["risk_score"] = global_risk_engine.calculate_edge_risk(edge)
+            
+        return all_edges
+
     async def fetch_txs(self, session, addr, chain):
         global EVM_API_SEMAPHORE
         if EVM_API_SEMAPHORE is None:

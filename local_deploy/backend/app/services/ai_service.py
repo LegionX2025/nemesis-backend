@@ -113,7 +113,12 @@ def ai_insights_node(state: WalletState) -> WalletState:
     if api_key:
         try:
             client = genai.Client(api_key=api_key)
-            prompt = f"Analyze wallet {state['wallet_address']} on {state['chain']}. Peel chain detected: {state['peel_chain_detected']}. Contract: {state['is_contract']}. Write a short 3-sentence forensic summary."
+            prompt = (
+                f"Analyze the intelligence graph for wallet {state['wallet_address']} on {state['chain']}. "
+                f"Behaviors detected: Peel chain: {state['peel_chain_detected']}, Clusters: {state['clusters']}. "
+                f"Use the new Nemesis Ontology (e.g. BRIDGED_TO, SWAPPED_TO, MIXED, CEX_DEPOSIT) and Risk Scores to trace the asset's journey. "
+                f"Write a chronological 4-sentence Investigation Summary assessing the holistic AML risk."
+            )
             resp = client.models.generate_content(
                 model="gemini-2.5-flash",
                 contents=prompt
