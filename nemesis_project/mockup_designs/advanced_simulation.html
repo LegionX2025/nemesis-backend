@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEMESIS | Advanced Orbital Tracing Simulation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/force-graph@1.43.3/dist/force-graph.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; overflow: hidden; margin:0; padding:0; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        
+        table th { position: sticky; top: 0; z-index: 10; background: #f8fafc; box-shadow: 0 1px 0 #e2e8f0; }
+        .ledger-container { transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .ledger-minimized { height: 40px !important; overflow: hidden; }
+
+        .graph-wrapper { position: relative; }
+        .graph-wrapper canvas { border-radius: 0.5rem; outline: none; }
+        
+        #html-node-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; }
+        
+        /* ---------------------------------------------------- */
+        /* ADVANCED HTML NODE DESIGNS (Glassmorphism & Orbital) */
+        /* ---------------------------------------------------- */
+        
+        .html-node {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            pointer-events: auto; /* Allow clicking on the HTML node */
+            transition: transform 0.1s linear; /* Smooth micro-movements */
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        /* Design 2: Tactile Dimensional Glass Sphere */
+        .glass-sphere {
+            width: 70px; height: 70px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9) 0%, rgba(241,245,249,0.7) 40%, rgba(203,213,225,0.8) 100%);
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.1), inset 5px 5px 15px rgba(255,255,255,1), 0 10px 20px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.8);
+            backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Selected State Glow */
+        .html-node.selected .glass-sphere {
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.1), inset 5px 5px 15px rgba(255,255,255,1), 0 0 30px rgba(59, 130, 246, 0.6);
+            border-color: #3b82f6;
+        }
+
+        /* Design 3: Advanced Orbital Data Rings */
+        .orbit-ring {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 140px; height: 140px;
+            margin-top: -70px; margin-left: -70px;
+            border: 1px dashed rgba(148, 163, 184, 0.4);
+            border-radius: 50%;
+            animation: spin 15s linear infinite;
+            z-index: 1;
+        }
+        
+        .orbit-pill {
+            position: absolute;
+            top: -10px; left: 50%;
+            transform: translateX(-50%);
+            background: white; border: 1px solid #cbd5e1;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-radius: 9999px;
+            padding: 2px 8px;
+            font-size: 8px; font-weight: 800; color: #475569;
+            white-space: nowrap;
+            /* Counter-rotate to keep text upright */
+            animation: spin-reverse 15s linear infinite;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes spin-reverse { 100% { transform: translateX(-50%) rotate(-360deg); } }
+
+        /* Floating Node Labels */
+        .node-label-container {
+            position: absolute;
+            top: calc(100% + 25px); /* Below the orbit ring */
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            pointer-events: none;
+            width: max-content;
+        }
+        
+        .node-value { font-weight: 900; font-size: 14px; color: #1e293b; letter-spacing: -0.5px; }
+        .node-name { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 4px; padding: 2px 6px; font-size: 9px; font-weight: 800; margin-top: 2px; display: inline-block; }
+    </style>
+</head>
+<body class="flex flex-col h-screen antialiased text-sm">
+
+    <!-- GLOBAL HEADER -->
+    <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0 z-50">
+        <div class="flex items-center gap-3 w-64">
+            <i class="fa-solid fa-lion text-3xl text-slate-900"></i>
+            <div class="flex flex-col">
+                <span class="font-black text-xl tracking-tight leading-none text-slate-900 uppercase">NEMESIS</span>
+                <span class="text-[8px] text-slate-500 font-bold tracking-widest uppercase mt-0.5">By Lionsgate Network</span>
+            </div>
+        </div>
+
+        <div class="flex-1 flex justify-center px-8">
+            <div class="relative w-full max-w-2xl">
+                <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" class="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-brand-500 focus:bg-white transition-colors" placeholder="Search by Address, Txn Hash, Entity...">
+            </div>
+        </div>
+
+        <div class="flex items-center gap-5 text-slate-500 w-64 justify-end">
+            <button class="hover:text-slate-800 transition-colors"><i class="fa-regular fa-bell text-lg"></i></button>
+            <div class="h-6 w-px bg-slate-200 mx-1"></div>
+            <div class="flex items-center gap-2 cursor-pointer">
+                <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-white text-xs font-bold">AN</div>
+                <div class="hidden md:block text-left leading-tight">
+                    <div class="text-xs font-bold text-slate-800">Analyst</div>
+                    <div class="text-[9px] text-slate-500 font-semibold">Lionsgate Network</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 flex overflow-hidden bg-slate-50">
+        <!-- LEFT SIDEBAR -->
+        <aside class="w-56 bg-white border-r border-slate-200 flex flex-col flex-shrink-0 z-20 overflow-y-auto custom-scrollbar">
+            <nav class="p-3 space-y-0.5 flex-1 text-[13px] font-medium text-slate-600">
+                <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 hover:text-slate-900 rounded-md transition"><i class="fa-solid fa-house w-4 text-center"></i> Dashboard</a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 bg-blue-50 text-blue-600 rounded-md font-semibold"><i class="fa-solid fa-network-wired w-4 text-center"></i> Graph Explorer</a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 hover:text-slate-900 rounded-md transition"><i class="fa-regular fa-bell w-4 text-center"></i> Alerts</a>
+            </nav>
+            <div class="p-4 mt-auto border-t border-slate-100">
+                <button onclick="startSimulation()" id="sim-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow mb-4 flex items-center justify-center gap-2 transition"><i class="fa-solid fa-satellite-dish"></i> Stream Trace</button>
+                <div class="text-[10px] font-bold text-slate-800 tracking-widest uppercase">LIONSGATE NETWORK</div>
+                <div class="text-[9px] text-slate-400 mt-1">Version 2.6.0 (Orbital)</div>
+            </div>
+        </aside>
+
+        <!-- CENTER CONTENT -->
+        <div class="flex-1 flex flex-col min-w-0 overflow-y-auto custom-scrollbar p-6 space-y-6">
+            
+            <div class="flex gap-6 h-[450px]">
+                
+                <!-- Graph Flow Visualization -->
+                <div class="flex-1 bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col overflow-hidden">
+                    <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <div class="flex items-center gap-3">
+                            <h2 class="font-bold text-slate-800">Orbital Kinematic Engine</h2>
+                            <span id="sim-badge" class="bg-slate-200 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-slate-400"></div> Standby</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 w-full bg-slate-50/30 relative graph-wrapper">
+                        <!-- native canvas layer for edges and physics -->
+                        <div id="graph-container" class="absolute inset-0"></div>
+                        <!-- HTML overlay layer for glass/orbital nodes -->
+                        <div id="html-node-layer"></div>
+                    </div>
+                </div>
+
+                <!-- Right Details Sidebar (Dynamic) -->
+                <div id="details-panel" class="w-80 bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col overflow-hidden relative">
+                    <div id="empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 bg-slate-50/50 z-10">
+                        <i class="fa-solid fa-atom text-4xl mb-3 text-slate-300"></i>
+                        <p class="text-xs font-bold uppercase tracking-wider text-center px-6">Select a Node to view<br>Orbital Data & Intelligence</p>
+                    </div>
+
+                    <div class="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-start">
+                        <div>
+                            <h2 id="panel-title" class="font-bold text-slate-800 text-[10px] uppercase tracking-widest mb-1 text-blue-600">Entity Inspector</h2>
+                            <div id="panel-main-id" class="text-base font-black text-slate-800 mono tracking-tight break-all leading-tight">--</div>
+                        </div>
+                        <span id="panel-badge" class="bg-slate-200 text-slate-600 border border-slate-300 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase mt-1">--</span>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto custom-scrollbar p-4 text-xs bg-white">
+                        <div id="panel-content" class="space-y-4"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOTTOM LEDGER SECTION -->
+            <div id="ledger-panel" class="bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col ledger-container flex-1 min-h-[300px]">
+                
+                <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center shrink-0 cursor-pointer" onclick="toggleLedger()">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-table-list text-blue-600"></i>
+                        <span class="font-bold text-slate-800">Real-Time Resolution Ledger</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <button class="bg-white border border-slate-200 px-2 py-1 rounded text-xs font-semibold text-slate-600 hover:bg-slate-50 flex items-center gap-1" onclick="event.stopPropagation()"><i class="fa-solid fa-download"></i> Export</button>
+                        <button class="text-slate-400 hover:text-slate-800 transition"><i id="ledger-toggle-icon" class="fa-solid fa-chevron-down"></i></button>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-auto custom-scrollbar">
+                    <table class="w-full text-left text-xs border-collapse whitespace-nowrap">
+                        <thead>
+                            <tr class="text-[9px] uppercase tracking-wider text-slate-500 font-bold bg-white">
+                                <th class="px-3 py-3 border-b border-slate-200">Date/Time (UTC)</th>
+                                <th class="px-3 py-3 border-b border-slate-200">Type of Transaction Correlation</th>
+                                <th class="px-3 py-3 border-b border-slate-200">TX Hash</th>
+                                <th class="px-3 py-3 border-b border-slate-200">From Wallet(Entity)</th>
+                                <th class="px-3 py-3 border-b border-slate-200">To Wallet(Entity)</th>
+                                <th class="px-3 py-3 border-b border-slate-200">To Receiver Entity</th>
+                                <th class="px-3 py-3 border-b border-slate-200 text-right">Amount</th>
+                                <th class="px-3 py-3 border-b border-slate-200">Transaction Type</th>
+                                <th class="px-3 py-3 border-b border-slate-200">Behavioral Cluster</th>
+                                <th class="px-3 py-3 border-b border-slate-200">Clustered address{root}ENTITY</th>
+                                <th class="px-3 py-3 border-b border-slate-200">Confidence</th>
+                                <th class="px-3 py-3 border-b border-slate-200">Transaction Attributions</th>
+                                <th class="px-3 py-3 border-b border-slate-200">Transaction intelligence</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ledger-body" class="text-slate-700 font-medium font-mono text-[10px] divide-y divide-slate-100">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        let isLedgerMinimized = false;
+        function toggleLedger() {
+            const panel = document.getElementById('ledger-panel');
+            const icon = document.getElementById('ledger-toggle-icon');
+            if (isLedgerMinimized) { panel.classList.remove('ledger-minimized'); icon.classList.replace('fa-chevron-up', 'fa-chevron-down'); } 
+            else { panel.classList.add('ledger-minimized'); icon.classList.replace('fa-chevron-down', 'fa-chevron-up'); }
+            isLedgerMinimized = !isLedgerMinimized;
+            setTimeout(() => { if(window.Graph) { window.Graph.width(document.getElementById('graph-container').clientWidth).height(document.getElementById('graph-container').clientHeight); } }, 350);
+        }
+
+        // --- Core Application Logic ---
+        
+        const imgs = {
+            binance: 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
+            usdt: 'https://cryptologos.cc/logos/tether-usdt-logo.png',
+            wallet: 'https://cdn-icons-png.flaticon.com/512/855/855279.png',
+            eth: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
+            uniswap: 'https://cryptologos.cc/logos/uniswap-uni-logo.png'
+        };
+
+        const sequenceData = [
+            {
+                type: 'node',
+                node: { id: 'N1', name: '0x1A2B...9C8D', type: 'PRIVATE WALLET', val: 'HACKER ORIGIN', icon: imgs.wallet, orbitLabel: 'Suspected Origin', 
+                        details: { root: '0x1A2B...{Hacker}', cluster: 'Lazarus Group', conf: '99%', intel: 'Initial extraction point.' } }
+            },
+            {
+                type: 'link',
+                link: { source: 'N1', target: 'N2', label: 'ETH (ERC20)', amount: '1,450.00 ETH', hash: '0xabc123...def4' },
+                node: { id: 'N2', name: 'UNISWAP V2', type: 'DEX MIXER', val: '$4,350,000.00', icon: imgs.uniswap, orbitLabel: 'DeFi Router',
+                        details: { root: 'Uniswap{DEX}', cluster: 'DeFi Mixing', conf: '100%', intel: 'High velocity transfer to DEX immediately post-exploit.' } },
+                ledger: { time: '06:05:12', corr: 'Direct Transfer', hash: '0xabc123...def4', from: '0x1A2B...9C8D', toWallet: 'Uniswap V2 Router', toRecv: 'DEX Smart Contract', amt: '1,450.00 ETH', txType: 'ERC20 Transfer', cluster: 'Initial Extraction', root: '0x1A2B...{Hacker}', conf: '99%', attr: 'Known Exploit Payload', intel: 'High velocity transfer to DEX immediately post-exploit.' }
+            },
+            {
+                type: 'link',
+                link: { source: 'N2', target: 'N3', label: 'USDT (ERC20)', amount: '$4,345,100.00', hash: '0x8899aa...bbcc' },
+                node: { id: 'N3', name: 'BINANCE 14', type: 'EXCHANGE', val: '$4,345,100.00', icon: imgs.binance, orbitLabel: 'Terminal Loss',
+                        details: { root: 'Binance{CEX}', cluster: 'Cashing Out', conf: '100%', intel: 'Funds swapped to USDT and consolidated to Exchange.' } },
+                ledger: { time: '06:08:44', corr: 'DEX Swap', hash: '0x8899aa...bbcc', from: 'Uniswap V2', toWallet: 'Binance Hot 14', toRecv: 'Binance Exchange', amt: '$4,345,100', txType: 'Internal Call', cluster: 'Cashing Out', root: 'Binance{CEX}', conf: '100%', attr: 'Deposit Consolidation', intel: 'Funds swapped to USDT and consolidated into centralized exchange.' }
+            }
+        ];
+
+        let gData = { nodes: [], links: [] };
+        let selectedNodeId = null;
+        let simInterval = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('graph-container');
+            const htmlLayer = document.getElementById('html-node-layer');
+            
+            window.Graph = ForceGraph()(container)
+                .graphData(gData)
+                .backgroundColor('transparent')
+                .d3AlphaDecay(0.02)
+                .enableZoomPanInteraction(true)
+                
+                // Hide native canvas nodes, we draw them in HTML overlay!
+                .nodeColor(() => 'rgba(0,0,0,0)') 
+                .nodeVal(10)
+
+                // Advanced Edges (Refined Tactile Dimensional style)
+                .linkCanvasObjectMode(() => 'after')
+                .linkCanvasObject((link, ctx, globalScale) => {
+                    const start = link.source; const end = link.target;
+                    if(typeof start !== 'object' || typeof end !== 'object') return;
+                    
+                    const midX = start.x + (end.x - start.x) / 2;
+                    const midY = start.y + (end.y - start.y) / 2;
+
+                    ctx.save(); ctx.translate(midX, midY - 10);
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+                    // Label Top
+                    ctx.font = 'bold 8px Inter'; ctx.fillStyle = '#64748b';
+                    ctx.fillText(link.label, 0, -12);
+                    
+                    // Outflow & Amount
+                    ctx.font = 'bold 10px Inter'; ctx.fillStyle = '#ef4444';
+                    ctx.fillText('↓ ' + link.amount, 0, 0);
+
+                    // Hash
+                    ctx.font = 'bold 8px JetBrains Mono'; ctx.fillStyle = '#94a3b8';
+                    ctx.fillText(link.hash, 0, 15);
+
+                    ctx.restore();
+                })
+                .linkColor(() => '#cbd5e1')
+                .linkWidth(2)
+                .linkDirectionalParticles(2)
+                .linkDirectionalParticleWidth(4)
+                .linkDirectionalParticleColor(() => '#0ea5e9')
+                .linkDirectionalParticleSpeed(0.005)
+
+                // Sync HTML overlay with Canvas coordinates every frame!
+                .onRenderFramePre(() => {
+                    // Update DOM element positions
+                    gData.nodes.forEach(node => {
+                        const el = document.getElementById(`html-node-${node.id}`);
+                        if (el) {
+                            // Convert canvas coords to DOM coords
+                            const { x, y } = Graph.graph2ScreenCoords(node.x, node.y);
+                            el.style.left = `${x}px`;
+                            el.style.top = `${y}px`;
+                        }
+                    });
+                });
+
+            // Handle resize
+            window.addEventListener('resize', () => { Graph.width(container.clientWidth).height(container.clientHeight); });
+        });
+
+        // Click handler for HTML Nodes
+        function handleNodeClick(nodeId) {
+            selectedNodeId = nodeId;
+            
+            // Update UI selection state
+            document.querySelectorAll('.html-node').forEach(el => el.classList.remove('selected'));
+            document.getElementById(`html-node-${nodeId}`).classList.add('selected');
+
+            // Find node data
+            const node = gData.nodes.find(n => n.id === nodeId);
+            
+            // Update Sidebar
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('panel-title').innerText = 'Entity Inspector';
+            document.getElementById('panel-main-id').innerText = node.val; 
+            document.getElementById('panel-badge').innerText = node.type; 
+            
+            document.getElementById('panel-content').innerHTML = `
+                <div class="flex justify-between border-b border-slate-100 pb-2"><span class="text-slate-500">Address</span><span class="font-semibold text-slate-800 mono">${node.name}</span></div>
+                <div class="flex justify-between border-b border-slate-100 pb-2"><span class="text-slate-500">Root Entity</span><span class="font-semibold text-purple-600 mono">${node.details.root}</span></div>
+                <div class="flex justify-between border-b border-slate-100 pb-2"><span class="text-slate-500">Cluster</span><span class="font-semibold text-slate-800">${node.details.cluster}</span></div>
+                <div class="flex justify-between border-b border-slate-100 pb-2"><span class="text-slate-500">Confidence</span><span class="font-semibold text-emerald-600">${node.details.conf}</span></div>
+                <div class="mt-4 bg-slate-50 p-3 rounded text-slate-600 italic">"${node.details.intel}"</div>
+            `;
+        }
+
+        // --- Simulation Engine ---
+        function startSimulation() {
+            if (simInterval) return;
+            
+            // Reset
+            gData = { nodes: [], links: [] };
+            Graph.graphData(gData);
+            document.getElementById('html-node-layer').innerHTML = '';
+            document.getElementById('ledger-body').innerHTML = '';
+            document.getElementById('empty-state').style.display = 'flex';
+            selectedNodeId = null;
+            
+            const btn = document.getElementById('sim-btn');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Engine Active...';
+            btn.classList.replace('bg-blue-600', 'bg-emerald-600');
+            
+            let step = 0;
+            
+            simInterval = setInterval(() => {
+                if (step >= sequenceData.length) {
+                    clearInterval(simInterval);
+                    simInterval = null;
+                    btn.innerHTML = '<i class="fa-solid fa-satellite-dish"></i> Restart Stream';
+                    btn.classList.replace('bg-emerald-600', 'bg-blue-600');
+                    Graph.zoomToFit(1000, 50);
+                    return;
+                }
+
+                const item = sequenceData[step];
+                const newNodes = [...gData.nodes];
+                const newLinks = [...gData.links];
+
+                if (item.type === 'node') {
+                    newNodes.push(item.node);
+                    createHtmlNode(item.node);
+                } else if (item.type === 'link') {
+                    newNodes.push(item.node);
+                    createHtmlNode(item.node);
+                    newLinks.push(item.link);
+                    appendLedgerRow(item.ledger);
+                }
+
+                gData = { nodes: newNodes, links: newLinks };
+                Graph.graphData(gData);
+                
+                Graph.d3Force('collide', d3.forceCollide(100)); // Keep HTML nodes spaced out
+                Graph.d3Force('charge').strength(-600);
+                
+                step++;
+            }, 1200); 
+        }
+
+        function createHtmlNode(node) {
+            const layer = document.getElementById('html-node-layer');
+            const el = document.createElement('div');
+            el.id = `html-node-${node.id}`;
+            el.className = 'html-node';
+            el.onclick = () => handleNodeClick(node.id);
+            
+            el.innerHTML = `
+                <!-- Orbiting Data Ring -->
+                <div class="orbit-ring">
+                    <div class="orbit-pill"><i class="fa-solid fa-circle-dot text-emerald-500 mr-1"></i>${node.orbitLabel}</div>
+                </div>
+                <!-- Core Glass Sphere -->
+                <div class="glass-sphere">
+                    <img src="${node.icon}" class="w-8 h-8 rounded-full">
+                </div>
+                <!-- Typography -->
+                <div class="node-label-container">
+                    <div class="node-value">${node.val}</div>
+                    <div class="node-name">${node.name}</div>
+                </div>
+            `;
+            layer.appendChild(el);
+        }
+
+        function appendLedgerRow(row) {
+            const tbody = document.getElementById('ledger-body');
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-blue-50 transition cursor-pointer animate-[fadeIn_0.5s_ease-out] bg-white';
+            tr.innerHTML = `
+                <td class="px-3 py-2 text-slate-500">${row.time}</td>
+                <td class="px-3 py-2"><span class="bg-blue-50 text-blue-600 border border-blue-100 px-1.5 py-0.5 rounded text-[8px] uppercase font-bold">${row.corr}</span></td>
+                <td class="px-3 py-2 text-blue-600 hover:underline cursor-pointer">${row.hash}</td>
+                <td class="px-3 py-2 font-semibold text-slate-700">${row.from}</td>
+                <td class="px-3 py-2 font-semibold text-slate-700">${row.toWallet}</td>
+                <td class="px-3 py-2 font-semibold text-slate-700">${row.toRecv}</td>
+                <td class="px-3 py-2 text-right font-black text-slate-800">${row.amt}</td>
+                <td class="px-3 py-2 text-slate-500 font-sans">${row.txType}</td>
+                <td class="px-3 py-2 text-slate-500 font-sans">${row.cluster}</td>
+                <td class="px-3 py-2 text-purple-600 font-bold">${row.root}</td>
+                <td class="px-3 py-2"><span class="text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-bold text-[9px]">${row.conf}</span></td>
+                <td class="px-3 py-2 text-slate-500 font-sans">${row.attr}</td>
+                <td class="px-3 py-2 text-slate-500 font-sans truncate max-w-[150px]" title="${row.intel}">${row.intel}</td>
+            `;
+            tbody.prepend(tr);
+        }
+    </script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS addresses (id TEXT PRIMARY KEY, address TEXT NOT NULL, chain TEXT DEFAULT 'ethereum', label TEXT, entity_name TEXT, entity_type TEXT, risk_score REAL DEFAULT 0, balance REAL DEFAULT 0, tx_count INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')));
+CREATE TABLE IF NOT EXISTS transactions (id TEXT PRIMARY KEY, tx_hash TEXT NOT NULL, chain TEXT DEFAULT 'ethereum', from_address TEXT, to_address TEXT, value REAL DEFAULT 0, block_number INTEGER, block_timestamp TEXT, gas_used REAL, gas_price REAL, status INTEGER DEFAULT 1, created_at TEXT DEFAULT (datetime('now')));
+CREATE TABLE IF NOT EXISTS transaction_graph (id TEXT PRIMARY KEY, source_address TEXT NOT NULL, target_address TEXT NOT NULL, tx_hash TEXT, chain TEXT, value REAL DEFAULT 0, depth INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')));
+CREATE TABLE IF NOT EXISTS labels (id TEXT PRIMARY KEY, address TEXT NOT NULL, label TEXT NOT NULL, label_type TEXT, confidence REAL DEFAULT 0.5, source TEXT, chain TEXT, created_at TEXT DEFAULT (datetime('now')));
+CREATE TABLE IF NOT EXISTS traces (id TEXT PRIMARY KEY, trace_id TEXT UNIQUE NOT NULL, root_address TEXT NOT NULL, chain TEXT, max_depth INTEGER DEFAULT 5, status TEXT DEFAULT 'pending', node_count INTEGER DEFAULT 0, edge_count INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')));
+CREATE TABLE IF NOT EXISTS trace_nodes (id TEXT PRIMARY KEY, trace_id TEXT NOT NULL, address TEXT NOT NULL, depth INTEGER, label TEXT, entity_name TEXT, is_root INTEGER DEFAULT 0);
+CREATE TABLE IF NOT EXISTS trace_edges (id TEXT PRIMARY KEY, trace_id TEXT NOT NULL, source_address TEXT NOT NULL, target_address TEXT NOT NULL, tx_hash TEXT, value REAL DEFAULT 0, depth INTEGER);
+CREATE INDEX IF NOT EXISTS idx_tx_from ON transactions(from_address);
+CREATE INDEX IF NOT EXISTS idx_tx_to ON transactions(to_address);
+CREATE INDEX IF NOT EXISTS idx_addr ON addresses(address);
+CREATE INDEX IF NOT EXISTS idx_label ON labels(address);

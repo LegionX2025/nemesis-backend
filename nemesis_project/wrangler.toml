@@ -1,0 +1,42 @@
+name = "nemesis-backend"
+main = "main.py"
+compatibility_date = "2026-07-12"
+compatibility_flags = ["python_workers"]
+
+# Database Binding (Cloudflare D1 Serverless SQL)
+[[d1_databases]]
+binding = "DB"
+database_name = "nemesis_db"
+database_id = "3d831f48-9ecb-4b71-88e7-9574ff44d7ca"
+
+# Global Cache/Storage Binding (Cloudflare KV)
+[[kv_namespaces]]
+binding = "NEMESIS_KV"
+id = "556aa273aeac4b009b559bb215346ce3"
+
+# Binary Storage (Cloudflare R2)
+[[r2_buckets]]
+binding = "NEMESIS_BUCKET"
+bucket_name = "nemesis-evidence"
+
+# Background Jobs (Cloudflare Queues)
+[[queues.producers]]
+binding = "JOB_QUEUE"
+queue = "nemesis-jobs"
+
+[[queues.consumers]]
+queue = "nemesis-jobs"
+max_batch_size = 10
+max_batch_timeout = 5
+
+# Session Engine (Cloudflare Durable Objects)
+[[durable_objects.bindings]]
+name = "SESSION_ENGINE"
+class_name = "SessionEngineDO"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["SessionEngineDO"]
+
+[vars]
+GEMINI_API_KEYS = "AIzaSyAx3ErRwHK9A3NsPBFSLORp_a-3vv39hVA,AQ.Ab8RN6JPOXbe9j_3OgJ_iFz3lG2DC_S0thaZPqZhSsHvnZFv0Q,AIzaSyDqBHYN95bnpLFSKc3qm_2TLLFPJgiH9U0,AIzaSyCvqDsVAT4_tnGrBwrzAc2J-IF014hITV8,AIzaSyBBCNCTy2WwSd8ZNNCLY0whKA2ZhKwZI1c,AIzaSyDWuVwzjOJxaNkYDXI-QPukOjQE8rDf5Gc,AIzaSyBGCmZuKhrxYK3WKY1HNRdZZTITP1J2RQo,AIzaSyBc6IQvMOK3DW-FDm0x0CV57rmcnPyeeqI,AIzaSyASBUdHMbQjI4ai7nwxf7UQFa806qY9cBE,AIzaSyAckC8hh64gq-A8LF7tNE0I95cnVwBJWmc,AIzaSyAD5RmuOVOm-cRlduRnEqVVUCeKf1tUKPQ"

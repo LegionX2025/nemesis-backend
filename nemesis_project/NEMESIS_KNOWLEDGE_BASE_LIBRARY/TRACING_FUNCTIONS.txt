@@ -1,0 +1,1439 @@
+Excellent — this is now **turning into a real intelligence ontology + tasking engine**, not just a list.
+
+What you’re designing is a **Unified Intelligence Graph OS** where:
+
+> **Entity type automatically determines**
+> • what to collect
+> • how to investigate
+> • what tools to run
+> • how to label
+> • how to cluster
+> • how to render in the graph
+> • how to build the dossier on click
+
+This is exactly how modern CTI / DFIR / blockchain forensics platforms are architected.
+
+Below is the **clean master structure** you can directly map into DB schema + graph engine + task runner.
+
+---
+
+# 🧠 LEVEL-1: MASTER ENTITY TYPES
+
+| Entity | Sub-Entities | Perform Tasks (auto) | Graph Relationships (auto) | Dossier Data (on click) |
+| ------ | ------------ | -------------------- | -------------------------- | ----------------------- |
+
+---
+
+## 🧍 PERSON
+
+| Entity | Sub-Entities                                                | Perform Tasks                                                  | Graph Auto-Map                                                  | Dossier                                         |
+| ------ | ----------------------------------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------- | ----------------------------------------------- |
+| Person | Name, alias, emails, phones, PGP, socials, devices, wallets | OSINT search, username hunt, email breach check, social scrape | OWNS → Wallet, USES → Device, MEMBER_OF → Org, POSTS_ON → Forum | Identity, aliases, socials, wallets, risk flags |
+
+---
+
+## 🏢 ORGANIZATION
+
+| Entity       | Sub-Entities                         | Perform Tasks                               | Graph                                     | Dossier                           |
+| ------------ | ------------------------------------ | ------------------------------------------- | ----------------------------------------- | --------------------------------- |
+| Organization | Domains, employees, servers, wallets | WHOIS, DNS history, breach data, infra scan | OWNS → Domain/IP/Wallet, EMPLOYS → Person | Legal, infra, wallets, reputation |
+
+---
+
+## 🌐 DOMAIN / IP / INFRA
+
+| Entity    | Sub-Entities                  | Perform Tasks                         | Graph                        | Dossier                       |
+| --------- | ----------------------------- | ------------------------------------- | ---------------------------- | ----------------------------- |
+| Domain/IP | DNS, SSL, hosting, open ports | WHOIS, DNSdumpster, nmap, cert scrape | HOSTS → C2, RESOLVES_TO → IP | Hosting, risks, linked actors |
+
+---
+
+## 🪙 WALLET ADDRESS (MOST IMPORTANT)
+
+| Entity | Sub-Entities                                  | Perform Tasks                                           | Graph                                             | Dossier                                 |
+| ------ | --------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------- | --------------------------------------- |
+| Wallet | EOA, Contract, CEX, Mixer, DeFi, Bridge, Scam | Explorer scrape (OKLink), tx pull, clustering, labeling | SENT_TO, RECEIVED_FROM, CLUSTERED_WITH, TAGGED_AS | Full wallet profile + graph + AI report |
+
+**Auto tasks when wallet detected**
+
+1. Scrape label from **OKLink**
+2. Pull Normal / Internal / Token txs
+3. Detect custodial entry
+4. Run clustering heuristic
+5. Assign NEMESIS Cluster ID
+6. Risk scoring
+7. Build animated graph
+8. Generate dossier
+
+---
+
+## 🧠 THREAT ACTOR / APT / RANSOMWARE
+
+Examples:
+
+* **Lazarus Group**
+* **LockBit**
+
+| Entity       | Sub-Entities                       | Perform Tasks                                   | Graph                        | Dossier                       |
+| ------------ | ---------------------------------- | ----------------------------------------------- | ---------------------------- | ----------------------------- |
+| Threat Group | Wallets, malware, domains, members | IOC search, malware hash lookup, wallet tracing | USES → Wallet, HOSTS → Infra | TTPs, wallets, infra, victims |
+
+---
+
+## 🦠 MALWARE / HASH
+
+Examples:
+
+* **Cobalt Strike**
+* **Emotet**
+
+| Entity  | Sub-Entities               | Perform Tasks                            | Graph                   | Dossier             |
+| ------- | -------------------------- | ---------------------------------------- | ----------------------- | ------------------- |
+| Malware | Hashes, C2, mutex, strings | VT lookup, string extraction, C2 mapping | CONNECTS_TO → Domain/IP | Capabilities, infra |
+
+---
+
+## 🕳️ DARKNET / FORUM / MARKET
+
+Examples:
+
+* **Hydra Market**
+* **BreachForums**
+
+| Entity       | Sub-Entities          | Perform Tasks                        | Graph             | Dossier               |
+| ------------ | --------------------- | ------------------------------------ | ----------------- | --------------------- |
+| Darknet Site | Vendors, PGP, wallets | Onion scan, PGP scrape, wallet trace | RECEIVES → Wallet | Vendors, escrow, risk |
+
+---
+
+# ⚙️ AUTO TASK ENGINE (BASED ON ENTITY TYPE)
+
+| Detected Input | Auto Tasks Fired                             |
+| -------------- | -------------------------------------------- |
+| Email          | Breach DB, username search, socials          |
+| Domain         | WHOIS, DNS, SSL, hosting, ports              |
+| IP             | nmap, ASN, abuse, reverse DNS                |
+| Wallet         | OKLink scrape, tx pull, clustering, labeling |
+| Hash           | VirusTotal, strings, C2 extract              |
+| Username       | 300+ site search, forums, darknet            |
+| Org name       | Domain pivot, employees, wallets             |
+
+---
+
+# 🔗 AUTO GRAPH RELATIONSHIPS
+
+When data is ingested, edges are created automatically:
+
+* OWNS
+* USES
+* SENT_TO
+* RECEIVED_FROM
+* CLUSTERED_WITH
+* HOSTED_ON
+* MEMBER_OF
+* DEPLOYED_BY
+* TAGGED_AS (Scam / Mixer / Sanction)
+
+---
+
+# 🧩 WALLET CLUSTERING HEURISTICS (CORE INTELLIGENCE)
+
+Automatic detection of same owner via:
+
+* Change address detection
+* Peel chain pattern
+* Reused gas payer
+* Shared nonce pattern
+* Common deposit → CEX
+* Timing correlation
+* Token movement correlation
+
+This is what makes the graph **intelligence**, not visualization.
+
+---
+
+# 🖥️ GRAPH ENGINE BEHAVIOR (NEMESIS VISUALIZER)
+
+When entity = Wallet:
+
+* Node icon = logo of entity (CEX, token, mixer, etc.)
+* Pulsing red edges if high risk
+* Toggle Physics
+* Tree / Graph mode
+* Money flow animation
+* Tooltips with:
+
+  * Balance
+  * Clustered addresses
+  * Risk
+  * Label
+
+---
+
+# 📁 DOSSIER PROFILE (ON CLICK ANY NODE)
+
+## Wallet dossier contains
+
+* Profile summary
+* Multi-chain addresses
+* Tx tables
+* Token holdings
+* Cluster map
+* Custodial detection
+* Intelligence signals (darknet, socials, forums)
+* Animated charts
+* “Generate Infographic”
+* “Generate Comprehensive Report (LLM)”
+
+---
+
+# 🧠 ANALYSIS MODES
+
+| Mode              | What it does                         |
+| ----------------- | ------------------------------------ |
+| Analyze           | Full wallet intelligence + AI report |
+| Tracer            | Recursive tree tracing               |
+| Custodial Scanner | Find exchange entry point            |
+| Asset Tracer      | Victim → Scammer path tracing        |
+
+---
+
+# 🏷️ SMART TAGGING SYSTEM
+
+Every wallet automatically gets:
+
+* Entity Category (Exchange, Mixer, DeFi, Scam, etc.)
+* Wallet Role (Hot, Cold, Treasury, Funnel, Peel chain)
+* AML Risk Tags (Sanctioned, Mixer-exposed, High risk)
+
+---
+
+# 🧠 RESULT
+
+You now have a **deterministic system** where:
+
+> Input anything → system knows:
+> **what it is → what to run → how to map → how to show → how to report**
+
+This is the foundation of a **true unified intelligence search engine + realtime forensic graph OS**.
+Below is the **ENTITY INTELLIGENCE ENGINE** layer that sits **on top of your ontology, graph, and task system**.
+
+This is the part that turns your platform from:
+
+> “data collection + graph”
+> into
+> **a real intelligence engine that reasons, classifies, correlates, scores risk, and writes conclusions automatically**
+
+---
+
+# 🧠 NEMESIS GLOBAL INTELLIGENCE ENGINE (NGIE)
+
+NGIE is a **multi-engine intelligence layer**.
+
+Each engine activates **based on detected entity type** and feeds:
+
+* Graph relationships
+* Dossier enrichment
+* Risk scoring
+* Auto narrative report
+* Visual graph behavior
+
+---
+
+## 🧍 HUMAN INTELLIGENCE ENGINE (HIE)
+
+**Triggers when entity = Person / alias / username / email / phone**
+
+**Correlates**
+
+* Social media
+* Breach data
+* Devices
+* Wallet ownership
+* Forum activity
+* Organization ties
+* Darknet presence
+
+**Detects**
+
+* Sockpuppets (same person, many aliases)
+* Real identity behind handles
+* Wallet ownership likelihood
+* Criminal / fraud / scam patterns
+
+**Graph adds**
+
+OWNS → Wallet
+USES → Device
+POSTS_ON → Forum
+MEMBER_OF → Org
+
+**Dossier adds**
+
+* Identity confidence score
+* Alias map
+* Digital footprint map
+* Risk indicators
+
+---
+
+## 🏢 ORGANIZATION INTELLIGENCE ENGINE (OIE)
+
+**Triggers when entity = Company / group / agency**
+
+**Correlates**
+
+* Domains, IPs, servers
+* Employees (humans)
+* Wallets
+* Infrastructure
+* Breaches
+* Sanctions / reputation
+
+**Detects**
+
+* Shell companies
+* Infra reused by threat actors
+* Financial links to wallets
+* Hidden subsidiaries
+
+**Graph adds**
+
+OWNS → Infra / Wallet
+EMPLOYS → Human
+
+---
+
+## 🪙 CRYPTO WALLET INTELLIGENCE ENGINE (CWIE)
+
+**Core of the system**
+
+**Triggers when entity = Wallet / Contract**
+
+Uses labels and data from **OKLink** and explorers, then runs:
+
+### Detects automatically
+
+* Custodial entry points (e.g., **Binance**, **Coinbase**)
+* Mixer exposure (e.g., **Tornado Cash**)
+* Peel chains
+* Change addresses
+* Wallet clustering
+* Role classification (funnel, treasury, hot, peel, aggregator)
+* AML risk tags
+* Entity type (exchange, scam, DeFi, bridge, etc.)
+
+**Graph adds**
+
+CLUSTERED_WITH • SENT_TO • RECEIVED_FROM • TAGGED_AS
+
+**Dossier adds**
+
+* Full wallet profile
+* Cluster map
+* Token analytics
+* Custodial detection
+* Intelligence signals
+* AI narrative
+
+---
+
+## 💰 FINANCIAL INTELLIGENCE ENGINE (FIE)
+
+**Triggers when wallets, banks, cards, exchanges are involved**
+
+**Correlates**
+
+* Fiat ↔ Crypto paths
+* OTC desks
+* Payment processors
+* Merchant wallets
+* Exchange deposit addresses
+
+**Detects**
+
+* Money laundering paths
+* Layering patterns
+* Off-ramp locations
+* Jurisdiction risks
+
+**Graph adds**
+
+TRANSFERRED_TO • CASHED_OUT_AT • FUNNELED_THROUGH
+
+---
+
+## 🕳️ UNDERGROUND / DARKNET INTELLIGENCE ENGINE (UDIE)
+
+**Triggers when entity = forum / onion / vendor / leak site**
+
+Examples:
+
+* **Hydra Market**
+* **BreachForums**
+
+**Correlates**
+
+* Vendor PGP
+* Escrow wallets
+* User aliases
+* Leak posts
+
+**Detects**
+
+* Vendor ↔ wallet links
+* Human ↔ darknet identity
+* Ransom / scam wallets
+
+---
+
+## 🦠 THREAT / MALWARE / APT INTELLIGENCE ENGINE (TAIE)
+
+Examples:
+
+* **Lazarus Group**
+* **LockBit**
+* **Cobalt Strike**
+
+**Correlates**
+
+* Malware hashes → C2 → domains → wallets
+* Ransom wallets
+* Hosting infra
+
+**Detects**
+
+* Campaign patterns
+* Shared infrastructure
+* Wallet reuse across attacks
+
+---
+
+## 🌐 GLOBAL GOVERNMENT / SANCTIONS INTELLIGENCE ENGINE (GGIE)
+
+**Triggers when entity touches sanctions, law enforcement, or state actors**
+
+**Correlates**
+
+* Sanction lists
+* Seized wallets
+* Prohibited jurisdictions
+* State-sponsored APT wallets
+
+**Detects**
+
+* Sanction exposure
+* Terror finance patterns
+* Government seizure trails
+
+---
+
+## 🧠 NATURAL LANGUAGE INTELLIGENCE ENGINE (NLIE)
+
+This is the **reasoning layer**.
+
+It reads:
+
+* Graph relationships
+* Wallet analytics
+* OSINT
+* Darknet signals
+* Threat intel
+
+And produces:
+
+### Automatically
+
+* Executive summaries
+* Investigation narratives
+* AML insights
+* Human-readable conclusions
+* Infographic explanations
+* Court-ready intelligence report text
+
+---
+
+# 🔁 HOW ENGINES WORK TOGETHER
+
+Example input: **wallet address**
+
+1. CWIE runs (tx, cluster, labels)
+2. FIE runs (money flow, off-ramps)
+3. UDIE checks darknet exposure
+4. TAIE checks ransomware/APT links
+5. GGIE checks sanctions
+6. NLIE writes the story
+
+You didn’t tell it to do this — **entity type triggered it**.
+
+---
+
+# 📁 FULL INTELLIGENCE DOSSIER (AUTO)
+
+Every entity click shows:
+
+* Overview
+* Sub-entities
+* Graph snapshot
+* Relationship map
+* Timeline
+* Risk & AML
+* Intelligence signals
+* Analytics charts
+* Infographic
+* **Generate Comprehensive Report**
+
+---
+
+# 🧩 GRAPH RELATIONSHIP MAPPING (AUTO)
+
+Edges created by engines:
+
+OWNS • USES • EMPLOYS • HOSTS •
+SENT_TO • RECEIVED_FROM • CLUSTERED_WITH •
+FUNNELED_THROUGH • CASHED_OUT_AT •
+LINKED_BY_IDENTIFIER • TAGGED_AS • TARGETS
+
+---
+
+# ✅ FINAL RESULT
+
+You now have:
+
+> **Ontology (what things are)**
+>
+> * **Task engine (how to collect)**
+> * **Graph engine (how to connect)**
+> * **Intelligence engines (how to think)**
+> * **NL engine (how to explain)**
+
+This is a **true global intelligence system** where any input becomes:
+
+**Mapped → Enriched → Connected → Analyzed → Explained → Reported**
+Below is the **end-to-end wired architecture** for a **True Global Intelligence System** where:
+
+> **Input → Entity Extraction → Ontology Classification → Auto-Tasks → Enrichment → Graph Mapping → Intelligence Engines → Dossier → Report → Searchable Knowledge**
+
+This is the missing **pipeline layer** that connects your:
+
+* Search Engine
+* Databases
+* ML / AI Labs
+* Telemetry (AI Hunter)
+* Ontology Auto-Gen
+* Visualization Graph
+* Settings / Task control
+
+---
+
+# 🌍 NEMESIS TRUE GLOBAL INTELLIGENCE SYSTEM — WIRED PIPELINE
+
+```
+INPUT
+  ↓
+Entity Extraction & Parsing
+  ↓
+Ontology Classifier (what is this?)
+  ↓
+Auto-Task Orchestrator (what to run?)
+  ↓
+Collectors / Crawlers / Scrapers / APIs
+  ↓
+Normalization & Entity Resolver
+  ↓
+Graph Mapper (relationships)
+  ↓
+Intelligence Engines (reasoning)
+  ↓
+Dossier Builder
+  ↓
+AI Report Generator
+  ↓
+Search Index + Databases
+  ↓
+Visualization Graph + UI
+```
+
+---
+
+## 1️⃣ INPUT LAYER (Anything user or telemetry feeds)
+
+* Name, email, username
+* Domain, IP
+* Wallet, tx hash
+* Malware hash
+* Org name
+* Forum/onion URL
+* Logs / telemetry stream
+
+---
+
+## 2️⃣ ENTITY EXTRACTION & PARSING PIPELINE
+
+**Purpose:** detect entities automatically from raw text, logs, pages, reports.
+
+**Parsers detect**
+
+* Emails, phones, usernames
+* Wallet addresses (multi-chain)
+* Domains, IPs
+* Hashes
+* PGP keys
+* Org names
+* Person names
+
+Output:
+
+```
+[ {value: "...", detected_type: "..."} ]
+```
+
+---
+
+## 3️⃣ ONTOLOGY CLASSIFIER (AUTO-GEN)
+
+Maps detected value into your ontology class:
+
+| Detected     | Classified as    |
+| ------------ | ---------------- |
+| 0x…          | Wallet           |
+| @handle      | Digital Identity |
+| example.com  | Domain           |
+| SHA256       | Malware          |
+| Company name | Organization     |
+
+This is where **ontology auto-generation** happens.
+
+---
+
+## 4️⃣ AUTO-TASK ORCHESTRATOR
+
+Entity type triggers tasks automatically.
+
+Example:
+
+| Entity | Tasks fired                                                      |
+| ------ | ---------------------------------------------------------------- |
+| Wallet | Explorer scrape via **OKLink**, tx history, clustering, labeling |
+| Domain | WHOIS, DNS, SSL, nmap                                            |
+| Email  | Breach, username hunt                                            |
+| Hash   | VT, C2 extraction                                                |
+
+No manual selection.
+
+---
+
+## 5️⃣ COLLECTORS / CRAWLERS / SCRAPERS
+
+Feeds from:
+
+* Blockchain explorers (priority: **OKLink**)
+* OSINT sources
+* Darknet / forums (e.g., **BreachForums**)
+* Threat intel
+* Telemetry logs
+* WHOIS / DNS / nmap
+
+---
+
+## 6️⃣ NORMALIZATION & ENTITY RESOLUTION
+
+Deduplicates and resolves:
+
+* Same wallet seen 20 times → 1 entity
+* Same person via email + username → 1 human
+* Same org via domain + WHOIS → 1 org
+
+Creates **Entity IDs (NEMESIS ID)**.
+
+---
+
+## 7️⃣ GRAPH MAPPER
+
+Creates edges automatically:
+
+SENT_TO • RECEIVED_FROM • OWNS • USES • HOSTS •
+CLUSTERED_WITH • MEMBER_OF • TAGGED_AS
+
+This feeds the **visual forensic graph**.
+
+---
+
+## 8️⃣ INTELLIGENCE ENGINES (Reasoning Layer)
+
+Engines activate based on entity:
+
+* Human Intelligence
+* Organization Intelligence
+* Crypto Wallet Intelligence
+* Financial Intelligence
+* Underground Intelligence
+* Threat / APT Intelligence
+* Government / Sanctions Intelligence
+* Natural Language Intelligence
+
+They add:
+
+* Risk scoring
+* Clustering
+* AML tags
+* Behavioral detection
+* Narrative reasoning
+
+---
+
+## 9️⃣ DOSSIER BUILDER (ON CLICK)
+
+Every entity becomes a **profile**:
+
+* Overview
+* Sub-entities
+* Relationship map
+* Timeline
+* Risk & AML
+* Intelligence signals
+* Analytics
+* Infographic
+* Generate AI report
+
+---
+
+## 🔟 AI REPORT GENERATOR (NLIE)
+
+Uses graph + analytics to write:
+
+* Executive summary
+* Transaction analysis
+* Relationship findings
+* AML insights
+* Conclusions
+* Recommendations
+
+---
+
+## 1️⃣1️⃣ SEARCH ENGINE (INTELLIGENCE SEARCH)
+
+You can search:
+
+> any value ever seen in the system
+
+Search returns:
+
+* Entity
+* Dossier
+* Graph focus
+* Related entities
+* Intelligence summary
+
+Backed by indexed Mongo/Postgres + graph DB.
+
+---
+
+## 1️⃣2️⃣ ML / AI LABS
+
+Consumes graph + entities for:
+
+* Wallet clustering models
+* Risk scoring models
+* Identity correlation
+* Scam / ransomware pattern learning
+
+Outputs feed back into ontology tags.
+
+---
+
+## 1️⃣3️⃣ AI HUNTER TELEMETRY
+
+Live feeds:
+
+* Logs
+* Transactions
+* Network events
+* New wallets
+* New domains
+
+Auto-parsed → pipeline again.
+
+---
+
+## 1️⃣4️⃣ VISUAL RELATIONSHIP GRAPH
+
+Graph rules:
+
+* Node icon from entity type (exchange, mixer, token, etc.)
+* Pulsing red for high risk
+* Tree / force / decision modes
+* Tooltips with labels, risk, clusters
+* Search → center → highlight path
+
+---
+
+## 1️⃣5️⃣ SETTINGS / TASK CONTROL
+
+You can configure:
+
+* Which tasks run per entity
+* Risk thresholds
+* Clustering sensitivity
+* Explorer priority (OKLink first)
+* Scraper fallback rotation
+* Report templates
+
+---
+
+# ✅ FINAL BEHAVIOR (What makes this “True Intelligence”)
+
+You paste:
+
+> a wallet / email / domain / username / hash
+
+The system:
+
+1. Extracts entities
+2. Classifies via ontology
+3. Runs the correct tasks
+4. Collects data
+5. Resolves entities
+6. Maps relationships
+7. Runs intelligence engines
+8. Builds dossier
+9. Generates report
+10. Indexes for search
+11. Renders live forensic graph
+
+No manual steps.
+
+This is a **fully wired Global Intelligence Operating System** spanning OSINT, CTI, DFIR, Blockchain Forensics, Darknet Intelligence, and AI reasoning in one unified pipeline.
+Here is the **corrected, darknet-seeded pipeline** wired exactly the way a real intelligence system should ingest, explode, classify, enrich, reason, and visualize from **SEED files**.
+
+This starts not from a user query — but from a **darknet seed list** that autonomously grows the intelligence graph.
+
+---
+
+# 🕳️ DARKNET-SEEDED TRUE GLOBAL INTELLIGENCE PIPELINE
+
+## 🧩 SEED SOURCE
+
+```
+SEED: darknet_urls.txt
+```
+
+Contains:
+
+* Onion markets
+* Forums
+* Leak sites
+* Vendor shops
+* Paste mirrors
+* Ransom blogs
+
+Examples you would see in such a seed:
+
+* **Hydra Market**
+* **BreachForums**
+
+---
+
+## 🔁 PIPELINE FLOW (WIRED)
+
+```
+SEED (darknet_urls.txt)
+        ↓
+Darknet Crawler / Page Harvester
+        ↓
+Entity Extraction & Parsing
+        ↓
+Ontology Classifier
+        ↓
+Auto-Task Orchestrator
+        ↓
+Collectors / Scrapers / APIs
+        ↓
+Normalization & Entity Resolver (NEMESIS ID)
+        ↓
+Graph Mapper (auto relationships)
+        ↓
+Intelligence Engines (reasoning layer)
+        ↓
+Dossier Builder (per entity)
+        ↓
+AI Report Generator (NL engine)
+        ↓
+Search Index + Databases
+        ↓
+Visualization Graph + UI
+```
+
+---
+
+## 1️⃣ DARKNET CRAWLER / PAGE HARVESTER
+
+Continuously crawls onion/forum pages and extracts raw content:
+
+* Vendor pages
+* PGP blocks
+* Wallet addresses
+* Usernames
+* Jabber IDs
+* Emails
+* Links to clearnet infra
+* Ransom notes
+* Leak data
+
+This is **unstructured raw intelligence**.
+
+---
+
+## 2️⃣ ENTITY EXTRACTION & PARSING
+
+Parsers detect automatically from the scraped text:
+
+| Detected       | Example             |
+| -------------- | ------------------- |
+| Wallets        | BTC, ETH, TRX, XMR  |
+| Usernames      | forum handles       |
+| Emails         | contact emails      |
+| PGP            | keys from vendors   |
+| Domains/IPs    | C2 / mirrors        |
+| Org names      | exchanges, services |
+| Malware hashes | from leak posts     |
+
+Output is a structured entity list.
+
+---
+
+## 3️⃣ ONTOLOGY CLASSIFIER (AUTO)
+
+Each detected value is classified:
+
+| Value       | Entity Type                    |
+| ----------- | ------------------------------ |
+| BTC address | Wallet                         |
+| @vendor123  | Digital Identity (Human alias) |
+| onion URL   | Darknet Site                   |
+| binance.com | Organization                   |
+| SHA256      | Malware                        |
+
+---
+
+## 4️⃣ AUTO-TASK ORCHESTRATOR
+
+Entity type decides tasks.
+
+### If Wallet detected
+
+* Scrape label from **OKLink**
+* Pull full tx history
+* Run clustering
+* Detect custodial entry (e.g., **Binance**, **Coinbase**)
+* AML scoring
+
+### If Username / PGP detected
+
+* Forum pivot
+* Darknet pivot
+* OSINT username reuse
+
+### If Domain/IP detected
+
+* WHOIS, DNS, SSL, nmap
+
+---
+
+## 5️⃣ COLLECTORS / SCRAPERS / APIs
+
+Pulls enrichment from:
+
+* Blockchain explorers (OKLink priority)
+* OSINT sources
+* Threat intel
+* WHOIS/DNS
+* Breach data
+
+---
+
+## 6️⃣ NORMALIZATION & ENTITY RESOLVER
+
+All duplicates merged into a **single NEMESIS ENTITY ID**
+
+* Same wallet seen in 10 pages → 1 wallet entity
+* Same PGP across vendors → 1 human alias
+* Same domain across posts → 1 infra entity
+
+---
+
+## 7️⃣ GRAPH MAPPER (AUTO RELATIONSHIPS)
+
+Edges created automatically:
+
+* Vendor USES Wallet
+* Wallet SENT_TO Exchange
+* Vendor USES PGP
+* Domain HOSTS malware
+* Wallet CLUSTERED_WITH wallets
+
+This builds the live forensic graph **without human input**.
+
+---
+
+## 8️⃣ INTELLIGENCE ENGINES FIRE
+
+Because entity types now exist:
+
+* Human Intelligence Engine (aliases)
+* Crypto Wallet Intelligence Engine (money flow)
+* Underground Intelligence Engine (vendor mapping)
+* Financial Intelligence Engine (off-ramps)
+* Threat Intelligence Engine (ransomware/APT links)
+* Government/Sanctions Engine
+* Natural Language Intelligence Engine
+
+They add reasoning, risk, clustering, conclusions.
+
+---
+
+## 9️⃣ DOSSIER BUILDER (PER ENTITY)
+
+Every wallet, vendor, PGP, domain, org now has:
+
+* Profile
+* Relationships
+* Timeline
+* Risk flags
+* Intelligence signals
+* Analytics
+* Graph snapshot
+
+---
+
+## 🔟 AI REPORT GENERATOR
+
+Automatically writes:
+
+* Executive summary
+* Vendor ↔ wallet ↔ exchange flow
+* AML insights
+* Conclusions
+
+---
+
+## 1️⃣1️⃣ SEARCH INDEX + DATABASES
+
+Everything indexed.
+
+You can now search:
+
+> a wallet seen once on a darknet page 3 weeks ago
+
+…and jump to full graph + dossier.
+
+---
+
+## 1️⃣2️⃣ VISUALIZATION GRAPH + UI
+
+Graph already populated before any user search.
+
+* Nodes labeled (exchange logos, mixer, scam, etc.)
+* Pulsing high-risk paths
+* Clusters expandable
+* Tooltips: label, risk, balance, last activity
+
+---
+
+# ✅ WHAT MAKES THIS POWERFUL
+
+You are no longer starting investigations from user input.
+
+You are **growing a living intelligence graph from darknet seeds**, where:
+
+> Pages → Entities → Relationships → Intelligence → Reports → Searchable Knowledge → Visual Graph
+
+Fully autonomous.
+Below is the **fully unified, cleaned, production-grade “True Global Intelligence System” architecture**, merging everything you built into a **single coherent intelligence operating system design**.
+
+I’ve structured it so it can be directly mapped into:
+
+* 🧠 Graph DB (Neo4j / Memgraph)
+* 🗄️ PostgreSQL (structured entities + tasks)
+* 📄 MongoDB (dossiers + raw intelligence)
+* ⚙️ Distributed task runners (workers / queues)
+* 🧪 ML Labs (classification + clustering)
+* 📡 Telemetry ingestion (AI Hunter stream)
+* 🌐 Visual Graph UI (real-time intelligence map)
+* 🔎 Search Engine (entity-resolution index)
+
+---
+
+# 🌍 NEMESIS — TRUE GLOBAL INTELLIGENCE SYSTEM (UNIFIED ARCHITECTURE)
+
+---
+
+# 🧩 1. SEED + INPUT LAYER (ALL ENTRY POINTS)
+
+```text
+SEED FILES (darknet_urls.txt, logs, APIs)
+        ↓
+LIVE INPUT STREAM
+(user, telemetry, crawler, API, manual)
+```
+
+### Supported Inputs
+
+* Human text
+* Emails / usernames
+* IPs / domains
+* Wallets / tx hashes
+* Darknet URLs
+* Logs / alerts
+* OSINT feeds
+* Blockchain streams
+
+---
+
+# 🧠 2. ENTITY EXTRACTION & PARSING ENGINE
+
+### Extracts raw entities:
+
+* Person / alias
+* Organization
+* Wallets (multi-chain)
+* Domains / IPs
+* Emails / phones
+* PGP keys
+* Malware hashes
+* Darknet URLs
+
+### Output:
+
+```json
+{
+  "entity": "...",
+  "type": "wallet | human | org | infra | malware | darknet"
+}
+```
+
+---
+
+# 🧭 3. ONTOLOGY CLASSIFIER (CORE INTELLIGENCE ROUTER)
+
+Maps everything into:
+
+## 🌍 LEVEL-0 ENTITY CLASSES
+
+* Human
+* Organization
+* Cyber Infrastructure
+* Digital Identity
+* Financial
+* Blockchain
+* Threat
+* Underground
+* Content
+* Device
+* Event
+
+---
+
+# ⚙️ 4. AUTO-TASK ORCHESTRATOR (BRAIN OF SYSTEM)
+
+## Triggered automatically per entity type:
+
+| Entity  | Tasks                                             |
+| ------- | ------------------------------------------------- |
+| Wallet  | blockchain tracing, clustering, labeling (OKLink) |
+| Domain  | WHOIS, DNS, SSL, nmap                             |
+| Email   | breach scan, username pivot                       |
+| IP      | ASN, abuse, reverse DNS                           |
+| Malware | VT lookup, C2 extraction                          |
+| Org     | infra mapping, employees, domains                 |
+
+---
+
+# 🕷️ 5. COLLECTORS / CRAWLERS / API LAYER
+
+Sources:
+
+* Blockchain explorers (**OKLink**)
+* OSINT engines
+* WHOIS / DNS
+* Darknet crawlers
+* Threat intel feeds
+* Forum scrapers
+
+---
+
+# 🧬 6. NORMALIZATION & ENTITY RESOLUTION (NEMESIS ID)
+
+### Deduplication engine:
+
+* Same wallet → 1 entity
+* Same alias → linked identity
+* Same domain → single infra node
+
+### Output:
+
+```
+NEMESIS_ENTITY_ID
+```
+
+---
+
+# 🔗 7. GRAPH MAPPER (RELATIONSHIP ENGINE)
+
+## Auto-generated edges:
+
+* OWNS
+* USES
+* HOSTS
+* SENT_TO
+* RECEIVED_FROM
+* CLUSTERED_WITH
+* TAGGED_AS
+* DEPLOYED_BY
+* LINKED_BY_IDENTIFIER
+
+---
+
+# 🧠 8. INTELLIGENCE ENGINES (MULTI-CORE REASONING)
+
+## Engines activated by entity type:
+
+### 🧍 Human Intelligence Engine
+
+* identity resolution
+* alias linking
+* social graph
+
+### 🏢 Organization Intelligence Engine
+
+* infrastructure mapping
+* employee linking
+* financial exposure
+
+### 🪙 Crypto Wallet Intelligence Engine
+
+* transaction tracing
+* clustering
+* custodial detection (Binance, Coinbase)
+* mixer detection (Tornado Cash)
+
+### 💰 Financial Intelligence Engine
+
+* fiat ↔ crypto flows
+* laundering patterns
+* off-ramp detection
+
+### 🕳️ Underground Intelligence Engine
+
+* darknet markets
+* vendors
+* escrow wallets
+
+### 🦠 Threat Intelligence Engine
+
+* ransomware/APT mapping
+* malware C2 linking
+
+### 🏛️ Government / Sanctions Engine
+
+* OFAC / EU / UN matching
+* seized wallet detection
+
+### 🧠 Natural Language Intelligence Engine
+
+* narrative reasoning
+* report generation
+* summarization
+
+---
+
+# 🔁 9. JOB QUERY INJECTION SYSTEM (AUTO-DISCOVERY LAYER)
+
+## Triggered when:
+
+* No match in search
+* Unknown entity
+* No graph data
+
+### Turns unknown into active investigation:
+
+```text
+UNKNOWN INPUT
+   ↓
+Semantic Expansion
+   ↓
+Job Generator
+   ↓
+Task Orchestrator
+   ↓
+Crawlers / Scanners
+   ↓
+Entity Discovery
+   ↓
+Re-insert into pipeline
+```
+
+---
+
+## Job Types
+
+* OSINT jobs (username search)
+* Blockchain discovery jobs
+* Darknet crawling jobs
+* Infrastructure scanning jobs
+* Threat intelligence jobs
+
+---
+
+# 📁 10. DOSSIER BUILDER (ENTITY PROFILE SYSTEM)
+
+Every entity becomes a **live intelligence file**:
+
+### Includes:
+
+* Overview
+* Sub-entities
+* Graph snapshot
+* Relationship map
+* Timeline
+* AML / risk score
+* Intelligence signals
+* Cluster analysis
+* Behavioral patterns
+
+---
+
+# 📊 11. AI REPORT GENERATOR (LLM ENGINE)
+
+Automatically produces:
+
+* Executive Summary
+* Investigation Findings
+* Transaction Analysis
+* Risk & AML Insights
+* Relationship Mapping
+* Source/Destination flows
+* Recommendations
+* Glossary
+
+---
+
+# 🔎 12. SEARCH ENGINE (INTELLIGENCE INDEX)
+
+### Query anything:
+
+* wallet
+* username
+* domain
+* IP
+* darknet URL
+* org name
+
+Returns:
+
+* entity
+* graph
+* dossier
+* intelligence summary
+
+---
+
+# 🧪 13. ML / AI LABS (LEARNING ENGINE)
+
+Models for:
+
+* Wallet clustering
+* Scam detection
+* Identity correlation
+* Threat classification
+* Graph anomaly detection
+
+Feeds back into ontology automatically.
+
+---
+
+# 📡 14. AI HUNTER TELEMETRY (REAL-TIME STREAM)
+
+Continuously ingests:
+
+* transactions
+* logs
+* darknet feeds
+* network events
+* new entities
+
+Triggers pipeline automatically.
+
+---
+
+# 🧭 15. VISUALIZATION GRAPH ENGINE
+
+### Features:
+
+* Force / Tree / Decision graph modes
+* Pulsing high-risk paths
+* Cluster expansion
+* Tooltips (risk, balance, label)
+* Search → center → highlight
+* Entity icons (exchange, mixer, scam, token logos)
+
+---
+
+# ⚙️ 16. SETTINGS & CONTROL LAYER
+
+Controls:
+
+* Task activation rules
+* Risk thresholds
+* Scraper priority (OKLink first)
+* Job injection sensitivity
+* ML clustering behavior
+* Report format templates
+
+---
+
+# 🔄 FINAL SYSTEM BEHAVIOR (CORE PRINCIPLE)
+
+## ANY INPUT:
+
+```
+text / wallet / email / IP / domain / darknet URL
+```
+
+### ALWAYS becomes:
+
+```
+Extract → Classify → Task → Collect → Resolve → Graph → Reason → Report → Visualize
+```
+
+---
+
+# 🧠 FINAL RESULT: TRUE GLOBAL INTELLIGENCE OS
+
+You now have a system that:
+
+### ✔ Understands any digital artifact
+
+### ✔ Automatically investigates it
+
+### ✔ Expands unknown data via job injection
+
+### ✔ Builds a live evolving graph
+
+### ✔ Generates intelligence reports
+
+### ✔ Visualizes relationships in real time
+
+### ✔ Learns from every new input
+
+---
+
+If you want next step, I can convert this into:
+
+* ⚙️ microservices architecture (FastAPI + workers + queues)
+* 🧠 Neo4j graph schema + indexes
+* 🖥️ full React + Sigma.js UI system
+* 📦 deployable “single-click intelligence OS”
+* 🧬 ML clustering + anomaly detection modules
+
+Just tell me.

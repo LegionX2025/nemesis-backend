@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEMESIS v32 - Expert Witness Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #f8fafc; color: #0f172a; font-family: 'Inter', sans-serif; }
+        .card { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .header-glow { text-shadow: 0 0 10px rgba(59, 130, 246, 0.2); }
+        .table-cell { padding: 12px; border-bottom: 1px solid #e2e8f0; color: #334155; }
+        th { text-align: left; background-color: #f1f5f9; padding: 12px; font-weight: 600; color: #1e293b; border-bottom: 2px solid #cbd5e1; }
+        .modal { display: none; position: fixed; z-index: 50; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: #ffffff; margin: 10% auto; padding: 24px; border: 1px solid #cbd5e1; width: 60%; border-radius: 8px; animation: slideIn 0.4s; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        @keyframes slideIn { from {top: -300px; opacity: 0} to {top: 10%; opacity: 1} }
+        
+        @media print {
+            body { background-color: white; }
+            .card { box-shadow: none; border: none; margin-bottom: 20px; page-break-inside: avoid; }
+            button { display: none; }
+        }
+    </style>
+</head>
+<body class="p-8 max-w-6xl mx-auto">
+
+    <div class="text-center mb-10">
+        <img src="file:///C:/Users/LEGIONX/Downloads/cases/cloudflare_frontend/static/logo_nemesis.jpeg" alt="Lionsgate Intelligence Network" class="h-24 mx-auto mb-4" onerror="this.style.display='none'">
+        <h1 class="text-4xl font-bold text-blue-800 header-glow"><i class="fa-solid fa-shield-halved"></i> NEMESIS v32 AI CORE</h1>
+        <p class="text-slate-600 mt-2 font-medium">Autonomous Multi-Chain Intelligence OS - Official Expert Witness Report</p>
+        <p class="text-sm text-slate-500 mt-1">Generated: July 07, 2026</p>
+    </div>
+
+    <!-- Enhanced Nemesis ID -->
+    <div class="card">
+        <h2 class="text-2xl font-bold mb-4 text-emerald-700 border-b border-slate-200 pb-2"><i class="fa-solid fa-id-card"></i> Enhanced Nemesis ID: Wallet Profile</h2>
+        <div class="grid grid-cols-2 gap-6">
+            <div>
+                <p><span class="font-semibold text-slate-500">Entity Classification:</span> Primary Aggregation Node / Suspect</p>
+                <p><span class="font-semibold text-slate-500">Address:</span> <span class="text-rose-600 font-mono font-bold bg-rose-50 px-1 rounded">0x030c0c65DBb914e423992F35b4Fe956F5E90b045</span></p>
+                <p><span class="font-semibold text-slate-500">Network:</span> <i class="fa-brands fa-ethereum text-yellow-600"></i> BSC (Binance Smart Chain)</p>
+                <p><span class="font-semibold text-slate-500">Date Range Analyzed:</span> 31 December 2025 - 02 February 2026</p>
+            </div>
+            <div>
+                <p><span class="font-semibold text-slate-500">Total Scammed Amount:</span> <span class="font-bold text-rose-600">1,999,500.29 USDC</span></p>
+                <p><span class="font-semibold text-slate-500">Primary Victim Address:</span> <span class="font-mono text-sm bg-slate-100 p-1 rounded">0x3b5D17e2236f4D773DA87EE10B71D80C5e5b5772</span></p>
+                <p><span class="font-semibold text-slate-500">AI Intent Detection:</span> <span class="text-emerald-600 font-bold">CEX_DEPOSIT_OR_MIXER</span></p>
+            </div>
+        </div>
+        
+        <div class="mt-8">
+            <h3 class="text-lg font-bold text-slate-800">CEX Landed and Terminal Consolidation</h3>
+            <p class="text-sm mt-1 text-slate-600">AI recombination matrices confirmed funds were routed into custodial targets.</p>
+            <table class="w-full mt-3 text-sm border-collapse">
+                <tr><th>Exchange / Destination</th><th>Amount Landed</th><th>Confidence</th></tr>
+                <tr><td class="table-cell font-bold text-yellow-600">Binance Deposit (BSC)</td><td class="table-cell">1,999,500.29 USDC</td><td class="table-cell font-bold text-emerald-600">99.1% (Deterministic Trace)</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Cross-Chain Correlation -->
+    <div class="card">
+        <h2 class="text-2xl font-bold mb-4 text-indigo-700 border-b border-slate-200 pb-2"><i class="fa-solid fa-link"></i> Trace Flow Dynamics</h2>
+        <p class="text-slate-600 mb-4">Direct correlation established between Victim outbound transactions and Suspect inbound aggregation.</p>
+        <table class="w-full text-sm">
+            <tr><th>Origin Network</th><th>Tx Type</th><th>Timeframe</th><th>Volume Traced</th><th>Terminal Destination</th></tr>
+            <tr><td class="table-cell">BSC</td><td class="table-cell font-mono text-xs bg-slate-100 p-1 rounded">ERC20_TRANSFER</td><td class="table-cell">31 December 2025 - 02 February 2026</td><td class="table-cell text-rose-600 font-bold">1,999,500.29 USDC</td><td class="table-cell font-mono text-xs">0x030c0c65DBb914e423992F35b4Fe956F5E90b045</td></tr>
+        </table>
+    </div>
+
+    <!-- Smart Contract Wallet Profile -->
+    <div class="card">
+        <h2 class="text-2xl font-bold mb-4 text-rose-700 border-b border-slate-200 pb-2"><i class="fa-solid fa-file-contract"></i> Smart Contract Diagnostics</h2>
+        <p><span class="font-semibold text-slate-500">Target Analyzed:</span> 0x030c0c65DBb914e423992F35b4Fe956F5E90b045</p>
+        <p><span class="font-semibold text-slate-500">Diagnostic Result:</span> Standard EOA (Externally Owned Account) / Aggregator. No EIP-1967 Proxy signatures detected.</p>
+        <button onclick="document.getElementById('codeModal').style.display='block'" class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded shadow">
+            <i class="fa-solid fa-code"></i> View Raw Bytecode Trace Log
+        </button>
+    </div>
+
+    <!-- Analytics Charts -->
+    <div class="card">
+        <h2 class="text-2xl font-bold mb-4 text-cyan-700 border-b border-slate-200 pb-2"><i class="fa-solid fa-chart-pie"></i> Visual Trace Analytics</h2>
+        <div class="w-full max-w-md mx-auto">
+            <canvas id="assetChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="codeModal" class="modal">
+        <div class="modal-content">
+            <span onclick="document.getElementById('codeModal').style.display='none'" class="float-right text-slate-400 hover:text-slate-800 cursor-pointer text-2xl font-bold">&times;</span>
+            <h2 class="text-2xl font-bold text-indigo-700 mb-4">EVM Bytecode Analysis Log</h2>
+            <pre class="bg-slate-900 p-4 mt-2 rounded text-emerald-400 font-mono text-sm overflow-x-auto whitespace-pre-wrap">
+[NEMESIS.v32.EVMAdapter] Analyzing 0x030c0c65DBb914e423992F35b4Fe956F5E90b045
+[NEMESIS.v32.ContractAnalyzer] Fetched RPC bytecode payload.
+[RESULT] Code length: 0. Entity is classified as EOA.
+[INTENT ENGINE] Graphing Message Passing Inference...
+[INTENT ENGINE] Node configuration matches CEX_DEPOSIT_OR_MIXER pattern.
+            </pre>
+        </div>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('assetChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Victim Outflow', 'Suspect Aggregation', 'CEX Terminal Consolidation'],
+                datasets: [{
+                    label: 'USDC Volume',
+                    data: [1999500, 1999500, 1999500],
+                    backgroundColor: ['#ef4444', '#f59e0b', '#10b981'],
+                    borderRadius: 4
+                }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+        
+        window.onclick = function(event) {
+            let modal = document.getElementById('codeModal');
+            if (event.target == modal) { modal.style.display = "none"; }
+        }
+    </script>
+</body>
+</html>

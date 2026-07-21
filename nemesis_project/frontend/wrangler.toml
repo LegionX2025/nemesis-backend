@@ -1,0 +1,30 @@
+name = "nemesis-frontend"
+compatibility_date = "2024-12-01"
+pages_build_output_dir = "."
+
+[vars]
+BACKEND_API_URL = "https://nemesis-backend.onrender.com"
+NEMESIS_EDGE_SECRET = "default_dev_secret_override"
+
+[[kv_namespaces]]
+binding = "NEMESIS_KV"
+id = "556aa273aeac4b009b559bb215346ce3"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "nemesis_audit_db"
+database_id = "80acedab-33c2-4637-bee7-6b9a1176a463"
+
+[[d1_databases]]
+binding = "NEMESIS_DB_PRIMARY"
+database_name = "nemesis"
+database_id = "73ef6e7d-9499-4d59-a190-ae7220873a71"
+
+[[d1_databases]]
+binding = "NEMESIS_DB_SECONDARY"
+database_name = "nemesis-db"
+database_id = "860655f8-aa37-4d4f-92a9-b5ea49bc101a"
+
+[[r2_buckets]]
+binding = "NEMESIS_STORAGE"
+bucket_name = "nemesis-assets"

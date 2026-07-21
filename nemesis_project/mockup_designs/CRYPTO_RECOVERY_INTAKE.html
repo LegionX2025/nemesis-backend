@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Node Design Concepts V4 - Animated Data Rich</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: white; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Hexagon Clip Path */
+        .hex { clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); }
+        
+        /* 1. Spinning Gradient Border for Seed Address */
+        .spin-border-wrapper {
+            position: relative;
+            border-radius: 16px;
+            background: #1e293b;
+            z-index: 10;
+        }
+        .spin-border-wrapper::before {
+            content: '';
+            position: absolute;
+            top: -3px; left: -3px; right: -3px; bottom: -3px;
+            background: conic-gradient(from 0deg, #3b82f6, #8b5cf6, #ec4899, #3b82f6);
+            border-radius: 19px;
+            z-index: -1;
+            animation: spin 3s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* 2. Severe Red Pulse for CEX Loss Terminal */
+        .pulse-red-border {
+            border: 2px solid #ef4444;
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            animation: pulseRed 2s infinite cubic-bezier(0.66, 0, 0, 1);
+        }
+        @keyframes pulseRed {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.9), inset 0 0 10px rgba(239, 68, 68, 0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0), inset 0 0 30px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0), inset 0 0 10px rgba(239, 68, 68, 0); }
+        }
+
+        /* Standard Glow */
+        .glow-blue { box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .data-row:last-child { border-bottom: none; }
+    </style>
+</head>
+<body class="p-10 min-h-screen flex flex-col items-center justify-center">
+
+    <div class="text-center mb-16 max-w-2xl">
+        <h1 class="text-4xl font-black tracking-tight text-white mb-2">OmniChain Node Architectures</h1>
+        <p class="text-slate-400">Highly detailed data dashboards featuring the Cyber Hexagon, with live CSS boundary animations for Seed and Terminal states.</p>
+    </div>
+
+    <div class="flex flex-wrap justify-center gap-16 w-full max-w-7xl">
+
+        <!-- STATE 1: STANDARD DEFI NODE -->
+        <div class="flex flex-col items-center">
+            <h2 class="text-slate-400 font-bold mb-6 tracking-widest text-sm uppercase"><i class="fa-solid fa-circle-nodes mr-2"></i>Standard Hop Node</h2>
+            
+            <div class="bg-slate-800 rounded-2xl w-[320px] p-1 border border-slate-700 glow-blue relative z-10">
+                <div class="bg-slate-900 rounded-xl p-5 h-full relative overflow-hidden">
+                    
+                    <!-- Top Section: Hex Logo & Entity -->
+                    <div class="flex items-center gap-4 mb-4 pb-4 border-b border-slate-800">
+                        <div class="hex w-14 h-14 bg-slate-800 flex items-center justify-center border border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)] flex-shrink-0">
+                            <img src="https://cryptologos.cc/logos/uniswap-uni-logo.png" class="w-8 h-8">
+                        </div>
+                        <div>
+                            <div class="font-black text-xl text-white tracking-wide uppercase leading-none">UNISWAP</div>
+                            <div class="flex items-center gap-1.5 mt-1.5">
+                                <span class="bg-blue-500/20 text-blue-400 text-[9px] font-bold px-1.5 py-0.5 rounded border border-blue-500/30 uppercase"><i class="fa-solid fa-cube mr-1"></i>DEFI</span>
+                                <span class="bg-slate-700/50 text-slate-300 text-[9px] font-bold px-1.5 py-0.5 rounded border border-slate-600 uppercase">ETH</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Address & Label -->
+                    <div class="mb-4 bg-slate-800/50 rounded-lg p-2.5 border border-slate-700/50">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[10px] text-slate-500 uppercase font-bold">Wallet Address</span>
+                            <i class="fa-regular fa-copy text-slate-500 hover:text-white cursor-pointer text-xs transition"></i>
+                        </div>
+                        <div class="mono text-sm text-blue-300 font-bold tracking-tight">0x7a25...488</div>
+                        <div class="text-[10px] text-slate-400 mt-1 italic"><i class="fa-solid fa-tag mr-1 text-slate-500"></i>V2 Router Contract</div>
+                    </div>
+
+                    <!-- Flow Data -->
+                    <div class="space-y-1">
+                        <div class="data-row">
+                            <div class="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase">
+                                <div class="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30"><i class="fa-solid fa-arrow-down text-emerald-400 text-[10px]"></i></div>
+                                Inflow
+                            </div>
+                            <span class="mono text-sm font-black text-emerald-400">+$2.4M</span>
+                        </div>
+                        <div class="data-row">
+                            <div class="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase">
+                                <div class="w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center border border-red-500/30"><i class="fa-solid fa-arrow-up text-red-400 text-[10px]"></i></div>
+                                Outflow
+                            </div>
+                            <span class="mono text-sm font-black text-red-400">-$2.4M</span>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+
+        <!-- STATE 2: SEED ADDRESS (SPINNING BORDER) -->
+        <div class="flex flex-col items-center">
+            <h2 class="text-purple-400 font-bold mb-6 tracking-widest text-sm uppercase animate-pulse"><i class="fa-solid fa-crosshairs mr-2"></i>Trace Seed Node</h2>
+            
+            <div class="spin-border-wrapper w-[320px] p-1">
+                <div class="bg-slate-900 rounded-xl p-5 h-full relative overflow-hidden">
+                    
+                    <!-- Top Section: Hex Logo & Entity -->
+                    <div class="flex items-center gap-4 mb-4 pb-4 border-b border-slate-800">
+                        <div class="hex w-14 h-14 bg-slate-800 flex items-center justify-center border border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.6)] flex-shrink-0">
+                            <svg class="w-7 h-7 text-purple-400" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6a2 2 0 012-2h12a2 2 0 012 2v1H4V6zm0 3h16v9a2 2 0 01-2 2H6a2 2 0 01-2-2V9zm12 3a1 1 0 100 2 1 1 0 000-2z"/></svg>
+                        </div>
+                        <div>
+                            <div class="font-black text-xl text-white tracking-wide uppercase leading-none">UNKNOWN</div>
+                            <div class="flex items-center gap-1.5 mt-1.5">
+                                <span class="bg-purple-500/20 text-purple-400 text-[9px] font-bold px-1.5 py-0.5 rounded border border-purple-500/30 uppercase"><i class="fa-solid fa-user-secret mr-1"></i>PRIVATE WALLET</span>
+                                <span class="bg-slate-700/50 text-slate-300 text-[9px] font-bold px-1.5 py-0.5 rounded border border-slate-600 uppercase">BTC</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Address & Label -->
+                    <div class="mb-4 bg-purple-900/20 rounded-lg p-2.5 border border-purple-500/30">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[10px] text-purple-300/70 uppercase font-bold">Wallet Address (Target)</span>
+                            <i class="fa-regular fa-copy text-purple-400 hover:text-white cursor-pointer text-xs transition"></i>
+                        </div>
+                        <div class="mono text-sm text-white font-bold tracking-tight">bc1qxy...x0wlh</div>
+                        <div class="text-[10px] text-purple-300 mt-1 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1 text-red-500"></i>HACKER SEED ACCOUNT</div>
+                    </div>
+
+                    <!-- Flow Data -->
+                    <div class="space-y-1">
+                        <div class="data-row">
+                            <div class="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase">
+                                <div class="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700"><i class="fa-solid fa-arrow-down text-slate-600 text-[10px]"></i></div>
+                                Inflow
+                            </div>
+                            <span class="mono text-sm font-black text-slate-600">$0.00</span>
+                        </div>
+                        <div class="data-row">
+                            <div class="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase">
+                                <div class="w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center border border-red-500/30"><i class="fa-solid fa-arrow-up text-red-400 text-[10px]"></i></div>
+                                Outflow
+                            </div>
+                            <span class="mono text-sm font-black text-red-400">-$8.2M</span>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+
+        <!-- STATE 3: CEX TERMINAL (PULSING RED BORDER) -->
+        <div class="flex flex-col items-center">
+            <h2 class="text-red-500 font-bold mb-6 tracking-widest text-sm uppercase"><i class="fa-solid fa-building-columns mr-2"></i>Cashout Terminal</h2>
+            
+            <div class="bg-slate-900 rounded-2xl w-[320px] pulse-red-border relative z-10 overflow-hidden">
+                <div class="bg-slate-900 p-5 h-full relative">
+                    
+                    <!-- Background Alert Stripes -->
+                    <div class="absolute inset-0 opacity-5 pointer-events-none" style="background: repeating-linear-gradient(45deg, transparent, transparent 10px, #ef4444 10px, #ef4444 20px);"></div>
+
+                    <!-- Top Section: Hex Logo & Entity -->
+                    <div class="flex items-center gap-4 mb-4 pb-4 border-b border-red-900/50 relative z-10">
+                        <div class="hex w-14 h-14 bg-white flex items-center justify-center border-2 border-red-500 flex-shrink-0 relative">
+                            <div class="absolute inset-0 bg-red-500 mix-blend-color animate-pulse"></div>
+                            <img src="https://cryptologos.cc/logos/bnb-bnb-logo.png" class="w-8 h-8">
+                        </div>
+                        <div>
+                            <div class="font-black text-xl text-red-100 tracking-wide uppercase leading-none">BINANCE</div>
+                            <div class="flex items-center gap-1.5 mt-1.5">
+                                <span class="bg-red-500/20 text-red-400 text-[9px] font-bold px-1.5 py-0.5 rounded border border-red-500/30 uppercase"><i class="fa-solid fa-building-columns mr-1"></i>EXCHANGE</span>
+                                <span class="bg-slate-700/50 text-slate-300 text-[9px] font-bold px-1.5 py-0.5 rounded border border-slate-600 uppercase">TRON</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Address & Label -->
+                    <div class="mb-4 bg-red-950/40 rounded-lg p-2.5 border border-red-900/50 relative z-10">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[10px] text-red-300/70 uppercase font-bold">Wallet Address</span>
+                            <i class="fa-regular fa-copy text-red-400 hover:text-white cursor-pointer text-xs transition"></i>
+                        </div>
+                        <div class="mono text-sm text-red-200 font-bold tracking-tight">TF17Bg...Oho</div>
+                        <div class="text-[10px] text-red-400 mt-1 font-black"><i class="fa-solid fa-ban mr-1"></i>TERMINAL LOSS ASSET CACHE</div>
+                    </div>
+
+                    <!-- Flow Data -->
+                    <div class="space-y-1 relative z-10">
+                        <div class="data-row">
+                            <div class="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase">
+                                <div class="w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center border border-red-500/30"><i class="fa-solid fa-arrow-down text-red-400 text-[10px]"></i></div>
+                                Inflow (Total Loss)
+                            </div>
+                            <span class="mono text-sm font-black text-red-400">+$1.2M</span>
+                        </div>
+                        <div class="data-row">
+                            <div class="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase">
+                                <div class="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700"><i class="fa-solid fa-arrow-up text-slate-600 text-[10px]"></i></div>
+                                Outflow
+                            </div>
+                            <span class="mono text-sm font-black text-slate-600">$0.00</span>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

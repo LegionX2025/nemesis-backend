@@ -1,0 +1,35 @@
+.neon-border {
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.2), inset 0 0 10px rgba(168, 85, 247, 0.1);
+    border: 1px solid rgba(168, 85, 247, 0.4);
+}
+.search-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+}
+/* Sliding Sidebar for Live Stream */
+#live-stream-panel {
+    position: fixed;
+    right: -500px;
+    top: 110px; /* Below global nav */
+    bottom: 60px; /* Above footer */
+    width: 480px;
+    transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+}
+#live-stream-panel.active {
+    right: 0;
+}
+
+.stream-table-container {
+    overflow-y: auto;
+    flex: 1;
+}
+.stream-table th {
+    position: sticky;
+    top: 0;
+    background: rgba(241, 245, 249, 0.95);
+    backdrop-filter: blur(4px);
+}

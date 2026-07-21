@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Node Design Concepts V3</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* CSS Shapes */
+        .hex { clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); }
+        .sci-fi-card { clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px); }
+        .sci-fi-card-reverse { clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 15px 100%, 0 calc(100% - 15px)); }
+    </style>
+</head>
+<body class="p-10">
+    <div class="max-w-7xl mx-auto">
+        <div class="mb-12 text-center">
+            <h1 class="text-3xl font-black text-slate-800 tracking-tight">Nemesis: Hybrid Node Concepts</h1>
+            <p class="text-slate-500 mt-2 font-medium">Combining "The Dashboard Card" with the "Cyber Hexagon" shape.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            
+            <!-- DESIGN 1: Hex-Header Card -->
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden flex flex-col items-center justify-center min-h-[400px]">
+                <div class="absolute top-4 left-4">
+                    <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full">Option 1</span>
+                    <h2 class="font-bold text-slate-700 mt-2 text-lg">The Crested Hex</h2>
+                    <p class="text-[11px] text-slate-400">Dashboard card with a hexagon bursting from the top.</p>
+                </div>
+
+                <!-- Node Visual -->
+                <div class="relative mt-16 w-[260px] z-10">
+                    <!-- The Hexagon Crest -->
+                    <div class="absolute -top-10 left-1/2 -translate-x-1/2 hex w-20 h-20 bg-white border-[3px] border-indigo-500 flex items-center justify-center shadow-lg z-20">
+                        <img src="https://cryptologos.cc/logos/bnb-bnb-logo.png" class="w-10 h-10">
+                    </div>
+                    
+                    <!-- The Dashboard Card -->
+                    <div class="bg-white border-2 border-slate-200 rounded-xl shadow-lg pt-12 pb-4 px-4 relative z-10">
+                        <div class="text-center border-b border-slate-100 pb-3">
+                            <div class="font-black text-slate-800 text-lg uppercase tracking-wide">BINANCE</div>
+                            <div class="text-[10px] font-bold text-indigo-600 uppercase tracking-widest mt-1">EXCHANGE</div>
+                        </div>
+                        <div class="mt-3 space-y-3">
+                            <div class="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-100">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase">Address</span>
+                                <span class="mono text-xs font-bold text-slate-700">0xab8...9f2</span>
+                            </div>
+                            <div class="flex justify-between items-center px-1">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase">Flow</span>
+                                <span class="text-sm font-black text-emerald-500">+$2.4M</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DESIGN 2: Inline Hex Dashboard -->
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden flex flex-col items-center justify-center min-h-[400px]">
+                <div class="absolute top-4 left-4">
+                    <span class="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full">Option 2</span>
+                    <h2 class="font-bold text-slate-700 mt-2 text-lg">Inline Hex Dashboard</h2>
+                    <p class="text-[11px] text-slate-400">Hexagon integrated into the left side of a wide card.</p>
+                </div>
+
+                <!-- Node Visual -->
+                <div class="relative mt-12 w-[320px] bg-white border-2 border-slate-200 rounded-xl shadow-lg flex items-center z-10 p-2">
+                    <!-- Left Hexagon -->
+                    <div class="hex w-20 h-20 bg-blue-50 flex-shrink-0 flex items-center justify-center border-2 border-blue-500">
+                        <img src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png" class="w-10 h-10">
+                    </div>
+                    
+                    <!-- Right Info -->
+                    <div class="ml-4 flex-grow py-2 pr-2">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="font-black text-slate-800 text-base uppercase leading-none">USDC</div>
+                                <div class="text-[9px] font-bold text-blue-500 uppercase mt-1 tracking-widest">STABLECOIN</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-[9px] font-bold text-slate-400 uppercase">Flow</div>
+                                <div class="text-sm font-black text-emerald-500">+$45,000</div>
+                            </div>
+                        </div>
+                        <div class="mt-3 bg-slate-50 border border-slate-200 px-2 py-1 rounded text-center">
+                            <span class="mono text-[11px] font-bold text-slate-600">0xa0b...0ce</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DESIGN 3: Sci-Fi Hex Outline -->
+            <div class="bg-slate-900 p-8 rounded-2xl shadow-sm border border-slate-800 relative overflow-hidden flex flex-col items-center justify-center min-h-[400px]">
+                <div class="absolute top-4 left-4">
+                    <span class="bg-emerald-900 text-emerald-400 text-xs font-bold px-3 py-1 rounded-full border border-emerald-700">Option 3</span>
+                    <h2 class="font-bold text-slate-200 mt-2 text-lg">The Tactical Hex-Card</h2>
+                    <p class="text-[11px] text-slate-400">Dark mode dashboard with sci-fi cut corners.</p>
+                </div>
+
+                <!-- Node Visual -->
+                <div class="relative mt-12 w-[280px] sci-fi-card bg-slate-800 border border-emerald-500/50 p-1 shadow-[0_0_20px_rgba(16,185,129,0.15)] z-10">
+                    <div class="sci-fi-card bg-slate-900 h-full w-full p-4 flex flex-col items-center relative">
+                        
+                        <!-- Top Hex Logo -->
+                        <div class="hex w-16 h-16 bg-slate-800 flex items-center justify-center border border-emerald-400 mb-3 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                            <img src="https://cryptologos.cc/logos/uniswap-uni-logo.png" class="w-8 h-8">
+                        </div>
+
+                        <!-- Info -->
+                        <div class="w-full text-center mb-3">
+                            <div class="font-black text-emerald-400 text-lg uppercase tracking-wider">UNISWAP</div>
+                            <div class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">DEFI PROTOCOL</div>
+                        </div>
+
+                        <!-- Data Dashboard -->
+                        <div class="w-full bg-slate-800 border border-slate-700 p-2 rounded-sm space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-[9px] font-bold text-slate-500 uppercase">Address</span>
+                                <span class="mono text-[10px] font-bold text-slate-300">0x7a2...488</span>
+                            </div>
+                            <div class="h-[1px] w-full bg-slate-700"></div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-[9px] font-bold text-slate-500 uppercase">Outflow</span>
+                                <span class="text-xs font-black text-emerald-400">$865,737</span>
+                            </div>
+                        </div>
+
+                        <!-- Cyber accents -->
+                        <div class="absolute top-2 right-2 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DESIGN 4: The Shield Dashboard -->
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden flex flex-col items-center justify-center min-h-[400px]">
+                <div class="absolute top-4 left-4">
+                    <span class="bg-amber-100 text-amber-700 text-xs font-bold px-3 py-1 rounded-full">Option 4</span>
+                    <h2 class="font-bold text-slate-700 mt-2 text-lg">The Hex-Core Shield</h2>
+                    <p class="text-[11px] text-slate-400">A wide dashboard intersecting a massive background hex.</p>
+                </div>
+
+                <!-- Node Visual -->
+                <div class="relative mt-12 w-[340px] h-[160px] flex items-center justify-center z-10">
+                    <!-- Background Giant Hex -->
+                    <div class="absolute left-4 hex w-32 h-32 bg-amber-100/50 border border-amber-200 -z-10"></div>
+                    
+                    <!-- Main Card -->
+                    <div class="w-full bg-white border-2 border-slate-200 rounded-xl shadow-xl flex items-center p-3 relative z-10 backdrop-blur-sm bg-white/90">
+                        <div class="hex w-16 h-16 bg-white border-2 border-slate-800 flex items-center justify-center shadow-inner flex-shrink-0">
+                            <svg class="w-8 h-8 text-slate-700" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6a2 2 0 012-2h12a2 2 0 012 2v1H4V6zm0 3h16v9a2 2 0 01-2 2H6a2 2 0 01-2-2V9zm12 3a1 1 0 100 2 1 1 0 000-2z"/></svg>
+                        </div>
+                        <div class="ml-4 flex-grow">
+                            <div class="font-black text-slate-800 text-base uppercase">UNKNOWN</div>
+                            <div class="text-[9px] font-bold text-amber-600 bg-amber-50 px-1 py-0.5 rounded uppercase mt-1 inline-block border border-amber-200">PRIVATE WALLET</div>
+                            
+                            <div class="mt-2 flex justify-between items-end border-t border-slate-100 pt-2">
+                                <span class="mono text-[10px] font-bold text-slate-500">bc1q...0wlh</span>
+                                <span class="text-xs font-black text-red-500">-$10,000</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

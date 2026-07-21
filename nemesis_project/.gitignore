@@ -1,0 +1,4 @@
+# Ignore massive data files
+data/
+NEMESIS_KNOWLEDGE_BASE_LIBRARY/data/
+*.jsonl
