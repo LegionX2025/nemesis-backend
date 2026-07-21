@@ -1,8 +1,0 @@
-.tab-btn.active { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: bold; }
-.tab-content { display: none; }
-.tab-content.active { display: block; }
-/* Loader */
-#ajax-loader { display: none; }
-
-/* Overrides for Light Web3GL Theme */
-main { background: transparent !important; }
