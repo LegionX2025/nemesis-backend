@@ -1,8 +1,0 @@
-name = "nemesis-id-frontend"
-compatibility_date = "2024-02-08"
-pages_build_output_dir = "."
-
-# Bind the queue so the Pages Function can push to it
-[[queues.producers]]
-binding = "TRACE_QUEUE"
-queue = "wallet-tracing"

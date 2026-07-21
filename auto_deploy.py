@@ -58,7 +58,8 @@ def main():
     core_files = [
         "local_deploy",
         "adapters", "intel", "graph", "core", "api", "scratch", "nemesis_v32.py",
-        "requirements.txt", "render.yaml", "auto_deploy.py", 
+        "requirements.txt", "render.yaml", "auto_deploy.py", "omni_engineer.py",
+        "datasets", "NEMESIS_KNOWLEDGE_BASE_LIBRARY",
         "Dockerfile", ".gitignore"
     ]
     for f in core_files:

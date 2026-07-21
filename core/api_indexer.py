@@ -34,6 +34,9 @@ class APIEndpointIndexer:
         self._register_infura()
         self._register_getblock()
         self._register_ankr()
+        self._register_validation_cloud()
+        self._register_publicnode()
+        self._register_xrpscan()
         
         logger.info(f"[API INDEXER] Successfully indexed {len(self.providers)} providers.")
 
@@ -108,7 +111,9 @@ class APIEndpointIndexer:
             "snowtrace": ("SNOWTRACE_API_KEY", "https://api.snowtrace.io/api"),
             "arbiscan": ("ARBISCAN_API_KEY", "https://api.arbiscan.io/api"),
             "optimism": ("OPTIMISMSCAN_API_KEY", "https://api-optimistic.etherscan.io/api"),
-            "basescan": ("BASESCAN_API_KEY", "https://api.basescan.org/api")
+            "basescan": ("BASESCAN_API_KEY", "https://api.basescan.org/api"),
+            "celoscan": ("CELOSCAN_API_KEY", "https://api.celoscan.io/api"),
+            "lineascan": ("LINEASCAN_API_KEY", "https://api.lineascan.build/api")
         }
         
         for name, (env_key, url) in scanners.items():
@@ -138,17 +143,24 @@ class APIEndpointIndexer:
             }
 
     def _register_getblock(self):
-        # Taking ETH as standard example
-        key = os.getenv("GETBLOCK_ETH_KEY")
-        if key:
-            self.providers["getblock"] = {
-                "name": "GetBlock RPC",
-                "type": "rpc-provider",
-                "base_url": f"https://go.getblock.io/{key}",
-                "auth_type": "url",
-                "headers": {},
-                "params": {}
-            }
+        keys = {
+            "getblock_eth": "GETBLOCK_ETH_KEY",
+            "getblock_btc": "GETBLOCK_BTC_KEY",
+            "getblock_sol": "GETBLOCK_SOL_KEY",
+            "getblock_tron": "GETBLOCK_TRON_KEY",
+            "getblock_xrp": "GETBLOCK_XRP_KEY",
+        }
+        for name, env_key in keys.items():
+            key = os.getenv(env_key)
+            if key:
+                self.providers[name] = {
+                    "name": f"GetBlock {name.split('_')[1].upper()}",
+                    "type": "rpc-provider",
+                    "base_url": f"https://go.getblock.io/{key}",
+                    "auth_type": "url",
+                    "headers": {},
+                    "params": {}
+                }
 
     def _register_ankr(self):
         key = os.getenv("ANKR_API_KEY")
@@ -158,6 +170,56 @@ class APIEndpointIndexer:
                 "type": "rpc-provider",
                 "base_url": f"https://rpc.ankr.com/multichain/{key}",
                 "auth_type": "url",
+                "headers": {},
+                "params": {}
+            }
+            
+    def _register_validation_cloud(self):
+        urls = {
+            "validation_btc": "VALIDATION_BTC",
+            "validation_eth": "VALIDATION_ETH",
+            "validation_sol": "VALIDATION_SOL",
+        }
+        for name, env_key in urls.items():
+            url = os.getenv(env_key)
+            if url:
+                self.providers[name] = {
+                    "name": f"Validation Cloud {name.split('_')[1].upper()}",
+                    "type": "enterprise-rpc",
+                    "base_url": url,
+                    "auth_type": "url",
+                    "headers": {},
+                    "params": {}
+                }
+
+    def _register_publicnode(self):
+        urls = {
+            "publicnode_btc": "PUBLICNODE_BITCOIN_RPC",
+            "publicnode_tron": "PUBLICNODE_TRON_RPC",
+            "publicnode_base_wss": "PUBLICNODE_BASE_WSS",
+            "publicnode_solana_wss": "PUBLICNODE_SOLANA_WSS",
+            "publicnode_terra_wss": "PUBLICNODE_TERRA_WSS"
+        }
+        for name, env_key in urls.items():
+            url = os.getenv(env_key)
+            if url:
+                self.providers[name] = {
+                    "name": f"PublicNode {name.split('_')[1].upper()}",
+                    "type": "public-rpc" if "wss" not in name else "public-wss",
+                    "base_url": url,
+                    "auth_type": "url",
+                    "headers": {},
+                    "params": {}
+                }
+
+    def _register_xrpscan(self):
+        url = os.getenv("XRPSCAN_BASE_URL")
+        if url:
+            self.providers["xrpscan"] = {
+                "name": "XRPScan API",
+                "type": "ledger-scanner",
+                "base_url": url,
+                "auth_type": "none",
                 "headers": {},
                 "params": {}
             }
