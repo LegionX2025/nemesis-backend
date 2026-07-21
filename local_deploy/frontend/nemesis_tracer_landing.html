@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEMESIS TRACER | OmniChain Flow Analysis</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+
+    <!-- Light Theme & WebGL Overrides -->
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="global_nav.js"></script>
+    <link rel="stylesheet" href="nemesis-enterprise.css">
+
+    <link rel="stylesheet" href="/light-theme.css">
+
+    <script>
+        const IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        window.BACKEND_URL = IS_LOCAL ? 'http://127.0.0.1:8088' : 'https://nemesis-api-v3.legionxgaming2021.workers.dev';
+        window.API_BASE = window.BACKEND_URL;
+    </script>
+        \n</head>
+<body class="h-screen flex items-center justify-center p-4 relative">
+
+    <!-- WebGL Particle Background -->
+    <canvas id="quantum-bg"></canvas>
+
+    <!-- Active Loader Overlay -->
+    <div id="global-loader" style="display: none;">
+        <div class="cyber-ring mb-8"></div>
+        <h2 class="text-[#0f172a] font-black text-2xl tracking-widest uppercase">Initializing Tracer Graph</h2>
+        <p class="text-purple-600 font-mono text-xs uppercase tracking-widest mt-3" id="loader-text">Booting OmniChain Flow Analysis Engine...</p>
+    </div>
+
+    <!-- Main Input Card -->
+    <div class="glass-card rounded-2xl w-full max-w-2xl p-8 md:p-12 relative overflow-hidden" id="input-container">
+        <!-- Decoration -->
+        <div class="absolute -top-10 -right-10 w-40 h-40 bg-purple-100 rounded-full blur-3xl opacity-50"></div>
+        <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-100 rounded-full blur-3xl opacity-50"></div>
+
+        <div class="relative z-10">
+            <div class="text-center mb-10">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-50 border border-purple-100 shadow-sm mb-4">
+                    <i class="fa-solid fa-diagram-project text-purple-600 text-3xl"></i>
+                </div>
+                <h1 class="text-3xl font-black text-slate-200 tracking-tight mb-2">NEMESIS TRACER</h1>
+                <p class="text-slate-500 font-mono text-sm uppercase tracking-widest">Real-time OmniChain Fund Flow Analysis</p>
+            </div>
+
+            <form id="searchForm" class="space-y-4" onsubmit="event.preventDefault(); startTracing();">
+                <!-- Main Input Textarea -->
+                <div class="relative">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono">Seed Addresses / TX Hashes (One per line)</label>
+                    <div class="relative flex items-start">
+                        <!-- Chain Logo Display -->
+                        <div id="chain-logo-container" class="absolute left-4 top-4 w-6 h-6 flex items-center justify-center transition-all duration-300">
+                            <i class="fa-solid fa-magnifying-glass text-slate-500"></i>
+                        </div>
+                        <textarea id="wallet_address" rows="3" class="w-full pl-14 pr-4 py-4 rounded-xl transition resize-none" placeholder="0x...&#10;bc1...&#10;0xabc..." autocomplete="off" oninput="detectChain(this.value)" required></textarea>
+                    </div>
+                    <p id="chain-detected-text" class="text-[10px] text-purple-600 font-mono font-bold mt-2 ml-1 hidden uppercase tracking-wider popIn"></p>
+                </div>
+                
+                <!-- Total Loss and Asset Type -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono">Total Loss Assets</label>
+                        <input type="number" id="loss_amount" class="w-full px-4 py-3 rounded-xl transition" placeholder="e.g. 150000" min="0">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono">Asset Type</label>
+                        <select id="asset_type" class="w-full px-4 py-3 rounded-xl transition text-slate-300">
+                            <option value="ALL_TOKENS" selected>All Tokens & Native Assets</option>
+                            <option value="USD">USD Value ($)</option>
+                            <option value="STABLECOINS">All Stablecoins (USDT, USDC, DAI)</option>
+                            <option value="BTC">Bitcoin (BTC)</option>
+                            <option value="ETH">Ethereum (ETH)</option>
+                            <option value="USDT">Tether (USDT)</option>
+                            <option value="USDC">USD Coin (USDC)</option>
+                            <option value="DAI">Dai (DAI)</option>
+                            <option value="BNB">BNB (BSC)</option>
+                            <option value="SOL">Solana (SOL)</option>
+                            <option value="XRP">Ripple (XRP)</option>
+                            <option value="MATIC">Polygon (MATIC)</option>
+                            <option value="AVAX">Avalanche (AVAX)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Chains / Networks -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono">Networks to Trace</label>
+                    <select id="networks" class="w-full px-4 py-3 rounded-xl transition text-slate-300" multiple size="4">
+                        <option value="ALL" selected>OmniChain (Auto-Detect All)</option>
+                        <option value="ETHEREUM">Ethereum (ETH)</option>
+                        <option value="BITCOIN">Bitcoin (BTC)</option>
+                        <option value="SOLANA">Solana (SOL)</option>
+                        <option value="TRON">Tron (TRX)</option>
+                        <option value="BSC">Binance Smart Chain (BSC)</option>
+                        <option value="POLYGON">Polygon (MATIC)</option>
+                        <option value="ARBITRUM">Arbitrum (ARB)</option>
+                        <option value="OPTIMISM">Optimism (OP)</option>
+                        <option value="BASE">Base</option>
+                        <option value="AVALANCHE">Avalanche (AVAX)</option>
+                        <option value="RIPPLE">Ripple (XRP)</option>
+                        <option value="CELO">Celo</option>
+                        <option value="LINEA">Linea</option>
+                        <option value="TERRA">Terra</option>
+                        <option value="ZKSYNC">zkSync</option>
+                        <option value="STARKNET">Starknet</option>
+                    </select>
+                    <p class="text-[10px] text-slate-500 font-mono mt-1 ml-1">Hold Ctrl (Windows) or Command (Mac) to select multiple.</p>
+                </div>
+
+                <!-- Date Range -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono">Start Date (Optional)</label>
+                        <input type="date" id="start_date" class="w-full px-4 py-3 rounded-xl transition text-slate-300">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 font-mono">End Date (Optional)</label>
+                        <input type="date" id="end_date" class="w-full px-4 py-3 rounded-xl transition text-slate-300">
+                    </div>
+                </div>
+
+                <div class="flex justify-center mt-4">
+                    <button type="submit" class="w-full glass-panel hover:bg-slate-900 text-slate-200 font-mono font-bold py-3.5 px-6 rounded-xl shadow-lg transition text-sm uppercase tracking-widest flex items-center justify-center gap-3">
+                        <i class="fa-solid fa-satellite-dish text-purple-400"></i> Deploy Swarm Tracker
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const CHAINS = {
+            BTC: { regex: /^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,39}$/, name: 'Bitcoin', logo: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png' },
+            ETH: { regex: /^0x[a-fA-F0-9]{40}$/, name: 'Ethereum / EVM', logo: 'https://cryptologos.cc/logos/ethereum-eth-logo.png' },
+            TRX: { regex: /^T[A-Za-z1-9]{33}$/, name: 'Tron', logo: 'https://cryptologos.cc/logos/tron-trx-logo.png' },
+            XRP: { regex: /^r[0-9a-zA-Z]{24,34}$/, name: 'Ripple', logo: 'https://cryptologos.cc/logos/xrp-xrp-logo.png' },
+            SOL: { regex: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/, name: 'Solana', logo: 'https://cryptologos.cc/logos/solana-sol-logo.png' }
+        };
+
+        function detectChain(address) {
+            const logoContainer = document.getElementById('chain-logo-container');
+            const textContainer = document.getElementById('chain-detected-text');
+            
+            let detected = null;
+            let val = address.trim().split('\n')[0]; // Grab first line
+
+            if (val.length === 0) {
+                resetLogo();
+                return;
+            }
+
+            // Quick pattern matching
+            if (CHAINS.ETH.regex.test(val)) detected = CHAINS.ETH;
+            else if (CHAINS.BTC.regex.test(val)) detected = CHAINS.BTC;
+            else if (CHAINS.SOL.regex.test(val)) detected = CHAINS.SOL;
+            else if (CHAINS.TRX.regex.test(val)) detected = CHAINS.TRX;
+
+            if (detected) {
+                logoContainer.innerHTML = `<img src="${detected.logo}" class="w-6 h-6 logo-enter drop-shadow-md">`;
+                textContainer.innerHTML = `<i class="fa-solid fa-check-circle mr-1"></i> ${detected.name} Network Detected`;
+                textContainer.classList.remove('hidden');
+                textContainer.classList.remove('text-red-500');
+                textContainer.classList.add('text-purple-600');
+            } else {
+                logoContainer.innerHTML = `<i class="fa-solid fa-circle-question text-amber-500 logo-enter"></i>`;
+                textContainer.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Unknown Chain Format`;
+                textContainer.classList.remove('hidden');
+                textContainer.classList.remove('text-purple-600');
+                textContainer.classList.add('text-red-500');
+            }
+        }
+
+        function resetLogo() {
+            document.getElementById('chain-logo-container').innerHTML = `<i class="fa-solid fa-magnifying-glass text-slate-500 logo-enter"></i>`;
+            document.getElementById('chain-detected-text').classList.add('hidden');
+        }
+
+        function startTracing() {
+            const val = document.getElementById('wallet_address').value.trim();
+            if (!val) return;
+
+            // Gather additional inputs
+            const lossAmount = document.getElementById('loss_amount').value;
+            const assetType = document.getElementById('asset_type').value;
+            const networksSelect = document.getElementById('networks');
+            const selectedNetworks = Array.from(networksSelect.selectedOptions).map(opt => opt.value).join(',');
+            const startDate = document.getElementById('start_date').value;
+            const endDate = document.getElementById('end_date').value;
+
+            document.getElementById('input-container').style.display = 'none';
+            document.getElementById('global-loader').style.display = 'flex';
+            
+            const texts = [
+                "Deploying Distributed Tracer Swarm...",
+                "Mapping Peer-to-Peer Fund Topologies...",
+                "Bypassing Sub-Graph Limitations...",
+                "Running Multi-Tier BFS Graph Analysis...",
+                "Synchronizing WebSockets..."
+            ];
+            let i = 0;
+            const textEl = document.getElementById('loader-text');
+            const interval = setInterval(() => {
+                if (i < texts.length) {
+                    textEl.innerText = texts[i];
+                    i++;
+                }
+            }, 800);
+
+            // Redirect to dashboard with address attached + new params
+            setTimeout(() => {
+                clearInterval(interval);
+                let query = `?address=${encodeURIComponent(val)}&loss=${encodeURIComponent(lossAmount)}&asset=${encodeURIComponent(assetType)}&networks=${encodeURIComponent(selectedNetworks)}&start=${encodeURIComponent(startDate)}&end=${encodeURIComponent(endDate)}`;
+                window.location.href = `/nemesis_tracer.html${query}`;
+            }, 4000);
+        }
+    </script>
+    <script src="/static/js/particles.js"></script>
+
+    <!-- WebGL Butterflies Engine -->
+    <script src="webgl-butterflies.js"></script>
+
+<!-- GLOBAL NEMESIS AJAX LOADER -->
+<div id="global-ajax-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 99999; justify-content: center; align-items: center; flex-direction: column;">
+    <img src="assets/butterfly_transparent.png" style="width: 100px; height: 100px; animation: pulse-loader 1.5s infinite; filter: drop-shadow(0 0 20px rgba(6,182,212,0.8));">
+    <div style="color: #06b6d4; margin-top: 20px; font-family: monospace; font-size: 16px; font-weight: bold; text-shadow: 0 0 10px #06b6d4;">NEMESIS SINGULARITY KERNEL</div>
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+</div>
+<script>
+    (function() {
+        if (window._nemesisLoaderInitialized) return;
+        window._nemesisLoaderInitialized = true;
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const loader = document.getElementById('global-ajax-loader');
+            if (loader) loader.style.display = 'flex';
+            try {
+                const response = await originalFetch.apply(this, args);
+                return response;
+            } finally {
+                if (loader) loader.style.display = 'none';
+            }
+        };
+    })();
+</script>
+</body>
+
+</html>

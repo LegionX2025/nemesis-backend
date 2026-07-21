@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NEMESIS Tracer v6 - Graph Overlays</title>
+  
+    <!-- Light Theme & WebGL Overrides -->
+    <link rel="stylesheet" href="/light-theme.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+  <body>
+    <div id="tracer-v6-root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  
+    <!-- WebGL Butterflies Engine -->
+    <script src="/webgl-butterflies.js"></script>
+
+<!-- GLOBAL NEMESIS AJAX LOADER -->
+<div id="global-ajax-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 99999; justify-content: center; align-items: center; flex-direction: column;">
+    <img src="assets/butterfly_transparent.png" style="width: 100px; height: 100px; animation: pulse-loader 1.5s infinite; filter: drop-shadow(0 0 20px rgba(6,182,212,0.8));">
+    <div style="color: #06b6d4; margin-top: 20px; font-family: monospace; font-size: 16px; font-weight: bold; text-shadow: 0 0 10px #06b6d4;">NEMESIS SINGULARITY KERNEL</div>
+    <style>
+        @keyframes pulse-loader {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; filter: drop-shadow(0 0 30px rgba(6,182,212,1)); }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+    </style>
+</div>
+<script>
+    (function() {
+        if (window._nemesisLoaderInitialized) return;
+        window._nemesisLoaderInitialized = true;
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const loader = document.getElementById('global-ajax-loader');
+            if (loader) loader.style.display = 'flex';
+            try {
+                const response = await originalFetch.apply(this, args);
+                return response;
+            } finally {
+                if (loader) loader.style.display = 'none';
+            }
+        };
+    })();
+</script>
+</body>
+
+</html>

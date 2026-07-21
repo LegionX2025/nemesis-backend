@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nemesis | Admin Authentication</title>
+    <script src="https://cdn.tailwindcss.com">
+
+        // ==========================================
+        // DYNAMIC BACKEND ROUTING FOR CLOUDFLARE/LOCAL
+        // ==========================================
+        const IS_LOCAL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "";
+        window.BACKEND_URL = IS_LOCAL ? "http://127.0.0.1:8088" : "https://nemesis-api-v3.legionxgaming2021.workers.dev";
+        window.API_BASE = window.BACKEND_URL;
+        const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        window.WS_URL = IS_LOCAL ? "ws://127.0.0.1:8088" : "wss://nemesis-api.legionxgaming2021.workers.dev";
+        // ==========================================
+</script>
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+
+    <!-- Light Theme & WebGL Overrides -->
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="global_nav.js"></script>
+    <link rel="stylesheet" href="nemesis-enterprise.css">
+
+    <link rel="stylesheet" href="/light-theme.css">
+</head>
+<body>
+    <div class="grid-bg"></div>
+    
+    <div class="glass-panel p-10 rounded-2xl w-full max-w-md">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00ff88] to-[#00b8ff] tracking-widest mb-2">NEMESIS</h1>
+            <p class="text-sm text-slate-500 tracking-widest uppercase">Admin Authorization</p>
+        </div>
+
+        <form id="loginForm" class="space-y-6">
+            <div>
+                <label class="block text-xs text-slate-500 uppercase tracking-wider mb-2">Identifier</label>
+                <input type="text" id="username" class="cyber-input w-full px-4 py-3 rounded-lg" placeholder="Enter Admin ID" required>
+            </div>
+            <div>
+                <label class="block text-xs text-slate-500 uppercase tracking-wider mb-2">Passcode</label>
+                <input type="password" id="password" class="cyber-input w-full px-4 py-3 rounded-lg" placeholder="••••••••••••" required>
+            </div>
+            
+            <div id="error-msg" class="hidden text-red-500 text-sm text-center"></div>
+
+            <button type="submit" class="cyber-btn w-full py-4 rounded-lg mt-4">
+                Initialize Uplink
+            </button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            const err = document.getElementById('error-msg');
+            
+            try {
+                // Determine API URL based on environment
+                const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const apiUrl = isLocal ? 'http://127.0.0.1:3001/api/login' : '/api/login';
+
+                const formData = new URLSearchParams();
+                formData.append('username', u);
+                formData.append('password', p);
+
+                const res = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData
+                });
+
+                const data = await res.json();
+                
+                if (res.ok) {
+                    localStorage.setItem('nemesis_admin_token', data.access_token);
+                    err.classList.add('hidden');
+                    window.location.href = 'admin.html';
+                } else {
+                    err.textContent = data.detail || 'Access Denied.';
+                    err.classList.remove('hidden');
+                }
+            } catch (error) {
+                err.textContent = 'Connection to mainframe failed.';
+                err.classList.remove('hidden');
+            }
+        });
+    </script>
+
+    <!-- WebGL Butterflies Engine -->
+    <script src="webgl-butterflies.js"></script>
+
+<!-- GLOBAL NEMESIS AJAX LOADER -->
+<div id="global-ajax-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 99999; justify-content: center; align-items: center; flex-direction: column;">
+    <img src="assets/butterfly_transparent.png" style="width: 100px; height: 100px; animation: pulse-loader 1.5s infinite; filter: drop-shadow(0 0 20px rgba(6,182,212,0.8));">
+    <div style="color: #06b6d4; margin-top: 20px; font-family: monospace; font-size: 16px; font-weight: bold; text-shadow: 0 0 10px #06b6d4;">NEMESIS SINGULARITY KERNEL</div>
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+</div>
+<script>
+    (function() {
+        if (window._nemesisLoaderInitialized) return;
+        window._nemesisLoaderInitialized = true;
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const loader = document.getElementById('global-ajax-loader');
+            if (loader) loader.style.display = 'flex';
+            try {
+                const response = await originalFetch.apply(this, args);
+                return response;
+            } finally {
+                if (loader) loader.style.display = 'none';
+            }
+        };
+    })();
+</script>
+</body>
+
+</html>

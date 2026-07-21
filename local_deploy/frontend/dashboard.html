@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEMESIS | Enterprise Intelligence Platform</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        // Suppress Tailwind CDN production warning
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) return;
+            originalWarn.apply(console, args);
+        };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Orbitron', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            light: '#020617',
+                            cyan: '#06b6d4',
+                            fuchsia: '#d946ef'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+    <script src="global_nav.js"></script>
+    <link rel="stylesheet" href="nemesis-enterprise.css">
+
+    <link rel="stylesheet" href="/light-theme.css">
+
+    <script>
+        const IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        window.BACKEND_URL = IS_LOCAL ? 'http://127.0.0.1:8088' : 'https://nemesis-api-v3.legionxgaming2021.workers.dev';
+        window.API_BASE = window.BACKEND_URL;
+    </script>
+        \n</head>
+<body>
+    
+    <!-- Holographic Ambient Backgrounds -->
+    <div class="holographic-bg"></div>
+    <div class="swirls"></div>
+
+    <!-- Top Navigation -->
+    <div class="top-brand">
+        <img src="assets/butterfly_transparent.png" onerror="this.src='assets/butterfly_transparent.png'" alt="Nemesis Logo Small">
+        <span>NEMESIS</span>
+    </div>
+    <nav class="top-nav">
+        <a href="#">Solutions</a>
+        <a href="#">Technology</a>
+        <a href="#">Company</a>
+        <a href="#">Contact</a>
+    </nav>
+
+    <!-- Main Central Content -->
+    <main class="w-full h-full flex flex-col items-center justify-center text-center relative z-20">
+        
+        <!-- Logo Section -->
+        <div class="logo-container">
+            <div class="butterfly-glow"></div>
+            <!-- Try to load butterfly_transparent.png, fallback to butterfly_transparent.png -->
+            <img src="assets/butterfly_transparent.png" onerror="this.src='assets/butterfly_transparent.png'" alt="NEMESIS Butterfly Logo" class="butterfly-logo">
+        </div>
+        
+        <div class="nemesis-text">NEMESIS</div>
+
+        <!-- Typography -->
+        <h2 class="subtitle uppercase mt-4">Unveiling the future of cyber defense.</h2>
+        <p class="description">
+            An Adaptive intelligence engine to predict, confront, and neutralize advanced digital threats. Transformation is security.
+        </p>
+
+        <!-- Call to Action -->
+        <a href="nemesis_id_landing.html" class="cta-button">
+            Request a Secure Demo
+        </a>
+
+        <!-- Bouncing Down Arrow -->
+        <i class="fa-solid fa-chevron-down bounce-arrow"></i>
+
+        <!-- Glassmorphic Features Cards -->
+        <div class="features-container mt-8">
+            <a href="nemesis_id_landing.html" class="glass-card">
+                <div class="card-icon cyan-purple">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div class="card-text text-left">
+                    Multi-Dimensional<br/>Threat Analysis
+                </div>
+            </a>
+            
+            <a href="nemesis_tracer_landing.html" class="glass-card">
+                <div class="card-icon prism">
+                    <i class="fa-solid fa-cubes"></i>
+                </div>
+                <div class="card-text text-left">
+                    Predictive<br/>Adaptation Engine
+                </div>
+            </a>
+            
+            <a href="nemesis_intelligence.html" class="glass-card">
+                <div class="card-icon butterfly">
+                    <img src="assets/butterfly_transparent.png" onerror="this.src='assets/butterfly_transparent.png'" alt="Icon">
+                </div>
+                <div class="card-text text-left">
+                    Forensic<br/>Deep-Dive Reports
+                </div>
+            </a>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer items-center">
+        <div class="footer-brand">
+            <img src="assets/butterfly_transparent.png" onerror="this.src='assets/butterfly_transparent.png'" alt="Logo small">
+            <span>NEMESIS</span>
+        </div>
+        <div>&copy; 2026 NEMESIS SYSTEMS. ALL RIGHTS RESERVED.</div>
+        <div class="footer-links">
+            <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a>
+        </div>
+    </footer>
+
+
+<!-- GLOBAL NEMESIS AJAX LOADER -->
+<div id="global-ajax-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 99999; justify-content: center; align-items: center; flex-direction: column;">
+    <img src="assets/butterfly_transparent.png" style="width: 100px; height: 100px; animation: pulse-loader 1.5s infinite; filter: drop-shadow(0 0 20px rgba(6,182,212,0.8));">
+    <div style="color: #06b6d4; margin-top: 20px; font-family: monospace; font-size: 16px; font-weight: bold; text-shadow: 0 0 10px #06b6d4;">NEMESIS SINGULARITY KERNEL</div>
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+</div>
+<script>
+    (function() {
+        if (window._nemesisLoaderInitialized) return;
+        window._nemesisLoaderInitialized = true;
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const loader = document.getElementById('global-ajax-loader');
+            if (loader) loader.style.display = 'flex';
+            try {
+                const response = await originalFetch.apply(this, args);
+                return response;
+            } finally {
+                if (loader) loader.style.display = 'none';
+            }
+        };
+    })();
+</script>
+</body>
+
+</html>

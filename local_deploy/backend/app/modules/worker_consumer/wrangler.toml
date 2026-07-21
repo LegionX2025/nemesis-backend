@@ -1,0 +1,14 @@
+name = "nemesis-queue-consumer"
+main = "src/index.js"
+compatibility_date = "2024-02-08"
+
+# Bind the queue that this worker will consume from
+[[queues.consumers]]
+queue = "nemesis-trace-queue"
+max_batch_size = 10
+max_batch_timeout = 5
+max_retries = 3
+
+[vars]
+# Change this to your Cloudflare Tunnel URL when you start cloudflared
+PYTHON_BACKEND_URL = "https://api.yourdomain.com"

@@ -1,0 +1,32 @@
+name = "nemesis-backend-v2"
+main = "app/main.py"
+compatibility_date = "2024-03-20"
+compatibility_flags = ["python_workers"]
+
+# Cloudflare Bindings
+[[d1_databases]]
+binding = "DB"
+database_name = "nemesis_db"
+database_id = "992368c1-dcde-41e1-8f8c-3330eab4f117"
+
+[[d1_databases]]
+binding = "AUDIT_DB"
+database_name = "nemesis_audit_db"
+database_id = "a0093d96-9fc5-4175-82f5-2238b9cc89b8"
+
+[[d1_databases]]
+binding = "NEMESIS_DB"
+database_name = "nemesis-db"
+database_id = "e0e33a48-31e6-4fd9-9123-882e70a4e596"
+
+[[kv_namespaces]]
+binding = "NEMESIS_CACHE"
+id = "f4099ea1458e4e62ba838734f172846f"
+
+[[hyperdrive]]
+binding = "HYPERDRIVE"
+id = "2bf62864eaf64708b5a349169d6efc7e"
+localConnectionString = "postgresql://admin:!Nemesis2026@ep-morning-glitter-adpz0uqn-pooler.c-2.us-east-1.aws.neon.tech:5432/intelligence"
+
+[vars]
+APP_MODE = "production"

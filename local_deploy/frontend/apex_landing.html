@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEMESIS APEX - Intelligence Engine</title>
+    
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+    <link rel="stylesheet" href="nemesis-enterprise.css">
+
+    <link rel="stylesheet" href="/light-theme.css">
+
+    <script>
+        const IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        window.BACKEND_URL = IS_LOCAL ? 'http://127.0.0.1:8088' : 'https://nemesis-api-v3.legionxgaming2021.workers.dev';
+        window.API_BASE = window.BACKEND_URL;
+    </script>
+        \n    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <div id="global-nav"></div>
+
+    <section class="hero">
+        <img src="..butterfly_transparent.png" alt="NEMESIS APEX" class="hero-logo" onerror="this.src='https://via.placeholder.com/150?text=LOGO';">
+        <h1 class="hero-title">NEMESIS APEX OMNI-CORE</h1>
+        <div class="hero-subtitle">Unified Singularity Kernel (v100.0)</div>
+        <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto 40px; line-height: 1.6;">
+            Government-Grade Deployment Protocol for Law Enforcement & Forensic Analysis.
+            Harness the power of AI-driven self-healing swarms and zero-mock live chain integration.
+        </p>
+        <a href="apex_dashboard.html" class="btn-launch">Initialize Matrix <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i></a>
+    </section>
+
+    <section class="features">
+        <div class="feature-card">
+            <i class="fa-solid fa-microchip feature-icon"></i>
+            <h3 class="feature-title">Self-Healing AGI</h3>
+            <p class="feature-desc">Autonomous code-patching powered by Gemini-2.5. Crashing processes are caught, diagnosed, and repaired live without human intervention.</p>
+        </div>
+        
+        <div class="feature-card">
+            <i class="fa-solid fa-network-wired feature-icon"></i>
+            <h3 class="feature-title">Omni-Chain Matrix</h3>
+            <p class="feature-desc">Total integration across Ethereum, Bitcoin, Solana, and TRON via Infura, GetBlock, and Ankr, providing unparalleled forensic resolution.</p>
+        </div>
+
+        <div class="feature-card">
+            <i class="fa-solid fa-spider feature-icon"></i>
+            <h3 class="feature-title">Ransomware Engine</h3>
+            <p class="feature-desc">Live clustering with DBSCAN to automatically track and attribute peel chains, mixer deposits, and exchange liquidations in real-time.</p>
+        </div>
+    </section>
+
+    <script src="global_nav.js"></script>
+    <!-- Optionally include webgl-butterflies.js for background effect if desired -->
+    <script src="webgl-butterflies.js"></script>
+
+<!-- GLOBAL NEMESIS AJAX LOADER -->
+<div id="global-ajax-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 99999; justify-content: center; align-items: center; flex-direction: column;">
+    <img src="assets/butterfly_transparent.png" style="width: 100px; height: 100px; animation: pulse-loader 1.5s infinite; filter: drop-shadow(0 0 20px rgba(6,182,212,0.8));">
+    <div style="color: #06b6d4; margin-top: 20px; font-family: monospace; font-size: 16px; font-weight: bold; text-shadow: 0 0 10px #06b6d4;">NEMESIS SINGULARITY KERNEL</div>
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+</div>
+<script>
+    (function() {
+        if (window._nemesisLoaderInitialized) return;
+        window._nemesisLoaderInitialized = true;
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const loader = document.getElementById('global-ajax-loader');
+            if (loader) loader.style.display = 'flex';
+            try {
+                const response = await originalFetch.apply(this, args);
+                return response;
+            } finally {
+                if (loader) loader.style.display = 'none';
+            }
+        };
+    })();
+</script>
+</body>
+
+</html>

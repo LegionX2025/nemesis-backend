@@ -1,0 +1,31 @@
+services:
+  - type: redis
+    name: nemesis-redis
+    plan: free
+    ipAllowList: []
+  
+  - type: web
+    name: nemesis-backend-api
+    env: docker
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: nemesis-redis
+          property: connectionString
+          
+  - type: worker
+    name: nemesis-celery-worker
+    env: docker
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
+    startCommand: "cd app && celery -A celery_worker.celery_app worker --loglevel=info -P gevent"
+    envVars:
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: nemesis-redis
+          property: connectionString

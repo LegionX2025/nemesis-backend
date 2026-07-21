@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEMESIS APEX - Intelligence Dashboard</title>
+    <!-- Glassmorphism Theme Base -->
+    
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+    <link rel="stylesheet" href="nemesis-enterprise.css">
+
+    <link rel="stylesheet" href="/light-theme.css">
+
+    <script>
+        const IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        window.BACKEND_URL = IS_LOCAL ? 'http://127.0.0.1:8088' : 'https://nemesis-api-v3.legionxgaming2021.workers.dev';
+        window.API_BASE = window.BACKEND_URL;
+    </script>
+        \n    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <div id="global-nav"></div>
+
+    <div class="dashboard-container">
+        <!-- Control Center -->
+        <aside class="glass-panel control-center">
+            <h2>Omni-Core Uplink</h2>
+            
+            <div class="input-group">
+                <label>Target IOC (Address/Hash/Domain)</label>
+                <input type="text" id="target-input" placeholder="0x..." autocomplete="off">
+            </div>
+
+            <div class="input-group">
+                <label>Network Override</label>
+                <input type="text" id="network-input" placeholder="AUTO, ETH, BTC..." value="AUTO">
+            </div>
+
+            <button class="btn-primary" id="btn-deploy">Deploy Swarm</button>
+            <button class="btn-primary" id="btn-hunt" style="background: linear-gradient(135deg, var(--neon-purple) 0%, #4a00e0 100%); color: white; margin-top: 12px;">Auto-Hunt Ransomware</button>
+
+            <div style="margin-top: auto;">
+                <div class="stat-card">
+                    <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">System Status</span>
+                    <span style="color: #00ff00; font-weight: bold;">🟢 ONLINE - KERNEL v100.0</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Visualization -->
+        <main class="visualization-area">
+            <div class="glass-panel graph-container">
+                <h2>Network Matrix</h2>
+                <div id="3d-graph" style="width: 100%; height: calc(100% - 50px);">
+                    <!-- 3D Graph injected here -->
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-secondary); font-family: monospace;">
+                        AWAITING TARGET ACQUISITION...
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Analytics & Intel -->
+        <aside class="analytics-panel">
+            <div class="glass-panel">
+                <h2>Live Telemetry</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+                    <div class="stat-card">
+                        <span style="font-size: 0.75rem; color: var(--text-secondary);">Nodes Discovered</span>
+                        <span class="stat-value" id="stat-nodes">0</span>
+                    </div>
+                    <div class="stat-card">
+                        <span style="font-size: 0.75rem; color: var(--text-secondary);">Edges Traced</span>
+                        <span class="stat-value" id="stat-edges" style="color: var(--neon-blue);">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel" style="flex: 1; display: flex; flex-direction: column;">
+                <h2>Terminal Stream</h2>
+                <div class="log-container" id="terminal-logs">
+                    <div class="log-entry info">[SYS] Terminal Initialized.</div>
+                    <div class="log-entry info">[SYS] Connecting to Omni-Core socket...</div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Assuming global_nav.js and webgl-butterflies.js are present in the same dir -->
+    <script src="global_nav.js"></script>
+    <script src="webgl-butterflies.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    
+    <script>
+        // --- Terminal Logging ---
+        const terminal = document.getElementById('terminal-logs');
+        function log(msg, type = 'info') {
+            const el = document.createElement('div');
+            el.className = `log-entry ${type}`;
+            const ts = new Date().toISOString().split('T')[1].substring(0, 12);
+            el.textContent = `[${ts}] ${msg}`;
+            terminal.appendChild(el);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        // --- Socket.IO Connection ---
+        // Connect to the backend server (assuming it runs on port 8000/8001 locally)
+        const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '' ? 'http://localhost:8000' : '';
+        const socket = io(BACKEND_URL);
+
+        socket.on('connect', () => {
+            log('Uplink Established with NEMESIS APEX', 'info');
+        });
+
+        socket.on('system_alert', (data) => {
+            log(data.msg, data.type === 'error' ? 'error' : 'warning');
+        });
+
+        socket.on('node', (data) => {
+            log(`Discovered Node: ${data.node.id.substring(0,8)}... [${data.node.classification}]`, 'info');
+            // Update stats
+            const nodeEl = document.getElementById('stat-nodes');
+            nodeEl.textContent = parseInt(nodeEl.textContent) + 1;
+        });
+
+        socket.on('edge', (data) => {
+            log(`Traced Edge: ${data.edge.amount} ${data.edge.asset} -> ${data.edge.to_addr.substring(0,8)}...`, 'info');
+            const edgeEl = document.getElementById('stat-edges');
+            edgeEl.textContent = parseInt(edgeEl.textContent) + 1;
+        });
+
+        socket.on('pipeline_update', (data) => {
+            log(`Pipeline Stage: ${data.active_stage} (${data.progress}%)`, 'info');
+        });
+
+        socket.on('trace_complete', (data) => {
+            log(`Trace ${data.trace_id} Completed. Rendering Graph...`, 'info');
+            // Logic to fetch graph data and render it (e.g., using 3d-force-graph)
+            document.getElementById('3d-graph').innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--neon-blue); font-family: monospace; font-size: 1.5rem; text-shadow: 0 0 10px rgba(0,243,255,0.5);">
+                    GRAPH RENDERED FOR: ${data.trace_id}
+                </div>
+            `;
+        });
+
+        // --- UI Interactions ---
+        document.getElementById('btn-deploy').addEventListener('click', async () => {
+            const seeds = document.getElementById('target-input').value;
+            const chain = document.getElementById('network-input').value;
+            
+            if (!seeds) {
+                log('Error: No target IOC provided.', 'error');
+                return;
+            }
+
+            log(`Deploying Swarm to targets: ${seeds}...`, 'info');
+            
+            try {
+                const res = await fetch(`${window.BACKEND_URL}/api/v1/trace/deploy`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ seeds: seeds, chain_override: chain, max_depth: 3 })
+                });
+                const data = await res.json();
+                log(`Trace Initiated: ID ${data.trace_id}`, 'info');
+                socket.emit('join_trace', { trace_id: data.trace_id });
+                
+                // Clear graph area
+                document.getElementById('3d-graph').innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-secondary); font-family: monospace;">
+                        ANALYZING BLOCKCHAIN TOPOLOGY...
+                    </div>
+                `;
+                document.getElementById('stat-nodes').textContent = '0';
+                document.getElementById('stat-edges').textContent = '0';
+                
+            } catch (e) {
+                log(`Failed to contact deployment endpoint: ${e.message}`, 'error');
+            }
+        });
+
+        document.getElementById('btn-hunt').addEventListener('click', async () => {
+            log(`Initiating Autonomous Ransomware Hunt...`, 'warning');
+            try {
+                socket.emit('join_ransomware_hub');
+                const res = await fetch(`${window.BACKEND_URL}/api/v1/ransomware/hunt`, { method: 'POST' });
+                const data = await res.json();
+                log(data.status, 'info');
+            } catch (e) {
+                log(`Hunt deployment failed: ${e.message}`, 'error');
+            }
+        });
+    </script>
+
+<!-- GLOBAL NEMESIS AJAX LOADER -->
+<div id="global-ajax-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 99999; justify-content: center; align-items: center; flex-direction: column;">
+    <img src="assets/butterfly_transparent.png" style="width: 100px; height: 100px; animation: pulse-loader 1.5s infinite; filter: drop-shadow(0 0 20px rgba(6,182,212,0.8));">
+    <div style="color: #06b6d4; margin-top: 20px; font-family: monospace; font-size: 16px; font-weight: bold; text-shadow: 0 0 10px #06b6d4;">NEMESIS SINGULARITY KERNEL</div>
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+</div>
+<script>
+    (function() {
+        if (window._nemesisLoaderInitialized) return;
+        window._nemesisLoaderInitialized = true;
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const loader = document.getElementById('global-ajax-loader');
+            if (loader) loader.style.display = 'flex';
+            try {
+                const response = await originalFetch.apply(this, args);
+                return response;
+            } finally {
+                if (loader) loader.style.display = 'none';
+            }
+        };
+    })();
+</script>
+</body>
+
+</html>

@@ -1,0 +1,8 @@
+# Ignore everything by default
+*
+!tracer_scripts/**
+!pyproject.toml
+!wrangler.toml
+!.env
+!pylock.toml
+!uv.lock

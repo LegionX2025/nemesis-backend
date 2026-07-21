@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nemesis E2E Refactor Audit Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+
+    <!-- Light Theme & WebGL Overrides -->
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="global_nav.js"></script>
+    <link rel="stylesheet" href="nemesis-enterprise.css">
+
+    <link rel="stylesheet" href="/light-theme.css">
+
+    <script>
+        const IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        window.BACKEND_URL = IS_LOCAL ? 'http://127.0.0.1:8088' : 'https://nemesis-api-v3.legionxgaming2021.workers.dev';
+        window.API_BASE = window.BACKEND_URL;
+    </script>
+        \n</head>
+<body class="text-slate-200 p-8 max-w-5xl mx-auto">
+
+    <div class="mb-10 text-center">
+        <h1 class="text-4xl font-black text-slate-100 mb-2">Nemesis Omni-Deployer</h1>
+        <h2 class="text-xl font-bold text-slate-500 uppercase tracking-widest">End-to-End System Audit Report</h2>
+        <div class="mt-4 flex items-center justify-center gap-4">
+            <span class="status-badge status-pass"><i class="fa-solid fa-check-circle mr-1"></i> System Verified</span>
+            <span class="text-sm font-medium text-slate-500">Generated: Post-Refactor</span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="audit-card">
+            <h3 class="text-lg font-bold border-b pb-2 mb-4"><i class="fa-solid fa-server text-indigo-500 mr-2"></i> Backend API (main.py)</h3>
+            <ul class="space-y-3">
+                <li class="flex items-start gap-3">
+                    <i class="fa-solid fa-check text-emerald-500 mt-1"></i>
+                    <div>
+                        <div class="font-bold">Autonomous Trace REST Endpoint Added</div>
+                        <div class="text-sm text-slate-500">Implemented <code class="glass-panel px-1 rounded">/api/nemesis/autonomous_trace</code> for fast, 2-hop parallel E2E endpoint discovery without WebSocket overhead.</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="audit-card">
+            <h3 class="text-lg font-bold border-b pb-2 mb-4"><i class="fa-solid fa-microchip text-blue-500 mr-2"></i> Trace Engine (trace_engine.py)</h3>
+            <ul class="space-y-3">
+                <li class="flex items-start gap-3">
+                    <i class="fa-solid fa-check text-emerald-500 mt-1"></i>
+                    <div>
+                        <div class="font-bold">Asyncio.Gather Parallel Fetching</div>
+                        <div class="text-sm text-slate-500">Refactored <code class="glass-panel px-1 rounded">auto_compute_loss_amount</code> to utilize concurrent execution for resolving seed chains, reducing TTFB significantly.</div>
+                    </div>
+                </li>
+                <li class="flex items-start gap-3">
+                    <i class="fa-solid fa-check text-emerald-500 mt-1"></i>
+                    <div>
+                        <div class="font-bold">CEX & Mixer Terminal Stopping Logic</div>
+                        <div class="text-sm text-slate-500">Traversal explicitly halts upon detecting <code class="glass-panel px-1 rounded">CEX</code>, <code class="glass-panel px-1 rounded">MIXER</code>, or <code class="glass-panel px-1 rounded">EXCHANGE_CUSTODIAL</code> entities, preventing infinite depth looping inside hot wallets.</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="audit-card">
+            <h3 class="text-lg font-bold border-b pb-2 mb-4"><i class="fa-solid fa-spider text-rose-500 mr-2"></i> Scraper Engine (scraper_engine.py)</h3>
+            <ul class="space-y-3">
+                <li class="flex items-start gap-3">
+                    <i class="fa-solid fa-check text-emerald-500 mt-1"></i>
+                    <div>
+                        <div class="font-bold">Playwright Concurrent Resolution</div>
+                        <div class="text-sm text-slate-500">Refactored <code class="glass-panel px-1 rounded">resolve_address()</code> to fire all applicable block explorer instances in parallel via <code class="glass-panel px-1 rounded">asyncio.gather</code>, falling back gracefully to the first successful scrape.</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="audit-card">
+            <h3 class="text-lg font-bold border-b pb-2 mb-4"><i class="fa-brands fa-html5 text-orange-500 mr-2"></i> Frontend Views</h3>
+            <ul class="space-y-3">
+                <li class="flex items-start gap-3">
+                    <i class="fa-solid fa-check text-emerald-500 mt-1"></i>
+                    <div>
+                        <div class="font-bold">Mocks Deprecated (nemesis_tracer.html)</div>
+                        <div class="text-sm text-slate-500">Replaced the <code class="glass-panel px-1 rounded">setTimeout</code> mock with a real <code class="glass-panel px-1 rounded">fetch()</code> payload routed to the new Autonomous Trace endpoint.</div>
+                    </div>
+                </li>
+                <li class="flex items-start gap-3">
+                    <i class="fa-solid fa-check text-emerald-500 mt-1"></i>
+                    <div>
+                        <div class="font-bold">Mocks Deprecated (nemesis_id.html)</div>
+                        <div class="text-sm text-slate-500">Integrated the Autonomous Execution flow into the Target Profile page, successfully streaming real entity labels to the UI.</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="bg-slate-50 text-slate-200 rounded-xl p-6 shadow-lg">
+        <h3 class="text-xl font-bold mb-3 flex items-center gap-2"><i class="fa-solid fa-rocket text-yellow-400"></i> Deployment Ready</h3>
+        <p class="text-slate-300 text-sm mb-4">All core systems have been refactored, de-mocked, and optimized for highly concurrent execution. The system is structurally sound for production.</p>
+        <div class="glass-panel p-4 rounded border border-slate-600 font-mono text-sm text-emerald-400">
+            > python auto_deploy.py<br>
+            > [SUCCESS] All E2E constraints resolved.<br>
+            > OmniChain Forensic Engine v2.0 READY.
+        </div>
+    </div>
+
+
+    <!-- WebGL Butterflies Engine -->
+    <script src="webgl-butterflies.js"></script>
+
+<!-- GLOBAL NEMESIS AJAX LOADER -->
+<div id="global-ajax-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 99999; justify-content: center; align-items: center; flex-direction: column;">
+    <img src="assets/butterfly_transparent.png" style="width: 100px; height: 100px; animation: pulse-loader 1.5s infinite; filter: drop-shadow(0 0 20px rgba(6,182,212,0.8));">
+    <div style="color: #06b6d4; margin-top: 20px; font-family: monospace; font-size: 16px; font-weight: bold; text-shadow: 0 0 10px #06b6d4;">NEMESIS SINGULARITY KERNEL</div>
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+</div>
+<script>
+    (function() {
+        if (window._nemesisLoaderInitialized) return;
+        window._nemesisLoaderInitialized = true;
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const loader = document.getElementById('global-ajax-loader');
+            if (loader) loader.style.display = 'flex';
+            try {
+                const response = await originalFetch.apply(this, args);
+                return response;
+            } finally {
+                if (loader) loader.style.display = 'none';
+            }
+        };
+    })();
+</script>
+</body>
+
+</html>

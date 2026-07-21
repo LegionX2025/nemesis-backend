@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nemesis - Initializing System...</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+
+    <!-- MERMAID -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <!-- INJECTED WHITEPAPER STYLES -->
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+
+    <link rel="stylesheet" href="nemesis-enterprise.css">
+
+    <link rel="stylesheet" href="/light-theme.css">
+
+    <script>
+        const IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        window.BACKEND_URL = IS_LOCAL ? 'http://127.0.0.1:8088' : 'https://nemesis-api-v3.legionxgaming2021.workers.dev';
+        window.API_BASE = window.BACKEND_URL;
+    </script>
+        \n</head>
+<body>
+    <!-- GLOBAL HEADER -->
+    <script src="global_nav.js"></script>
+
+
+    <audio id="cinematic-audio" src="https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=cinematic-time-lapse-115672.mp3" preload="auto"></audio>
+
+    <div id="start-screen">
+        <h1 class="text-3xl font-black text-slate-100 mb-8 tracking-[10px]">NEMESIS</h1>
+        <button id="start-btn">Initialize System</button>
+        <p class="text-xs text-slate-500 mt-6 tracking-widest uppercase">Audio Required - Please ensure sound is on</p>
+    </div>
+
+    <div id="webgl-bg-container"></div>
+    <div class="lens-flare"></div>
+
+    <div class="cinematic-layer" id="sequence-container">
+        <div id="seq-1" class="text-sequence">NEMESIS</div>
+        <div id="seq-2" class="text-sequence">
+            ENTERPRISE OSINT<br>
+            <span style="font-size: 1rem; color: #94a3b8; letter-spacing: 4px; font-weight: normal; margin-top: 15px; display: block;">CROSS-CHAIN GRAPH TRACING</span>
+        </div>
+        <div id="seq-3" class="text-sequence">
+            SYSTEM ONLINE
+            <span>REDIRECTING TO DASHBOARD...</span>
+        </div>
+        <div class="progress-bar-container"><div class="progress-bar-fill"></div></div>
+    </div>
+    <div id="black-out"></div>
+
+    <script>
+        // High-fidelity procedural wing texture generator
+        function createWingTexture(isRight) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 1024;
+            const ctx = canvas.getContext('2d');
+
+            const rootX = isRight ? 0 : 512;
+            const rootY = 512;
+
+            ctx.clearRect(0,0,512,1024);
+
+            // Pixar-style vibrant organic wing shape
+            ctx.beginPath();
+            if (!isRight) { 
+                ctx.moveTo(512, 512);
+                ctx.bezierCurveTo(400, 50, 100, 20, 40, 100);
+                ctx.bezierCurveTo(-20, 250, 20, 500, 60, 512); // upper lobe
+                ctx.bezierCurveTo(20, 700, 100, 950, 300, 980); // swallowtail bottom
+                ctx.bezierCurveTo(400, 990, 500, 700, 512, 512);
+            } else { 
+                ctx.moveTo(0, 512);
+                ctx.bezierCurveTo(112, 50, 412, 20, 472, 100);
+                ctx.bezierCurveTo(532, 250, 492, 500, 452, 512); 
+                ctx.bezierCurveTo(492, 700, 412, 950, 212, 980); 
+                ctx.bezierCurveTo(112, 990, 12, 700, 0, 512);
+            }
+
+            // Rich multi-stop vibrant gradient (Pixar/Unreal vividness)
+            const grad = ctx.createRadialGradient(rootX, rootY, 0, rootX, rootY, 600);
+            grad.addColorStop(0, '#ffffff'); // blinding white core
+            grad.addColorStop(0.1, '#fde047'); // yellow burst
+            grad.addColorStop(0.3, '#ec4899'); // hot pink
+            grad.addColorStop(0.6, '#8b5cf6'); // vibrant purple
+            grad.addColorStop(0.85, '#0f172a'); // dark navy edges
+            grad.addColorStop(1, '#000000'); // black tips
+
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            // Intricate organic veins
+            ctx.strokeStyle = '#000000';
+            ctx.lineCap = 'round';
+            ctx.globalAlpha = 0.5;
+            for(let i=1; i<12; i++) {
+                ctx.beginPath();
+                ctx.moveTo(rootX, rootY);
+                const angle = (!isRight) ? (Math.PI/2 - (i * Math.PI/13)) : (Math.PI/2 + (i * Math.PI/13));
+                const len = 700;
+                
+                // Vein branches
+                ctx.bezierCurveTo(
+                    rootX + Math.cos(angle)*len*0.3, rootY - Math.sin(angle)*len*0.3,
+                    rootX + Math.cos(angle - 0.3)*len*0.6, rootY - Math.sin(angle - 0.3)*len*0.6,
+                    rootX + Math.cos(angle)*len, rootY - Math.sin(angle)*len
+                );
+                ctx.lineWidth = (13-i) * 0.8;
+                ctx.stroke();
+            }
+            ctx.globalAlpha = 1.0;
+
+            // Glowing bioluminescent dots
+            ctx.fillStyle = '#fbcfe8';
+            const drawDot = (x, y, r) => { 
+                ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill(); 
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath(); ctx.arc(x, y, r*0.5, 0, Math.PI*2); ctx.fill(); 
+                ctx.fillStyle = '#fbcfe8';
+            };
+            
+            if (!isRight) {
+                drawDot(80, 250, 6); drawDot(60, 350, 4); drawDot(70, 450, 8); 
+                drawDot(100, 600, 5); drawDot(150, 800, 7); drawDot(250, 920, 4);
+                drawDot(50, 180, 3); drawDot(40, 280, 3);
+            } else {
+                drawDot(512-80, 250, 6); drawDot(512-60, 350, 4); drawDot(512-70, 450, 8); 
+                drawDot(512-100, 600, 5); drawDot(512-150, 800, 7); drawDot(512-250, 920, 4);
+                drawDot(512-50, 180, 3); drawDot(512-40, 280, 3);
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.anisotropy = 16;
+            return texture;
+        }
+
+        // Procedural 3D Flower Generator
+        function create3DFlower(colorHex) {
+            const group = new THREE.Group();
+            
+            // Petal Shape
+            const petalShape = new THREE.Shape();
+            petalShape.moveTo(0, 0);
+            petalShape.quadraticCurveTo(0.6, 1, 0, 2.5);
+            petalShape.quadraticCurveTo(-0.6, 1, 0, 0);
+            
+            const petalGeo = new THREE.ShapeGeometry(petalShape);
+            // Bend the petal slightly
+            const pos = petalGeo.attributes.position;
+            for(let i=0; i<pos.count; i++) {
+                const y = pos.getY(i);
+                pos.setZ(i, -Math.pow(y, 1.5) * 0.15);
+            }
+            petalGeo.computeVertexNormals();
+
+            // Pixar-like waxy/translucent material
+            const petalMat = new THREE.MeshPhysicalMaterial({ 
+                color: colorHex, 
+                side: THREE.DoubleSide, 
+                roughness: 0.3, 
+                clearcoat: 0.8,
+                clearcoatRoughness: 0.2,
+                transmission: 0.4 // glass-like translucency
+            });
+            
+            for (let i=0; i<7; i++) {
+                const mesh = new THREE.Mesh(petalGeo, petalMat);
+                mesh.rotation.z = (Math.PI * 2 / 7) * i;
+                mesh.rotation.x = 0.8; // Fold outward
+                group.add(mesh);
+            }
+
+            // Inner petals
+            for (let i=0; i<5; i++) {
+                const mesh = new THREE.Mesh(petalGeo, petalMat);
+                mesh.scale.set(0.7, 0.7, 0.7);
+                mesh.rotation.z = (Math.PI * 2 / 5) * i + 0.5;
+                mesh.rotation.x = 0.5;
+                group.add(mesh);
+            }
+            
+            // Glowing center (Stamen)
+            const centerGeo = new THREE.SphereGeometry(0.4, 32, 32);
+            const centerMat = new THREE.MeshPhysicalMaterial({ 
+                color: 0xfde047, 
+                emissive: 0xeab308,
+                emissiveIntensity: 0.5,
+                roughness: 0.8 
+            });
+            const center = new THREE.Mesh(centerGeo, centerMat);
+            center.scale.z = 0.5;
+            center.position.z = 0.2;
+            group.add(center);
+            
+            return group;
+        }
+
+        function initScene() {
+            if (typeof THREE === 'undefined') return;
+            const container = document.getElementById('webgl-bg-container');
+            
+            // Fog for atmospheric depth
+            const scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x020617, 0.02);
+
+            const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            // Cinematic renderer setup
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: "high-performance" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            // Tone mapping for HDR bloom effect look
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.1;
+            container.appendChild(renderer.domElement);
+
+            // Studio Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
+            scene.add(ambientLight);
+            
+            const mainLight = new THREE.DirectionalLight(0xffffff, 3.0);
+            mainLight.position.set(10, 20, 15);
+            scene.add(mainLight);
+
+            const rimLight = new THREE.DirectionalLight(0xfbcfe8, 2.0);
+            rimLight.position.set(-10, -10, -10);
+            scene.add(rimLight);
+
+            // ==========================================
+            // 1. THE HERO BUTTERFLY (Pixar/Unreal Style)
+            // ==========================================
+            const leftTex = createWingTexture(false);
+            const rightTex = createWingTexture(true);
+
+            // Advanced PBR Material for the wings
+            const matProps = {
+                transparent: true,
+                side: THREE.DoubleSide,
+                roughness: 0.2,
+                metalness: 0.1,
+                clearcoat: 1.0,           // Glossy sheen
+                clearcoatRoughness: 0.1,
+                transmission: 0.3,        // Subsurface scattering / light passing through
+                depthWrite: false
+            };
+
+            const leftMat = new THREE.MeshPhysicalMaterial({ ...matProps, map: leftTex, emissive: 0xdb2777, emissiveIntensity: 0.1 });
+            const rightMat = new THREE.MeshPhysicalMaterial({ ...matProps, map: rightTex, emissive: 0xdb2777, emissiveIntensity: 0.1 });
+
+            const wingWidth = 4;
+            const wingHeight = 8;
+            
+            // Detailed curved plane for 3D realism
+            const wingGeoLeft = new THREE.PlaneGeometry(wingWidth, wingHeight, 32, 32);
+            // Curve the wing slightly
+            const posL = wingGeoLeft.attributes.position;
+            for(let i=0; i<posL.count; i++) {
+                const x = posL.getX(i);
+                posL.setZ(i, Math.sin(x * 1.5) * -0.5);
+            }
+            wingGeoLeft.computeVertexNormals();
+            wingGeoLeft.translate(-wingWidth/2, 0, 0); 
+            const leftWing = new THREE.Mesh(wingGeoLeft, leftMat);
+            
+            const wingGeoRight = new THREE.PlaneGeometry(wingWidth, wingHeight, 32, 32);
+            const posR = wingGeoRight.attributes.position;
+            for(let i=0; i<posR.count; i++) {
+                const x = posR.getX(i);
+                posR.setZ(i, Math.sin(x * 1.5) * 0.5);
+            }
+            wingGeoRight.computeVertexNormals();
+            wingGeoRight.translate(wingWidth/2, 0, 0); 
+            const rightWing = new THREE.Mesh(wingGeoRight, rightMat);
+
+            // Realistic segmented body using compatible geometry
+            const bodyGeo = new THREE.CylinderGeometry(0.2, 0.15, 3, 16);
+            const bodyMat = new THREE.MeshPhysicalMaterial({ 
+                color: 0x0f172a, 
+                roughness: 0.4, 
+                metalness: 0.8,
+                clearcoat: 1.0
+            });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.rotation.x = Math.PI / 2;
+
+            const antGeo = new THREE.TubeGeometry(
+                new THREE.QuadraticBezierCurve3(
+                    new THREE.Vector3(0,0,0),
+                    new THREE.Vector3(0.5, 0.5, 1),
+                    new THREE.Vector3(1.5, 1.5, 0.5)
+                ), 20, 0.02, 8, false
+            );
+            const ant1 = new THREE.Mesh(antGeo, bodyMat);
+            ant1.position.set(-0.1, 0, 1.5);
+            ant1.rotation.y = Math.PI/2;
+            ant1.rotation.z = Math.PI/6;
+
+            const antGeo2 = new THREE.TubeGeometry(
+                new THREE.QuadraticBezierCurve3(
+                    new THREE.Vector3(0,0,0),
+                    new THREE.Vector3(-0.5, 0.5, 1),
+                    new THREE.Vector3(-1.5, 1.5, 0.5)
+                ), 20, 0.02, 8, false
+            );
+            const ant2 = new THREE.Mesh(antGeo2, bodyMat);
+            ant2.position.set(0.1, 0, 1.5);
+            ant2.rotation.y = Math.PI/2;
+            ant2.rotation.z = -Math.PI/6;
+
+            const butterfly = new THREE.Group();
+            butterfly.add(leftWing);
+            butterfly.add(rightWing);
+            butterfly.add(body);
+            butterfly.add(ant1);
+            butterfly.add(ant2);
+            
+            butterfly.position.set(0, -3, -40);
+            butterfly.rotation.x = Math.PI / 8;
+            scene.add(butterfly);
+
+            // ==========================================
+            // 2. BACKGROUND 3D FLOWERS
+            // ==========================================
+            const flowers = new THREE.Group();
+            const colors = [0xf472b6, 0x38bdf8, 0xfde047, 0xc084fc, 0xec4899];
+            for(let i=0; i<15; i++) {
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const flower = create3DFlower(color);
+                flower.position.set(
+                    (Math.random() - 0.5) * 60,
+                    (Math.random() - 0.5) * 40 - 10,
+                    -15 - Math.random() * 40
+                );
+                const s = 1.5 + Math.random() * 2;
+                flower.scale.set(s,s,s);
+                flower.rotation.x = Math.random() * Math.PI;
+                flower.rotation.y = Math.random() * Math.PI;
+                
+                // Save original data for floating animation
+                flower.userData = {
+                    rx: Math.random() * 0.01,
+                    ry: Math.random() * 0.01,
+                    rz: Math.random() * 0.01,
+                    oy: flower.position.y,
+                    speed: Math.random() * 2 + 1
+                };
+                flowers.add(flower);
+            }
+            scene.add(flowers);
+
+            // ==========================================
+            // 3. FALLING PETAL PARTICLES (InstancedMesh)
+            // ==========================================
+            const petalCount = 800;
+            const petalShape = new THREE.Shape();
+            petalShape.moveTo(0,0);
+            petalShape.quadraticCurveTo(0.2, 0.5, 0, 1);
+            petalShape.quadraticCurveTo(-0.2, 0.5, 0, 0);
+            const pGeo = new THREE.ShapeGeometry(petalShape);
+            
+            // Curve the instanced petals
+            const pPos = pGeo.attributes.position;
+            for(let i=0; i<pPos.count; i++) pPos.setZ(i, Math.sin(pPos.getY(i)*Math.PI)*0.1);
+            pGeo.computeVertexNormals();
+
+            const pMat = new THREE.MeshPhysicalMaterial({
+                color: 0xfbcfe8,
+                roughness: 0.4,
+                transmission: 0.5,
+                side: THREE.DoubleSide
+            });
+
+            const petalMesh = new THREE.InstancedMesh(pGeo, pMat, petalCount);
+            const dummy = new THREE.Object3D();
+            const petalData = [];
+
+            for(let i=0; i<petalCount; i++) {
+                const x = (Math.random() - 0.5) * 80;
+                const y = Math.random() * 60;
+                const z = (Math.random() - 0.5) * 50;
+                dummy.position.set(x, y, z);
+                dummy.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
+                const s = Math.random() * 0.5 + 0.2;
+                dummy.scale.set(s, s, s);
+                dummy.updateMatrix();
+                petalMesh.setMatrixAt(i, dummy.matrix);
+                
+                petalData.push({
+                    x, y, z,
+                    rx: Math.random() * 0.05,
+                    ry: Math.random() * 0.05,
+                    rz: Math.random() * 0.05,
+                    vx: (Math.random() - 0.5) * 0.05,
+                    vy: -0.05 - Math.random() * 0.05,
+                    vz: (Math.random() - 0.5) * 0.05,
+                    scale: s
+                });
+            }
+            scene.add(petalMesh);
+
+            camera.position.z = 15;
+
+            let time = 0;
+            let sequenceStarted = false;
+
+            // Render loop
+            function animate() {
+                requestAnimationFrame(animate);
+                time += 0.016; 
+
+                // 1. Butterfly Animation
+                const flapSpeed = sequenceStarted ? 14 : 3;
+                const flap = Math.sin(time * flapSpeed) * 1.0 + Math.sin(time * flapSpeed * 2) * 0.15;
+                
+                leftWing.rotation.y = flap;
+                rightWing.rotation.y = -flap;
+
+                // Wing flex
+                leftWing.rotation.z = Math.cos(time * flapSpeed) * 0.1;
+                rightWing.rotation.z = -Math.cos(time * flapSpeed) * 0.1;
+
+                if (sequenceStarted) {
+                    // Fly towards camera
+                    if (butterfly.position.z < 8) {
+                        butterfly.position.z += 0.05;
+                    }
+                    
+                    // Complex cinematic flight path
+                    butterfly.position.y = Math.sin(time * 2.0) * 1.5 + Math.cos(time * 0.8) * 0.5;
+                    butterfly.position.x = Math.sin(time * 1.2) * 3.0;
+                    
+                    // Cinematic banking
+                    butterfly.rotation.z = Math.sin(time * 1.2) * -0.4; 
+                    butterfly.rotation.y = Math.cos(time * 1.2) * 0.3;
+                    butterfly.rotation.x = Math.PI / 6 + Math.sin(time * 2.5) * 0.15;
+                }
+
+                // 2. Flowers drifting
+                flowers.children.forEach(flower => {
+                    flower.rotation.x += flower.userData.rx;
+                    flower.rotation.y += flower.userData.ry;
+                    flower.rotation.z += flower.userData.rz;
+                    flower.position.y = flower.userData.oy + Math.sin(time * flower.userData.speed) * 2;
+                });
+
+                // 3. Falling Petals
+                for(let i=0; i<petalCount; i++) {
+                    let d = petalData[i];
+                    d.y += d.vy;
+                    d.x += d.vx + Math.sin(time + i)*0.02;
+                    d.z += d.vz;
+                    
+                    // Reset if falls below screen
+                    if(d.y < -30) {
+                        d.y = 30 + Math.random() * 10;
+                        d.x = (Math.random() - 0.5) * 80;
+                    }
+
+                    dummy.position.set(d.x, d.y, d.z);
+                    dummy.rotation.x += d.rx;
+                    dummy.rotation.y += d.ry;
+                    dummy.rotation.z += d.rz;
+                    dummy.scale.set(d.scale, d.scale, d.scale);
+                    dummy.updateMatrix();
+                    petalMesh.setMatrixAt(i, dummy.matrix);
+                }
+                petalMesh.instanceMatrix.needsUpdate = true;
+
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            return {
+                start: () => { sequenceStarted = true; }
+            };
+        }
+
+        const engine = initScene();
+
+        document.getElementById('start-btn').addEventListener('click', () => {
+            const startScreen = document.getElementById('start-screen');
+            startScreen.style.opacity = '0';
+            setTimeout(() => { startScreen.style.display = 'none'; }, 1000);
+
+            const audio = document.getElementById('cinematic-audio');
+            audio.volume = 0.5;
+            audio.play().catch(e => console.warn("Audio play failed:", e));
+
+            document.getElementById('sequence-container').classList.add('sequence-active');
+
+            if (engine) engine.start();
+
+            
+            setTimeout(() => {
+                document.getElementById('webgl-bg-container').style.opacity = '0';
+                document.getElementById('sequence-container').style.opacity = '0';
+                
+                // Keep the skip button around but maybe hide it since intro finished naturally
+                const skipBtn = document.getElementById('skip-intro-btn');
+                if (skipBtn) skipBtn.style.display = 'none';
+
+                setTimeout(() => {
+                    document.getElementById('webgl-bg-container').style.display = 'none';
+                    document.getElementById('sequence-container').style.display = 'none';
+                    const wp = document.getElementById('whitepaper-container');
+                    wp.style.display = 'block';
+                    document.body.style.overflow = 'auto'; // allow scrolling
+                    
+                    // Start mock terminal simulation
+                    let simLines = [
+                        "[OSINT] Scraping 1,403 nodes across darknet...",
+                        "[AI] Analyzed 542 smart contracts for reentrancy...",
+                        "[DB] Neo4j graph updated with 12,000 edges.",
+                        "[HEALING] Worker 4 panicked. Supervisor deployed GenAI patch.",
+                        "[HEALING] Restarting Worker 4... SUCCESS."
+                    ];
+                    let term = document.getElementById('mock-terminal');
+                    let i = 0;
+                    setInterval(() => {
+                        if(i < simLines.length) {
+                            term.innerHTML += `<div>${simLines[i]}</div>`;
+                            term.scrollTop = term.scrollHeight;
+                            i++;
+                        } else {
+                            i = 0; // loop
+                        }
+                    }, 2000);
+                    
+                }, 2000);
+            }, 30000);
+
+        });
+
+    </script>
+
+<!-- GLOBAL NEMESIS AJAX LOADER -->
+<div id="global-ajax-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 99999; justify-content: center; align-items: center; flex-direction: column;">
+    <img src="assets/../butterfly_transparent.png" style="width: 100px; height: 100px; animation: pulse-loader 1.5s infinite; filter: drop-shadow(0 0 20px rgba(6,182,212,0.8));">
+    <div style="color: #06b6d4; margin-top: 20px; font-family: monospace; font-size: 16px; font-weight: bold; text-shadow: 0 0 10px #06b6d4;">NEMESIS SINGULARITY KERNEL</div>
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+</div>
+<script>
+    (function() {
+        if (window._nemesisLoaderInitialized) return;
+        window._nemesisLoaderInitialized = true;
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const loader = document.getElementById('global-ajax-loader');
+            if (loader) loader.style.display = 'flex';
+            try {
+                const response = await originalFetch.apply(this, args);
+                return response;
+            } finally {
+                if (loader) loader.style.display = 'none';
+            }
+        };
+    })();
+</script>
+
+    <!-- INJECTED WHITEPAPER CONTENT -->
+    <div id="whitepaper-container" style="display: none; position: absolute; top: 0; left: 0; width: 100%; min-height: 100vh; z-index: 50; background: #020617; overflow-y: auto;">
+        
+
+    <!-- Navigation -->
+    <nav class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <img src="../butterfly_transparent.png" alt="NEMESIS Logo" class="h-8 w-auto mr-3 nemesis-logo-animated">
+                    <span class="font-bold text-xl text-slate-100 tracking-tight">NEMESIS OMNI-OS</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="#executive-summary" class="text-slate-500 hover:text-white px-3 py-2 text-sm font-medium transition-colors">Executive Summary</a>
+                    <a href="#architecture" class="text-slate-500 hover:text-white px-3 py-2 text-sm font-medium transition-colors">System Architecture</a>
+                    <a href="#capabilities" class="text-slate-500 hover:text-white px-3 py-2 text-sm font-medium transition-colors">Core Capabilities</a>
+                    <a href="nemesis_apex_dashboard.html" class="bg-sky-500 hover:bg-sky-600 text-slate-900 px-4 py-2 rounded-md text-sm font-medium transition-colors"><i class="fa-solid fa-rocket mr-2"></i>Launch Portal</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero-section">
+        <div class="max-w-7xl mx-auto px-4 relative z-10">
+            <img src="../butterfly_transparent.png" alt="NEMESIS" class="nemesis-logo-animated mx-auto drop-shadow-xl">
+            <h1 class="hero-title">The Self-Programming Singularity Kernel</h1>
+            <p class="hero-subtitle">v100.0 Lionsgate Intelligence Network — A Classified Cyber Intelligence Enterprise powered by Autonomous Agents, Generative AI, and Machine Learning Clustering.</p>
+        </div>
+        <!-- Decorative background elements -->
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 opacity-20 pointer-events-none">
+            <div class="absolute -top-40 -left-40 w-96 h-96 bg-sky-300 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob"></div>
+            <div class="absolute top-40 -right-40 w-96 h-96 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
+            <div class="absolute -bottom-40 left-20 w-96 h-96 bg-cyan-300 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-4000"></div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-16">
+        
+        <!-- Executive Summary -->
+        <section id="executive-summary" class="mb-20">
+            <div class="text-center mb-12">
+                <span class="text-sky-500 font-semibold tracking-wider uppercase text-sm">Overview</span>
+                <h2 class="text-3xl mt-2">Executive Summary</h2>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                <div class="space-y-6 text-lg text-slate-500">
+                    <p>The NEMESIS OMNI-OS represents a paradigm shift in cyber intelligence. It is not merely a software platform; it is a <strong>Self-Programming Singularity Kernel</strong> designed for the Lionsgate Intelligence Network.</p>
+                    <p>By fusing <strong>Generative AI (Gemini 2.5)</strong> with high-performance Python architectures, NEMESIS achieves complete operational autonomy. It diagnoses its own errors, writes its own patches in real-time, and orchestrates massive swarms of OSINT agents across the surface and dark webs.</p>
+                    <p>Designed for zero-mock forensic compliance, NEMESIS provides unparalleled insights through Live UTXO/EVM tracing, dynamic UI extraction, and ML-driven entity attribution.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div class="glass-card">
+                        <div class="feature-icon"><i class="fa-solid fa-microchip"></i></div>
+                        <h3 class="text-xl mb-2">Self-Healing Engine</h3>
+                        <p class="text-sm text-slate-500">Dynamically patches code and restarts upon encountering traceback errors via GenAI.</p>
+                    </div>
+                    <div class="glass-card">
+                        <div class="feature-icon"><i class="fa-solid fa-network-wired"></i></div>
+                        <h3 class="text-xl mb-2">Zero-Mock Forensics</h3>
+                        <p class="text-sm text-slate-500">Live UTXO and EVM tracing directly mapped to autonomous attribution logic.</p>
+                    </div>
+                    <div class="glass-card">
+                        <div class="feature-icon"><i class="fa-brands fa-hubspot"></i></div>
+                        <h3 class="text-xl mb-2">Omni-Orchestrator</h3>
+                        <p class="text-sm text-slate-500">Auto-manages MongoDB, Neo4j, PostgreSQL, APIs, and Tor tunnels.</p>
+                    </div>
+                    <div class="glass-card">
+                        <div class="feature-icon"><i class="fa-solid fa-spider"></i></div>
+                        <h3 class="text-xl mb-2">Dynamic UIE</h3>
+                        <p class="text-sm text-slate-500">Universal Information Extraction across surface and darknet data streams.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- System Architecture (Infographics) -->
+        <section id="architecture" class="mb-20">
+            <div class="text-center mb-12">
+                <span class="text-sky-500 font-semibold tracking-wider uppercase text-sm">Infographics</span>
+                <h2 class="text-3xl mt-2">Omni-OS Architecture</h2>
+                <p class="text-slate-500 mt-4 max-w-2xl mx-auto">Visualizing the flow of intelligence from collection to automated remediation.</p>
+            </div>
+
+            <!-- Flowchart 1: The Self-Healing Kernel -->
+            <div class="glass-card mb-8">
+                <h3 class="text-2xl mb-4 border-b border-slate-800 pb-2"><i class="fa-solid fa-stethoscope text-sky-500 mr-2"></i> AutoHealer Supervisor (Level 1)</h3>
+                <p class="text-slate-500 mb-4">The core mechanism that ensures system resilience. When a worker process crashes, the `AutoHealerSupervisor` intercepts the traceback, queries the Gemini API for a native code fix, patches the source script, and autonomously restarts the process.</p>
+                <div class="mermaid">
+                    sequenceDiagram
+                        participant Worker as NEMESIS Worker Process
+                        participant Supervisor as AutoHealer Supervisor
+                        participant Gemini as Gemini AI (LLM)
+                        participant FS as File System
+                        
+                        Worker->>Supervisor: Crash! (Traceback Error)
+                        Supervisor->>Supervisor: [SELF-DIAGNOSING]
+                        Supervisor->>Gemini: Send Traceback + Current Script Code
+                        Gemini-->>Supervisor: Return Patched Python Code
+                        Supervisor->>FS: Backup Original Script
+                        Supervisor->>FS: Overwrite with Patched Script
+                        Supervisor->>Worker: [SELF-RESTARTING] Sequence Initiated
+                </div>
+            </div>
+
+            <!-- Flowchart 2: OSINT Swarm & ML Clustering -->
+            <div class="glass-card">
+                <h3 class="text-2xl mb-4 border-b border-slate-800 pb-2"><i class="fa-solid fa-project-diagram text-sky-500 mr-2"></i> Intelligence Pipeline (Levels 4 & 5)</h3>
+                <p class="text-slate-500 mb-4">Data is scraped via Playwright swarms, parsed for vulnerabilities, and then clustered using DBSCAN machine learning algorithms to identify entity syndicates.</p>
+                <div class="mermaid">
+                    graph TD
+                        A[Target Address / Query] -->|Trigger| B(SwarmScraper)
+                        B --> C{Playwright Engine}
+                        C -->|Surface Web| D[Block Explorers / OKLink]
+                        C -->|Dark Web| E[Tor / Mixers]
+                        D --> F[Extract Transactions & Tags]
+                        E --> F
+                        F --> G(BytecodeIntrospector)
+                        G -->|Scan| H{VulnerabilityScanner}
+                        H -->|Signatures Match| I[Flag: Malicious Payload]
+                        F --> J(AutoClusterEngine)
+                        J -->|DBSCAN Algorithm| K[Extract Features: Vol, Tx Count]
+                        K --> L[Cluster Sybil/Related Wallets]
+                        L --> M(EntityAttributionEngine)
+                        I --> M
+                        M -->|Risk Score >= 80| N((Attribution: Ransomware/Illicit))
+                        M -->|Known Bad Actor| O((Attribution: Sanctioned Entity))
+                        
+                        style B fill:#f0f9ff,stroke:#0ea5e9,stroke-width:2px
+                        style J fill:#f5f3ff,stroke:#8b5cf6,stroke-width:2px
+                        style M fill:#fff1f2,stroke:#f43f5e,stroke-width:2px
+                        style N fill:#fee2e2,stroke:#ef4444,stroke-width:2px
+                        style O fill:#fee2e2,stroke:#ef4444,stroke-width:2px
+                </div>
+            </div>
+        </section>
+
+        <!-- Technical Deep Dives -->
+        <section id="capabilities" class="mb-20">
+            <div class="text-center mb-12">
+                <span class="text-sky-500 font-semibold tracking-wider uppercase text-sm">Deep Dive</span>
+                <h2 class="text-3xl mt-2">Core Technical Capabilities</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                
+                <!-- Level 0 -->
+                <div class="glass-card">
+                    <div class="flex items-center mb-4">
+                        <span class="glass-panel text-slate-900 text-xs font-bold px-2 py-1 rounded mr-3">LEVEL 0</span>
+                        <h3 class="text-xl font-bold">Self-Bootstrapping Dependency Matrix</h3>
+                    </div>
+                    <p class="text-slate-500 text-sm mb-4">NEMESIS does not require pre-configuration. Upon execution, `execute_self_install()` verifies the environment.</p>
+                    <ul class="space-y-2 text-sm text-slate-500">
+                        <li><i class="fa-solid fa-check text-emerald-500 w-5"></i> Detects missing neural dependencies (FastAPI, Motor, Web3, scikit-learn).</li>
+                        <li><i class="fa-solid fa-check text-emerald-500 w-5"></i> Autonomously invokes `pip` and Playwright browser installations.</li>
+                        <li><i class="fa-solid fa-check text-emerald-500 w-5"></i> Applies Windows Event Loop patches (`ProactorEventLoopPolicy`) for async stability.</li>
+                        <li><i class="fa-solid fa-check text-emerald-500 w-5"></i> Hardens Global SSL Contexts bypassing standard CA verification blocks.</li>
+                    </ul>
+                </div>
+
+                <!-- Level 1 -->
+                <div class="glass-card">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-blue-600 text-slate-900 text-xs font-bold px-2 py-1 rounded mr-3">LEVEL 1</span>
+                        <h3 class="text-xl font-bold">Self-Programming Evolution</h3>
+                    </div>
+                    <p class="text-slate-500 text-sm mb-4">The `AutoHealerSupervisor` class represents a leap in autonomous software lifecycle management.</p>
+                    <div class="bg-slate-50 rounded p-4 text-xs font-mono text-sky-300 overflow-x-auto mb-4">
+                        def trigger_heal(self, stderr_output):<br>
+                        &nbsp;&nbsp;prompt = f"[TRACEBACK ERROR]\n{stderr_output}\n\n[CURRENT SCRIPT]\n{current_code}"<br>
+                        &nbsp;&nbsp;response = self.client.models.generate_content(...)<br>
+                        &nbsp;&nbsp;# Backs up and overwrites live code
+                    </div>
+                    <p class="text-sm text-slate-500">Instructs GenAI: <em>"Fix the error natively without removing functionality. Return ONLY full updated code."</em></p>
+                </div>
+
+                <!-- Level 4 -->
+                <div class="glass-card">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-purple-600 text-slate-900 text-xs font-bold px-2 py-1 rounded mr-3">LEVEL 4</span>
+                        <h3 class="text-xl font-bold">Playwright Swarm & Vulnerability Scanner</h3>
+                    </div>
+                    <p class="text-slate-500 text-sm mb-4">The `SwarmScraper` employs headless Chromium instances to extract contextual tags (Exchange, Mixer, Bridge) from block explorers asynchronously.</p>
+                    <p class="text-slate-500 text-sm mb-4">The `BytecodeIntrospector` and `VulnerabilityScanner` pull live EVM bytecode and statically analyze it for malicious signatures:</p>
+                    <ul class="space-y-1 text-sm font-mono text-slate-500 glass-panel p-3 rounded">
+                        <li>"REENTRANCY_ATTACK": "fd5b600080fd"</li>
+                        <li>"SELFDESTRUCT_PAYLOAD": "ff"</li>
+                        <li>"FLASHLOAN_EXPLOIT": "5c60da1b"</li>
+                    </ul>
+                </div>
+
+                <!-- Level 5 -->
+                <div class="glass-card">
+                    <div class="flex items-center mb-4">
+                        <span class="bg-rose-600 text-slate-900 text-xs font-bold px-2 py-1 rounded mr-3">LEVEL 5</span>
+                        <h3 class="text-xl font-bold">ML Clustering & AML Attribution</h3>
+                    </div>
+                    <p class="text-slate-500 text-sm mb-4">NEMESIS applies Machine Learning (DBSCAN) to transaction ledgers via the `AutoClusterEngine`.</p>
+                    <ul class="space-y-2 text-sm text-slate-500 mb-4">
+                        <li><strong>Feature Extraction:</strong> In/Out Volume, Tx Count, Counterparties.</li>
+                        <li><strong>StandardScaler:</strong> Normalizes features for multidimensional clustering.</li>
+                        <li><strong>DBSCAN:</strong> Identifies Sybil networks and connected wallet clusters.</li>
+                    </ul>
+                    <p class="text-slate-500 text-sm border-l-4 border-rose-500 pl-3">The `EntityAttributionEngine` compares behaviors against known OFAC/Sanctioned actors (e.g., Lazarus Group, LockBit) and flags identical inflow patterns indicative of Ransomware.</p>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-50 border-t border-slate-800 py-8 text-center">
+        <div class="max-w-7xl mx-auto px-4">
+            <img src="../butterfly_transparent.png" alt="NEMESIS" class="h-10 mx-auto mb-4 opacity-50">
+            <p class="text-slate-500 text-sm">NEMESIS OMNI-OS v100.0 &copy; 2026 Lionsgate Intelligence Network. All Rights Reserved.</p>
+            <p class="text-slate-500 text-xs mt-2">Classified Cyber Intelligence Enterprise.</p>
+        </div>
+    </footer>
+
+    
+        
+        <!-- NEW SECTION: MOCK SIMULATIONS -->
+        <section id="simulations" class="max-w-7xl mx-auto px-4 mb-20">
+            <div class="text-center mb-12">
+                <span class="text-sky-500 font-semibold tracking-wider uppercase text-sm">Live Feed</span>
+                <h2 class="text-3xl mt-2">System Simulations</h2>
+            </div>
+            <div class="bg-slate-50 rounded-lg p-4 font-mono text-xs text-sky-400 h-64 overflow-y-auto" id="mock-terminal">
+                <div>[SYSTEM] Initializing Omni-Orchestrator...</div>
+            </div>
+        </section>
+
+        <!-- NEW SECTION: API DOCS -->
+        <section id="api-docs" class="max-w-7xl mx-auto px-4 mb-20">
+            <div class="text-center mb-12">
+                <span class="text-sky-500 font-semibold tracking-wider uppercase text-sm">Developers</span>
+                <h2 class="text-3xl mt-2">API Documentation</h2>
+            </div>
+            <div class="grid gap-6">
+                <div class="glass-card">
+                    <h4 class="text-lg font-bold text-slate-100 mb-2"><span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-sm mr-2">GET</span> /api/admin/scripts</h4>
+                    <p class="text-slate-500 text-sm">Fetches all available modules in the NEMESIS directory.</p>
+                </div>
+                <div class="glass-card">
+                    <h4 class="text-lg font-bold text-slate-100 mb-2"><span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-sm mr-2">POST</span> /api/admin/scripts/&#123;name&#125;/analyze</h4>
+                    <p class="text-slate-500 text-sm">Triggers Gemini GenAI to analyze the specified script architecture.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- NEW SECTION: INVESTORS & MARKET -->
+        <section id="investors" class="max-w-7xl mx-auto px-4 mb-20">
+            <div class="text-center mb-12">
+                <span class="text-sky-500 font-semibold tracking-wider uppercase text-sm">Enterprise Valuation</span>
+                <h2 class="text-3xl mt-2">Investors & Market</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                <div class="glass-card">
+                    <div class="text-4xl font-bold text-slate-100 mb-2">$42B</div>
+                    <div class="text-slate-500 text-sm uppercase tracking-wider">TAM (Cyber Intel)</div>
+                </div>
+                <div class="glass-card">
+                    <div class="text-4xl font-bold text-slate-100 mb-2">Tier-1</div>
+                    <div class="text-slate-500 text-sm uppercase tracking-wider">Enterprise Licensing</div>
+                </div>
+                <div class="glass-card">
+                    <div class="text-4xl font-bold text-slate-100 mb-2">Q4 2026</div>
+                    <div class="text-slate-500 text-sm uppercase tracking-wider">Series A Target</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- NEW SECTION: FOUNDER & LICENSE -->
+        <section id="credits" class="max-w-7xl mx-auto px-4 mb-20 text-center">
+            <div class="glass-card bg-slate-50 text-slate-900 border-none">
+                <h2 class="text-2xl font-bold mb-2">Lionsgate Intelligence Network</h2>
+                <p class="text-sky-400 mb-6">Founder & Lead Architect: <strong>Rey Villanueva</strong></p>
+                <p class="text-slate-500 text-sm max-w-2xl mx-auto">
+                    NEMESIS OMNI-OS is a proprietary, classified cyber intelligence platform. 
+                    Unauthorized distribution, reverse-engineering, or deployment of this software is strictly prohibited under the Enterprise License Agreement.
+                </p>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'dark',
+            securityLevel: 'loose',
+            flowchart: { curve: 'basis' }
+        });
+    </script>
+
+
+    <button id="skip-intro-btn" style="position: fixed; bottom: 20px; right: 20px; z-index: 10000; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.5); color: #020617; padding: 8px 16px; border-radius: 4px; cursor: pointer; backdrop-filter: blur(4px); font-family: 'Inter'; font-weight: 600;">Skip Intro &rarr;</button>
+    <script>
+        document.getElementById('skip-intro-btn').addEventListener('click', () => {
+            document.getElementById('webgl-bg-container').style.display = 'none';
+            document.getElementById('sequence-container').style.display = 'none';
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('skip-intro-btn').style.display = 'none';
+            
+            const wp = document.getElementById('whitepaper-container');
+            if (wp) wp.style.display = 'block';
+            document.body.style.overflow = 'auto'; // allow scrolling
+            
+            // Start mock terminal simulation
+            let simLines = [
+                "[OSINT] Scraping 1,403 nodes across darknet...",
+                "[AI] Analyzed 542 smart contracts for reentrancy...",
+                "[DB] Neo4j graph updated with 12,000 edges.",
+                "[HEALING] Worker 4 panicked. Supervisor deployed GenAI patch.",
+                "[HEALING] Restarting Worker 4... SUCCESS."
+            ];
+            let term = document.getElementById('mock-terminal');
+            let i = 0;
+            if (term) {
+                setInterval(() => {
+                    if(i < simLines.length) {
+                        term.innerHTML += `<div>${simLines[i]}</div>`;
+                        term.scrollTop = term.scrollHeight;
+                        i++;
+                    } else {
+                        i = 0; // loop
+                    }
+                }, 2000);
+            }
+        });
+    </script>
+
+
+    <!-- GLOBAL FOOTER -->
+    <footer class="fixed bottom-0 left-0 w-full h-8 bg-slate-900/80 backdrop-blur-md text-slate-500 z-[9999] flex items-center justify-between px-6 border-t border-slate-700/50">
+        <div class="text-[9px] font-mono uppercase tracking-widest">
+            &copy; 2026 NEMESIS Enterprise Intelligence. Founder: Rey Villanueva.
+        </div>
+        <div class="flex gap-4 text-[9px] font-mono uppercase tracking-widest">
+            <a href="#" class="hover:text-cyan-400 transition">Terms</a>
+            <a href="#" class="hover:text-cyan-400 transition">Privacy</a>
+            <span class="text-fuchsia-400">System Status: ONLINE</span>
+        </div>
+    </footer>
+</body>
+
+</html>

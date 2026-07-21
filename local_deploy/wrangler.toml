@@ -1,0 +1,108 @@
+name = "nemesis-api"
+main = "worker.js"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "nemesis_intelligence_db"
+database_id = "7fcfec1d-362d-445b-af2a-69eac4180aed"
+
+[[kv_namespaces]]
+binding = "NEMESIS_CACHE"
+id = "f4099ea1458e4e62ba838734f172846f"
+
+[[kv_namespaces]]
+binding = "ENTITY_CACHE"
+id = "817961173773498d9e4715b3479fc66d"
+
+[[kv_namespaces]]
+binding = "TOKEN_CACHE"
+id = "2c35b6ff21d14830b3ae93ee4e6006c2"
+
+[[kv_namespaces]]
+binding = "SESSION_CACHE"
+id = "7fbab659456242db8c27082fcdb0d4b1"
+
+[[kv_namespaces]]
+binding = "OSINT_CACHE"
+id = "5558ace53efa4a0aa37dc035b17c256a"
+
+[[r2_buckets]]
+binding = "EVIDENCE"
+bucket_name = "nemesis-evidence"
+
+[[r2_buckets]]
+binding = "EXPORTS"
+bucket_name = "nemesis-exports"
+
+[[r2_buckets]]
+binding = "REPORTS"
+bucket_name = "nemesis-reports"
+
+[[r2_buckets]]
+binding = "SCREENSHOTS"
+bucket_name = "nemesis-screenshots"
+
+[[queues.producers]]
+binding = "TRACE_QUEUE"
+queue = "wallet-tracing"
+
+[[queues.producers]]
+binding = "ENTITY_QUEUE"
+queue = "entity-resolution"
+
+[[queues.producers]]
+binding = "AI_QUEUE"
+queue = "gemini-analysis"
+
+[[queues.producers]]
+binding = "REPORT_QUEUE"
+queue = "report-generation"
+
+[[queues.producers]]
+binding = "NOTIFICATION_QUEUE"
+queue = "notifications"
+
+[[queues.consumers]]
+queue = "wallet-tracing"
+max_batch_size = 10
+max_batch_timeout = 30
+
+[[queues.consumers]]
+queue = "entity-resolution"
+max_batch_size = 10
+max_batch_timeout = 30
+
+[[queues.consumers]]
+queue = "gemini-analysis"
+max_batch_size = 5
+max_batch_timeout = 60
+
+[[durable_objects.bindings]]
+name = "ADMIN_CONSOLE"
+class_name = "AdminConsole"
+
+[[durable_objects.bindings]]
+name = "REALTIME_MANAGER"
+class_name = "RealtimeManager"
+
+[[durable_objects.bindings]]
+name = "TRACE_COORDINATOR"
+class_name = "TraceCoordinator"
+
+[[migrations]]
+tag = "v3"
+new_sqlite_classes = ["AdminConsole", "RealtimeManager", "TraceCoordinator"]
+
+[vars]
+APP_NAME = "nemesis-platform"
+APP_MODE = "production"
+NODE_ENV = "production"
+PYTHON_BACKEND_URL = "https://nemesis-backend.legionxgaming2021.workers.dev"
+
+[triggers]
+crons = ["*/15 * * * *"]
+
+[observability]
+enabled = true

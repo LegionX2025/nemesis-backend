@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEMESIS | Enterprise Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/force-graph@1.43.3/dist/force-graph.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; overflow: hidden; margin:0; padding:0; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        
+        .stat-card { background: white; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 1rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .stat-icon { width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; }
+        
+        /* Table styles */
+        table th { position: sticky; top: 0; z-index: 10; background: #f8fafc; box-shadow: 0 1px 0 #e2e8f0; }
+        
+        .nav-link.active { background-color: #eff6ff; color: #2563eb; font-weight: 600; }
+        
+        /* Loader Pulse */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); }
+            100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+        .animate-pulse-ring { animation: pulse-ring 2s infinite; }
+    </style>
+</head>
+<body class="flex flex-col h-screen antialiased text-sm">
+
+    <!-- GLOBAL HEADER -->
+    <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0 z-50">
+        <div class="flex items-center gap-3 w-64">
+            <i class="fa-solid fa-lion text-3xl text-slate-900"></i>
+            <div class="flex flex-col">
+                <span class="font-black text-xl tracking-tight leading-none text-slate-900 uppercase">NEMESIS</span>
+                <span class="text-[8px] text-slate-500 font-bold tracking-widest uppercase mt-0.5">By Lionsgate Network</span>
+            </div>
+        </div>
+
+        <div class="flex-1 flex justify-center px-8">
+            <div class="relative w-full max-w-2xl">
+                <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input id="searchInput" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition-colors" placeholder="Search by Address, Txn Hash, Entity... (Press Enter to Trace)">
+            </div>
+        </div>
+
+        <div class="flex items-center gap-5 text-slate-500 w-64 justify-end">
+            <button class="hover:text-slate-800 transition-colors"><i class="fa-regular fa-sun text-lg"></i></button>
+            <button class="hover:text-slate-800 transition-colors"><i class="fa-regular fa-bell text-lg"></i></button>
+            <button class="hover:text-slate-800 transition-colors"><i class="fa-regular fa-envelope text-lg"></i></button>
+            <button class="hover:text-slate-800 transition-colors"><i class="fa-solid fa-globe text-lg"></i></button>
+            <div class="h-6 w-px bg-slate-200 mx-1"></div>
+            <div class="flex items-center gap-2 cursor-pointer">
+                <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-white text-xs font-bold">AN</div>
+                <div class="hidden md:block text-left leading-tight">
+                    <div class="text-xs font-bold text-slate-800">Analyst</div>
+                    <div class="text-[9px] text-slate-500 font-semibold">Lionsgate Network</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN LAYOUT -->
+    <main class="flex-1 flex overflow-hidden bg-slate-50">
+
+        <!-- LEFT SIDEBAR -->
+        <aside class="w-56 bg-white border-r border-slate-200 flex flex-col flex-shrink-0 z-20 overflow-y-auto custom-scrollbar">
+            <nav class="p-3 space-y-0.5 flex-1 text-[13px] font-medium text-slate-600">
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-widest px-3 py-2 mt-2">Core</div>
+                <a href="/" class="nav-link active flex items-center gap-3 px-3 py-2 rounded-md transition hover:bg-slate-50 hover:text-slate-900"><i class="fa-solid fa-house w-4 text-center"></i> Dashboard</a>
+                <a href="/tracer.html" class="nav-link flex items-center gap-3 px-3 py-2 hover:bg-slate-50 hover:text-slate-900 rounded-md transition"><i class="fa-solid fa-network-wired w-4 text-center"></i> Nemesis Tracer</a>
+                <a href="/nemesis_id.html" class="nav-link flex items-center gap-3 px-3 py-2 hover:bg-slate-50 hover:text-slate-900 rounded-md transition"><i class="fa-solid fa-id-card w-4 text-center"></i> Nemesis ID</a>
+                <a href="#" class="nav-link flex items-center gap-3 px-3 py-2 hover:bg-slate-50 hover:text-slate-900 rounded-md transition"><i class="fa-solid fa-magnifying-glass w-4 text-center"></i> Investigations</a>
+                <a href="#" class="nav-link flex items-center gap-3 px-3 py-2 hover:bg-slate-50 hover:text-slate-900 rounded-md transition"><i class="fa-solid fa-briefcase w-4 text-center"></i> Cases</a>
+                <a href="#" class="nav-link flex items-center gap-3 px-3 py-2 hover:bg-slate-50 hover:text-slate-900 rounded-md transition"><i class="fa-regular fa-bell w-4 text-center"></i> Alerts</a>
+                
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-widest px-3 py-2 mt-4">Intelligence</div>
+                <a href="#" class="nav-link flex items-center gap-3 px-3 py-2 hover:bg-slate-50 hover:text-slate-900 rounded-md transition"><i class="fa-regular fa-user w-4 text-center"></i> Entities</a>
+                <a href="#" class="nav-link flex items-center gap-3 px-3 py-2 hover:bg-slate-50 hover:text-slate-900 rounded-md transition"><i class="fa-solid fa-wallet w-4 text-center"></i> Wallets</a>
+                <a href="#" class="nav-link flex items-center gap-3 px-3 py-2 hover:bg-slate-50 hover:text-slate-900 rounded-md transition"><i class="fa-solid fa-building-columns w-4 text-center"></i> Exchanges</a>
+                <a href="#" class="nav-link flex items-center gap-3 px-3 py-2 hover:bg-slate-50 hover:text-slate-900 rounded-md transition"><i class="fa-solid fa-bridge-water w-4 text-center"></i> Bridges</a>
+                <a href="#" class="nav-link flex items-center gap-3 px-3 py-2 hover:bg-slate-50 hover:text-slate-900 rounded-md transition"><i class="fa-solid fa-database w-4 text-center"></i> Database</a>
+                
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-widest px-3 py-2 mt-4">Compliance</div>
+                <a href="#" class="nav-link flex items-center gap-3 px-3 py-2 hover:bg-slate-50 hover:text-slate-900 rounded-md transition"><i class="fa-solid fa-shield-halved w-4 text-center"></i> Compliance</a>
+                <a href="#" class="nav-link flex items-center gap-3 px-3 py-2 hover:bg-slate-50 hover:text-slate-900 rounded-md transition"><i class="fa-solid fa-ban w-4 text-center"></i> Sanctions</a>
+                <a href="#" class="nav-link flex items-center gap-3 px-3 py-2 hover:bg-slate-50 hover:text-slate-900 rounded-md transition"><i class="fa-solid fa-gavel w-4 text-center"></i> AML Rules</a>
+                
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-widest px-3 py-2 mt-4">Analytics</div>
+                <a href="#" class="nav-link flex items-center gap-3 px-3 py-2 hover:bg-slate-50 hover:text-slate-900 rounded-md transition"><i class="fa-solid fa-globe w-4 text-center"></i> Global Metrics</a>
+                <a href="#" class="nav-link flex items-center gap-3 px-3 py-2 hover:bg-slate-50 hover:text-slate-900 rounded-md transition"><i class="fa-solid fa-chart-line w-4 text-center"></i> Analytics</a>
+            </nav>
+        </aside>
+
+        <!-- CENTER CONTENT -->
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+            
+            <!-- MODULE HEADER / TABS -->
+            <div class="bg-white border-b border-slate-200 px-6 py-2 flex items-center gap-4 overflow-x-auto custom-scrollbar shrink-0">
+                <button class="px-3 py-2 text-sm font-bold text-blue-600 border-b-2 border-blue-600 whitespace-nowrap">Overview</button>
+                <button class="px-3 py-2 text-sm font-bold text-slate-500 hover:text-slate-800 whitespace-nowrap">Transactions</button>
+                <button class="px-3 py-2 text-sm font-bold text-slate-500 hover:text-slate-800 whitespace-nowrap">Token Transfers (ERC-20)</button>
+                <button class="px-3 py-2 text-sm font-bold text-slate-500 hover:text-slate-800 whitespace-nowrap">Authorizations (EIP-7702)</button>
+                <button class="px-3 py-2 text-sm font-bold text-slate-500 hover:text-slate-800 whitespace-nowrap">Other Transactions</button>
+                <button class="px-3 py-2 text-sm font-bold text-slate-500 hover:text-slate-800 whitespace-nowrap">Assets Dashboard</button>
+                <button class="px-3 py-2 text-sm font-bold text-slate-500 hover:text-slate-800 whitespace-nowrap">Transfer Points</button>
+                <button class="px-3 py-2 text-sm font-bold text-slate-500 hover:text-slate-800 whitespace-nowrap">Entity Details</button>
+            </div>
+
+            <!-- SCROLLABLE CONTENT AREA -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-6">
+                <!-- STATS ROW -->
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+                    <div class="stat-card">
+                        <div class="stat-icon text-blue-500"><i class="fa-regular fa-user"></i></div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">TOTAL ADDRESSES</div>
+                            <div class="text-lg font-black text-slate-800" id="summary-addrs">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon text-blue-500"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">TOTAL TRANSACTIONS</div>
+                            <div class="text-lg font-black text-slate-800" id="summary-txs">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon text-blue-500"><i class="fa-solid fa-dollar-sign border-2 border-blue-500 rounded-full w-5 h-5 flex items-center justify-center text-xs"></i></div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">TOTAL VOLUME (USD)</div>
+                            <div class="text-lg font-black text-slate-800" id="summary-volume">$0.00</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon text-blue-500"><i class="fa-solid fa-briefcase"></i></div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">ACTIVE INVESTIGATIONS</div>
+                            <div class="text-lg font-black text-slate-800" id="summary-investigations">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card border-red-200 bg-red-50/30">
+                        <div class="stat-icon text-red-500"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">HIGH RISK ALERTS</div>
+                            <div class="text-lg font-black text-red-600" id="summary-alerts">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MAIN WORKSPACE -->
+                <div class="flex flex-col lg:flex-row gap-6 h-[750px]">
+                    <!-- Entity Details Sidebar (Inside main area for context) -->
+                    <div class="w-full lg:w-80 bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col overflow-y-auto custom-scrollbar flex-shrink-0">
+                        <div class="p-4 border-b border-slate-100 bg-slate-50/50">
+                            <h2 class="font-bold text-slate-800 mb-2">Entity Profile</h2>
+                            <div class="flex justify-between items-center">
+                                <div class="text-lg font-black text-slate-800 mono tracking-tight break-all" id="sidebar-id">Select Node</div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-4 space-y-4 text-xs">
+                            <div class="flex justify-between border-b border-slate-100 pb-2"><span class="text-slate-500">Entity Type</span><span class="font-semibold text-blue-600" id="sidebar-type">UNKNOWN</span></div>
+                            <div class="flex justify-between border-b border-slate-100 pb-2"><span class="text-slate-500">Balance</span><span class="font-semibold text-slate-800 mono" id="sidebar-balance">--</span></div>
+                            <div class="flex justify-between border-b border-slate-100 pb-2"><span class="text-slate-500">USD Value</span><span class="font-semibold text-slate-800 mono" id="sidebar-usd">--</span></div>
+                            
+                            <div>
+                                <div class="font-bold text-slate-800 mb-2">Labels / Tags</div>
+                                <div class="flex flex-wrap gap-2" id="sidebar-labels">
+                                    <span class="text-xs text-slate-400">Waiting for selection...</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="font-bold text-slate-800 mb-2">External Links</div>
+                                <div class="space-y-2">
+                                    <a href="#" class="flex justify-between items-center text-slate-600 hover:text-blue-600"><span class="flex items-center gap-2"> Block Explorer</span> <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Graph Flow Visualization -->
+                    <div class="flex-1 bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col overflow-hidden relative">
+                        <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                            <div class="flex items-center gap-3">
+                                <h2 class="font-bold text-slate-800"><i class="fa-solid fa-network-wired text-blue-600 mr-2"></i> Flow Visualization & Transaction Graph</h2>
+                                <div id="graph-loader" class="hidden flex items-center gap-2 ml-2">
+                                    <div class="w-4 h-4 rounded-full border-2 border-slate-200 border-t-blue-600 animate-spin"></div>
+                                    <span id="graph-loader-subtext" class="text-blue-600 font-mono text-[10px] tracking-widest font-bold uppercase animate-pulse">Streaming...</span>
+                                </div>
+                                <span id="summary-status" class="bg-slate-200 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">Standby</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="if(window.Graph) Graph.zoomToFit(400, 50);" class="px-3 py-1 bg-white border border-slate-200 rounded text-xs font-semibold text-slate-600 hover:bg-slate-50"><i class="fa-solid fa-arrows-to-dot mr-1"></i> Recenter</button>
+                            </div>
+                        </div>
+                        
+
+                        <!-- Graph Canvas Wrapper -->
+                        <div id="graph-container" class="flex-1 w-full bg-slate-50/30 relative graph-wrapper">
+                            <!-- Canvas goes here via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BOTTOM LEDGER SECTION -->
+                <div class="mt-6 bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col">
+                    <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center shrink-0">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-table-list text-blue-600"></i>
+                            <span class="font-bold text-slate-800">Transaction Resolution Ledger</span>
+                            <span class="bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold" id="ledger-count">0 Records</span>
+                        </div>
+                        <button class="bg-white border border-slate-200 px-2 py-1 rounded text-xs font-semibold text-slate-600 hover:bg-slate-50 flex items-center gap-1"><i class="fa-solid fa-download"></i> CSV</button>
+                    </div>
+
+                    <div class="max-h-64 overflow-y-auto custom-scrollbar">
+                        <table class="w-full text-left text-xs border-collapse whitespace-nowrap">
+                            <thead>
+                                <tr class="text-[10px] uppercase tracking-wider text-slate-500 font-bold bg-white">
+                                    <th class="px-4 py-3 border-b border-slate-200">Date/Time (UTC)</th>
+                                    <th class="px-4 py-3 border-b border-slate-200">TX Hash</th>
+                                    <th class="px-4 py-3 border-b border-slate-200">From Wallet(Entity)</th>
+                                    <th class="px-4 py-3 border-b border-slate-200">To Wallet(Entity)</th>
+                                    <th class="px-4 py-3 border-b border-slate-200 text-right">Amount</th>
+                                    <th class="px-4 py-3 border-b border-slate-200">Network/Token</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ledger-body" class="text-slate-700 font-medium font-mono text-[11px] divide-y divide-slate-100">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Utilities
+        function formatCurrency(num) {
+            if (!num) return '$0.00';
+            return '$' + parseFloat(num).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+
+        // Setup Search/Trace input
+        document.getElementById('searchInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                startTrace(this.value);
+            }
+        });
+
+        // Graph State
+        const traceData = { nodes: [], links: [] };
+        const nodeSet = new Set();
+        let totalVolume = 0;
+        let totalTxs = 0;
+        let activeInvestigations = 0;
+        let highRiskAlerts = 0;
+
+        // Initialize ForceGraph (Design 1)
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('graph-container');
+            
+            window.Graph = ForceGraph()(container)
+                .graphData(traceData)
+                .backgroundColor('transparent')
+                .enableNodeDrag(true)
+                .enableZoomPanInteraction(true)
+                
+                // Design 1: Modern Clean Nodes
+                .nodeCanvasObject((node, ctx, globalScale) => {
+                    const w = 120;
+                    const h = 140;
+                    const r = 24; // Logo circle radius
+                    
+                    // Main Card Background
+                    ctx.fillStyle = '#ffffff';
+                    ctx.shadowColor = 'rgba(0,0,0,0.08)';
+                    ctx.shadowBlur = 12;
+                    ctx.beginPath(); ctx.roundRect(node.x - w/2, node.y - h/2, w, h, 8); ctx.fill();
+                    
+                    ctx.shadowColor = 'transparent';
+                    ctx.lineWidth = 1/globalScale;
+                    ctx.strokeStyle = '#e2e8f0';
+                    ctx.stroke();
+
+                    // Logo Circle
+                    ctx.beginPath(); ctx.arc(node.x, node.y - 20, r, 0, 2*Math.PI);
+                    ctx.fillStyle = node.isBinance ? '#f8fafc' : '#eff6ff';
+                    ctx.fill();
+                    ctx.strokeStyle = node.isBinance ? '#e2e8f0' : '#bfdbfe';
+                    ctx.stroke();
+
+                    // FontAwesome Icon fallback inside circle
+                    ctx.font = '900 20px "Font Awesome 6 Free"';
+                    ctx.fillStyle = node.isBinance ? '#f59e0b' : '#3b82f6';
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                    ctx.fillText(node.isBinance ? '\uf15a' : '\uf555', node.x, node.y - 20);
+
+                    // Verified Badge (Bottom Right of Logo)
+                    ctx.beginPath(); ctx.arc(node.x + 16, node.y - 4, 8, 0, 2*Math.PI);
+                    ctx.fillStyle = '#10b981'; // Emerald 500
+                    ctx.fill();
+                    ctx.font = '900 8px "Font Awesome 6 Free"'; 
+                    ctx.fillStyle = '#fff';
+                    ctx.fillText('\uf00c', node.x + 16, node.y - 4);
+
+                    // Typography
+                    ctx.textAlign = 'center';
+                    
+                    // USD Value
+                    ctx.font = 'bold 12px Inter';
+                    ctx.fillStyle = '#2563eb'; // Blue 600
+                    ctx.fillText(node.valStr || '$0.00', node.x, node.y + 20);
+
+                    // Entity Name Pill
+                    ctx.font = 'bold 8px Inter';
+                    const nameStr = (node.nameStr || 'UNKNOWN').toUpperCase();
+                    const textWidth = ctx.measureText(nameStr).width;
+                    ctx.fillStyle = '#eff6ff'; // Blue 50
+                    ctx.beginPath(); ctx.roundRect(node.x - textWidth/2 - 6, node.y + 32, textWidth + 12, 14, 4); ctx.fill();
+                    ctx.fillStyle = '#2563eb'; // Blue 600
+                    ctx.fillText(nameStr, node.x, node.y + 42);
+
+                    // Entity Type
+                    ctx.font = '600 8px Inter';
+                    ctx.fillStyle = '#64748b'; // Slate 500
+                    ctx.fillText((node.typeStr || 'WALLET').toUpperCase(), node.x, node.y + 57);
+                })
+                .nodePointerAreaPaint((node, color, ctx) => {
+                    const w = 120;
+                    const h = 140;
+                    ctx.fillStyle = color;
+                    ctx.beginPath(); ctx.roundRect(node.x - w/2, node.y - h/2, w, h, 8); ctx.fill();
+                })
+                
+                // Design 1: Modern Clean Links
+                .linkCanvasObjectMode(() => 'after')
+                .linkCanvasObject((link, ctx) => {
+                    const start = link.source; const end = link.target;
+                    if (typeof start !== 'object' || typeof end !== 'object') return;
+                    
+                    const midX = start.x + (end.x - start.x) / 2;
+                    const midY = start.y + (end.y - start.y) / 2;
+
+                    ctx.save(); ctx.translate(midX, midY - 15);
+                    
+                    // Keep text upright
+                    let angle = Math.atan2(end.y - start.y, end.x - start.x);
+                    if (angle > Math.PI / 2 || angle < -Math.PI / 2) {
+                        angle += Math.PI;
+                    }
+                    ctx.rotate(angle);
+
+                    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+                    // Label Top (e.g. USDT TRC20)
+                    ctx.font = 'bold 9px Inter';
+                    ctx.fillStyle = '#475569';
+                    ctx.fillText(link.tagStr ? `TOKEN (${link.tagStr})` : 'TRANSFER', 0, -15);
+                    
+                    // Outflow & Amount
+                    ctx.font = 'bold 8px Inter';
+                    ctx.fillStyle = '#64748b';
+                    ctx.fillText('OUTFLOW', 0, -3);
+                    ctx.font = 'bold 11px Inter';
+                    ctx.fillStyle = '#ef4444'; // Red 500
+                    ctx.fillText('↓ ' + link.valStr, 0, 8);
+
+                    // Hash
+                    ctx.font = '10px JetBrains Mono';
+                    ctx.fillStyle = '#64748b';
+                    ctx.fillText(link.hashStr || '0x...', 0, 30);
+                    
+                    // Tag bottom
+                    if(link.tagStr) {
+                        ctx.font = 'bold 8px Inter';
+                        ctx.fillStyle = '#f1f5f9'; // Slate 100
+                        const tw = ctx.measureText(link.tagStr).width;
+                        ctx.beginPath(); ctx.roundRect(-tw/2 - 4, 38, tw + 8, 12, 2); ctx.fill();
+                        
+                        ctx.strokeStyle = '#e2e8f0';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+
+                        ctx.fillStyle = '#64748b';
+                        ctx.fillText(link.tagStr, 0, 44);
+                    }
+
+                    ctx.restore();
+                })
+                .linkColor(() => '#3b82f6') // Solid Blue line
+                .linkWidth(1.5)
+                .linkDirectionalArrowLength(6)
+                .linkDirectionalArrowRelPos(1)
+                .linkDirectionalArrowColor(() => '#3b82f6')
+                
+                // Interaction
+                .onNodeClick(node => {
+                    document.getElementById('sidebar-id').innerText = node.displayId || node.id;
+                    document.getElementById('sidebar-type').innerText = node.typeStr || 'WALLET';
+                    document.getElementById('sidebar-usd').innerText = node.valStr || '$0.00';
+                    document.getElementById('sidebar-balance').innerText = 'Loading...';
+                    
+                    let backendUrl = window.BACKEND_URL || (window.location.protocol === "https:" ? "" : "http://localhost:8088");
+                    fetch(`${backendUrl}/api/nemesis_id/profile/${node.id}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.entity) {
+                                document.getElementById('sidebar-balance').innerText = data.entity.total_balance_usd ? formatCurrency(data.entity.total_balance_usd) : "N/A";
+                                
+                                let labelsHtml = '';
+                                if (data.entity.associated_entities && data.entity.associated_entities.length > 0) {
+                                    data.entity.associated_entities.forEach(entity => {
+                                        labelsHtml += `<span class="px-2 py-1 bg-blue-50 text-blue-600 border border-blue-100 rounded text-[10px] font-semibold">${entity}</span>`;
+                                    });
+                                } else {
+                                    labelsHtml = '<span class="text-xs text-slate-400">No labels found</span>';
+                                }
+                                document.getElementById('sidebar-labels').innerHTML = labelsHtml;
+                            }
+                        })
+                        .catch(err => {
+                            document.getElementById('sidebar-balance').innerText = "Error";
+                        });
+                });
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                Graph.width(container.clientWidth).height(container.clientHeight);
+            });
+        });
+
+        // WebSocket Tracing Logic
+        let ws;
+
+        function startTrace(seeds) {
+            if (!seeds) return;
+            
+            traceData.nodes = [];
+            traceData.links = [];
+            nodeSet.clear();
+            if (Graph) Graph.graphData(traceData);
+            document.getElementById('ledger-body').innerHTML = '';
+
+            totalVolume = 0;
+            totalTxs = 0;
+            activeInvestigations = 1;
+            highRiskAlerts = 0;
+            document.getElementById('summary-investigations').innerText = activeInvestigations;
+            document.getElementById('summary-alerts').innerText = highRiskAlerts;
+            
+            const loader = document.getElementById('graph-loader');
+            if(loader) loader.classList.remove('hidden');
+            
+            document.getElementById('summary-status').innerText = 'CONNECTING';
+            document.getElementById('summary-status').className = 'bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider animate-pulse';
+
+            let wsUrl = window.BACKEND_URL 
+                ? window.BACKEND_URL.replace("http", "ws") + "/trace" 
+                : (window.location.protocol === "https:" ? "wss://" : "ws://") + (window.location.host === "localhost:3001" ? "127.0.0.1:8088" : window.location.host) + "/trace";
+            
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log("Connected to WebSocket");
+                document.getElementById('summary-status').innerText = 'LIVE TRACING';
+                document.getElementById('summary-status').className = 'bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider animate-pulse';
+                document.getElementById('graph-loader-subtext').innerText = 'Streaming...';
+
+                ws.send(JSON.stringify({
+                    type: "START_TRACE",
+                    seeds: seeds.split(',').map(s => s.trim()),
+                    target_amount: "0",
+                    network: "ALL"
+                }));
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                
+                if (data.type === "LEDGER") {
+                    document.getElementById('graph-loader-subtext').innerText = 'Tracing: ' + (data["TX Hash"] ? data["TX Hash"].substring(0,8) + '...' : '');
+                    
+                    const fAddr = data["From Wallet(Entity)"] ? data["From Wallet(Entity)"].split(' ')[0] : (data.from || "UNKNOWN");
+                    const tAddr = data["To Wallet(Entity)"] ? data["To Wallet(Entity)"].split(' ')[0] : (data.to || "UNKNOWN");
+                    const fName = data.sender_entity || "UNKNOWN";
+                    const tName = data["To Receiver Entity"] || "UNKNOWN";
+                    const usdVal = data.usd || 0;
+                    
+                    const fIsBinance = fName.toUpperCase().includes('BINANCE');
+                    const tIsBinance = tName.toUpperCase().includes('BINANCE');
+
+                    if (!nodeSet.has(fAddr)) {
+                        traceData.nodes.push({
+                            id: fAddr,
+                            displayId: fAddr.substring(0,6) + '...' + fAddr.substring(fAddr.length-4),
+                            valStr: formatCurrency(0),
+                            nameStr: fName,
+                            typeStr: data.entity_class || 'WALLET',
+                            isBinance: fIsBinance,
+                            totalOutflow: 0
+                        });
+                        nodeSet.add(fAddr);
+                        document.getElementById('summary-addrs').innerText = nodeSet.size;
+                    }
+                    if (!nodeSet.has(tAddr)) {
+                        traceData.nodes.push({
+                            id: tAddr,
+                            displayId: tAddr.substring(0,6) + '...' + tAddr.substring(tAddr.length-4),
+                            valStr: formatCurrency(0),
+                            nameStr: tName,
+                            typeStr: data.entity_class || 'WALLET',
+                            isBinance: tIsBinance,
+                            totalOutflow: 0
+                        });
+                        nodeSet.add(tAddr);
+                        document.getElementById('summary-addrs').innerText = nodeSet.size;
+                    }
+
+                    const sourceNode = traceData.nodes.find(n => n.id === fAddr);
+                    if (sourceNode) {
+                        sourceNode.totalOutflow += usdVal;
+                        sourceNode.valStr = formatCurrency(sourceNode.totalOutflow);
+                    }
+
+                    traceData.links.push({
+                        source: fAddr,
+                        target: tAddr,
+                        valStr: formatCurrency(usdVal),
+                        hashStr: data["TX Hash"] ? (data["TX Hash"].substring(0,6) + '...' + data["TX Hash"].substring(data["TX Hash"].length-4)) : "N/A",
+                        tagStr: data.ticker
+                    });
+
+                    // Update ledger table
+                    const tbody = document.getElementById('ledger-body');
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50 transition cursor-pointer";
+                    tr.innerHTML = `
+                        <td class="px-4 py-2">${new Date().toISOString().replace('T', ' ').substring(0,19)}</td>
+                        <td class="px-4 py-2 text-blue-600">${data["TX Hash"] ? data["TX Hash"].substring(0,10) + '...' : ''}</td>
+                        <td class="px-4 py-2">${fAddr.substring(0,8)}...</td>
+                        <td class="px-4 py-2">${tAddr.substring(0,8)}...</td>
+                        <td class="px-4 py-2 text-right font-black text-slate-800">${formatCurrency(usdVal)}</td>
+                        <td class="px-4 py-2">${data.ticker || 'N/A'}</td>
+                    `;
+                    tbody.prepend(tr);
+                    document.getElementById('ledger-count').innerText = `${traceData.links.length} Records`;
+
+                    totalVolume += usdVal;
+                    totalTxs++;
+                    
+                    document.getElementById('summary-volume').innerText = formatCurrency(totalVolume);
+                    document.getElementById('summary-txs').innerText = totalTxs;
+
+                    if (data.entity_class === "MIXER" || data.entity_class === "DARKNET" || data.entity_class === "SANCTIONED") {
+                        highRiskAlerts++;
+                        document.getElementById('summary-alerts').innerText = highRiskAlerts;
+                    }
+
+                    Graph.graphData(traceData);
+                } else if (data.type === "COMPLETE") {
+                    const loader = document.getElementById('graph-loader');
+                    if(loader) loader.classList.add('hidden');
+                    document.getElementById('summary-status').innerText = 'TRACE COMPLETE';
+                    document.getElementById('summary-status').className = 'bg-slate-200 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider';
+                }
+            };
+        }
+    </script>
+</body>
+</html>

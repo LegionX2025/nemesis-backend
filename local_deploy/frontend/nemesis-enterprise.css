@@ -1,0 +1,84 @@
+/* nemesis-enterprise.css - Enterprise Dark Theme structural styles */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;600;700;800&display=swap');
+
+:root {
+    --bg-main: #020617; /* Slate 950 */
+    --bg-card: #0f172a; /* Slate 900 */
+    --bg-sidebar: #0f172a; /* Slate 900 */
+    
+    --text-primary: #f8fafc; /* Slate 50 */
+    --text-secondary: #cbd5e1; /* Slate 300 */
+    --text-muted: #94a3b8; /* Slate 400 */
+    
+    --border-color: #334155; /* Slate 700 */
+    --border-highlight: #475569; /* Slate 600 */
+    
+    --accent-blue: #0ea5e9; /* Light Blue / Cyan */
+    --accent-emerald: #10b981;
+    --accent-rose: #e11d48;
+    --accent-amber: #f59e0b;
+    --accent-purple: #a855f7;
+    
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+.font-mono {
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+}
+
+.glass-card {
+    background: rgba(30, 41, 59, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.glass-card:hover {
+    border-color: var(--border-highlight);
+    box-shadow: 0 0 15px rgba(14, 165, 233, 0.1);
+}
+
+/* Base structural fixes */
+* {
+    box-sizing: border-box;
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-highlight);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}

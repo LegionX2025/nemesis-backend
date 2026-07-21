@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEMESIS Omni-OS | Intelligence & API Architecture</title>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+    <script src="global_nav.js"></script>
+    <link rel="stylesheet" href="nemesis-enterprise.css">
+
+    <link rel="stylesheet" href="/light-theme.css">
+
+    <script>
+        const IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        window.BACKEND_URL = IS_LOCAL ? 'http://127.0.0.1:8088' : 'https://nemesis-api-v3.legionxgaming2021.workers.dev';
+        window.API_BASE = window.BACKEND_URL;
+    </script>
+        \n</head>
+<body class="relative">
+
+    <!-- CINEMATIC INTRO -->
+    <div id="cinematic-intro">
+        <h1 class="text-xs tracking-[10px] text-slate-500 mb-8 uppercase font-bold">Initializing System</h1>
+        <img src="assets/butterfly_transparent.png" class="intro-logo" alt="NEMESIS Logo">
+        <h2 class="text-4xl font-extrabold mt-8 text-slate-200 tracking-tight" style="text-shadow: 0 4px 20px rgba(255,255,255,1);">NEMESIS OMNI-OS</h2>
+        <p class="text-slate-500 mt-2 font-mono text-sm">v100.0 // Singularity Kernel</p>
+        
+        <div class="mt-8 w-64 h-1 bg-slate-700 rounded overflow-hidden">
+            <div id="loading-bar" class="h-full bg-sky-500 w-0 transition-all duration-1000 ease-out"></div>
+        </div>
+        <p id="loading-text" class="text-xs font-mono text-slate-500 mt-2">Loading core modules...</p>
+
+        <button id="enter-btn" class="enter-btn opacity-0 pointer-events-none">Enter the Kernel</button>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-bg min-h-screen relative z-10">
+        
+        <!-- Navigation -->
+        <nav class="sticky top-0 w-full z-50 glass-card mx-auto max-w-7xl mt-4 px-4 sm:px-6 lg:px-8 border-none !rounded-full py-2">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <img class="h-8 w-auto" src="assets/butterfly_transparent.png" alt="NEMESIS Logo">
+                    <span class="font-bold text-lg text-slate-200">NEMESIS</span>
+                </div>
+                <div class="hidden md:flex space-x-6">
+                    <a href="#whitepaper" class="text-slate-500 hover:text-sky-600 font-medium text-sm transition">Whitepaper</a>
+                    <a href="#simulations" class="text-slate-500 hover:text-sky-600 font-medium text-sm transition">Simulations</a>
+                    <a href="#api" class="text-slate-500 hover:text-sky-600 font-medium text-sm transition">API Docs</a>
+                    <a href="#investors" class="text-slate-500 hover:text-sky-600 font-medium text-sm transition">Investors</a>
+                    <a href="dashboard.html" class="bg-sky-600 text-slate-900 px-4 py-1.5 rounded-full font-bold hover:bg-sky-700 transition shadow">Dashboard <i class="fa-solid fa-arrow-right ml-1"></i></a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- SECTION: WHITEPAPER & INFOGRAPHIC -->
+        <section id="whitepaper" class="pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+            <div class="text-center mb-16 fade-in-up">
+                <h1 class="text-5xl font-extrabold text-slate-100 mb-4">The Future of <span class="text-sky-600">Cyber Intelligence</span></h1>
+                <p class="text-xl text-slate-500 max-w-3xl mx-auto">NEMESIS Omni-OS represents a paradigm shift in threat intelligence, blending Playwright OSINT swarms, Zero-Mock blockchain tracing, and Gemini 2.5 Auto-Healing.</p>
+            </div>
+
+            <div class="glass-card p-8 md:p-12 fade-in-up relative overflow-hidden">
+                <div class="absolute -right-20 -top-20 opacity-10">
+                    <img src="assets/butterfly_transparent.png" class="w-96 h-96" alt="Background Motif">
+                </div>
+                <h2 class="text-2xl font-bold text-slate-200 mb-8 border-b border-slate-200 pb-4">Omni-Orchestrator Architecture</h2>
+                
+                <div class="grid md:grid-cols-3 gap-8 relative z-10">
+                    <div class="bg-slate-900/60 p-6 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition">
+                        <i class="fa-solid fa-cloud-bolt text-3xl text-sky-500 mb-4"></i>
+                        <h3 class="font-bold text-slate-200 text-lg mb-2">Cloudflare Edge</h3>
+                        <p class="text-sm text-slate-500">Serverless API gateway providing instant global routing, rate limiting, and JWT authentication before requests hit the deep kernel.</p>
+                    </div>
+                    <div class="bg-slate-900/60 p-6 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition">
+                        <i class="fa-solid fa-microchip text-3xl text-purple-500 mb-4"></i>
+                        <h3 class="font-bold text-slate-200 text-lg mb-2">FastAPI Kernel</h3>
+                        <p class="text-sm text-slate-500">The `nemesis_x.py` Python orchestrator running async Semaphores to coordinate OSINT scrapers and ML models.</p>
+                    </div>
+                    <div class="bg-slate-900/60 p-6 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition">
+                        <i class="fa-solid fa-robot text-3xl text-emerald-500 mb-4"></i>
+                        <h3 class="font-bold text-slate-200 text-lg mb-2">Gemini Auto-Healer</h3>
+                        <p class="text-sm text-slate-500">Continuous cognitive loop that intercepts runtime exceptions, queries Gemini APIs, and writes dynamic patches to itself.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: MOCK SIMULATIONS -->
+        <section id="simulations" class="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-700/50">
+            <h2 class="text-3xl font-bold text-slate-100 mb-10 text-center fade-in-up">Live System Simulations</h2>
+            
+            <div class="grid lg:grid-cols-2 gap-10">
+                <!-- Zero-Mock Trace Animation -->
+                <div class="glass-card p-6 fade-in-up">
+                    <h3 class="font-bold text-slate-200 mb-4 flex items-center gap-2"><i class="fa-solid fa-chart-network text-sky-500"></i> Zero-Mock Tracing Activity</h3>
+                    <div class="terminal" id="trace-terminal">
+                        <div class="terminal-header">
+                            <div class="t-red"></div><div class="t-yellow"></div><div class="t-green"></div>
+                        </div>
+                        <div id="term-output" class="text-[12px] font-mono">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OSINT Swarm Graph -->
+                <div class="glass-card p-6 fade-in-up flex flex-col justify-between">
+                    <h3 class="font-bold text-slate-200 mb-4 flex items-center gap-2"><i class="fa-solid fa-spider text-purple-500"></i> Playwright Swarm Clustering</h3>
+                    <div class="relative h-64 glass-panel rounded-lg border border-slate-200 overflow-hidden flex items-center justify-center">
+                        <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9IiNjYmQ1ZTEiLz48L3N2Zz4=')] opacity-50"></div>
+                        
+                        <!-- Animated Graph Nodes -->
+                        <div class="absolute w-8 h-8 bg-purple-500 rounded-full animate-bounce z-10 shadow-[0_0_15px_rgba(168,85,247,0.8)]" style="top: 20%; left: 30%;"></div>
+                        <div class="absolute w-6 h-6 bg-sky-500 rounded-full animate-pulse z-10 shadow-[0_0_15px_rgba(14,165,233,0.8)]" style="top: 50%; left: 60%;"></div>
+                        <div class="absolute w-10 h-10 bg-emerald-500 rounded-full animate-bounce z-10 shadow-[0_0_15px_rgba(16,185,129,0.8)]" style="top: 70%; left: 40%; animation-delay: 0.5s;"></div>
+                        
+                        <!-- Connecting Line -->
+                        <svg class="absolute inset-0 w-full h-full pointer-events-none z-0">
+                            <line x1="32%" y1="25%" x2="62%" y2="52%" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4,4" class="animate-[dash_1s_linear_infinite]" />
+                            <line x1="62%" y1="52%" x2="42%" y2="72%" stroke="#94a3b8" stroke-width="2" stroke-dasharray="4,4" class="animate-[dash_1s_linear_infinite]" />
+                        </svg>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-4 text-center">Simulated DBSCAN ML Anomaly clustering attributing darknet IDs to on-chain wallets.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: API DOCUMENTATION -->
+        <section id="api" class="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-700/50">
+            <h2 class="text-3xl font-bold text-slate-100 mb-10 text-center fade-in-up">Full API Documentation</h2>
+            
+            <div class="glass-card overflow-hidden fade-in-up">
+                <!-- API Route 1 -->
+                <div class="border-b border-slate-700/50">
+                    <div class="p-6 cursor-pointer hover:bg-slate-800/50 transition flex justify-between items-center" onclick="toggleApi('api-1')">
+                        <div class="flex items-center gap-4">
+                            <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded font-bold text-xs code-font">POST</span>
+                            <span class="font-bold text-slate-200 code-font">/api/v1/trace/deploy</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-slate-500"></i>
+                    </div>
+                    <div id="api-1" class="hidden p-6 glass-panel border-t border-slate-100">
+                        <p class="text-sm text-slate-500 mb-4">Initializes a new OmniGraph Zero-Mock Trace against a target wallet address.</p>
+                        <h4 class="text-xs font-bold text-slate-300 uppercase mb-2">Request Payload</h4>
+                        <pre class="glass-panel text-slate-300 p-4 rounded-lg text-sm code-font overflow-x-auto">
+{
+  "target_address": "0x1234abcd...",
+  "chain_id": "ethereum",
+  "depth": 3,
+  "heuristics": ["peel_chain", "tornado_cash"]
+}</pre>
+                    </div>
+                </div>
+
+                <!-- API Route 2 -->
+                <div class="border-b border-slate-700/50">
+                    <div class="p-6 cursor-pointer hover:bg-slate-800/50 transition flex justify-between items-center" onclick="toggleApi('api-2')">
+                        <div class="flex items-center gap-4">
+                            <span class="bg-green-100 text-green-700 px-3 py-1 rounded font-bold text-xs code-font">GET</span>
+                            <span class="font-bold text-slate-200 code-font">/api/v1/osint/report/{task_id}</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-slate-500"></i>
+                    </div>
+                    <div id="api-2" class="hidden p-6 glass-panel border-t border-slate-100">
+                        <p class="text-sm text-slate-500 mb-4">Retrieves the finalized intelligence report from the Playwright Swarm.</p>
+                        <h4 class="text-xs font-bold text-slate-300 uppercase mb-2">Response Example</h4>
+                        <pre class="glass-panel text-slate-300 p-4 rounded-lg text-sm code-font overflow-x-auto">
+{
+  "status": "completed",
+  "data": {
+    "darknet_mentions": 14,
+    "extracted_emails": ["target@protonmail.com"],
+    "ml_confidence": 0.98
+  }
+}</pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION: INVESTORS & FOUNDER -->
+        <section id="investors" class="py-20 bg-gradient-to-b from-transparent to-slate-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                
+                <div class="grid md:grid-cols-2 gap-12">
+                    <!-- Investor Pitch -->
+                    <div class="fade-in-up">
+                        <h2 class="text-3xl font-bold text-slate-100 mb-6">Market & Valuation</h2>
+                        <div class="glass-card p-8">
+                            <h3 class="text-4xl font-extrabold text-sky-600 mb-2">$32.5B</h3>
+                            <p class="text-slate-500 font-medium mb-6 uppercase tracking-wide text-sm">Total Addressable Market (TAM) - Cybersecurity & AML</p>
+                            
+                            <p class="text-slate-500 mb-6 leading-relaxed">
+                                The NEMESIS platform is uniquely positioned to dominate the intersection of AI orchestration, Web3 forensic analysis, and automated compliance. Traditional manual auditing costs firms millions; NEMESIS achieves 99% accuracy autonomously in seconds.
+                            </p>
+                            
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+                                    <span class="text-slate-300 font-bold">Enterprise License Price</span>
+                                    <span class="text-emerald-600 font-bold">$120,000 / yr</span>
+                                </div>
+                                <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+                                    <span class="text-slate-300 font-bold">Government API Access</span>
+                                    <span class="text-emerald-600 font-bold">$500,000 / yr</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Founder & License -->
+                    <div class="fade-in-up">
+                        <h2 class="text-3xl font-bold text-slate-100 mb-6">Leadership & License</h2>
+                        <div class="glass-card p-8 text-center md:text-left flex flex-col items-center md:items-start">
+                            <div class="w-24 h-24 glass-panel rounded-full flex items-center justify-center mb-6 shadow-xl border-4 border-white">
+                                <i class="fa-solid fa-user-astronaut text-4xl text-sky-400"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-slate-100">Rey Villanueva</h3>
+                            <p class="text-sky-600 font-bold mb-4">Founder & Lead Architect</p>
+                            <p class="text-slate-500 text-sm mb-8 leading-relaxed">
+                                Visionary behind the NEMESIS Singularity Kernel. Pioneered the integration of Hybrid Cloudflare Edge routing with local asynchronous Python Multi-Agent Systems.
+                            </p>
+                            
+                            <div class="glass-panel w-full p-4 rounded-lg text-left text-xs code-font text-slate-500">
+                                <span class="text-slate-900 font-bold block mb-2">PROPRIETARY LICENSE</span>
+                                Copyright (c) 2026 Rey Villanueva / Enterprise AI.<br>
+                                All rights reserved. Unauthorized copying, modification, or distribution of the NEMESIS Omni-OS architecture is strictly prohibited.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // --- 1. Cinematic Intro Logic ---
+        document.addEventListener("DOMContentLoaded", () => {
+            const intro = document.getElementById("cinematic-intro");
+            const loadingBar = document.getElementById("loading-bar");
+            const loadingText = document.getElementById("loading-text");
+            const enterBtn = document.getElementById("enter-btn");
+
+            // Simulate loading
+            setTimeout(() => { loadingBar.style.width = "30%"; loadingText.innerText = "Connecting to OmniGraph Engine..."; }, 500);
+            setTimeout(() => { loadingBar.style.width = "65%"; loadingText.innerText = "Deploying Playwright Swarm..."; }, 1500);
+            setTimeout(() => { loadingBar.style.width = "100%"; loadingText.innerText = "Kernel Ready."; }, 2500);
+            
+            // Show Enter button
+            setTimeout(() => {
+                enterBtn.classList.remove("opacity-0", "pointer-events-none");
+            }, 3000);
+
+            // Handle Entrance
+            enterBtn.addEventListener("click", () => {
+                intro.classList.add("fade-out");
+                setTimeout(() => { intro.style.display = 'none'; }, 1500);
+            });
+        });
+
+        // --- 2. Scroll Animations ---
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.fade-in-up').forEach(el => observer.observe(el));
+
+        // --- 3. API Toggle Logic ---
+        function toggleApi(id) {
+            const el = document.getElementById(id);
+            if (el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        }
+
+        // --- 4. Terminal Simulation ---
+        const termOutput = document.getElementById("term-output");
+        const logs = [
+            "[INFO] Initialize Zero-Mock Trace on 0x123...abc",
+            "[SYSTEM] Allocating 12 Async Workers...",
+            "[FETCH] Extracting UTXO graph depth=3",
+            "[WARN] Detected Tor relay IP associated with target",
+            "[ML_ENGINE] Running DBSCAN on transaction topology...",
+            "[SUCCESS] Target attributed to known ransomware group (98.4%)"
+        ];
+        
+        let logIdx = 0;
+        setInterval(() => {
+            if (logIdx < logs.length) {
+                const p = document.createElement("p");
+                p.innerText = "> " + logs[logIdx];
+                p.style.margin = "4px 0";
+                termOutput.appendChild(p);
+                termOutput.parentElement.scrollTop = termOutput.parentElement.scrollHeight;
+                logIdx++;
+            } else {
+                termOutput.innerHTML = "";
+                logIdx = 0;
+            }
+        }, 2000);
+
+    </script>
+</body>
+</html>

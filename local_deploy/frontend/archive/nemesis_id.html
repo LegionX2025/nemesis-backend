@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEMESIS | Enterprise Intelligence Platform</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                        display: ['Orbitron', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            light: '#020617',
+                            blue: '#2563eb',
+                            cyan: '#0891b2',
+                            fuchsia: '#c026d3'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script src="global_nav.js"></script>
+    <link rel="stylesheet" href="nemesis-enterprise.css">
+
+    <link rel="stylesheet" href="/light-theme.css">
+
+    <script>
+        const IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        window.BACKEND_URL = IS_LOCAL ? 'http://127.0.0.1:8088' : 'https://nemesis-api-v3.legionxgaming2021.workers.dev';
+        window.API_BASE = window.BACKEND_URL;
+    </script>
+        \n</head>
+<body class="w-screen h-screen flex items-center justify-center p-4 relative">
+    <div id="particles-js" class="absolute inset-0 w-full h-full z-0 pointer-events-none opacity-40"></div>
+
+    <!-- Ambient background glows -->
+    <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+        <div class="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] bg-cyan-200 opacity-40 rounded-full blur-[120px]"></div>
+        <div class="absolute -bottom-[20%] -right-[10%] w-[60%] h-[60%] bg-blue-200 opacity-50 rounded-full blur-[150px]"></div>
+    </div>
+
+    <!-- 3D Perspective Wrapper -->
+    <div class="w-full w-full h-full max-w-none max-h-none perspective-wrapper relative z-10">
+        <div id="flip-container" class="flip-card-inner w-full h-full relative">
+
+            <!-- ============================================== -->
+            <!-- FRONT FACE: LANDING & WALLET INPUT             -->
+            <!-- ============================================== -->
+            <main class="front-face absolute inset-0 glass-container flex overflow-hidden border border-white/60 shadow-2xl shadow-slate-300">
+                
+                                                                                                    <!-- Left Column: Menu -->
+            <div class="nemesis-sidebar sidebar-expanded flex-shrink-0 border-r border-slate-700/50 flex flex-col justify-start p-6 bg-slate-900/30 h-full overflow-y-auto custom-scrollbar relative z-50">
+                
+                <button class="sidebar-toggle absolute top-6 right-[-12px] w-6 h-6 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center shadow-md text-slate-500 hover:text-cyan-600 hover:border-cyan-300 transition-all z-50">
+                    <i class="fa-solid fa-chevron-left text-[10px] transition-transform duration-300"></i>
+                </button>
+
+                <div class="logo-container flex items-center gap-4 mb-8 pb-6 border-b border-slate-200 transition-all">
+                    <div id="logo-destination" class="w-10 h-10 flex-shrink-0 relative">
+                        <img src="assets/butterfly_transparent.png" class="w-10 h-10 filter drop-shadow-[0_0_10px_rgba(6,182,212,0.6)]" alt="NEMESIS Logo">
+                    </div>
+                    <span class="nemesis-logo-text font-display font-black text-2xl tracking-[0.15em] text-slate-200 uppercase">NEMESIS</span>
+                </div>
+
+                <nav class="w-full flex flex-col">
+                    
+                    <button class="accordion-toggle w-full flex items-center justify-between text-[10px] font-mono tracking-widest text-slate-500 mb-2 uppercase font-bold px-2 py-1 hover:text-cyan-600 transition outline-none">
+                        <span class="nav-header">CORE MODULES</span>
+                        <i class="fa-solid fa-chevron-down text-[8px] transition-transform duration-300 transform rotate-180"></i>
+                    </button>
+                    
+                    <div class="accordion-content overflow-hidden transition-all duration-300 space-y-2 mb-4">
+                        <a href="dashboard.html" class="nav-item  font-mono text-sm flex items-center gap-3 no-underline text-slate-500 hover:text-cyan-700 transition group p-2 rounded-lg hover:bg-cyan-50 border border-transparent hover:border-cyan-100">
+                            <div class="w-8 h-8 flex-shrink-0 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center shadow-sm group-hover:border-cyan-300">
+                                <i class="fa-solid fa-server text-cyan-500"></i>
+                            </div> 
+                            <span class="nav-text whitespace-nowrap">Platform Hub</span>
+                        </a>
+                        
+                        <a href="nemesis_tracer.html" class="nav-item  font-mono text-sm flex items-center gap-3 no-underline text-slate-500 hover:text-fuchsia-700 transition group p-2 rounded-lg hover:bg-fuchsia-50 border border-transparent hover:border-fuchsia-100">
+                            <div class="w-8 h-8 flex-shrink-0 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center shadow-sm group-hover:border-fuchsia-300">
+                                <i class="fa-solid fa-network-wired text-fuchsia-600"></i>
+                            </div> 
+                            <span class="nav-text whitespace-nowrap">Tracer Engine</span>
+                        </a>
+                        
+                        <a href="nemesis_id.html" class="nav-item active font-mono text-sm flex items-center gap-3 no-underline text-yellow-700 font-bold transition group p-2 rounded-lg bg-yellow-50/50 border border-yellow-100">
+                            <div class="w-8 h-8 flex-shrink-0 rounded-full bg-yellow-100 border border-yellow-200 flex items-center justify-center shadow-sm ">
+                                <img src="assets/butterfly_transparent.png" class="w-4 h-4 filter drop-shadow-[0_0_5px_rgba(234,179,8,0.8)]">
+                            </div> 
+                            <span class="nav-text whitespace-nowrap">NEMESIS ID</span>
+                        </a>
+                        
+                        <a href="nemesis_intelligence.html" class="nav-item  font-mono text-sm flex items-center gap-3 no-underline text-slate-500 hover:text-blue-700 transition group p-2 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100">
+                            <div class="w-8 h-8 flex-shrink-0 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center shadow-sm group-hover:border-blue-300">
+                                <i class="fa-solid fa-brain text-blue-500"></i>
+                            </div> 
+                            <span class="nav-text whitespace-nowrap">Intelligence</span>
+                        </a>
+                        
+                        <a href="recovery_framework.html" class="nav-item  font-mono text-sm flex items-center gap-3 no-underline text-slate-500 hover:text-teal-700 transition group p-2 rounded-lg hover:bg-teal-50 border border-transparent hover:border-teal-100">
+                            <div class="w-8 h-8 flex-shrink-0 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center shadow-sm group-hover:border-teal-300">
+                                <i class="fa-solid fa-shield-halved text-teal-500"></i>
+                            </div> 
+                            <span class="nav-text whitespace-nowrap">Recovery</span>
+                        </a>
+                    </div>
+                    
+                    <button class="accordion-toggle w-full flex items-center justify-between text-[10px] font-mono tracking-widest text-slate-500 mt-2 mb-2 uppercase font-bold px-2 py-1 hover:text-cyan-600 transition outline-none pt-4 border-t border-slate-200">
+                        <span class="nav-header">DOCUMENTATION</span>
+                        <i class="fa-solid fa-chevron-down text-[8px] transition-transform duration-300 transform rotate-180"></i>
+                    </button>
+                    
+                    <div class="accordion-content overflow-hidden transition-all duration-300 space-y-2">
+                        <a href="report_template.html" class="nav-item  font-mono text-sm flex items-center gap-3 no-underline text-slate-500 hover:text-emerald-700 transition group p-2 rounded-lg hover:bg-emerald-50 border border-transparent hover:border-emerald-100">
+                            <div class="w-8 h-8 flex-shrink-0 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center shadow-sm group-hover:border-emerald-300">
+                                <i class="fa-solid fa-file-contract text-emerald-500"></i>
+                            </div> 
+                            <span class="nav-text whitespace-nowrap">Reports</span>
+                        </a>
+                        
+                        <a href="api_docs.html" class="nav-item  font-mono text-sm flex items-center gap-3 no-underline text-slate-500 hover:text-indigo-700 transition group p-2 rounded-lg hover:bg-indigo-50 border border-transparent hover:border-indigo-100">
+                            <div class="w-8 h-8 flex-shrink-0 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center shadow-sm group-hover:border-indigo-300">
+                                <i class="fa-solid fa-code text-indigo-500"></i>
+                            </div> 
+                            <span class="nav-text whitespace-nowrap">API Docs</span>
+                        </a>
+
+                        <a href="about.html" class="nav-item  font-mono text-sm flex items-center gap-3 no-underline text-slate-500 hover:text-orange-700 transition group p-2 rounded-lg hover:bg-orange-50 border border-transparent hover:border-orange-100">
+                            <div class="w-8 h-8 flex-shrink-0 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center shadow-sm group-hover:border-orange-300">
+                                <i class="fa-solid fa-circle-info text-orange-500"></i>
+                            </div> 
+                            <span class="nav-text whitespace-nowrap">About Platform</span>
+                        </a>
+                    </div>
+                </nav>
+            </div>
+            <!-- Center Column: Hero Graphic & Input -->
+                <div class="flex-1 border-r-0 border-slate-700/50 relative flex flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+                    
+                    <!-- Ambient Background Effects -->
+                    <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-200/50 rounded-full blur-[100px] pointer-events-none"></div>
+                    <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-200/40 rounded-full blur-[100px] pointer-events-none"></div>
+                    
+                    <!-- Floating Elements (Butterflies & Data nodes) -->
+                    <img src="assets/butterfly_transparent.png" class="absolute top-[20%] left-[15%] w-24 h-24 opacity-60 mix-blend-multiply animate-[float_6s_ease-in-out_infinite]" />
+                    <img src="assets/butterfly_transparent.png" class="absolute bottom-[15%] right-[10%] w-32 h-32 opacity-50 mix-blend-multiply animate-[float_8s_ease-in-out_infinite_reverse]" />
+                    <img src="assets/butterfly_transparent.png" class="absolute top-[60%] left-[25%] w-16 h-16 opacity-40 mix-blend-multiply animate-[float_7s_ease-in-out_infinite]" />
+
+                    <!-- Curved flowing lines (using SVG) -->
+                    <svg class="absolute inset-0 w-full h-full pointer-events-none opacity-40" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+                        <path d="M0,500 C300,300 700,700 1000,400" stroke="url(#lineGrad1)" stroke-width="2" fill="none" />
+                        <path d="M0,600 C400,800 600,200 1000,500" stroke="url(#lineGrad2)" stroke-width="1.5" fill="none" />
+                        <defs>
+                            <linearGradient id="lineGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#3b82f6" stop-opacity="0" />
+                                <stop offset="50%" stop-color="#3b82f6" stop-opacity="1" />
+                                <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0" />
+                            </linearGradient>
+                            <linearGradient id="lineGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#06b6d4" stop-opacity="0" />
+                                <stop offset="50%" stop-color="#06b6d4" stop-opacity="0.8" />
+                                <stop offset="100%" stop-color="#3b82f6" stop-opacity="0" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+
+                    <!-- Floating Chart/Data Glass panels -->
+                    <div class="absolute left-[10%] top-[45%] w-48 h-32 bg-slate-900/50 backdrop-blur-md border border-white/80 rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.05)] p-4 flex flex-col justify-end z-10 hover:scale-105 transition-transform duration-500 cursor-default">
+                        <svg viewBox="0 0 100 40" class="w-full h-full opacity-60">
+                            <polyline points="0,30 20,15 40,25 60,10 80,20 100,5" fill="none" stroke="#3b82f6" stroke-width="2" />
+                            <circle cx="60" cy="10" r="3" fill="#3b82f6" />
+                            <circle cx="100" cy="5" r="3" fill="#3b82f6" />
+                        </svg>
+                    </div>
+                    
+                    <div class="absolute right-[5%] bottom-[35%] w-56 h-28 bg-slate-900/50 backdrop-blur-md border border-white/80 rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.05)] p-4 flex items-end justify-between gap-1 z-10 hover:scale-105 transition-transform duration-500 cursor-default">
+                        <div class="w-2 h-[40%] bg-blue-300 rounded-t"></div>
+                        <div class="w-2 h-[60%] bg-blue-400 rounded-t"></div>
+                        <div class="w-2 h-[80%] bg-indigo-400 rounded-t"></div>
+                        <div class="w-2 h-[100%] bg-blue-500 rounded-t"></div>
+                        <div class="w-2 h-[50%] bg-blue-300 rounded-t"></div>
+                        <div class="w-2 h-[70%] bg-indigo-300 rounded-t"></div>
+                        <div class="w-2 h-[30%] bg-blue-200 rounded-t"></div>
+                        <div class="w-2 h-[90%] bg-blue-400 rounded-t"></div>
+                        <div class="w-2 h-[60%] bg-indigo-400 rounded-t"></div>
+                    </div>
+
+                    <!-- Main Content Container -->
+                    <div class="z-20 flex flex-col items-center justify-center w-full px-8 -mt-16">
+                        
+                        <!-- Header Text -->
+                        <h1 class="text-5xl lg:text-[4.5rem] font-display font-black text-slate-100 text-center mb-6 tracking-tight leading-[1.1]">
+                            UNMASK THE FLOW<br/>OF ASSETS.
+                        </h1>
+                        <p class="text-lg lg:text-xl text-slate-500 text-center mb-12 max-w-2xl font-medium leading-relaxed">
+                            Advanced Crypto Forensics & Blockchain Analysis<br/>for investigators and compliance teams.
+                        </p>
+
+                        <!-- The Glass Form -->
+                        <div class="w-full max-w-md bg-slate-900/60 backdrop-blur-2xl border border-white rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.08)] p-8 relative overflow-hidden">
+                            
+                            <!-- Internal Loader -->
+                            <div id="loader-overlay" class="absolute inset-0 bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center opacity-0 pointer-events-none transition-opacity duration-500 z-50">
+                                <div class="nemesis-loader mb-6 relative w-16 h-16 flex items-center justify-center">
+                                    <div class="absolute inset-0 border-4 border-t-blue-500 border-r-transparent border-b-blue-500 border-l-transparent rounded-full animate-[spin_2s_linear_infinite]"></div>
+                                    <div class="absolute inset-2 border-4 border-t-indigo-500 border-l-transparent border-b-indigo-500 border-r-transparent rounded-full animate-[spin_1.5s_linear_infinite_reverse]"></div>
+                                </div>
+                                <div id="loader-text" class="text-xs font-mono text-blue-800 uppercase tracking-widest font-bold">Initializing Deep Trace...</div>
+                            </div>
+
+                            <h3 class="text-[13px] font-bold tracking-widest mb-6 text-slate-100 uppercase font-display text-center">START A FORENSIC INVESTIGATION</h3>
+                            
+                            <!-- Target Address -->
+                            <div class="mb-5 relative group">
+                                <input type="text" id="wallet-address" placeholder="Target Seed Wallets (Enter Address)" class="w-full bg-slate-900/70 border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-200 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition placeholder-slate-500 shadow-sm pr-10">
+                                <i class="fa-solid fa-wallet absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 group-focus-within:text-blue-500 transition-colors"></i>
+                            </div>
+
+                            <!-- Trace Depth -->
+                            <div class="mb-6 relative group">
+                                <select class="w-full bg-slate-900/70 border border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-200 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition shadow-sm appearance-none cursor-pointer">
+                                    <option value="" disabled selected>Trace Depth</option>
+                                    <option value="L1">L1 (Direct Links)</option>
+                                    <option value="L2">L2 (Secondary Links)</option>
+                                    <option value="L3">L3+ (Deep Trace)</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-500 text-xs font-medium">
+                                    e.g., L1, L2, L3+ <i class="fa-solid fa-chevron-down ml-2 text-[10px]"></i>
+                                </div>
+                            </div>
+
+                            <!-- Max Hops Slider -->
+                            <div class="mb-8 px-1">
+                                <div class="flex justify-between items-center mb-3">
+                                    <span class="text-sm text-slate-200 font-medium">Max Hops</span>
+                                </div>
+                                <div class="relative w-full h-1.5 bg-slate-700 rounded-full mb-3">
+                                    <div class="absolute left-0 top-0 h-full bg-blue-400 rounded-full" style="width: 40%;"></div>
+                                    <div class="absolute left-[40%] top-1/2 transform -translate-y-1/2 -translate-x-1/2 w-4 h-4 bg-slate-50 border-[3px] border-blue-400 rounded-full shadow cursor-pointer hover:scale-110 transition-transform"></div>
+                                </div>
+                                <div class="flex justify-between text-xs text-slate-500 font-medium">
+                                    <span>1</span>
+                                    <span class="text-slate-200 font-bold ml-6">8</span>
+                                    <span>20</span>
+                                </div>
+                            </div>
+                            
+                            <button onclick="executeSearch()" class="w-full py-4 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 text-slate-900 text-sm font-bold tracking-wide hover:opacity-90 transition-opacity duration-300 shadow-[0_8px_20px_rgba(59,130,246,0.3)] rounded-xl flex justify-center items-center gap-2 group">
+                                Execute Deep Trace <i class="fa-solid fa-magnifying-glass transform group-hover:scale-110 transition-transform"></i>
+                            </button>
+                        </div>
+
+                    </div>
+                    
+                    <!-- Bottom Features Bar -->
+                    <div class="absolute bottom-10 w-full flex justify-center gap-16 text-slate-500 font-medium text-sm">
+                        <div class="flex items-center gap-2 hover:text-slate-100 transition-colors cursor-pointer">
+                            <i class="fa-solid fa-chart-line text-blue-500 text-lg"></i> Real-time Graph
+                        </div>
+                        <div class="flex items-center gap-2 hover:text-slate-100 transition-colors cursor-pointer">
+                            <i class="fa-solid fa-triangle-exclamation text-blue-500 text-lg"></i> Anomaly Detection
+                        </div>
+                        <div class="flex items-center gap-2 hover:text-slate-100 transition-colors cursor-pointer">
+                            <i class="fa-solid fa-briefcase text-blue-500 text-lg"></i> Case Management
+                        </div>
+                    </div>
+
+                </div>
+
+                </main>
+
+            <!-- ============================================== -->
+            <!-- BACK FACE: NEMESIS ID DASHBOARD                -->
+            <!-- ============================================== -->
+            <div class="back-face absolute inset-0 glass-container flex flex-col overflow-hidden bg-slate-900/80 border border-slate-200 shadow-2xl shadow-slate-300">
+                
+                <!-- Dashboard Header -->
+                <header class="h-16 border-b border-slate-200 flex items-center justify-between px-8 shrink-0 bg-slate-900/50 backdrop-blur-md">
+                    <div class="flex items-center gap-6">
+                        <div class="flex items-center justify-center w-8 h-8 rounded glass-panel border border-slate-200 hover:bg-slate-700 transition cursor-pointer text-slate-500">
+                            <i class="fa-solid fa-bars"></i>
+                        </div>
+                        <div class="font-mono text-[10px] font-bold tracking-widest text-slate-500 uppercase">Global Menu Minimzed</div>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <div class="text-right">
+                            <div class="font-display font-bold text-xl tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-fuchsia-600 uppercase">
+                                NEMESIS
+                            </div>
+                        </div>
+                        <img src="assets/butterfly_transparent.png" class="w-10 h-auto filter brightness-90 contrast-125" />
+                    </div>
+                </header>
+
+                <!-- Dashboard Content Grid -->
+                <div class="flex-1 flex overflow-hidden">
+                    
+                    <!-- Modules Sidebar -->
+                    <aside class="w-64 border-r border-slate-200 bg-slate-800/50 overflow-y-auto p-6 shrink-0">
+                        <div class="text-[10px] font-mono tracking-widest text-cyan-600 mb-4 uppercase font-bold">Modules</div>
+                        
+                        <div class="space-y-1">
+                            <div class="module-item active flex items-center gap-3" onclick="switchModule('module-wallet')"><i class="fa-solid fa-id-card w-4 text-center"></i> Wallet Profile</div>
+                            <div class="module-item flex items-center gap-3" onclick="switchModule('module-counterparties')"><i class="fa-solid fa-users-viewfinder w-4 text-center"></i> Counterparties</div>
+                            <div class="module-item flex items-center gap-3" onclick="switchModule('module-assets')"><i class="fa-solid fa-link w-4 text-center"></i> Assets & Chains</div>
+                            <div class="module-item flex items-center gap-3" onclick="switchModule('module-transactions')"><i class="fa-solid fa-list-ul w-4 text-center"></i> Transactions</div>
+                            <div class="module-item flex items-center gap-3 text-fuchsia-600 border-fuchsia-200 bg-fuchsia-50" onclick="switchModule('module-trace')"><i class="fa-solid fa-sitemap w-4 text-center"></i> Trace Graph</div>
+                        </div>
+
+                        <div class="text-[10px] font-mono tracking-widest text-fuchsia-600 mb-4 mt-8 uppercase font-bold">Intelligence</div>
+                        
+                        <div class="space-y-1">
+                            <div class="module-item flex items-center gap-3" onclick="switchModule('module-aml')"><i class="fa-solid fa-shield-halved w-4 text-center"></i> AML Risk & Compliance</div>
+                            <div class="module-item flex items-center gap-3" onclick="switchModule('module-geo')"><i class="fa-solid fa-globe w-4 text-center"></i> GeoRisk Analysis</div>
+                            <div class="module-item flex items-center gap-3" onclick="switchModule('module-osint')"><i class="fa-solid fa-magnifying-glass-chart w-4 text-center"></i> Intelligence (OSINT)</div>
+                            <div class="module-item flex items-center gap-3" onclick="switchModule('module-ai')"><i class="fa-solid fa-microchip w-4 text-center"></i> AI Insights</div>
+                        </div>
+
+                        <div class="mt-12">
+                            <button onclick="generateReport()" class="w-full bg-red-50 border border-red-200 hover:bg-red-100 text-red-600 text-xs font-bold uppercase tracking-widest py-3 rounded transition flex items-center justify-center gap-2 shadow-sm">
+                                <i id="report-icon" class="fa-solid fa-file-pdf"></i> <span id="report-text">Generate Report</span>
+                            </button>
+                        </div>
+                    </aside>
+
+                    <!-- Main Data Container -->
+                    <main class="flex-1 p-8 overflow-y-auto bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMCwwLDAsMC4wMikiLz48L3N2Zz4=')]">
+                        
+                        <div class="max-w-5xl mx-auto space-y-6 relative min-h-full">
+                            
+                            <!-- 1. Wallet Profile -->
+                            <div id="module-wallet" class="module-view active">
+                                <div class="flex items-start justify-between light-card mb-6 bg-slate-900/90 border-cyan-200 shadow-[0_0_20px_rgba(8,145,178,0.1)]">
+                                    <div>
+                                        <div id="wallet-tags-container" class="flex items-center gap-3 mb-3"></div>
+                                        <h1 id="display-wallet" class="text-2xl font-mono font-bold text-slate-200 tracking-tight break-all">--</h1>
+                                        <div id="display-wallet-subtitle" class="text-sm text-slate-500 font-medium mt-1">Fetching Entity Profile...</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-[10px] uppercase font-mono tracking-widest text-slate-500 mb-1 font-bold">Nemesis Risk Score</div>
+                                        <div id="display-wallet-risk" class="text-6xl font-black text-slate-500 drop-shadow-sm">--</div>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-3 gap-6">
+                                    <div class="light-card text-center">
+                                        <div class="light-label">Total Volume Received</div>
+                                        <div id="display-wallet-received" class="light-value text-cyan-700">--</div>
+                                        <div id="display-wallet-received-change" class="text-xs text-slate-500 mt-2 font-medium">--</div>
+                                    </div>
+                                    <div class="light-card text-center">
+                                        <div class="light-label">Total Volume Sent</div>
+                                        <div id="display-wallet-sent" class="light-value text-blue-700">--</div>
+                                        <div id="display-wallet-sent-change" class="text-xs text-slate-500 mt-2 font-medium">--</div>
+                                    </div>
+                                    <div class="light-card text-center">
+                                        <div class="light-label">Current Balance</div>
+                                        <div id="display-wallet-balance" class="light-value text-slate-200">--</div>
+                                        <div id="display-wallet-chain-count" class="text-xs text-slate-500 mt-2 font-medium">--</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2. Counterparties -->
+                            <div id="module-counterparties" class="module-view">
+                                <h2 class="text-xl font-bold text-slate-200 mb-4 font-display">COUNTERPARTY EXPOSURE</h2>
+                                <div class="light-card">
+                                    <table class="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr class="border-b border-slate-200">
+                                                <th class="py-3 px-4 light-label">Entity</th>
+                                                <th class="py-3 px-4 light-label">Category</th>
+                                                <th class="py-3 px-4 light-label">Volume USD</th>
+                                                <th class="py-3 px-4 light-label">Risk Level</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="table-counterparties" class="text-sm font-medium text-slate-300">
+                                            <!-- Dynamically populated -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- 3. Assets & Chains -->
+                            <div id="module-assets" class="module-view">
+                                <h2 class="text-xl font-bold text-slate-200 mb-4 font-display">ASSETS & CHAINS PORTFOLIO</h2>
+                                <div class="grid grid-cols-2 gap-6">
+                                    <div class="light-card">
+                                        <h3 class="light-label mb-4 text-center">Top Chains by Volume</h3>
+                                        <div id="div-top-chains" class="space-y-4">
+                                            <!-- Dynamically populated -->
+                                        </div>
+                                    </div>
+                                    <div class="light-card">
+                                        <h3 class="light-label mb-4 text-center">Asset Distribution</h3>
+                                        <div id="div-asset-distribution" class="space-y-4">
+                                            <!-- Dynamically populated -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 4. Transactions -->
+                            <div id="module-transactions" class="module-view">
+                                <h2 class="text-xl font-bold text-slate-200 mb-4 font-display">LATEST TRANSACTIONS</h2>
+                                <div id="list-transactions" class="light-card space-y-3">
+                                    <!-- Dynamically populated -->
+                                </div>
+                            </div>
+
+                            <!-- 5. Trace Graph -->
+                            <div id="module-trace" class="module-view">
+                                <div class="light-card h-96 flex flex-col items-center justify-center border-dashed border-2 border-slate-600 relative overflow-hidden glass-panel">
+                                    <div id="trace-graph-container" class="absolute inset-0"></div>
+                                    <div class="z-10 mt-48 text-sm font-mono text-slate-500 tracking-widest uppercase font-bold bg-slate-50 px-4 py-1 rounded-full shadow">Initializing Graph Data...</div>
+                                </div>
+                            </div>
+
+                            <!-- 6. AML Risk & Compliance -->
+                            <div id="module-aml" class="module-view">
+                                <h2 class="text-xl font-bold text-slate-200 mb-4 font-display">AML RISK & COMPLIANCE</h2>
+                                <div id="div-aml-alerts" class="grid grid-cols-2 gap-6">
+                                    <!-- Dynamically populated -->
+                                </div>
+                            </div>
+
+                            <!-- 7. GeoRisk Analysis -->
+                            <div id="module-geo" class="module-view">
+                                <h2 class="text-xl font-bold text-slate-200 mb-4 font-display">GEORISK ANALYSIS</h2>
+                                <div class="light-card h-80 bg-slate-700 relative overflow-hidden flex items-center justify-center border-slate-600">
+                                    <div class="absolute inset-0 opacity-20 bg-[url('https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg')] bg-no-repeat bg-center bg-cover"></div>
+                                    <div id="div-georisk" class="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+                                        <!-- Dynamically populated clusters -->
+                                    </div>
+                                    <div id="div-georisk-summary" class="z-20 bg-slate-900/90 backdrop-blur px-6 py-4 rounded-xl shadow-lg border border-slate-200 text-center">
+                                        <div class="text-2xl font-black text-slate-500">Scanning...</div>
+                                        <div class="text-xs font-mono text-slate-500 uppercase">Analyzing Geo Nodes</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 8. Intelligence (OSINT) -->
+                            <div id="module-osint" class="module-view">
+                                <h2 class="text-xl font-bold text-slate-200 mb-4 font-display">OSINT INTELLIGENCE</h2>
+                                <div id="div-osint" class="light-card space-y-6">
+                                    <!-- Dynamically populated -->
+                                </div>
+                            </div>
+
+                            <!-- 9. AI Insights -->
+                            <div id="module-ai" class="module-view">
+                                <h2 class="text-xl font-bold text-slate-200 mb-4 font-display">AI HEURISTIC INSIGHTS</h2>
+                                <div id="div-ai-insights" class="light-card bg-gradient-to-br from-slate-800 to-slate-900 border-slate-200">
+                                    <div class="flex items-center gap-3 mb-4">
+                                        <i class="fa-solid fa-sparkles text-slate-500 text-xl"></i>
+                                        <h3 class="font-bold text-slate-200 text-lg">Predictive Behavioral Model</h3>
+                                    </div>
+                                    <p id="ai-insight-text" class="text-sm text-slate-500 leading-relaxed mb-4">
+                                        Awaiting Data Context...
+                                    </p>
+                                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 shadow-sm">
+                                        <div class="text-xs font-mono font-bold text-slate-500 uppercase mb-2">Recommended Action</div>
+                                        <div id="ai-action-text" class="text-sm font-medium text-slate-500">--</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </main>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Subtle Scanlines Overlay Light -->
+    <div class="fixed top-0 left-0 w-full h-full pointer-events-none z-50 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgoJPHJlY3Qgd2lkdGg9IjQiIGhlaWdodD0iMSIgZmlsbD0icmdiYSgwLDAsMCwwLjAyKSIvPgo8L3N2Zz4=')] opacity-50"></div>
+
+    <script>
+        // Animations & Interactions
+        
+        function initWalletFlow() {
+            // 1. Hide left menu and right lore
+            document.getElementById('left-menu-col').style.opacity = '0';
+            document.getElementById('left-menu-col').style.pointerEvents = 'none';
+            document.getElementById('right-lore-col').style.opacity = '0';
+            document.getElementById('right-lore-col').style.pointerEvents = 'none';
+            
+            // 2. Fade out butterfly
+            document.getElementById('main-butterfly').style.opacity = '0';
+            document.getElementById('main-butterfly').style.transform = 'scale(0.8)';
+
+            // 3. Slide in wallet input container
+            setTimeout(() => {
+                document.getElementById('wallet-input-container').classList.add('active');
+                document.getElementById('wallet-address').focus();
+            }, 500);
+        }
+
+        function startDataFetch() {
+            const input = document.getElementById('wallet-address').value;
+            if(!input) {
+                alert("Please enter a target wallet address.");
+                return;
+            }
+
+            const loader = document.getElementById('loader-overlay');
+            const loaderText = document.getElementById('loader-text');
+            loader.style.opacity = '1';
+            
+            setTimeout(() => { loaderText.innerText = "QUERYING MULTI-CHAIN LEDGERS..."; }, 1000);
+            setTimeout(() => { loaderText.innerText = "EXTRACTING COUNTERPARTY GRAPH..."; }, 2000);
+            setTimeout(() => { loaderText.innerText = "APPLYING OSINT HEURISTICS..."; }, 3000);
+            
+            setTimeout(() => {
+                document.getElementById('flip-container').classList.add('flipped');
+                loadEntityData(input);
+            }, 4000);
+        }
+
+        async function loadEntityData(address) {
+            document.getElementById('display-wallet').innerText = address;
+            try {
+                const res = await fetch(`/api/entity?address=${encodeURIComponent(address)}`);
+                if(!res.ok) throw new Error("Entity data not found or backend error.");
+                const data = await res.json();
+                
+                // 1. Wallet Profile
+                document.getElementById('display-wallet-subtitle').innerText = data.metadata?.description || 'Unknown Entity';
+                document.getElementById('display-wallet-risk').innerText = data.risk_score || '0';
+                document.getElementById('display-wallet-risk').className = `text-6xl font-black drop-shadow-sm ${data.risk_score > 80 ? 'text-red-600' : (data.risk_score > 50 ? 'text-orange-500' : 'text-green-500')}`;
+                
+                const tagsContainer = document.getElementById('wallet-tags-container');
+                tagsContainer.innerHTML = '';
+                (data.metadata?.tags || []).forEach(tag => {
+                    const t = document.createElement('div');
+                    t.className = 'text-[10px] font-mono font-bold uppercase tracking-widest border px-2 py-0.5 rounded shadow-sm glass-panel text-slate-300 border-slate-600';
+                    t.innerText = tag;
+                    tagsContainer.appendChild(t);
+                });
+
+                if (data.financials) {
+                    document.getElementById('display-wallet-received').innerText = `$${(data.financials.total_received_usd || 0).toLocaleString()}`;
+                    document.getElementById('display-wallet-sent').innerText = `$${(data.financials.total_sent_usd || 0).toLocaleString()}`;
+                    document.getElementById('display-wallet-balance').innerText = `$${(data.financials.current_balance_usd || 0).toLocaleString()}`;
+                    document.getElementById('display-wallet-chain-count').innerText = `Across ${(data.financials.active_chains || []).length} chains`;
+                }
+
+                // 2. Counterparties
+                const cpBody = document.getElementById('table-counterparties');
+                cpBody.innerHTML = '';
+                (data.counterparties || []).forEach(cp => {
+                    cpBody.innerHTML += `
+                        <tr class="border-b border-slate-100 hover:bg-slate-800">
+                            <td class="py-3 px-4 font-mono text-cyan-600">${cp.name || cp.id.substring(0,10)+'...'}</td>
+                            <td class="py-3 px-4">${cp.category || 'Unknown'}</td>
+                            <td class="py-3 px-4">$${(cp.volume_usd || 0).toLocaleString()}</td>
+                            <td class="py-3 px-4"><span class="px-2 py-1 rounded text-xs ${cp.risk_level === 'CRITICAL' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-700'}">${cp.risk_level || 'UNKNOWN'}</span></td>
+                        </tr>
+                    `;
+                });
+
+                // 3. Assets & Chains
+                if (data.financials) {
+                    const chainsDiv = document.getElementById('div-top-chains');
+                    chainsDiv.innerHTML = '';
+                    (data.financials.active_chains || []).forEach(chain => {
+                        chainsDiv.innerHTML += `<div class="flex justify-between items-center"><span class="font-bold text-slate-300">${chain}</span></div>`;
+                    });
+
+                    const assetsDiv = document.getElementById('div-asset-distribution');
+                    assetsDiv.innerHTML = '';
+                    for (const [asset, amount] of Object.entries(data.financials.asset_distribution || {})) {
+                        assetsDiv.innerHTML += `<div class="flex justify-between items-center"><span class="font-bold text-slate-300">${asset}</span><span class="font-mono text-sm">$${amount.toLocaleString()}</span></div>`;
+                    }
+                }
+
+                // 4. Transactions
+                const txDiv = document.getElementById('list-transactions');
+                txDiv.innerHTML = '';
+                (data.recent_transactions || []).forEach(tx => {
+                    const isOut = tx.sender === address;
+                    txDiv.innerHTML += `
+                        <div class="flex justify-between items-center p-3 border border-slate-100 rounded-lg hover:bg-slate-800">
+                            <div class="flex items-center gap-4">
+                                <div class="w-8 h-8 rounded-full ${isOut ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'} flex items-center justify-center"><i class="fa-solid ${isOut ? 'fa-arrow-right' : 'fa-arrow-left'}"></i></div>
+                                <div>
+                                    <div class="text-sm font-bold text-slate-200">${isOut ? 'Transfer Out' : 'Transfer In'}</div>
+                                    <div class="text-xs font-mono text-slate-500">${isOut ? 'To: ' + tx.receiver : 'From: ' + tx.sender}</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-mono font-bold text-slate-200">$${(tx.amount_usd || 0).toLocaleString()}</div>
+                                <div class="text-xs text-slate-500">${tx.timestamp}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // 6. AML
+                const amlDiv = document.getElementById('div-aml-alerts');
+                amlDiv.innerHTML = '';
+                (data.intelligence?.aml_alerts || []).forEach(alert => {
+                    amlDiv.innerHTML += `
+                        <div class="light-card border-l-4 border-l-red-500">
+                            <h3 class="font-bold text-slate-200 text-lg mb-2"><i class="fa-solid fa-ban text-red-500 mr-2"></i> ${alert.rule}</h3>
+                            <p class="text-sm text-slate-500 mb-4">${alert.description}</p>
+                        </div>
+                    `;
+                });
+
+                // 7. GeoRisk
+                if (data.intelligence?.georisk) {
+                    document.getElementById('div-georisk-summary').innerHTML = `
+                        <div class="text-2xl font-black text-slate-200">${data.intelligence.georisk.primary_region}</div>
+                        <div class="text-xs font-mono text-slate-500 uppercase">Primary Node Cluster</div>
+                    `;
+                }
+
+                // 8. OSINT
+                const osintDiv = document.getElementById('div-osint');
+                osintDiv.innerHTML = '';
+                (data.intelligence?.osint || []).forEach(osint => {
+                    osintDiv.innerHTML += `
+                        <div class="flex items-start gap-4 mb-6 pb-6 border-b border-slate-100">
+                            <i class="fa-brands fa-twitter text-blue-400 text-2xl mt-1"></i>
+                            <div>
+                                <div class="font-bold text-slate-200">${osint.source}</div>
+                                <div class="text-xs text-slate-500 mb-2">${osint.date}</div>
+                                <div class="text-sm text-slate-300 glass-panel p-3 rounded border border-slate-200">${osint.content}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // 9. AI Insights
+                if (data.intelligence?.ai_insights) {
+                    document.getElementById('ai-insight-text').innerHTML = data.intelligence.ai_insights.summary;
+                    document.getElementById('ai-action-text').innerHTML = data.intelligence.ai_insights.recommended_action;
+                }
+
+            } catch (e) {
+                console.error(e);
+                document.getElementById('display-wallet-subtitle').innerText = "Entity Data Unavailable (API Error). Check Backend.";
+                document.getElementById('display-wallet-risk').innerText = 'N/A';
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const address = params.get('address');
+            if (address) {
+                // If loaded with ?address=, skip landing animation
+                document.getElementById('flip-container').classList.add('flipped');
+                loadEntityData(address);
+            }
+        });
+
+        // Module Routing Engine
+        function switchModule(moduleId) {
+            // Remove active class from all items in sidebar
+            document.querySelectorAll('.module-item').forEach(el => el.classList.remove('active', 'bg-fuchsia-50', 'text-fuchsia-600', 'border-fuchsia-200'));
+            
+            // Add active class to clicked item
+            const clickedEvent = event.currentTarget;
+            clickedEvent.classList.add('active');
+
+            // Hide all module views
+            document.querySelectorAll('.module-view').forEach(el => el.classList.remove('active'));
+            
+            // Show target module view
+            document.getElementById(moduleId).classList.add('active');
+        }
+
+        // Generate Report Mock Action
+        function generateReport() {
+            const icon = document.getElementById('report-icon');
+            const text = document.getElementById('report-text');
+            
+            icon.className = 'fa-solid fa-circle-notch fa-spin';
+            text.innerText = 'Compiling PDF...';
+            
+            setTimeout(() => {
+                icon.className = 'fa-solid fa-check';
+                text.innerText = 'Report Saved!';
+                setTimeout(() => {
+                    icon.className = 'fa-solid fa-file-pdf';
+                    text.innerText = 'Generate Report';
+                }, 3000);
+            }, 2000);
+        }
+
+    </script>
+
+    <script>
+        if(typeof particlesJS !== 'undefined') {
+            particlesJS('particles-js', {
+              "particles": {
+                "number": { "value": 60, "density": { "enable": true, "value_area": 800 } },
+                "color": { "value": "#0891b2" },
+                "shape": { "type": "circle" },
+                "opacity": { "value": 0.5, "random": false },
+                "size": { "value": 3, "random": true },
+                "line_linked": { "enable": true, "distance": 150, "color": "#0891b2", "opacity": 0.4, "width": 1 },
+                "move": { "enable": true, "speed": 2, "direction": "none", "random": false, "straight": false, "out_mode": "out", "bounce": false }
+              },
+              "interactivity": {
+                "detect_on": "window",
+                "events": { "onhover": { "enable": true, "mode": "grab" }, "onclick": { "enable": true, "mode": "push" }, "resize": true },
+                "modes": { "grab": { "distance": 140, "line_linked": { "opacity": 1 } }, "push": { "particles_nb": 4 } }
+              },
+              "retina_detect": true
+            });
+        }
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebars = document.querySelectorAll('.nemesis-sidebar');
+            const toggleBtns = document.querySelectorAll('.sidebar-toggle');
+            
+            const applyState = (state) => {
+                sidebars.forEach(sb => {
+                    if(state === 'collapsed') {
+                        sb.classList.remove('sidebar-expanded');
+                        sb.classList.add('sidebar-collapsed');
+                    } else {
+                        sb.classList.remove('sidebar-collapsed');
+                        sb.classList.add('sidebar-expanded');
+                    }
+                });
+                toggleBtns.forEach(btn => {
+                    const icon = btn.querySelector('i');
+                    if(icon) {
+                        icon.className = state === 'collapsed' ? 'fa-solid fa-bars text-[10px] transition-transform duration-300' : 'fa-solid fa-chevron-left text-[10px] transition-transform duration-300';
+                    }
+                    btn.style.transform = 'rotate(0deg)';
+                });
+            };
+
+            // Load state
+            if(localStorage.getItem('nemesis_sidebar_state') === 'collapsed') {
+                applyState('collapsed');
+            }
+            
+            toggleBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const currentState = localStorage.getItem('nemesis_sidebar_state');
+                    const newState = currentState === 'collapsed' ? 'expanded' : 'collapsed';
+                    localStorage.setItem('nemesis_sidebar_state', newState);
+                    applyState(newState);
+                });
+            });
+
+            // Accordion Logic
+            const accordions = document.querySelectorAll('.accordion-toggle');
+            accordions.forEach(acc => {
+                acc.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    const icon = this.querySelector('.fa-chevron-down');
+                    const content = this.nextElementSibling;
+                    if (content.style.maxHeight) {
+                        content.style.maxHeight = null;
+                        if(icon) icon.style.transform = 'rotate(180deg)';
+                    } else {
+                        content.style.maxHeight = content.scrollHeight + "px";
+                        if(icon) icon.style.transform = 'rotate(0deg)';
+                    }
+                });
+                
+                // Initialize expanded
+                const content = acc.nextElementSibling;
+                if(content && !content.style.maxHeight) {
+                    content.style.maxHeight = "500px"; // Arbitrary large enough height
+                }
+            });
+
+        });
+    </script>
+
+<!-- GLOBAL NEMESIS AJAX LOADER -->
+<div id="global-ajax-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 99999; justify-content: center; align-items: center; flex-direction: column;">
+    <img src="assets/butterfly_transparent.png" style="width: 100px; height: 100px; animation: pulse-loader 1.5s infinite; filter: drop-shadow(0 0 20px rgba(6,182,212,0.8));">
+    <div style="color: #06b6d4; margin-top: 20px; font-family: monospace; font-size: 16px; font-weight: bold; text-shadow: 0 0 10px #06b6d4;">NEMESIS SINGULARITY KERNEL</div>
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+</div>
+<script>
+    (function() {
+        if (window._nemesisLoaderInitialized) return;
+        window._nemesisLoaderInitialized = true;
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const loader = document.getElementById('global-ajax-loader');
+            if (loader) loader.style.display = 'flex';
+            try {
+                const response = await originalFetch.apply(this, args);
+                return response;
+            } finally {
+                if (loader) loader.style.display = 'none';
+            }
+        };
+    })();
+</script>
+</body>
+
+
+</html>

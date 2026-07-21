@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEMESIS THREAT INTELLIGENCE DASHBOARD</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700;800&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- Vis.js for Network Graph -->
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <!-- Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Socket.IO Client -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    },
+                    colors: {
+                        nemesis: {
+                            bg: '#020617', /* Light theme bg */
+                            panel: '#ffffff',
+                            panelborder: '#e2e8f0',
+                            accent: '#3b82f6',
+                            danger: '#ef4444',
+                            success: '#10b981',
+                            warning: '#f59e0b',
+                            purple: '#8b5cf6'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+    <link rel="stylesheet" href="nemesis-enterprise.css">
+
+    <link rel="stylesheet" href="/light-theme.css">
+
+    <script>
+        const IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        window.BACKEND_URL = IS_LOCAL ? 'http://127.0.0.1:8088' : 'https://nemesis-api-v3.legionxgaming2021.workers.dev';
+        window.API_BASE = window.BACKEND_URL;
+    </script>
+        \n</head>
+<body class="antialiased flex flex-col h-screen">
+
+    <!-- Global Nav Integration -->
+    <div id="global-nav-placeholder"></div>
+    <script src="global_nav.js"></script>
+
+    <div class="flex flex-1 overflow-hidden pt-[70px]">
+        
+        <!-- LEFT SIDEBAR -->
+        <aside class="w-[240px] light-panel m-3 flex flex-col shrink-0 overflow-y-auto custom-scrollbar">
+            <div class="p-4 border-b border-slate-200">
+                <div class="flex items-center gap-3">
+                    <img src="..butterfly_transparent.png" alt="Logo" class="w-8 h-8 rounded border border-blue-500/30">
+                    <div>
+                        <div class="font-display font-bold text-sm highlight-text">NEMESIS</div>
+                        <div class="text-[8px] text-slate-500 uppercase tracking-widest">Intelligence Network</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-3 space-y-1 flex-1">
+                <div class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2 mt-2">Modules</div>
+                <div class="sidebar-item" onclick="window.location.href='/apex_dashboard.html'">
+                    <i class="fa-solid fa-gauge-high w-4 text-center"></i> APEX Dashboard
+                </div>
+                <div class="sidebar-item active">
+                    <i class="fa-solid fa-spider w-4 text-center"></i> Threat Intelligence
+                    <span class="ml-auto bg-rose-500 text-slate-900 text-[8px] px-1.5 py-0.5 rounded">NEW</span>
+                </div>
+                <div class="sidebar-item">
+                    <i class="fa-solid fa-money-bill-transfer w-4 text-center"></i> Illicit Tracking
+                </div>
+                <div class="sidebar-item">
+                    <i class="fa-solid fa-ban w-4 text-center"></i> Blacklisted Addrs
+                </div>
+                <div class="sidebar-item">
+                    <i class="fa-solid fa-building-shield w-4 text-center"></i> Sanctions Watch
+                </div>
+                
+                <div class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2 mt-6">Analysis</div>
+                <div class="sidebar-item">
+                    <i class="fa-solid fa-magnifying-glass w-4 text-center"></i> Investigations
+                </div>
+                <div class="sidebar-item">
+                    <i class="fa-solid fa-bolt w-4 text-center"></i> Live Transactions
+                </div>
+                <div class="sidebar-item">
+                    <i class="fa-solid fa-bell w-4 text-center"></i> Alerts & Notifications
+                    <span class="ml-auto bg-purple-500 text-slate-900 text-[9px] px-1.5 py-0.5 rounded-full">23</span>
+                </div>
+                
+                <div class="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2 mt-6">Resources</div>
+                <div class="sidebar-item">
+                    <i class="fa-solid fa-address-card w-4 text-center"></i> Entity Profiles
+                </div>
+                <div class="sidebar-item">
+                    <i class="fa-solid fa-tags w-4 text-center"></i> Labels & Tags
+                </div>
+                <div class="sidebar-item">
+                    <i class="fa-solid fa-cubes w-4 text-center"></i> Block Explorer
+                </div>
+                <div class="sidebar-item">
+                    <i class="fa-solid fa-chart-pie w-4 text-center"></i> Risk Scoring
+                </div>
+                <div class="sidebar-item">
+                    <i class="fa-solid fa-globe w-4 text-center"></i> OSINT Intelligence
+                </div>
+            </div>
+
+            <!-- Mini AI Assistant -->
+            <div class="p-4 border-t border-slate-200 glass-panel m-2 rounded-lg">
+                <div class="flex items-center gap-2 mb-2">
+                    <div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-500"><i class="fa-solid fa-robot text-[10px]"></i></div>
+                    <div class="text-xs font-bold text-slate-200">AI Assistant Online</div>
+                </div>
+                <input type="text" placeholder="Ask anything..." class="w-full bg-slate-50 border border-slate-200 rounded px-2 py-1.5 text-[10px] text-slate-200 focus:outline-none focus:border-blue-500">
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 flex flex-col m-3 ml-0 gap-3 overflow-hidden">
+            
+            <!-- TOP STATS BAR -->
+            <div class="grid grid-cols-4 gap-3 shrink-0">
+                <div class="metric-card metric-blue p-3">
+                    <div class="flex justify-between items-start">
+                        <div class="text-[10px] font-bold text-slate-500 uppercase">Total Addrs Monitored</div>
+                        <i class="fa-solid fa-user-shield text-blue-500 text-lg opacity-80"></i>
+                    </div>
+                    <div class="text-2xl font-display font-bold mt-1 text-slate-200">1,248,221</div>
+                    <div class="text-[10px] text-emerald-600 mt-1"><i class="fa-solid fa-caret-up"></i> 12.45% 24H</div>
+                </div>
+                <div class="metric-card metric-purple p-3">
+                    <div class="flex justify-between items-start">
+                        <div class="text-[10px] font-bold text-slate-500 uppercase">Suspicious Addresses</div>
+                        <i class="fa-solid fa-users-viewfinder text-purple-500 text-lg opacity-80"></i>
+                    </div>
+                    <div class="text-2xl font-display font-bold mt-1 text-slate-200">18,392</div>
+                    <div class="text-[10px] text-emerald-600 mt-1"><i class="fa-solid fa-caret-up"></i> 8.31% 24H</div>
+                </div>
+                <div class="metric-card metric-red p-3">
+                    <div class="flex justify-between items-start">
+                        <div class="text-[10px] font-bold text-slate-500 uppercase">Ransomware Clusters</div>
+                        <i class="fa-solid fa-biohazard text-red-500 text-lg opacity-80"></i>
+                    </div>
+                    <div class="text-2xl font-display font-bold mt-1 text-slate-200" id="ransomware-cluster-count">247</div>
+                    <div class="text-[10px] text-emerald-600 mt-1"><i class="fa-solid fa-caret-up"></i> 15.72% 24H</div>
+                </div>
+                <div class="metric-card metric-green p-3">
+                    <div class="flex justify-between items-start">
+                        <div class="text-[10px] font-bold text-slate-500 uppercase">Illicit Volume (24H)</div>
+                        <i class="fa-solid fa-sack-dollar text-emerald-500 text-lg opacity-80"></i>
+                    </div>
+                    <div class="text-2xl font-display font-bold mt-1 text-slate-200">$93.42M</div>
+                    <div class="text-[10px] text-emerald-600 mt-1"><i class="fa-solid fa-caret-up"></i> 17.81% 24H</div>
+                </div>
+            </div>
+
+            <!-- MIDDLE SECTION: GRAPH & PROFILER -->
+            <div class="flex-1 flex gap-3 min-h-0">
+                <!-- NETWORK GRAPH -->
+                <div class="flex-1 light-panel flex flex-col overflow-hidden relative">
+                    <div class="p-3 border-b border-slate-200 flex justify-between items-center bg-slate-50 z-10 shrink-0">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-circle-nodes text-blue-500"></i>
+                            <h2 class="text-xs font-bold text-slate-200 uppercase tracking-wider">Threat Intelligence Graph</h2>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="huntBtn" class="bg-red-500 hover:bg-red-600 text-slate-900 px-3 py-1 text-xs rounded font-bold transition-colors shadow-sm shadow-red-500/50 flex items-center gap-2">
+                                <i class="fa-solid fa-crosshairs"></i> INITIATE HUNT
+                            </button>
+                            <button class="glass-panel hover:bg-slate-700 text-slate-300 px-2 py-1 text-xs rounded transition-colors border border-slate-200">
+                                <i class="fa-solid fa-filter"></i>
+                            </button>
+                            <button class="glass-panel hover:bg-slate-700 text-slate-300 px-2 py-1 text-xs rounded transition-colors border border-slate-200" onclick="network.fit()">
+                                <i class="fa-solid fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Vis.js Container -->
+                    <div id="network-graph" class="flex-1 grid-bg-light relative"></div>
+                    <div id="radar-overlay" class="hidden"></div>
+                    
+                    <!-- Graph Legend -->
+                    <div class="absolute bottom-4 left-4 bg-slate-900/90 backdrop-blur border border-slate-200 p-2 rounded text-[9px] flex gap-4 shadow-sm">
+                        <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span> Wallet</div>
+                        <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-500"></span> Ransomware</div>
+                        <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-500"></span> Mixer</div>
+                        <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-yellow-500"></span> CEX</div>
+                        <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Smart Contract</div>
+                    </div>
+                </div>
+
+                <!-- ENTITY PROFILER -->
+                <div class="w-[320px] light-panel flex flex-col shrink-0 overflow-hidden">
+                    <div class="p-3 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                        <h2 class="text-xs font-bold text-slate-200 uppercase tracking-wider"><i class="fa-solid fa-id-card text-purple-500 mr-2"></i> Entity Profiler</h2>
+                    </div>
+                    
+                    <div id="profiler-empty" class="flex-1 flex flex-col items-center justify-center p-6 text-center text-slate-500">
+                        <i class="fa-solid fa-hand-pointer text-3xl mb-3 opacity-50"></i>
+                        <p class="text-xs">Select a node on the graph to view detailed entity intelligence.</p>
+                    </div>
+
+                    <div id="profiler-content" class="flex-1 overflow-y-auto custom-scrollbar hidden">
+                        <!-- Header & Score -->
+                        <div class="p-4 text-center border-b border-slate-200 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-full h-1" id="profiler-risk-bar" style="background: #3b82f6;"></div>
+                            
+                            <img src="https://api.dicebear.com/7.x/identicon/svg?seed=nemesis" id="profiler-avatar" class="w-16 h-16 rounded-full mx-auto mb-2 border-2 border-slate-200 bg-slate-50">
+                            
+                            <h3 class="text-sm font-bold text-slate-200 font-mono break-all" id="profiler-address">0x...</h3>
+                            <div class="text-[10px] text-slate-500 mt-1" id="profiler-name">Unknown Entity</div>
+                            
+                            <div class="mt-4 flex justify-center">
+                                <div class="relative w-20 h-20 flex items-center justify-center">
+                                    <svg class="w-full h-full transform -rotate-90">
+                                        <circle cx="40" cy="40" r="36" stroke="#e2e8f0" stroke-width="6" fill="none"></circle>
+                                        <circle cx="40" cy="40" r="36" stroke="#ef4444" stroke-width="6" fill="none" stroke-dasharray="226" stroke-dashoffset="45" id="profiler-risk-circle"></circle>
+                                    </svg>
+                                    <div class="absolute text-center">
+                                        <div class="text-xl font-bold text-slate-200" id="profiler-risk-score">0</div>
+                                        <div class="text-[8px] text-slate-500 uppercase">Risk</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Details -->
+                        <div class="p-4 space-y-4">
+                            <div>
+                                <div class="text-[9px] font-bold text-slate-500 uppercase mb-1">Classification</div>
+                                <div class="flex items-center gap-2">
+                                    <span id="profiler-classification-badge" class="px-2 py-0.5 rounded text-[10px] font-bold glass-panel text-slate-300">Wallet</span>
+                                    <span id="profiler-verified" class="hidden text-emerald-500 text-[10px]"><i class="fa-solid fa-circle-check"></i> Verified</span>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="text-[9px] font-bold text-slate-500 uppercase mb-1">Intelligence Tags</div>
+                                <div class="flex flex-wrap gap-1" id="profiler-tags">
+                                    <!-- Tags injected here -->
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2 border-t border-slate-200 pt-3">
+                                <div>
+                                    <div class="text-[9px] text-slate-500 uppercase">First Seen</div>
+                                    <div class="text-xs text-slate-200 font-mono mt-0.5" id="profiler-first-seen">N/A</div>
+                                </div>
+                                <div>
+                                    <div class="text-[9px] text-slate-500 uppercase">Last Active</div>
+                                    <div class="text-xs text-slate-200 font-mono mt-0.5" id="profiler-last-seen">N/A</div>
+                                </div>
+                                <div>
+                                    <div class="text-[9px] text-slate-500 uppercase">Total Received</div>
+                                    <div class="text-xs text-emerald-600 font-mono mt-0.5" id="profiler-received">0.00</div>
+                                </div>
+                                <div>
+                                    <div class="text-[9px] text-slate-500 uppercase">Total Sent</div>
+                                    <div class="text-xs text-rose-500 font-mono mt-0.5" id="profiler-sent">0.00</div>
+                                </div>
+                            </div>
+
+                            <button class="w-full py-2 bg-blue-500 hover:bg-blue-600 text-slate-900 text-xs font-bold rounded transition-colors shadow-sm">
+                                FULL INVESTIGATION REPORT &rarr;
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOTTOM SECTION: CHARTS & FEEDS -->
+            <div class="h-[220px] shrink-0 flex gap-3">
+                
+                <!-- Risk Distribution Donut -->
+                <div class="w-[280px] light-panel flex flex-col p-3">
+                    <h3 class="text-[10px] font-bold text-slate-500 uppercase mb-2">Risk Distribution</h3>
+                    <div class="flex-1 relative">
+                        <canvas id="riskChart"></canvas>
+                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none mt-2">
+                            <div class="text-center">
+                                <div class="text-lg font-bold text-slate-200">18K</div>
+                                <div class="text-[8px] text-slate-500">Total Flags</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Network Activity Line Chart -->
+                <div class="flex-1 light-panel flex flex-col p-3">
+                    <h3 class="text-[10px] font-bold text-slate-500 uppercase mb-2">Network Activity (24H)</h3>
+                    <div class="flex-1 relative">
+                        <canvas id="activityChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Live Transaction Feed -->
+                <div class="w-[320px] light-panel flex flex-col">
+                    <div class="p-3 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                        <h3 class="text-[10px] font-bold text-slate-500 uppercase"><i class="fa-solid fa-satellite-dish text-blue-500 mr-1"></i> Live Intercepts</h3>
+                        <div class="flex gap-1">
+                            <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                        </div>
+                    </div>
+                    <div class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2" id="live-feed">
+                        <!-- Feed items injected here -->
+                    </div>
+                </div>
+            </div>
+            
+        </main>
+    </div>
+
+    <script>
+        // -----------------------------------------
+        // SOCKET.IO REAL-TIME INTEGRATION
+        // -----------------------------------------
+        const BACKEND_WS_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '' ? 'ws://localhost:8088' : 'wss://nemesis-api-v3.legionxgaming2021.workers.dev';
+        const socket = io(BACKEND_WS_URL);
+        
+        socket.on('connect', () => {
+            console.log("Connected to NEMESIS APEX Engine");
+            socket.emit('join_ransomware_hub');
+        });
+
+        // -----------------------------------------
+        // VIS.JS NETWORK GRAPH SETUP
+        // -----------------------------------------
+        const nodes = new vis.DataSet([]);
+        const edges = new vis.DataSet([]);
+        const container = document.getElementById('network-graph');
+        
+        const data = { nodes: nodes, edges: edges };
+        const options = {
+            nodes: {
+                shape: 'dot', size: 16,
+                font: { color: '#0f172a', size: 10, face: 'JetBrains Mono', strokeWidth: 2, strokeColor: '#ffffff' },
+                borderWidth: 2,
+                shadow: { enabled: true, color: 'rgba(0,0,0,0.1)', size: 5, x: 2, y: 2 }
+            },
+            edges: {
+                width: 1.5,
+                smooth: { type: 'continuous', roundness: 0.5 },
+                color: { color: '#cbd5e1', highlight: '#3b82f6' },
+                arrows: { to: { enabled: true, scaleFactor: 0.5 } },
+                font: { size: 9, color: '#64748b', strokeWidth: 2, strokeColor: '#ffffff', align: 'top' }
+            },
+            physics: {
+                solver: 'forceAtlas2Based',
+                forceAtlas2Based: { gravitationalConstant: -60, centralGravity: 0.01, springLength: 100, springConstant: 0.08, damping: 0.4 },
+                stabilization: { iterations: 150 }
+            },
+            interaction: {
+                hover: true, tooltipDelay: 200, hideEdgesOnDrag: true
+            }
+        };
+
+        const network = new vis.Network(container, data, options);
+
+        // Helper to format currency
+        const formatMoney = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(val);
+
+        // -----------------------------------------
+        // EVENT HANDLERS & REAL-TIME UPDATES
+        // -----------------------------------------
+        
+        let clusterMap = {};
+        
+        socket.on('cluster_map', (data) => {
+            console.log("Received ML Cluster Map:", data);
+            clusterMap = data;
+            
+            // Update existing nodes with cluster tags
+            const nodesToUpdate = [];
+            for(let addr in clusterMap) {
+                const clusterName = clusterMap[addr];
+                const existingNode = nodes.get(addr);
+                if (existingNode) {
+                    nodesToUpdate.push({
+                        id: addr,
+                        group: 'Ransomware',
+                        borderWidth: 4,
+                        color: { border: '#ef4444', background: '#fee2e2' },
+                        title: `<div><b>${existingNode.label}</b><br/>Cluster: <span style="color:red">${clusterName}</span></div>`
+                    });
+                }
+            }
+            if(nodesToUpdate.length > 0) {
+                nodes.update(nodesToUpdate);
+                document.getElementById('ransomware-cluster-count').innerText = 
+                    parseInt(document.getElementById('ransomware-cluster-count').innerText) + Object.keys(clusterMap).length;
+            }
+        });
+
+        socket.on('ransomware_node', (data) => {
+            const n = data.node;
+            if (!nodes.get(n.id)) {
+                let color = '#3b82f6'; // Wallet
+                let icon = '\uf0c2';
+                
+                if(n.classification === 'Ransomware' || n.classification === 'Ransomware_Syndicate') { color = '#ef4444'; }
+                else if(n.classification === 'Mixer') { color = '#8b5cf6'; }
+                else if(n.classification === 'CEX' || n.classification === 'Exchange') { color = '#f59e0b'; }
+                else if(n.classification === 'Sanctioned') { color = '#b91c1c'; }
+
+                nodes.add({
+                    id: n.id,
+                    label: n.entity_name !== 'Unknown' ? n.entity_name : `${n.id.substring(0,6)}...${n.id.substring(n.id.length-4)}`,
+                    color: { background: '#ffffff', border: color },
+                    title: `Type: ${n.classification}<br>Risk: ${n.risk_score}`,
+                    raw_data: n
+                });
+            }
+        });
+
+        socket.on('ransomware_edge', (data) => {
+            const e = data.edge;
+            const edgeId = `${e.from_addr}-${e.to_addr}-${e.tx_hash}`;
+            if (!edges.get(edgeId)) {
+                let color = '#cbd5e1';
+                if(e.action_type === 'PEEL_CHAIN') color = '#ef4444';
+                
+                edges.add({
+                    id: edgeId,
+                    from: e.from_addr,
+                    to: e.to_addr,
+                    label: `${e.amount.toFixed(2)} ETH\n(${formatMoney(e.usd_value)})`,
+                    color: { color: color, highlight: '#ef4444' }
+                });
+                addLiveFeedItem(e);
+            }
+        });
+
+        socket.on('system_alert', (data) => {
+            console.log("SYSTEM ALERT:", data.msg);
+            // Could add toast notifications here
+        });
+
+        socket.on('trace_complete', () => {
+            const radar = document.getElementById('radar-overlay');
+            radar.classList.remove('radar-circle-light');
+            radar.classList.add('hidden');
+            setTimeout(() => network.fit(), 1000);
+        });
+
+        // -----------------------------------------
+        // HUNT INITIATION
+        // -----------------------------------------
+        document.getElementById('huntBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('huntBtn');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> HUNTING...';
+            btn.classList.add('opacity-80', 'cursor-not-allowed');
+            
+            // Show radar
+            const radar = document.getElementById('radar-overlay');
+            radar.classList.remove('hidden');
+            radar.classList.add('radar-circle-light');
+            
+            try {
+                const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '' ? 'http://localhost:8088' : '';
+                await fetch(`${window.BACKEND_URL}/api/v1/ransomware/hunt`, { method: 'POST' });
+            } catch (e) {
+                console.error("Failed to start hunt", e);
+                btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> FAILED';
+                setTimeout(() => { btn.innerHTML = '<i class="fa-solid fa-crosshairs"></i> INITIATE HUNT'; btn.classList.remove('opacity-80', 'cursor-not-allowed'); }, 2000);
+            }
+        });
+
+        // -----------------------------------------
+        // ENTITY PROFILER LOGIC
+        // -----------------------------------------
+        network.on("click", async function (params) {
+            if (params.nodes.length > 0) {
+                const nodeId = params.nodes[0];
+                document.getElementById('profiler-empty').classList.add('hidden');
+                document.getElementById('profiler-content').classList.remove('hidden');
+                
+                // Show loading state
+                document.getElementById('profiler-address').innerText = "Loading...";
+                document.getElementById('profiler-tags').innerHTML = '<div class="text-[10px] text-slate-500">Fetching intelligence...</div>';
+                
+                try {
+                    const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '' ? 'http://localhost:8088' : '';
+                    const res = await fetch(`${window.BACKEND_URL}/api/v1/entities/${nodeId}`);
+                    const entity = await res.json();
+                    
+                    document.getElementById('profiler-address').innerText = entity.address;
+                    document.getElementById('profiler-name').innerText = entity.entity_name || 'Unknown Entity';
+                    
+                    // Update avatar
+                    document.getElementById('profiler-avatar').src = `https://api.dicebear.com/7.x/identicon/svg?seed=${entity.address}`;
+                    
+                    // Update risk score
+                    const risk = entity.risk_score || 0;
+                    document.getElementById('profiler-risk-score').innerText = risk;
+                    const dashoffset = 226 - (226 * (risk / 100));
+                    document.getElementById('profiler-risk-circle').style.strokeDashoffset = dashoffset;
+                    
+                    let riskColor = '#10b981'; // Green
+                    if(risk > 40) riskColor = '#f59e0b'; // Yellow
+                    if(risk > 75) riskColor = '#ef4444'; // Red
+                    document.getElementById('profiler-risk-circle').style.stroke = riskColor;
+                    document.getElementById('profiler-risk-bar').style.background = riskColor;
+                    
+                    // Update classification
+                    const classBadge = document.getElementById('profiler-classification-badge');
+                    classBadge.innerText = entity.classification || 'Wallet';
+                    classBadge.className = `px-2 py-0.5 rounded text-[10px] font-bold ${getClassificationColor(entity.classification)}`;
+                    
+                    if(entity.verified) document.getElementById('profiler-verified').classList.remove('hidden');
+                    else document.getElementById('profiler-verified').classList.add('hidden');
+                    
+                    // Update tags
+                    const tagsContainer = document.getElementById('profiler-tags');
+                    tagsContainer.innerHTML = '';
+                    if(entity.tags && entity.tags.length > 0) {
+                        entity.tags.forEach(tag => {
+                            tagsContainer.innerHTML += `<span class="glass-panel text-slate-500 px-1.5 py-0.5 rounded text-[9px] border border-slate-200">${tag}</span>`;
+                        });
+                    }
+                    if(clusterMap[entity.address]) {
+                        tagsContainer.innerHTML += `<span class="bg-red-50 text-red-600 font-bold px-1.5 py-0.5 rounded text-[9px] border border-red-200"><i class="fa-solid fa-diagram-project"></i> ${clusterMap[entity.address]}</span>`;
+                    }
+                    
+                } catch (e) {
+                    console.error("Failed to load entity details", e);
+                }
+            } else {
+                document.getElementById('profiler-empty').classList.remove('hidden');
+                document.getElementById('profiler-content').classList.add('hidden');
+            }
+        });
+
+        function getClassificationColor(cls) {
+            if(cls === 'Ransomware' || cls === 'Sanctioned') return 'bg-red-100 text-red-700 border border-red-200';
+            if(cls === 'Mixer') return 'bg-purple-100 text-purple-700 border border-purple-200';
+            if(cls === 'CEX') return 'bg-yellow-100 text-yellow-700 border border-yellow-200';
+            return 'bg-blue-100 text-blue-700 border border-blue-200';
+        }
+
+        // -----------------------------------------
+        // LIVE FEED LOGIC
+        // -----------------------------------------
+        function addLiveFeedItem(edge) {
+            const feed = document.getElementById('live-feed');
+            let icon = '<i class="fa-solid fa-arrow-right text-blue-500"></i>';
+            if(edge.action_type === 'PEEL_CHAIN') icon = '<i class="fa-solid fa-layer-group text-red-500"></i>';
+            
+            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+            
+            const html = `
+                <div class="glass-panel border border-slate-100 p-2 rounded flex items-center gap-2 text-[10px]">
+                    <div class="text-slate-500 font-mono">${time}</div>
+                    <div class="w-4 text-center">${icon}</div>
+                    <div class="flex-1 font-mono text-slate-500 truncate">
+                        ${edge.from_addr.substring(0,4)}.. -> ${edge.to_addr.substring(0,4)}..
+                    </div>
+                    <div class="font-bold text-slate-200">${edge.amount.toFixed(2)}</div>
+                </div>
+            `;
+            feed.insertAdjacentHTML('afterbegin', html);
+            if(feed.children.length > 50) feed.removeChild(feed.lastChild);
+        }
+
+        // -----------------------------------------
+        // CHART.JS INITIALIZATION
+        // -----------------------------------------
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = 'Inter';
+
+        // Risk Donut
+        new Chart(document.getElementById('riskChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['High Risk', 'Medium Risk', 'Low Risk', 'Safe'],
+                datasets: [{
+                    data: [15, 30, 20, 35],
+                    backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981'],
+                    borderWidth: 0,
+                    cutout: '75%'
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // Activity Line
+        new Chart(document.getElementById('activityChart'), {
+            type: 'line',
+            data: {
+                labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'],
+                datasets: [
+                    { label: 'Illicit Vol', data: [10, 25, 20, 45, 30, 60, 50], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4, borderWidth: 2, pointRadius: 0 },
+                    { label: 'Normal Vol', data: [40, 50, 45, 60, 55, 70, 65], borderColor: '#3b82f6', borderDash: [5,5], fill: false, tension: 0.4, borderWidth: 2, pointRadius: 0 }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: '#0f172a' } },
+                    y: { grid: { color: '#0f172a' }, beginAtZero: true }
+                }
+            }
+        });
+        
+        // Add initial mock feed data
+        for(let i=0; i<5; i++) {
+            addLiveFeedItem({
+                from_addr: `0x${Math.random().toString(16).substr(2, 40)}`,
+                to_addr: `0x${Math.random().toString(16).substr(2, 40)}`,
+                amount: Math.random() * 10,
+                action_type: Math.random() > 0.8 ? 'PEEL_CHAIN' : 'TRANSFER'
+            });
+        }
+    </script>
+
+<!-- GLOBAL NEMESIS AJAX LOADER -->
+<div id="global-ajax-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 99999; justify-content: center; align-items: center; flex-direction: column;">
+    <img src="assets/butterfly_transparent.png" style="width: 100px; height: 100px; animation: pulse-loader 1.5s infinite; filter: drop-shadow(0 0 20px rgba(6,182,212,0.8));">
+    <div style="color: #06b6d4; margin-top: 20px; font-family: monospace; font-size: 16px; font-weight: bold; text-shadow: 0 0 10px #06b6d4;">NEMESIS SINGULARITY KERNEL</div>
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+</div>
+<script>
+    (function() {
+        if (window._nemesisLoaderInitialized) return;
+        window._nemesisLoaderInitialized = true;
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const loader = document.getElementById('global-ajax-loader');
+            if (loader) loader.style.display = 'flex';
+            try {
+                const response = await originalFetch.apply(this, args);
+                return response;
+            } finally {
+                if (loader) loader.style.display = 'none';
+            }
+        };
+    })();
+</script>
+</body>
+
+</html>
+

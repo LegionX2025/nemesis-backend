@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEMESIS Project Architecture & Overview</title>
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --surface: #1f2833;
+            --primary: #66fcf1;
+            --secondary: #45a29e;
+            --text-main: #c5c6c7;
+            --text-muted: #8b929a;
+            --border: #2a3441;
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: rgba(31, 40, 51, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            padding: 2rem;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        h1 {
+            margin: 0;
+            color: var(--primary);
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        h2, h3, h4 {
+            color: var(--primary);
+            margin-top: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .section {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: rgba(11, 12, 16, 0.5);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(102, 252, 241, 0.1);
+            border-color: var(--secondary);
+        }
+
+        .mermaid {
+            background: #ffffff;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            overflow-x: auto;
+        }
+
+        pre {
+            background: #000;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            color: #a6e22e;
+            border: 1px solid var(--border);
+        }
+
+        code {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background-color: rgba(69, 162, 158, 0.1);
+            color: var(--secondary);
+        }
+        
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        
+        ul li {
+            padding: 0.5rem 0;
+            position: relative;
+            padding-left: 1.5rem;
+        }
+        
+        ul li::before {
+            content: "▹";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+        }
+        
+        .nav-list a {
+            color: var(--text-main);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        .nav-list a:hover {
+            color: var(--primary);
+        }
+
+        /* Micro-animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animated {
+            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Fira+Code&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+
+<header>
+    <h1>NEMESIS Project Mapping</h1>
+    <p>Comprehensive Architecture, Workflows, and Endpoints</p>
+</header>
+
+<div class="container">
+    
+    <!-- 1. Directory Structure -->
+    <div class="section animated" style="animation-delay: 0.1s;">
+        <h2>1. High-Level Directory Structure</h2>
+        <pre><code>local_deploy/
+├── backend/                  # Python FastAPI Backend Services
+│   ├── app/                  # Main FastAPI Application
+│   │   ├── services/         # Core logic (GBIO Engine, AI Services, Plugins)
+│   │   ├── adapters/         # External API integrations
+│   │   ├── routers/          # API endpoints
+│   │   └── main.py           # Application Entry Point
+│   ├── nemesis_omni_core.py  # Standalone core engine
+│   ├── nemesis_apex_omni.py  # Apex engine for tracking
+│   └── requirements.txt      # Backend Python Dependencies
+├── frontend/                 # Static HTML, CSS, JS & Frontends
+│   ├── tracer_app/           # React + Vite App for Tracing
+│   ├── nemesis-global-worker/# Cloudflare Worker Scripts
+│   ├── *.html                # Multiple standalone app frontends
+│   ├── css/                  # Theming (light-theme.css, nemesis-enterprise.css)
+│   └── js/                   # Core frontend logic (nemesis-ui.js)
+├── scripts/                  # Utility & Deployment Scripts (Python)
+├── migrations/               # Database Migrations
+├── .env                      # Global Environment Configuration
+└── RUN_ME_NOW.bat            # Main Bootstrapper
+</code></pre>
+    </div>
+
+    <!-- 2. Apps Mapping -->
+    <div class="section animated" style="animation-delay: 0.2s;">
+        <h2>2. NEMESIS Apps, Frontends & Backends</h2>
+        <div class="grid">
+            <div class="card">
+                <h3>NEMESIS Tracer</h3>
+                <p><strong>Frontend:</strong> <code>nemesis_tracer.html</code>, <code>tracer_app/</code> (React)</p>
+                <p><strong>Backend:</strong> <code>backend/app/main.py</code>, <code>backend/nemesis_apex_omni.py</code></p>
+                <p><strong>Purpose:</strong> Visualizing blockchain traces, crypto flows, and OSINT correlations.</p>
+            </div>
+            <div class="card">
+                <h3>NEMESIS ID</h3>
+                <p><strong>Frontend:</strong> <code>nemesis_id.html</code>, <code>nemesis_id_new.html</code></p>
+                <p><strong>Backend:</strong> <code>/api/nemesis_id/*</code> endpoints</p>
+                <p><strong>Purpose:</strong> Individual entity profiling, KYC/AML scoring, and AI-driven insights.</p>
+            </div>
+            <div class="card">
+                <h3>NEMESIS Apex Omni</h3>
+                <p><strong>Frontend:</strong> <code>apex_dashboard.html</code>, <code>apex_landing.html</code></p>
+                <p><strong>Backend:</strong> <code>backend/nemesis_apex_omni.py</code></p>
+                <p><strong>Purpose:</strong> Enterprise-level threat hunting, global blockchain tracking, ransomware analysis.</p>
+            </div>
+            <div class="card">
+                <h3>NEMESIS Threat Hunter / Darknet</h3>
+                <p><strong>Frontend:</strong> <code>nemesis_threat_hunter.html</code>, <code>darknet_search.html</code></p>
+                <p><strong>Backend:</strong> <code>/api/osint/*</code> endpoints</p>
+                <p><strong>Purpose:</strong> Scanning dark web forums, identifying exploiters and ransomware affiliates.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. API Routes -->
+    <div class="section animated" style="animation-delay: 0.3s;">
+        <h2>3. API Routes & Endpoints</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Endpoint</th>
+                    <th>Method</th>
+                    <th>App / Service</th>
+                    <th>Purpose</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>/api/v1/trace/deploy</code></td>
+                    <td>POST</td>
+                    <td>Apex Omni</td>
+                    <td>Deploys a tracer agent on a specific target address.</td>
+                </tr>
+                <tr>
+                    <td><code>/api/v1/ransomware/hunt</code></td>
+                    <td>POST</td>
+                    <td>Apex Omni</td>
+                    <td>Initiates global threat hunt for ransomware strains.</td>
+                </tr>
+                <tr>
+                    <td><code>/api/entity</code></td>
+                    <td>POST/GET</td>
+                    <td>GBIO Ontology</td>
+                    <td>Add or retrieve entity metadata (Graph Node).</td>
+                </tr>
+                <tr>
+                    <td><code>/api/nemesis_id/profile/{address}</code></td>
+                    <td>GET</td>
+                    <td>Nemesis ID</td>
+                    <td>Fetches comprehensive KYC/AML profile for an address.</td>
+                </tr>
+                <tr>
+                    <td><code>/api/nemesis_id/tx_history/{address}</code></td>
+                    <td>GET</td>
+                    <td>Nemesis ID</td>
+                    <td>Retrieves categorized transaction history.</td>
+                </tr>
+                <tr>
+                    <td><code>/api/nemesis_id/ai_insights/{address}</code></td>
+                    <td>GET</td>
+                    <td>Nemesis ID / AI</td>
+                    <td>Generates LLM-based behavioral insights on a wallet.</td>
+                </tr>
+                <tr>
+                    <td><code>/api/osint/{address}</code></td>
+                    <td>GET</td>
+                    <td>Threat Hunter</td>
+                    <td>Pulls Clear/Dark web intelligence correlated to an address.</td>
+                </tr>
+                <tr>
+                    <td><code>/api/start_trace</code></td>
+                    <td>POST/GET</td>
+                    <td>Tracer App</td>
+                    <td>Kicks off the Graph extraction from blockchain nodes.</td>
+                </tr>
+                <tr>
+                    <td><code>/api/ai/fabric_status</code></td>
+                    <td>GET</td>
+                    <td>System</td>
+                    <td>Returns health of LLM integration (Gemini/OpenAI).</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 4. Menus and Pages -->
+    <div class="section animated" style="animation-delay: 0.4s;">
+        <h2>4. Frontend Menus, Pages, and Links</h2>
+        <div class="grid">
+            <div class="card">
+                <h3>Global Navigation Links</h3>
+                <ul class="nav-list">
+                    <li><a href="index.html">Main Landing Page</a></li>
+                    <li><a href="dashboard.html">System Dashboard</a></li>
+                    <li><a href="admin.html">Admin Console</a></li>
+                    <li><a href="api_docs.html">API Documentation</a></li>
+                    <li><a href="login.html">Authentication</a></li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Dashboard Variants</h3>
+                <ul class="nav-list">
+                    <li><a href="nemesis_enterprise_dashboard.html">Enterprise Dashboard</a></li>
+                    <li><a href="nemesis_fullscreen_dashboard.html">Fullscreen Dashboard</a></li>
+                    <li><a href="nemesis_id_dashboard.html">Nemesis ID Dashboard</a></li>
+                    <li><a href="client_dashboard.html">Client Facing Dashboard</a></li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>Tools & Workflows</h3>
+                <ul class="nav-list">
+                    <li><a href="audit.html">Compliance Audit</a></li>
+                    <li><a href="cloudflare_ops.html">Cloudflare Edge Ops</a></li>
+                    <li><a href="recovery_framework.html">Asset Recovery Framework</a></li>
+                    <li><a href="report_template.html">Intelligence Reports</a></li>
+                    <li><a href="subpoena_template.html">Subpoena Generation</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Architecture & Workflows -->
+    <div class="section animated" style="animation-delay: 0.5s;">
+        <h2>5. Full High-End Architecture & Executions</h2>
+        <p>The NEMESIS architecture relies on a highly decoupled event-driven system leveraging <strong>FastAPI</strong>, <strong>Celery Workers</strong>, and <strong>WebSockets (Socket.IO)</strong> for real-time trace streaming.</p>
+        
+        <h3>Execution Workflow Diagram</h3>
+        <div class="mermaid">
+        sequenceDiagram
+            participant User as Analyst UI
+            participant API as FastAPI Backend
+            participant GBIO as GBIO Ontology Engine
+            participant OSINT as Threat Intel Module
+            participant DB as Graph DB (Neo4j/Mongo)
+
+            User->>API: POST /api/start_trace (Target Wallet)
+            API->>GBIO: Initiate Trace & Classify
+            GBIO->>DB: Fetch Known Entity Labels
+            GBIO->>OSINT: Query Darknet/Clearweb Data
+            OSINT-->>GBIO: Return Threat Signals & Sanctions
+            GBIO->>GBIO: Execute Topological AML Profiling
+            GBIO-->>API: Stream Nodes & Edges (WebSockets)
+            API-->>User: Visual Graph Rendered in Real-Time
+        </div>
+    </div>
+
+    <!-- 6. Dashboard Schema -->
+    <div class="section animated" style="animation-delay: 0.6s;">
+        <h2>6. Dashboard Data Schema (Graph Node & Edge)</h2>
+        <p>Dashboards consume standardized Graph Based Intelligence Ontology (GBIO) responses to render the tracking environment.</p>
+        <pre><code>// GBIONode Schema (Node Data)
+{
+  "identifier": "0xABC...",
+  "network": "ETHEREUM",
+  "entity_class": "EXCHANGE_HOT",
+  "labels": ["Binance", "High-Volume"],
+  "risk_profile": {
+    "overall_score": 15.0,
+    "threat_level": "LOW",
+    "aml_flags": [],
+    "behavioral_indicators": ["FAN_IN"]
+  },
+  "primary_classification": "Exchange Hot Wallet",
+  "intelligence_confidence": "Verified"
+}
+
+// GBIOEdge Schema (Link Data)
+{
+  "edge_id": "0xtxhash:logindex",
+  "action": "SENT_TO",
+  "source_node_id": "ETHEREUM:0xABC...",
+  "target_node_id": "ETHEREUM:0xDEF...",
+  "asset_symbol": "USDC",
+  "amount_usd_estimate": 250000.0,
+  "timestamp": "2026-07-20T11:00:00Z",
+  "is_terminal_hop": true
+}
+</code></pre>
+    </div>
+
+</div>
+
+<script>
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+</script>
+</body>
+</html>

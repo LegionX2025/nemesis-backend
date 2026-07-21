@@ -1,0 +1,75 @@
+/* light-theme.css - Global Overrides for Nemesis Light Theme */
+
+body {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+    color: #0f172a !important;
+}
+
+/* Glassmorphism Panels */
+.glass-panel, .bg-slate-900, .bg-gray-900, .bg-\[\#0f172a\] {
+    background: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1) !important;
+    color: #1e293b !important;
+}
+
+/* Text Overrides */
+.text-white, .text-gray-100, .text-gray-200 {
+    color: #0f172a !important;
+}
+.text-gray-300, .text-gray-400 {
+    color: #475569 !important;
+}
+
+/* Border Overrides */
+.border-gray-800, .border-slate-700, .border-slate-800 {
+    border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Card Overrides */
+.data-card {
+    background: rgba(255, 255, 255, 0.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.6) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+}
+.data-card:hover {
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+    transform: translateY(-2px);
+}
+
+/* Fix specific UI elements that might become invisible */
+h1, h2, h3, h4, h5, h6 {
+    color: #020617 !important;
+}
+
+/* Links and Accents */
+a {
+    color: #2563eb;
+}
+a:hover {
+    color: #1d4ed8;
+}
+
+/* Neon accents converted to soft blues/purples for light theme */
+.border-nemesis-neon {
+    border-color: #3b82f6 !important;
+}
+.bg-nemesis-neon {
+    background-color: #3b82f6 !important;
+}
+.text-nemesis-neon {
+    color: #2563eb !important;
+}
+
+/* WebGL Canvas Container */
+#webgl-bg-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    pointer-events: none; /* Let clicks pass through */
+}

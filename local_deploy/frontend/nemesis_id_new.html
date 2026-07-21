@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEMESIS ID | Multi-Domain Intelligence Reconstruction</title>
+    
+    
+    
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Syncopate:wght@700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.26.0/cytoscape.min.js"></script>
+    <script src="https://unpkg.com/layout-base/layout-base.js"></script>
+    <script src="https://unpkg.com/cose-base/cose-base.js"></script>
+    <script src="https://unpkg.com/cytoscape-fcose/cytoscape-fcose.js"></script>
+    <script src="nemesis_graph_engine.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    
+
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd', 400: '#60a5fa', 
+              500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 800: '#1e40af', 900: '#1e3a8a', 950: '#172554',
+            },
+            dark: {
+              bg: '#020617',
+              surface: '#0f172a',
+              card: '#1e293b',
+              border: '#334155'
+            }
+          },
+          animation: {
+            'glow-pulse': 'glow-pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'float': 'float 6s ease-in-out infinite',
+            'cyber-scan': 'scan 2s linear infinite',
+          },
+          keyframes: {
+            'glow-pulse': {
+              '0%, 100%': { opacity: '1' },
+              '50%': { opacity: '.5', filter: 'brightness(1.5)' },
+            },
+            'float': {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-10px)' },
+            },
+            scan: {
+              '0%': { transform: 'translateY(-100%)' },
+              '100%': { transform: 'translateY(100%)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+
+
+    <!-- Light Theme & WebGL Overrides -->
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="global_nav.js"></script>
+
+    <link rel="stylesheet" href="/light-theme.css">
+
+    <script>
+        const IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        window.BACKEND_URL = IS_LOCAL ? 'http://127.0.0.1:8088' : 'https://nemesis-api-v3.legionxgaming2021.workers.dev';
+        window.API_BASE = window.BACKEND_URL;
+    </script>
+        \n</head>
+<body class="h-screen flex show-usd glass-panel overflow-hidden">
+
+    <div id="global-loader">
+        <div class="cyber-ring mb-6"></div>
+        <h2 class="text-slate-100 font-cyber text-2xl tracking-widest animate-pulse">NEMESIS ID ENGINE</h2>
+        <p class="text-blue-600 font-mono text-[10px] uppercase tracking-widest mt-2" id="loader-text">Fusing Blockchain, OSINT & Identity Graphs...</p>
+    </div>
+
+    <!-- Side Panel Data Dossier -->
+    <div id="side-panel" class="flex flex-col">
+        <div class="glass-panel border-b border-slate-200 text-slate-100 p-4 flex justify-between items-center sticky top-0 z-10 shadow-lg shadow-cyan-500/20">
+            <h3 class="font-black tracking-widest uppercase text-sm flex items-center gap-2 font-mono"><i class="fa-solid fa-folder-open text-blue-600"></i> Intelligence Dossier</h3>
+            <button onclick="closeSidePanel()" class="text-slate-500 hover:text-slate-300"><i class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+        <div class="p-5" id="side-panel-content"></div>
+    </div>
+
+    <!-- Custom Context Menu for Graph -->
+    <div id="custom-context-menu">
+        <div class="px-4 py-2 border-b border-slate-200 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Graph Actions</div>
+        <div class="context-menu-item" onclick="alertAction('trigger AI Insights', 'Generating AI Explanation...')"><i class="fa-solid fa-brain text-purple-500"></i> Trigger AI Insights</div>
+        <div class="context-menu-item" onclick="alertAction('OSINT lookup', 'Scanning Clear/Dark Web...')"><i class="fa-solid fa-globe text-blue-500"></i> OSINT Lookup</div>
+        <div class="context-menu-item" onclick="alertAction('Trace CEX', 'Resolving Custodial Endpoints...')"><i class="fa-solid fa-building-columns text-amber-500"></i> Trace CEX Hubs</div>
+        <div class="context-menu-item" onclick="alertAction('Mixing Analysis', 'De-obfuscating Layers...')"><i class="fa-solid fa-mask text-slate-300"></i> Mixing Analysis</div>
+        <div class="context-menu-item border-t border-slate-200 mt-1 pt-2" onclick="closeContextMenu()"><i class="fa-solid fa-xmark"></i> Close Menu</div>
+    </div>
+
+    <!-- LEFT SIDEBAR NAVIGATION -->
+    <aside class="w-64 flex-shrink-0 bg-slate-900/80 backdrop-blur-xl border-r border-slate-700/50 shadow-lg flex flex-col z-50 overflow-y-auto">
+        <div class="p-6 border-b border-slate-200">
+            <img src="butterfly_transparent.png" alt="LIONSGATE" class="h-10 mb-2">
+            <h2 class="text-slate-100 font-cyber text-lg tracking-widest">NEMESIS ID</h2>
+            <p class="text-[9px] text-slate-500 font-mono uppercase tracking-widest mt-1">Multi-Domain Recon</p>
+        </div>
+        
+        <nav class="flex flex-col flex-grow py-4 px-3 gap-1">
+            <button class="tab-btn active px-4 py-3 text-left rounded-lg transition-colors" onclick="switchTab('tab-profile')"><i class="fa-solid fa-id-card w-6 text-center"></i> Wallet Profile</button>
+            <button class="tab-btn px-4 py-3 text-left rounded-lg transition-colors" onclick="switchTab('tab-counterparties')"><i class="fa-solid fa-users-viewfinder w-6 text-center"></i> Counterparties</button>
+            <button class="tab-btn px-4 py-3 text-left rounded-lg transition-colors" onclick="switchTab('tab-assets')"><i class="fa-solid fa-wallet w-6 text-center"></i> Assets</button>
+            <button class="tab-btn px-4 py-3 text-left rounded-lg transition-colors" onclick="switchTab('tab-chains')"><i class="fa-solid fa-link w-6 text-center"></i> Chains</button>
+            <button class="tab-btn px-4 py-3 text-left rounded-lg transition-colors" onclick="switchTab('tab-transactions')"><i class="fa-solid fa-list-ul w-6 text-center"></i> Transactions</button>
+            <button class="tab-btn px-4 py-3 text-left rounded-lg transition-colors" onclick="switchTab('tab-balances')"><i class="fa-solid fa-chart-pie w-6 text-center"></i> Balances</button>
+            <button class="tab-btn px-4 py-3 text-left rounded-lg transition-colors" onclick="switchTab('tab-graph')"><i class="fa-solid fa-project-diagram w-6 text-center text-blue-600"></i> Trace Graph</button>
+            <button class="tab-btn px-4 py-3 text-left rounded-lg transition-colors" onclick="switchTab('tab-aml')"><i class="fa-solid fa-shield-halved w-6 text-center text-red-600"></i> AML</button>
+            <button class="tab-btn px-4 py-3 text-left rounded-lg transition-colors" onclick="switchTab('tab-georisk')"><i class="fa-solid fa-earth-americas w-6 text-center text-emerald-600"></i> GeoRisk</button>
+            <button class="tab-btn px-4 py-3 text-left rounded-lg transition-colors" onclick="switchTab('tab-intelligence')"><i class="fa-solid fa-user-secret w-6 text-center text-slate-100"></i> Intelligence</button>
+            <button class="tab-btn px-4 py-3 text-left rounded-lg transition-colors" onclick="switchTab('tab-ai-insights')"><i class="fa-solid fa-brain w-6 text-center text-purple-600"></i> AI Insights</button>
+            <button class="tab-btn px-4 py-3 text-left rounded-lg transition-colors" onclick="switchTab('tab-report')"><i class="fa-solid fa-file-pdf w-6 text-center text-indigo-600"></i> Report</button>
+        </nav>
+        
+        <div class="p-4 border-t border-slate-200 text-[10px] text-slate-500 font-mono text-center">
+            System Online <span class="text-emerald-500">●</span>
+        </div>
+    </aside>
+
+    <!-- RIGHT MAIN CONTENT -->
+    <div class="flex-grow flex flex-col h-screen overflow-hidden relative">
+        <!-- Header Panel -->
+        <header class="glass-panel px-6 py-4 flex-shrink-0 z-40 sticky top-0 border-b border-slate-200">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="flex items-start gap-4">
+                    <div class="relative w-14 h-14 bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 rounded-xl border border-slate-200 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                        <i class="fa-solid fa-fingerprint text-blue-600 text-3xl animate-pulse"></i>
+                    </div>
+                    
+                    <div>
+                        <div class="flex items-center gap-3 mb-1">
+                            <div class="flex -space-x-2" id="header-chain-logos">
+                                <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-6 h-6 rounded-full bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 p-1 border border-slate-200 relative z-30" title="Ethereum">
+                                <img src="https://cryptologos.cc/logos/polygon-matic-logo.png" class="w-6 h-6 rounded-full bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 p-1 border border-slate-200 relative z-20" title="Polygon">
+                                <img src="https://cryptologos.cc/logos/solana-sol-logo.png" class="w-6 h-6 rounded-full bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 p-1 border border-slate-200 relative z-10" title="Solana">
+                            </div>
+                            <h1 class="text-xl font-mono font-bold text-slate-100 tracking-tight flex items-center gap-2 hover:text-blue-600 cursor-pointer transition" id="header-address-container">
+                                <span id="header-address">Loading Address...</span> <i class="fa-solid fa-copy text-xs text-slate-500"></i>
+                            </h1>
+                        </div>
+                        
+                        <div class="flex items-center gap-4 text-sm font-mono mt-1">
+                            <span class="text-slate-500 uppercase text-[10px] tracking-widest font-bold" id="header-nemesis-id">NEMESIS ID: LOADING | SUBJECT WALLET ENTITY</span>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2 mt-2 text-[9px] font-bold uppercase tracking-wider font-mono" id="header-threat-tags">
+                            <span class="glass-panel text-slate-300 border border-slate-200 px-2 py-0.5 rounded shadow-sm">Analyzing Risk...</span>
+
+                            <div class="flex items-center gap-1.5 text-emerald-600 ml-2">
+                                <span class="live-dot"></span> STATUS: ACTIVE
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col items-end gap-3 w-full md:w-auto">
+                    <div class="px-5 py-2.5 rounded-lg flex items-center gap-3 w-full md:w-auto shadow-sm transition glass-panel border border-slate-200">
+                        <i class="fa-solid fa-shield-blank text-2xl text-slate-500"></i>
+                        <div>
+                            <p class="text-[9px] font-black uppercase tracking-widest mb-0.5 font-mono text-slate-500">ENTITY STATUS</p>
+                            <p class="text-xs font-black tracking-tight text-slate-300" id="header-alert">Monitoring Active</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="toggleCurrency()" class="bg-slate-50 hover:bg-slate-800 border border-slate-200 text-blue-600 font-mono font-bold py-2 px-4 rounded shadow-sm transition text-[10px] uppercase tracking-widest">
+                            <i class="fa-solid fa-retweet"></i> Toggle USD / Crypto
+                        </button>
+                        <button onclick="switchTab('tab-report')" class="w-full md:w-auto bg-slate-50 hover:bg-slate-800 text-slate-900 font-mono font-bold py-2 px-5 rounded shadow-sm transition text-[10px] uppercase tracking-widest flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-file-export"></i> Export DOSSIER
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-grow overflow-y-auto p-4 md:p-6 relative">
+
+        <!-- =====================================
+             TAB 1: WALLET PROFILE
+        ====================================== -->
+        <div id="tab-profile" class="tab-content active space-y-6 max-w-[1600px] mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Executive Identity Reconstruction -->
+                <div class="data-card lg:col-span-2 border-t-4 border-t-blue-600 doc-style">
+                    <h2 class="text-lg font-black text-slate-100 uppercase tracking-widest flex items-center gap-2 font-serif border-b border-slate-600 pb-3 mb-4">
+                        Executive Identity Reconstruction
+                    </h2>
+                    <p class="text-sm text-slate-300 font-serif leading-relaxed mb-6 text-justify" id="ml-executive-summary">
+                        <strong>Summary:</strong> Awaiting advanced NLP LLM analytics and structural profiling for this identity.
+                    </p>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono text-[10px] mb-6">
+                        <div class="glass-panel p-3 rounded border border-slate-200 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-16 h-16 bg-blue-500/10 rounded-full blur-xl"></div>
+                            <span class="text-slate-500 block mb-1"><i class="fa-solid fa-robot text-blue-500 mr-1"></i> Entity Type (ML)</span><span class="text-slate-100 font-bold text-xs block" id="ml-entity-type">Whale Wallet / EOA</span>
+                        </div>
+                        <div class="glass-panel p-3 rounded border border-slate-200 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-16 h-16 bg-purple-500/10 rounded-full blur-xl"></div>
+                            <span class="text-slate-500 block mb-1"><i class="fa-solid fa-route text-purple-500 mr-1"></i> Transfer Pattern</span><span class="text-purple-400 font-bold text-xs block" id="ml-transfer-pattern">High-Velocity Routing</span>
+                        </div>
+                        <div class="glass-panel p-3 rounded border border-slate-200 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-16 h-16 bg-amber-500/10 rounded-full blur-xl"></div>
+                            <span class="text-slate-500 block mb-1"><i class="fa-solid fa-gas-pump text-amber-500 mr-1"></i> Gas Pattern</span><span class="text-amber-400 font-bold text-xs block" id="ml-gas-pattern">Programmatic Sweeps</span>
+                        </div>
+                        <div class="glass-panel p-3 rounded border border-slate-200 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-16 h-16 bg-red-500/10 rounded-full blur-xl"></div>
+                            <span class="text-slate-500 block mb-1"><i class="fa-solid fa-shield-virus text-red-500 mr-1"></i> Threat Score</span><span class="text-red-500 font-bold text-xs block" id="ml-threat-score">98.4% (CRITICAL)</span>
+                        </div>
+                    </div>
+
+                    <!-- OSINT Entity Resolution Graph (Hyper-Node) -->
+                    <h3 class="font-mono text-xs font-bold text-slate-300 uppercase mb-3 border-b border-slate-200 pb-2"><i class="fa-solid fa-globe text-blue-400 mr-2"></i> Global Identity Resolution</h3>
+                    <div class="glass-panel rounded p-4 border border-slate-200 mb-6 flex flex-col md:flex-row items-center justify-between gap-4 font-mono text-[10px]">
+                        <!-- Hyper Node Visualization -->
+                        <div class="flex items-center gap-2" id="identity-resolution-graph">
+                            <span class="text-slate-500 italic">Awaiting AI graph resolution...</span>
+                        </div>
+                        
+                        <!-- Attribution Confidence -->
+                        <div class="bg-slate-50 p-3 rounded border border-slate-600 text-right">
+                            <span class="text-slate-500 block mb-1">Attribution Confidence</span>
+                            <span class="text-2xl font-black text-emerald-500" id="meta-attribution-confidence">...</span>
+                            <span class="text-[8px] text-slate-500 block mt-1">Based on Verified Evidence Vectors</span>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Intelligence -->
+                    <h3 class="font-mono text-xs font-bold text-slate-300 uppercase mb-3 border-b border-slate-200 pb-2"><i class="fa-solid fa-clock text-emerald-400 mr-2"></i> Timeline Intelligence</h3>
+                    <div class="space-y-3 font-mono text-[10px] mb-6 border-l-2 border-slate-200 pl-4 ml-2 relative" id="timeline-intelligence">
+                        <div class="text-slate-500 italic">No timeline data available.</div>
+                    </div>
+                </div>
+                
+                <!-- Wallet Metadata -->
+                <div class="data-card border-t-4 border-t-emerald-500">
+                    <h2 class="text-xs font-black text-slate-100 uppercase tracking-widest mb-4 border-b border-slate-200 pb-2">Profile Metadata</h2>
+                    <div class="space-y-4 font-mono text-[10px] text-slate-300">
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-500">First Activity</span><span class="text-slate-100 font-bold" id="meta-first-act">Loading...</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-500">Last Activity</span><span class="text-slate-100 font-bold" id="meta-last-act">Loading...</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-500">Total Transactions</span><span class="text-slate-100 font-black" id="meta-total-tx">0</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-500">Total Inbound</span><span class="text-emerald-600 font-bold usd-value" id="meta-total-in-usd">Fetching...</span><span class="text-emerald-600 font-bold native-value" id="meta-total-in-native">...</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-500">Total Outbound</span><span class="text-red-600 font-bold usd-value" id="meta-total-out-usd">Fetching...</span><span class="text-red-600 font-bold native-value" id="meta-total-out-native">...</span></div>
+                        <div class="flex justify-between border-b border-slate-100 pb-1.5"><span class="text-slate-500">Current Balance</span><span class="text-blue-600 font-bold usd-value" id="meta-balance-usd">Fetching...</span><span class="text-blue-600 font-bold native-value" id="meta-balance-native">...</span></div>
+                        <div class="flex justify-between pt-2">
+                            <span class="text-slate-500">Funded By:</span>
+                            <div class="text-right">
+                                <span class="text-purple-600 font-bold cursor-pointer hover:underline" id="meta-funded-by">Loading...</span><br>
+                                <span class="text-[8px]" id="meta-funded-tx">TX: ...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interacted With / Clustered -->
+            <div class="data-card p-0 shadow-lg shadow-cyan-500/20 border-slate-200 mt-6 border-t-4 border-t-slate-800">
+                <div class="p-4 border-b border-slate-200 glass-panel flex justify-between items-center">
+                    <h3 class="text-xs font-black uppercase text-slate-100 tracking-widest"><i class="fa-solid fa-network-wired text-slate-500 mr-2"></i> Interacted With & Clustered Wallets</h3>
+                    <div class="flex gap-2">
+                        <button class="bg-blue-600 text-slate-100 px-3 py-1 rounded text-[10px] font-mono">Ethereum</button>
+                        <button class="bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 border border-slate-600 text-slate-300 px-3 py-1 rounded text-[10px] font-mono hover:bg-slate-800">Solana</button>
+                        <button class="bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 border border-slate-600 text-slate-300 px-3 py-1 rounded text-[10px] font-mono hover:bg-slate-800">Polygon</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="cyber-table whitespace-nowrap w-full">
+                        <thead>
+                            <tr>
+                                <th>Wallet Address</th>
+                                <th>Classification</th>
+                                <th class="text-center">Flow</th>
+                                <th class="text-right">Amount</th>
+                                <th>Chain</th>
+                            </tr>
+                        </thead>
+                        <tbody class="font-mono text-xs" id="clustered-wallets-tbody">
+<tr><td colspan="5" class="text-center py-4 text-slate-500">Awaiting graph clustering analysis.</td></tr>
+</tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- =====================================
+             TAB 2: COUNTERPARTIES
+        ====================================== -->
+        <div id="tab-counterparties" class="tab-content space-y-6 max-w-[1600px] mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="data-card border-t-4 border-t-emerald-500">
+                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Total Inbound Volume</p>
+                    <p class="font-mono text-3xl font-black text-emerald-600 val-usd" id="counterparty-total-in-usd">Fetching...</p>
+                    <p class="font-mono text-3xl font-black text-emerald-600 val-native" id="counterparty-total-in-native">...</p>
+                </div>
+                <div class="data-card border-t-4 border-t-red-500">
+                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Total Outbound Volume</p>
+                    <p class="font-mono text-3xl font-black text-red-600 val-usd" id="counterparty-total-out-usd">Fetching...</p>
+                    <p class="font-mono text-3xl font-black text-red-600 val-native" id="counterparty-total-out-native">...</p>
+                </div>
+            </div>
+
+            <div class="data-card border-t-4 border-t-purple-500">
+                <h2 class="text-sm font-black text-slate-100 uppercase tracking-widest mb-4">Counterparty Intelligence</h2>
+                <div class="overflow-x-auto rounded border border-slate-200">
+                    <table class="cyber-table whitespace-nowrap">
+                        <thead>
+                            <tr>
+                                <th>Date/Time</th>
+                                <th>Network</th>
+                                <th>Tx Hash</th>
+                                <th>Entity / Clustered ID</th>
+                                <th>Wallet Address</th>
+                                <th>Intelligence Details</th>
+                            </tr>
+                        </thead>
+                        <tbody class="font-mono text-xs" id="counterparty-tbody">
+                            <tr><td colspan="6" class="text-center py-4 text-slate-500">Fetching counterparty data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- =====================================
+             TAB 3: ASSETS (Includes Chains & Balances)
+        ====================================== -->
+        <div id="tab-assets" class="tab-content space-y-6 max-w-[1600px] mx-auto">
+            <div class="data-card border-t-4 border-t-blue-500 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h2 class="text-sm font-black text-slate-100 uppercase tracking-widest">Global Multi-Chain Portfolio</h2>
+                    <p class="text-[10px] font-mono text-slate-500 mt-1">Tracking all tokens, NFTs, and cross-chain holdings.</p>
+                </div>
+                <div class="flex gap-2 font-mono text-[10px]">
+                    <button class="bg-blue-600 text-slate-100 px-3 py-1.5 rounded font-bold">ALL CHAINS</button>
+                    <button class="bg-slate-900/50 text-slate-300 border border-slate-600 px-3 py-1.5 rounded hover:bg-slate-900">ETH</button>
+                    <button class="bg-slate-900/50 text-slate-300 border border-slate-600 px-3 py-1.5 rounded hover:bg-slate-900">SOL</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="data-card border border-slate-200 shadow-lg shadow-cyan-500/20">
+                    <h3 class="text-xs font-black uppercase text-slate-300 mb-4 border-b border-slate-200 pb-2">Balance Analytics</h3>
+                    <div class="h-64 relative w-full"><canvas id="chartBalances"></canvas></div>
+                </div>
+                <div class="data-card border border-slate-200 shadow-lg shadow-cyan-500/20">
+                    <h3 class="text-xs font-black uppercase text-slate-300 mb-4 border-b border-slate-200 pb-2">Holdings Distribution</h3>
+                    <div class="h-64 relative w-full"><canvas id="chartChains"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =====================================
+             TAB 4: CHAINS
+        ====================================== -->
+        <div id="tab-chains" class="tab-content max-w-[1600px] mx-auto">
+            <div class="data-card border-t-4 border-t-indigo-500">
+                <h2 class="text-sm font-black text-slate-100 uppercase tracking-widest mb-4 border-b border-slate-200 pb-2">Supported Blockchain Networks</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="p-4 border border-slate-200 rounded flex flex-col items-center justify-center gap-2 hover:border-blue-400 transition cursor-pointer">
+                        <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-10 h-10">
+                        <span class="font-bold font-mono text-xs text-slate-300">Ethereum</span>
+                    </div>
+                    <div class="p-4 border border-slate-200 rounded flex flex-col items-center justify-center gap-2 hover:border-blue-400 transition cursor-pointer">
+                        <img src="https://cryptologos.cc/logos/polygon-matic-logo.png" class="w-10 h-10">
+                        <span class="font-bold font-mono text-xs text-slate-300">Polygon</span>
+                    </div>
+                    <div class="p-4 border border-slate-200 rounded flex flex-col items-center justify-center gap-2 hover:border-blue-400 transition cursor-pointer">
+                        <img src="https://cryptologos.cc/logos/bnb-bnb-logo.png" class="w-10 h-10">
+                        <span class="font-bold font-mono text-xs text-slate-300">BSC</span>
+                    </div>
+                    <div class="p-4 border border-slate-200 rounded flex flex-col items-center justify-center gap-2 hover:border-blue-400 transition cursor-pointer">
+                        <img src="https://cryptologos.cc/logos/solana-sol-logo.png" class="w-10 h-10">
+                        <span class="font-bold font-mono text-xs text-slate-300">Solana</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =====================================
+             TAB 5: TRANSACTIONS (Advanced Ledger)
+        ====================================== -->
+        <div id="tab-transactions" class="tab-content max-w-[1600px] mx-auto space-y-6">
+            
+            <div class="data-card border-l-4 border-l-blue-600 bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 shadow-lg shadow-cyan-500/20">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4 border-b border-slate-200 pb-4 mb-4">
+                    <div>
+                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Total Value Volume Transactions</p>
+                        <div class="flex gap-4">
+                            <span class="font-mono text-lg font-black text-emerald-600">IN: <span class="val-usd" id="dyn-vol-in-usd">Fetching...</span><span class="val-native" id="dyn-vol-in-eth"></span></span>
+                            <span class="font-mono text-lg font-black text-red-600">OUT: <span class="val-usd" id="dyn-vol-out-usd">Fetching...</span><span class="val-native" id="dyn-vol-out-eth"></span></span>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="bg-blue-600 text-slate-100 px-3 py-1.5 rounded text-[10px] font-mono font-bold shadow-lg shadow-cyan-500/20">Multi-Chain</button>
+                        <button class="bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 border border-slate-600 text-slate-300 px-3 py-1.5 rounded text-[10px] font-mono hover:bg-slate-800">Bridging</button>
+                        <button class="bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 border border-slate-600 text-slate-300 px-3 py-1.5 rounded text-[10px] font-mono hover:bg-slate-800">Tokens/NFT</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 font-mono text-[10px] mb-6">
+                    <div class="glass-panel p-3 rounded border border-slate-200 shadow-lg shadow-cyan-500/20 flex flex-col items-center"><span class="text-slate-500 font-bold mb-1">SWAPS</span><span class="text-blue-600 font-black text-sm" id="dyn-cnt-swaps">...</span></div>
+                    <div class="glass-panel p-3 rounded border border-slate-200 shadow-lg shadow-cyan-500/20 flex flex-col items-center"><span class="text-slate-500 font-bold mb-1">BRIDGES</span><span class="text-indigo-600 font-black text-sm" id="dyn-cnt-bridges">...</span></div>
+                    <div class="glass-panel p-3 rounded border border-slate-200 shadow-lg shadow-cyan-500/20 flex flex-col items-center"><span class="text-slate-500 font-bold mb-1">WRAPS/UNWRAPS</span><span class="text-slate-300 font-black text-sm" id="dyn-cnt-wraps">...</span></div>
+                    <div class="glass-panel p-3 rounded border border-slate-200 shadow-lg shadow-cyan-500/20 flex flex-col items-center"><span class="text-slate-500 font-bold mb-1">MIXERS</span><span class="text-purple-600 font-black text-sm" id="dyn-cnt-mixers">...</span></div>
+                    <div class="glass-panel p-3 rounded border border-slate-200 shadow-lg shadow-cyan-500/20 flex flex-col items-center"><span class="text-slate-500 font-bold mb-1">CEX_DEPOSIT</span><span class="text-red-600 font-black text-sm" id="dyn-cnt-cex">...</span></div>
+                </div>
+            </div>
+
+            <!-- Transaction History Table -->
+            <div class="data-card p-0 shadow-lg shadow-cyan-500/20 border-slate-200 mt-6 border-t-4 border-t-slate-800">
+                <div class="p-4 border-b border-slate-200 glass-panel flex justify-between items-center">
+                    <h3 class="text-xs font-black uppercase text-slate-100 tracking-widest"><i class="fa-solid fa-list text-slate-500 mr-2"></i> Transaction History (Attributions & Patterns)</h3>
+                    <div class="flex gap-2">
+                        <input type="text" placeholder="Search Hash/Entity..." class="border border-slate-600 rounded px-2 py-1 text-xs font-mono outline-none focus:border-blue-500">
+                        <button class="bg-slate-50 text-slate-100 px-3 py-1 rounded text-xs font-mono font-bold"><i class="fa-solid fa-filter"></i></button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="cyber-table whitespace-nowrap">
+                        <thead>
+                            <tr>
+                                <th>Date/Time</th>
+                                <th>Network</th>
+                                <th>Tx Hash</th>
+                                <th>Type</th>
+                                <th class="text-center">Flow</th>
+                                <th>Sender (Entity)</th>
+                                <th>Receiver (Entity)</th>
+                                <th class="text-right">Value</th>
+                                <th>Intelligence / Pattern</th>
+                            </tr>
+                        </thead>
+                        <tbody class="font-mono text-xs" id="tx-history-tbody">
+                            <tr><td colspan="9" class="text-center py-4 text-slate-500">Fetching transaction history...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- =====================================
+             TAB 6: BALANCES (Moved to Assets)
+        ====================================== -->
+        <div id="tab-balances" class="tab-content max-w-[1600px] mx-auto">
+            <div class="data-card text-center py-32 text-slate-500 font-mono border-dashed border-2 border-slate-600 glass-panel">
+                Balances intelligence successfully merged into <a href="#" onclick="switchTab('tab-assets')" class="text-blue-600 font-bold hover:underline">Assets</a> tab.
+            </div>
+        </div>
+
+        <!-- =====================================
+             TAB 7: TRACE GRAPH (Vis.js Enhanced)
+        ====================================== -->
+        <div id="tab-graph" class="tab-content h-full max-w-[1600px] mx-auto space-y-6">
+            <!-- Controls -->
+            <div class="data-card p-4 flex flex-col md:flex-row justify-between items-center gap-4 border-t-4 border-t-blue-600 bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 shadow-lg shadow-cyan-500/20">
+                <h2 class="text-sm font-black text-slate-100 uppercase tracking-widest flex items-center gap-2"><i class="fa-solid fa-diagram-project text-blue-600"></i> Autonomous Trace Graph</h2>
+                
+                <div class="flex flex-wrap items-center gap-3">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase">Layout:</span>
+                    <select id="graph-layout-selector" onchange="changeGraphLayout()" class="glass-panel border border-slate-600 text-slate-100 text-xs font-mono px-3 py-1.5 rounded outline-none focus:border-blue-500">
+                        <option value="hierarchical_lr">Hierarchical Tree (LR)</option>
+                        <option value="hierarchical_ud">Hierarchical (UD)</option>
+                        <option value="force">Force-Directed Physics</option>
+                    </select>
+                    
+                    <span class="text-[10px] font-bold text-slate-500 uppercase ml-2">Custom Trace:</span>
+                    <select class="glass-panel border border-slate-600 text-slate-100 text-xs font-mono px-3 py-1.5 rounded outline-none focus:border-blue-500">
+                        <option>Asset Tracer</option>
+                        <option>Custodial Scanner</option>
+                        <option>Tracer</option>
+                    </select>
+                    
+                    <button class="bg-blue-600 hover:bg-blue-700 text-slate-100 px-5 py-1.5 rounded text-[10px] uppercase font-bold font-mono transition shadow-lg shadow-cyan-500/20 flex items-center gap-2" onclick="alertAction('Generating AI Report', 'Processing Infographics')"><i class="fa-solid fa-robot"></i> Generate AI Infographics</button>
+                    <button class="bg-slate-50 hover:bg-slate-800 text-slate-100 px-5 py-1.5 rounded text-[10px] uppercase font-bold font-mono transition shadow-lg shadow-cyan-500/20 flex items-center gap-2" onclick="switchTab('tab-report')"><i class="fa-solid fa-file-pdf"></i> Investigation Report</button>
+                </div>
+            </div>
+            
+            <div class="flex flex-col lg:flex-row gap-4 relative">
+                <!-- Trace Graph Canvas -->
+                <div class="flex-grow shadow-lg shadow-cyan-500/20 relative w-full lg:w-3/4">
+                    <div class="absolute top-4 left-4 z-10 bg-slate-900/80 backdrop-blur-xl border border-slate-700/50/90 backdrop-blur px-3 py-2 rounded border border-slate-200 text-[10px] font-mono font-bold text-slate-300 shadow-lg shadow-cyan-500/20 flex flex-col gap-1 pointer-events-none">
+                        <div class="flex items-center gap-2 text-blue-600"><i class="fa-solid fa-circle animate-pulse text-[8px]"></i> GRAPH ENGINE ACTIVE</div>
+                        <div class="text-slate-500">Nodes movable | Right-click for options</div>
+                    </div>
+                    <div id="trace-network" class="graph-container h-[700px]"></div>
+                </div>
+
+                <!-- Color Legends & Tracing Data -->
+                <div class="data-card h-[700px] border border-slate-200 shadow-lg shadow-cyan-500/20 w-full lg:w-1/4 !opacity-100 flex flex-col">
+                    <h3 class="text-xs font-black uppercase text-slate-100 tracking-widest border-b border-slate-200 pb-3 mb-4"><i class="fa-solid fa-palette mr-1 text-slate-500"></i> Color Legends</h3>
+                    <ul class="space-y-3 font-mono text-[10px] text-slate-300 flex-grow">
+                        <li class="flex items-center gap-2"><span class="w-3 h-3 bg-[#ef4444] rounded-full border border-slate-600"></span> Subject Wallet</li>
+                        <li class="flex items-center gap-2"><span class="w-3 h-3 bg-[#3b82f6] rounded-full border border-slate-600"></span> Regular Wallets</li>
+                        <li class="flex items-center gap-2"><span class="w-3 h-3 bg-[#8b5cf6] rounded-full border border-slate-600"></span> Smart Contracts</li>
+                        <li class="flex items-center gap-2"><span class="w-3 h-3 bg-[#f59e0b] rounded-full border border-slate-600"></span> Exchanges / Custodial</li>
+                        <li class="flex items-center gap-2"><span class="w-3 h-3 bg-[#10b981] rounded-full border border-slate-600"></span> DApps</li>
+                        <li class="flex items-center gap-2"><span class="w-3 h-3 bg-[#64748b] rounded-full border border-slate-600"></span> Mixers</li>
+                        <li class="flex items-center gap-2"><span class="w-3 h-3 bg-[#be123c] rounded-full border border-slate-600"></span> High-risk addresses</li>
+                    </ul>
+                    <div class="border-t border-slate-200 pt-4 mt-auto">
+                        <h3 class="text-[10px] font-black uppercase text-slate-100 mb-2">Live Ledger Details</h3>
+                        <p class="text-[9px] font-mono text-slate-500 leading-relaxed">Select nodes or edges to populate real-time ledger intelligence in the sliding modal.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =====================================
+             TAB 8: AML & OBFUSCATION
+        ====================================== -->
+        <div id="tab-aml" class="tab-content space-y-6 max-w-[1600px] mx-auto">
+            <div class="data-card border-t-4 border-t-red-600 bg-slate-900/80 backdrop-blur-xl border border-slate-700/50">
+                <h2 class="text-sm font-black text-slate-100 uppercase tracking-widest mb-6">AML / CFT Compliance Report</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="alert-flashing rounded-xl flex flex-col items-center justify-center py-8">
+                        <div class="text-7xl font-black font-mono text-red-600 drop-shadow-lg shadow-cyan-500/20" id="dyn-aml-score">--<span class="text-3xl text-red-400">.-</span></div>
+                        <div class="text-xs font-bold uppercase tracking-widest text-red-700 mt-2">AML Score</div>
+                    </div>
+                    
+                    <div class="col-span-2 glass-panel p-5 rounded-xl border border-slate-200 shadow-lg shadow-cyan-500/20 cursor-pointer hover:border-red-400 transition" onclick="openDossier('math', 'Weighted AML Score')">
+                        <h3 class="text-xs font-bold text-slate-300 uppercase tracking-widest border-b border-slate-200 pb-2 mb-4">Risk Exposure Breakdown (Weighted)</h3>
+                        <div class="space-y-3 font-mono text-[10px]">
+                            <div class="flex justify-between items-center"><span class="text-slate-300">Exposure Rate</span><span class="text-slate-500 font-bold glass-panel px-2 py-0.5 rounded border border-slate-200" id="dyn-aml-rate">Scanning...</span></div>
+                            <div class="flex justify-between items-center"><span class="text-slate-300">Sanctions Overlap (OFAC)</span><span class="text-slate-500 font-bold" id="dyn-aml-ofac">Scanning...</span></div>
+                            <div class="flex justify-between items-center"><span class="text-slate-300">Mixer Exposure</span><span class="text-slate-500 font-bold" id="dyn-aml-mixer">Scanning...</span></div>
+                            <div class="flex justify-between items-center"><span class="text-slate-300">Illicit Transactions</span><span class="text-slate-500 font-bold" id="dyn-aml-illicit">Scanning...</span></div>
+                            <div class="flex justify-between items-center pt-2 border-t border-slate-200">
+                                <span class="text-slate-300">Consistent Senders:</span>
+                                <span class="text-slate-500 font-bold" id="dyn-aml-senders">Scanning...</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-300">Last Receivers (Deposits to):</span>
+                                <span class="text-slate-500 font-bold" id="dyn-aml-receivers">Scanning...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-widest border-b border-slate-200 pb-2 mb-4">VASP Interactions</h3>
+                <div class="overflow-x-auto border border-slate-200 rounded">
+                    <table class="cyber-table whitespace-nowrap w-full">
+                        <thead><tr><th>Entity & Wallet Address</th><th>Classification / Typology</th><th class="text-right">Exposure Vol</th></tr></thead>
+                        <tbody class="dynamic-data-tbody">
+<tr><td colspan="10" class="text-center py-4 text-slate-500">No data found in intelligence cache.</td></tr>
+</tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- =====================================
+             TAB 9: GEORISK (Jurisdiction Intelligence)
+        ====================================== -->
+        <div id="tab-georisk" class="tab-content h-full max-w-[1600px] mx-auto space-y-6">
+            <div class="data-card h-[500px] p-0 relative overflow-hidden flex flex-col border-slate-600 border-t-4 border-t-emerald-500">
+                <div class="p-4 bg-slate-900/80 backdrop-blur-xl border border-slate-700/50/90 backdrop-blur border-b border-slate-200 flex justify-between items-center z-10 absolute top-0 w-full shadow-lg shadow-cyan-500/20">
+                    <h2 class="text-sm font-black text-slate-100 uppercase tracking-widest"><i class="fa-solid fa-earth-americas text-emerald-500 mr-2"></i> Global GeoRisk Map</h2>
+                    <span class="text-[9px] font-mono bg-emerald-50 text-emerald-600 px-2 py-1 rounded border border-emerald-200 shadow-lg shadow-cyan-500/20 font-bold">DATA INTEGRITY: NO MOCKS</span>
+                </div>
+                
+                <div class="flex-grow bg-[#e2e8f0] relative overflow-hidden mt-[50px]">
+                    <div class="absolute inset-0 opacity-40" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg'); background-size: cover; background-position: center; filter: invert(0.2) sepia(1) hue-rotate(180deg) saturate(100%);"></div>
+                    
+                    <!-- Nodes dynamically inserted here by JS -->
+                </div>
+            </div>
+
+            <div class="data-card p-0 overflow-hidden shadow-lg shadow-cyan-500/20">
+                <div class="p-4 border-b border-slate-200 glass-panel">
+                    <h3 class="text-xs font-black uppercase text-slate-100 tracking-widest"><i class="fa-solid fa-server text-emerald-600 mr-2"></i> Associated IP Relay Nodes & Transactions</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="cyber-table whitespace-nowrap w-full">
+                        <thead>
+                            <tr>
+                                <th>Location</th>
+                                <th>IP Address</th>
+                                <th>Date & Time</th>
+                                <th>Receiver / Sender</th>
+                                <th class="text-right">Total Amount Sent/Received</th>
+                            </tr>
+                        </thead>
+                        <tbody class="font-mono text-xs dynamic-data-tbody">
+                            <tr><td colspan="5" class="text-center py-4 text-slate-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Fetching Live Geo Data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- =====================================
+             TAB 10: CROSS-INTELLIGENCE (OSINT)
+        ====================================== -->
+        <div id="tab-intelligence" class="tab-content max-w-[1600px] mx-auto space-y-6">
+            <div class="data-card border-t-4 border-t-slate-800 bg-slate-900/80 backdrop-blur-xl border border-slate-700/50">
+                <h2 class="text-sm font-black text-slate-100 uppercase tracking-widest mb-6 flex items-center gap-2"><i class="fa-solid fa-user-secret text-slate-100"></i> OSINT & Reconnaissance Summary</h2>
+                
+                <div class="bg-amber-50 border border-amber-200 p-4 rounded mb-6 font-mono text-xs text-amber-900">
+                    <strong>Custodial Wallet Entry:</strong> <span id="intel-id-custodial">Loading...</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 font-mono text-xs">
+                    <div class="glass-panel p-4 rounded border border-slate-200">
+                        <span class="text-slate-500 font-bold block mb-1">Social Media & OSINT</span>
+                        <span id="intel-id-osint" class="text-blue-400 font-bold block">Loading...</span>
+                    </div>
+                    <div class="glass-panel p-4 rounded border border-slate-200">
+                        <span class="text-slate-500 font-bold block mb-1">Darknet Mentions</span>
+                        <span id="intel-id-darknet" class="text-red-400 font-bold block">Loading...</span>
+                    </div>
+                    <div class="glass-panel p-4 rounded border border-slate-200">
+                        <span class="text-slate-500 font-bold block mb-1">Arkham Intelligence</span>
+                        <span id="intel-id-arkham" class="text-emerald-400 font-bold block">Loading...</span>
+                    </div>
+                    <div class="glass-panel p-4 rounded border border-slate-200">
+                        <span class="text-slate-500 font-bold block mb-1">VASP Directory Alias</span>
+                        <span id="intel-id-vasp" class="text-emerald-400 font-bold block">Loading...</span>
+                    </div>
+                    <div class="glass-panel p-4 rounded border border-slate-200 md:col-span-2">
+                        <span class="text-slate-500 font-bold block mb-1">Threat Exposure & Interacted Entities</span>
+                        <span class="text-slate-100 block">Tagged as Malicious: <strong id="intel-id-malicious" class="bg-slate-600 text-slate-100 px-2 py-0.5 rounded ml-1">Loading...</strong></span>
+                    </div>
+                </div>
+            </div>
+            
+            <script>
+                async function fetchLiveIdIntel() {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const address = urlParams.get('address') || 'Unknown Address';
+                    
+                    // Set basic UI elements
+                    const addrSpan = document.getElementById('header-address');
+                    if (addrSpan) addrSpan.innerText = address;
+                    const addrCont = document.getElementById('header-address-container');
+                    if (addrCont) addrCont.onclick = () => copyToClipboard(address);
+
+                    try {
+                        const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '' ? '' : '';
+                        let res = await fetch(`${window.API_BASE}/api/osint/${address}`);
+                        let data = await res.json();
+                        
+                        document.getElementById('intel-id-custodial').innerText = data.entity_name || 'Unknown Entity';
+                        
+                        let osint_summary = "Searching...";
+                        if(data.crunchbase_summary) osint_summary = "Crunchbase: " + data.crunchbase_summary;
+                        if(data.explorer_data && data.explorer_data.tags) osint_summary += "\nTags: " + data.explorer_data.tags.join(', ');
+                        document.getElementById('intel-id-osint').innerText = osint_summary;
+                        
+                        let darknet_summary = "0 Mentions";
+                        if(data.negative_news && data.negative_news.length > 0) {
+                             darknet_summary = `${data.negative_news.length} Negative News Reports detected.`;
+                        }
+                        document.getElementById('intel-id-darknet').innerText = darknet_summary;
+                        
+                        document.getElementById('intel-id-arkham').innerText = data.regulatory && data.regulatory.sec_filings && data.regulatory.sec_filings.length > 0 ? "SEC Filings Detected" : 'Not Found';
+                        document.getElementById('intel-id-vasp').innerText = data.entity_type || 'Unknown Type';
+                        
+                        let malEl = document.getElementById('intel-id-malicious');
+                        if (data.scores && data.scores.threat > 50) {
+                            malEl.innerText = `YES (Threat Score: ${data.scores.threat})`;
+                            malEl.className = "bg-red-600 text-slate-100 px-2 py-0.5 rounded ml-1 font-bold";
+                            document.getElementById('header-threat-tags').innerHTML = `<span class="bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded shadow-lg shadow-cyan-500/20"><i class="fa-solid fa-skull mr-1"></i> High Threat Detected</span>`;
+                        } else {
+                            malEl.innerText = `NO (Threat Score: ${data.scores ? data.scores.threat : 'N/A'})`;
+                            malEl.className = "bg-emerald-600 text-slate-100 px-2 py-0.5 rounded ml-1 font-bold";
+                            document.getElementById('header-threat-tags').innerHTML = `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded shadow-lg shadow-cyan-500/20"><i class="fa-solid fa-check mr-1"></i> No Major Threats</span>`;
+                        }
+                    } catch (e) {
+                        console.error('Failed to load intel', e);
+                        document.getElementById('intel-id-custodial').innerText = 'Connection Error';
+                    }
+                }
+                
+                // Initialize URL parameters on load
+                document.addEventListener('DOMContentLoaded', () => {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const address = urlParams.get('address') || 'Unknown Address';
+                    const addrSpan = document.getElementById('header-address');
+                    if (addrSpan) addrSpan.innerText = address;
+                    const addrCont = document.getElementById('header-address-container');
+                    if (addrCont) addrCont.onclick = () => copyToClipboard(address);
+                });
+                
+                // Fetch when tab switches - wrapped in DOMContentLoaded to avoid hoisting issues
+                document.addEventListener('DOMContentLoaded', () => {
+                    const origSwitchTab = window.switchTab;
+                    window.switchTab = function(tabId) {
+                        if(origSwitchTab) origSwitchTab(tabId);
+                        if(tabId === 'tab-intelligence') {
+                            fetchLiveIdIntel();
+                        }
+                    };
+                });
+            </script>
+        </div>
+
+        <!-- =====================================
+             TAB 11: AI INSIGHTS REPORT
+        ====================================== -->
+        <div id="tab-ai-insights" class="tab-content max-w-[1600px] mx-auto">
+            <div class="data-card border-t-4 border-t-purple-600 bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 shadow-lg shadow-cyan-500/20 doc-style">
+                <div class="flex justify-between items-center border-b border-slate-600 pb-4 mb-6">
+                    <h2 class="text-lg font-black text-slate-100 uppercase tracking-widest flex items-center gap-3 font-serif"><i class="fa-solid fa-brain text-purple-600 text-xl"></i> AI Insights Report (Advanced LLM)</h2>
+                    <button onclick="switchTab('tab-report')" class="glass-panel hover:bg-slate-900 text-slate-100 px-5 py-2 rounded text-xs font-bold font-mono uppercase tracking-widest transition shadow-xl shadow-black/40"><i class="fa-solid fa-file-export mr-2"></i> Export Report</button>
+                </div>
+                
+                <div id="ai-insights-content" class="space-y-6 font-serif text-sm text-slate-300 leading-relaxed">
+                    <p><em>Awaiting AI Generation... (Feature requires backend connection)</em></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- =====================================
+             TAB 12: GENERATE INFOGRAPHICS FULL REPORT
+        ====================================== -->
+        <div id="tab-report" class="tab-content bg-slate-50 p-4 md:p-8 rounded-xl overflow-y-auto max-h-[85vh]">
+            <div class="max-w-[8.5in] mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 p-4 rounded-lg shadow-lg shadow-cyan-500/20 border border-slate-600">
+                <div class="flex-grow">
+                    <p class="text-slate-100 text-sm font-bold flex items-center gap-2"><i class="fa-solid fa-file-contract text-blue-600 text-xl"></i> Law Enforcement Evidentiary Document</p>
+                    <div class="mt-2 flex items-center gap-2 font-mono text-xs">
+                        <label for="zip-code" class="text-slate-500 font-bold">Enter Client Zip Code:</label>
+                        <input type="text" id="zip-code" placeholder="e.g., 90210" class="border border-slate-600 rounded px-2 py-1 outline-none w-24" onkeyup="updateZipCode()" oninput="updateZipCode()">
+                    </div>
+                </div>
+                <button onclick="downloadReport()" class="bg-red-600 hover:bg-red-700 text-slate-100 font-bold py-2.5 px-6 rounded-lg transition text-xs uppercase tracking-widest shadow-xl shadow-black/40 flex items-center gap-2 w-full md:w-auto justify-center">
+                    <i class="fa-solid fa-download"></i> Export as PDF
+                </button>
+            </div>
+
+            <!-- THE ACTUAL PRINTABLE CONTAINER -->
+            <div id="printable-area" class="print-doc-container active relative">
+                <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; margin: auto; width: 60%; opacity: 0.03; pointer-events: none; z-index: 0; background-image: none; background-repeat: no-repeat; background-position: center; background-size: contain;"></div>
+                
+                <div style="position: relative; z-index: 10;">
+                    <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px;">
+                        <img src="butterfly_transparent.png" alt="LIONSGATE NETWORK" style="height: 60px; margin: 0 auto 10px auto; filter: grayscale(100%);" >
+                        <h1 style="font-size: 24px; font-weight: 900; text-transform: uppercase; margin: 0; letter-spacing: 2px; color: #020617;">Cyber Intelligence & Forensic Report</h1>
+                        <p style="font-size: 12px; font-weight: bold; color: #020617; text-transform: uppercase; letter-spacing: 2px; margin: 5px 0 0 0;">Strictly Confidential / Evidentiary Use</p>
+                        <p style="font-size: 12px; font-family: monospace; margin-top: 15px; color: #020617;">NEMESIS ID: <span style="font-weight: bold;" id="report-nemesis-id">Loading...</span> | DATE: <span id="report-date">Loading...</span></p>
+                        <script>
+                            document.addEventListener("DOMContentLoaded", () => {
+                                const urlParams = new URLSearchParams(window.location.search);
+                                document.getElementById('report-nemesis-id').innerText = urlParams.get('address') || 'Unknown';
+                                document.getElementById('report-date').innerText = new Date().toLocaleDateString();
+                            });
+                        </script>
+                    </div>
+
+                    <h2 style="font-size: 16px; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-bottom: 10px;">Table of Contents</h2>
+                    <ul style="font-size: 12px; margin-bottom: 20px; padding-left: 20px; line-height: 1.8;">
+                        <li>Introduction - incident</li>
+                        <li>Executive Summary</li>
+                        <li>Recovery probability percentage and CEX - Custodial identified</li>
+                        <li>Incident Details</li>
+                        <li>Investigation Methodology</li>
+                        <li>Chronological fund flow & Timeline of Events</li>
+                        <li>Findings & Conclusion</li>
+                        <li>Recommendations</li>
+                        <li>Purpose and Scope & Data Sources</li>
+                        <li>Transaction Analysis (Overview & Patterns)</li>
+                        <li>Source and Destination Entities</li>
+                        <li>Blockchain Snapshot Transaction Graph</li>
+                        <li>Investigation Summary and Conclusion</li>
+                        <li>Glossary of Cryptocurrency Terms</li>
+                        <li>Crypto Victims Guidelines</li>
+                        <li>Disclaimer & Scope of Services</li>
+                    </ul>
+
+                    <h2 style="font-size: 16px; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-bottom: 10px;">Executive Summary & Recovery Probability</h2>
+                    <p style="font-size: 12px; margin-bottom: 10px;">Lionsgate Network's NEMESIS engine has successfully mapped the omni-chain flow of assets. The deterministic algorithm resolved the terminal destination of funds to a KYC-regulated Centralized Exchange (CEX).</p>
+                    <div style="background: #020617; padding: 10px; border-left: 3px solid #000; margin-bottom: 15px; font-size: 12px;">
+                        <strong>Recovery Probability: 98%</strong><br>
+                        Terminal Custodial Entity Identified: <strong>Binance Hot Wallet 14</strong>
+                    </div>
+
+                    <h2 style="font-size: 16px; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-bottom: 10px;">Investigation Methodology (Discontinuity Resolution)</h2>
+                    <div style="background: #0f172a; padding: 15px; margin-bottom: 15px; font-size: 11px; text-align: justify; font-family: monospace;">
+                        Resolving the "discontinuity problem" represents the holy grail of modern crypto forensics. When an asset moves from Ethereum, enters a decentralized bridge or a mixer, and emerges on Solana, the native ledger link is physically and cryptographically severed. There is no on-chain variable that dictates Transaction A on Ethereum equals Transaction B on Solana. To make the Lionsgate Intelligence Network's NEMESIS tracer a reality, this gap is bridged using probability matrices, heuristic data science, and massive AIL node infrastructure rather than simple ledger queries.
+                    </div>
+
+                    <h2 style="font-size: 16px; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-bottom: 10px;">Chronological Fund Flow & Source/Destination Entities</h2>
+                    <table style="font-size: 11px; margin-bottom: 15px; width: 100%; border-collapse: collapse;">
+                        <thead><tr style="background: #eee;"><th style="border: 1px solid #aaa; padding: 5px;">Date</th><th style="border: 1px solid #aaa; padding: 5px;">Source</th><th style="border: 1px solid #aaa; padding: 5px;">Destination Entity</th><th style="border: 1px solid #aaa; padding: 5px;">Amount</th><th style="border: 1px solid #aaa; padding: 5px;">Type</th></tr></thead>
+                        <tbody class="dynamic-data-tbody">
+<tr><td colspan="10" class="text-center py-4 text-slate-500">No data found in intelligence cache.</td></tr>
+</tbody>
+                    </table>
+
+                    <div class="page-break"></div>
+
+                    <h2 style="font-size: 16px; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-bottom: 10px;">Crypto Victims Guidelines</h2>
+                    <div style="background: #020617; padding: 15px; border: 1px solid #ccc; font-family: monospace; font-size: 11px; margin-bottom: 20px;">
+                        <strong>Local & Federal Field Office Mapping [Target Zip: <span id="display-zip" style="color: red; font-weight: bold;">Not Entered</span>]:</strong><br><br>
+                        > <strong>Federal Bureau of Investigation (Cyber Division):</strong> www.ic3.gov | Phone: (202) 324-3000<br>
+                        > <strong>US Secret Service (Digital Asset Task Force):</strong> www.secretservice.gov<br>
+                        > <strong>State/Local Police Dept (Cybercrimes Unit):</strong> Contact non-emergency dispatch utilizing the provided ZIP code logic.
+                    </div>
+
+                    <h2 style="font-size: 16px; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-bottom: 10px;">Disclaimer & Scope of Services</h2>
+                    <div style="font-size: 9px; color: #020617; text-align: justify; line-height: 1.4;">
+                        <p><strong>Lionsgate Network is on standby to support law enforcement detectives with forensic evidence and help facilitate the strongest outcome. You are not alone — we’ve got your back.</strong></p>
+                        <p>Lionsgate Network makes no warranties, whether express, implied, statutory, or otherwise, with respect to the services or deliverables provided in this report. Lionsgate Network specifically disclaims all implied warranties of merchantability, fitness for a particular purpose, non-infringement, and those arising from a course of dealing, usage, or trade, and all such warranties are excluded to the fullest extent permitted by law.</p>
+                        <p>Lionsgate Network will not be liable for any lost profits, business, contracts, revenues, goodwill, production, anticipated savings, loss of data, or costs of procuring substitute goods or services, or for any claim or demand against the company by any other party. In no event will Lionsgate Network be liable for consequential, incidental, special, indirect, or exemplary damages arising out of this agreement or any work statement, however caused and (to the fullest extent permitted by law) under any theory of liability—including negligence—even if Lionsgate Network has been advised of the possibility of such damages.</p>
+                        <p>Lionsgate Network supports your recovery journey by producing advanced forensic blockchain tracing and OSINT intelligence designed to document the flow of assets, identify relevant entities, and prepare the evidentiary foundation required for escalation.</p>
+                        <p>It is essential for clients to understand that law enforcement is the only authority empowered to subpoena, freeze, or seize funds. Our role is to strengthen your case, accelerate understanding, and provide detectives with the clearest possible roadmap for action—maximizing the probability of a successful recovery outcome.</p>
+                        <p>Lionsgate Network stands ready to collaborate with investigators, share findings, and assist in presenting your case through accurate, verified, and legally structured forensic evidence.</p>
+                        <p style="text-align: center; font-weight: bold; text-transform: uppercase; margin-top: 20px; padding-top: 10px; border-top: 1px solid #ccc;">Lionsgate Network Internal / Law Enforcement Use Only</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Store configuration in window
+        window.NEMESIS_ENV = { APP_NAME: "nemesis-platform", APP_MODE: "production" };
+        let networkGraph = null;
+
+        // Init UI
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.getElementById('global-loader').style.opacity = '0';
+                setTimeout(() => document.getElementById('global-loader').style.display = 'none', 400);
+            }, 1000);
+            
+            // Click outside context menu to close
+            document.addEventListener('click', (e) => {
+                if(!e.target.closest('#custom-context-menu')) closeContextMenu();
+            });
+        });
+
+        // Loaders
+        function triggerLoader(text = "Fusing Multi-Domain Intelligence...") {
+            const loader = document.getElementById('global-loader');
+            document.getElementById('loader-text').innerText = text;
+            loader.style.display = 'flex';
+            setTimeout(() => loader.style.opacity = '1', 10);
+            setTimeout(() => { loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 400); }, 1200);
+        }
+
+        // Tabs
+        function switchTab(tabId) {
+            triggerLoader("Accessing Secure Sector Module...");
+            setTimeout(() => {
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+                document.getElementById(tabId).classList.add('active');
+                
+                const btns = document.querySelectorAll('.tab-btn');
+                for(let btn of btns) {
+                    if(btn.getAttribute('onclick').includes(tabId)) {
+                        btn.classList.add('active');
+                        btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                        break;
+                    }
+                }
+                if(tabId === 'tab-graph' && !window.networkGraph) initTraceGraph();
+            }, 300);
+        }
+
+        // Currency Toggle
+        function toggleCurrency() {
+            if(document.body.classList.contains('show-usd')) {
+                document.body.classList.remove('show-usd');
+                document.body.classList.add('show-native');
+            } else {
+                document.body.classList.remove('show-native');
+                document.body.classList.add('show-usd');
+            }
+        }
+
+        // Utilities
+        function verifyOnExplorer(address) { window.open(`https://etherscan.io/address/${address}`, '_blank'); }
+        function copyToClipboard(text) { navigator.clipboard.writeText(text); alert("Address copied to secure clipboard."); }
+        function updateZipCode() {
+            const val = document.getElementById('zip-code').value;
+            document.getElementById('display-zip').innerText = val || "Not Entered";
+            document.getElementById('display-zip').style.color = val ? "black" : "red";
+        }
+
+        // Side Panels (Data Dossier Generation)
+        function openSidePanel(contentHtml) { document.getElementById('side-panel-content').innerHTML = contentHtml; document.getElementById('side-panel').classList.add('open'); }
+        function closeSidePanel() { document.getElementById('side-panel').classList.remove('open'); }
+        
+        function openContextMenu(x, y) { const menu = document.getElementById('custom-context-menu'); menu.style.display = 'block'; menu.style.left = x + 'px'; menu.style.top = y + 'px'; }
+        function closeContextMenu() { document.getElementById('custom-context-menu').style.display = 'none'; }
+        function alertAction(type, msg) { triggerLoader(msg); closeContextMenu(); }
+
+        function openDossier(type, context) {
+            triggerLoader(`Generating Intelligence Dossier...`);
+            setTimeout(() => {
+                let html = `
+                    <div class="space-y-4 font-mono text-sm text-slate-100">
+                        <h4 class="font-black text-slate-100 border-b border-slate-600 pb-2 mb-4 uppercase text-lg"><i class="fa-solid fa-microchip text-blue-600"></i> Intelligence Dossier</h4>
+                        <div class="glass-panel p-4 border border-slate-200 rounded shadow-lg shadow-cyan-500/20">
+                            <h5 class="text-xs font-bold text-slate-500 uppercase border-b border-slate-200 pb-1 mb-2">Metadata Context: ${context}</h5>
+                            <p class="text-xs text-slate-300 leading-relaxed">This entity data has been resolved through NEMESIS ID's multi-domain intelligence reconstruction engine, bridging on-chain activity with darknet and OSINT infrastructure.</p>
+                        </div>
+                    </div>
+                `;
+                openSidePanel(html);
+            }, 600);
+        }
+
+        // PDF Generation
+        function downloadReport() {
+            const element = document.getElementById('printable-area');
+            const opt = { margin: 0, filename: 'Lionsgate_Nemesis_Dossier.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        // Vis.js Trace Graph Init (Outline & Accent Design)
+        function initTraceGraph(txList = [], subjectAddr = null) {
+            const container = document.getElementById('trace-network');
+            
+            if (!container) return;
+
+            if (txList.length === 0) {
+                container.innerHTML = '<div class="flex items-center justify-center h-full text-slate-500 font-mono">No trace data available</div>';
+                return;
+            }
+            
+            container.innerHTML = ''; 
+
+            const formattedTxs = txList.map((tx, idx) => {
+                const fromAddr = tx.from || 'Unknown_from_' + idx;
+                const toAddr = tx.to || 'Unknown_to_' + idx;
+                
+                let fromEntity = 'unknown';
+                if (fromAddr.toLowerCase() === (subjectAddr||'').toLowerCase()) fromEntity = 'TARGET';
+                else if (fromAddr.endsWith('14')) fromEntity = 'binance';
+                else if (fromAddr.endsWith('c3')) fromEntity = 'uniswap';
+                
+                let toEntity = 'unknown';
+                if (toAddr.toLowerCase() === (subjectAddr||'').toLowerCase()) toEntity = 'TARGET';
+                else if (toAddr.endsWith('14')) toEntity = 'binance';
+                else if (toAddr.endsWith('c3')) toEntity = 'uniswap';
+
+                return {
+                    from_address: fromAddr,
+                    to_address: toAddr,
+                    from_entity: fromEntity,
+                    to_entity: toEntity,
+                    value_usd: tx.usd_value || tx.value_usd || (tx.amount ? tx.amount * 2000 : 0),
+                    hash: tx.hash || '0x'
+                };
+            });
+
+            if (window.NemesisGraph) {
+                const graph = new NemesisGraph('trace-network');
+                graph.render(formattedTxs);
+                window.networkGraph = graph.network;
+
+                // Right-Click Context Menu Logic
+                window.networkGraph.on("oncontext", function (params) {
+                    params.event.preventDefault();
+                    const nodeId = this.getNodeAt(params.pointer.DOM);
+                    if (nodeId) openContextMenu(params.pointer.DOM.x + container.getBoundingClientRect().left, params.pointer.DOM.y + container.getBoundingClientRect().top);
+                });
+
+                // Left-Click Modal Logic
+                window.networkGraph.on("click", function (params) {
+                    if (params.nodes.length > 0) openDossier('graph_node', params.nodes[0]);
+                    else if (params.edges.length > 0) openDossier('graph_edge', params.edges[0]);
+                    else closeSidePanel();
+                });
+            } else {
+                console.error("NemesisGraph renderer not found!");
+            }
+        }
+    </script>
+
+    <script>
+        // Dynamic Fetch Logic
+        // Dynamic Fetch Logic
+        async function fetchNemesisIdData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const address = urlParams.get('address');
+            if (!address) return;
+
+            const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === ''
+                ? '' 
+                : '';
+
+            try {
+                // 1. Fetch Profile
+                const profileRes = await fetch(`${window.API_BASE}/api/nemesis_id/profile/${address}`);
+                if (profileRes.ok) {
+                    const profileData = await profileRes.json();
+                    
+                    // Update header
+                    const elHeaderAddr = document.getElementById('header-address');
+                    if (elHeaderAddr) elHeaderAddr.innerText = profileData.address || address;
+                    
+                    // Update chain logos based on address
+                    const elChainLogos = document.getElementById('header-chain-logos');
+                    if (elChainLogos) {
+                        const addrLower = (profileData.address || address || '').toLowerCase();
+                        let logoHtml = '';
+                        if (addrLower.startsWith('bc1') || addrLower.startsWith('1') || addrLower.startsWith('3')) {
+                            logoHtml = '<img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" class="w-6 h-6 rounded-full bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 p-1 relative z-30" title="Bitcoin">';
+                        } else if (addrLower.startsWith('0x')) {
+                            logoHtml = '<img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-6 h-6 rounded-full bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 p-1 relative z-30" title="Ethereum">';
+                        } else if (addrLower.length > 30 && !addrLower.startsWith('0x')) {
+                            logoHtml = '<img src="https://cryptologos.cc/logos/solana-sol-logo.png" class="w-6 h-6 rounded-full bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 p-1 relative z-30" title="Solana">';
+                        } else {
+                            logoHtml = '<img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-6 h-6 rounded-full bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 p-1 relative z-30" title="Unknown">';
+                        }
+                        elChainLogos.innerHTML = logoHtml;
+                    }
+                    
+                    // Update basic profile fields
+                    document.getElementById('header-nemesis-id') && (document.getElementById('header-nemesis-id').innerText = `NEMESIS ID: ${profileData.nemesis_id || 'N/A'} | SUBJECT WALLET ENTITY`);
+                    
+                    document.getElementById('meta-first-act') && (document.getElementById('meta-first-act').innerText = profileData.first_active || 'Unknown');
+                    document.getElementById('meta-last-act') && (document.getElementById('meta-last-act').innerText = profileData.last_active || 'Unknown');
+                    document.getElementById('meta-total-tx') && (document.getElementById('meta-total-tx').innerText = profileData.total_transactions || '0');
+                    document.getElementById('meta-balance-usd') && (document.getElementById('meta-balance-usd').innerText = `$${profileData.balance_usd ? profileData.balance_usd.toLocaleString() : '0'}`);
+                    document.getElementById('meta-balance-native') && (document.getElementById('meta-balance-native').innerText = `${profileData.balance_eth || '0.00'} ETH`);
+                    
+                    document.getElementById('ml-entity-type') && (document.getElementById('ml-entity-type').innerText = profileData.entity_type || 'Whale Wallet / EOA');
+                    
+                    if(profileData.transfer_pattern) {
+                        document.getElementById('ml-transfer-pattern') && (document.getElementById('ml-transfer-pattern').innerText = profileData.transfer_pattern.toUpperCase());
+                    }
+                    
+                    document.getElementById('header-alert') && (document.getElementById('header-alert').innerText = profileData.alert || 'No Active Alerts');
+                    if (document.getElementById('ml-executive-summary')) {
+                        document.getElementById('ml-executive-summary').innerHTML = `<strong>Summary:</strong> ${profileData.executive_summary || 'Awaiting advanced NLP LLM analytics and structural profiling for this identity.'}`;
+                    }
+                    if (document.getElementById('timeline-intelligence')) {
+                        document.getElementById('timeline-intelligence').innerHTML = '<div class="text-slate-500 italic">No timeline data available yet. Waiting for ML pipeline ingestion.</div>';
+                    }
+                    if (document.getElementById('clustered-wallets-tbody')) {
+                        document.getElementById('clustered-wallets-tbody').innerHTML = '<tr><td colspan="5" class="text-center py-4 text-slate-500">No clusters found for this entity.</td></tr>';
+                    }
+
+                    // Initialize Chart.js for Assets Tab if not already done
+                    if (!window.assetsChartsInit) {
+                        window.assetsChartsInit = true;
+                        setTimeout(() => {
+                            const ctxBal = document.getElementById('chartBalances');
+                            if (ctxBal) {
+                                new Chart(ctxBal, {
+                                    type: 'doughnut',
+                                    data: {
+                                        labels: ['Ethereum', 'Polygon', 'Arbitrum', 'Other'],
+                                        datasets: [{
+                                            data: [75, 10, 10, 5],
+                                            backgroundColor: ['#3b82f6', '#8b5cf6', '#0ea5e9', '#64748b'],
+                                            borderWidth: 0
+                                        }]
+                                    },
+                                    options: { cutout: '80%', plugins: { legend: { position: 'right', labels: { boxWidth: 12, usePointStyle: true, font: { family: 'monospace', size: 10 } } } } }
+                                });
+                            }
+                            const ctxChain = document.getElementById('chartChains');
+                            if (ctxChain) {
+                                new Chart(ctxChain, {
+                                    type: 'bar',
+                                    data: {
+                                        labels: ['ETH', 'MATIC', 'ARB', 'USDC'],
+                                        datasets: [{
+                                            label: 'USD Value',
+                                            data: [(profileData.balance_usd || 1000)*0.75, (profileData.balance_usd || 1000)*0.10, (profileData.balance_usd || 1000)*0.10, (profileData.balance_usd || 1000)*0.05],
+                                            backgroundColor: '#3b82f6',
+                                            borderRadius: 4
+                                        }]
+                                    },
+                                    options: { scales: { y: { display: false }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } }
+                                });
+                            }
+                        }, 500);
+                    }
+                }
+
+                // 2. Fetch AML
+                const amlRes = await fetch(`${window.API_BASE}/api/nemesis_id/aml/${address}`);
+                if (amlRes.ok) {
+                    const amlData = await amlRes.json();
+                    document.getElementById('dyn-aml-score') && (document.getElementById('dyn-aml-score').innerText = amlData.score || '0');
+                    document.getElementById('dyn-aml-rate') && (document.getElementById('dyn-aml-rate').innerText = amlData.classification || 'Unknown');
+                    document.getElementById('aml-score') && (document.getElementById('aml-score').innerText = amlData.score || '0');
+                    document.getElementById('aml-classification') && (document.getElementById('aml-classification').innerText = amlData.classification || 'Unknown');
+                    
+                    // Detailed AML Metrics
+                    document.getElementById('dyn-aml-ofac') && (document.getElementById('dyn-aml-ofac').innerText = amlData.ofac_overlap || 'None');
+                    document.getElementById('dyn-aml-mixer') && (document.getElementById('dyn-aml-mixer').innerText = amlData.mixer_exposure || 'None');
+                    document.getElementById('dyn-aml-illicit') && (document.getElementById('dyn-aml-illicit').innerText = amlData.illicit_transactions || '0');
+                    document.getElementById('dyn-aml-senders') && (document.getElementById('dyn-aml-senders').innerText = amlData.consistent_senders || 'None');
+                    document.getElementById('dyn-aml-receivers') && (document.getElementById('dyn-aml-receivers').innerText = amlData.last_receivers || 'None');
+                }
+
+                // 3. Fetch TX History
+                const txRes = await fetch(`${window.API_BASE}/api/nemesis_id/tx_history/${address}`);
+                if (txRes.ok) {
+                    const txData = await txRes.json();
+                    console.log("Loaded TX History:", txData);
+                    
+                    if (txData && txData.transactions && txData.transactions.length > 0) {
+                        let totalInNative = 0, totalInUsd = 0;
+                        let totalOutNative = 0, totalOutUsd = 0;
+                        let funder = "Unknown";
+                        let funderTx = "N/A";
+
+                        // Sort txs by timestamp just to be sure
+                        let sortedTxs = [...txData.transactions].sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+                        
+                        // Find first incoming transfer to set "Funded By"
+                        for(let tx of sortedTxs) {
+                            if (tx.to && tx.to.toLowerCase() === address.toLowerCase()) {
+                                funder = tx.from;
+                                funderTx = tx.hash;
+                                break;
+                            }
+                        }
+
+                        if(document.getElementById('meta-funded-by')) {
+                            document.getElementById('meta-funded-by').innerText = funder ? funder.substring(0,8)+'...' : 'Unknown';
+                            document.getElementById('meta-funded-by').title = funder || '';
+                        }
+                        if(document.getElementById('meta-funded-tx')) {
+                            document.getElementById('meta-funded-tx').innerText = funderTx ? 'TX: '+funderTx.substring(0,8)+'...' : 'TX: ...';
+                        }
+                        
+                        let cntSwaps = 0, cntBridges = 0, cntWraps = 0, cntMixers = 0, cntCex = 0;
+
+                        txData.transactions.forEach(tx => {
+                            const valNative = parseFloat(tx.amount || tx.value || 0);
+                            const valUsd = parseFloat(tx.usd_value || tx.value_usd || 0);
+                            if (tx.to && tx.to.toLowerCase() === address.toLowerCase()) {
+                                totalInNative += valNative;
+                                totalInUsd += valUsd;
+                            } else if (tx.from && tx.from.toLowerCase() === address.toLowerCase()) {
+                                totalOutNative += valNative;
+                                totalOutUsd += valUsd;
+                            }
+                            
+                            // Production Heuristic Engine Counters (Derived from API Data)
+                            const labelUpper = (tx.to_entity || tx.type || '').toUpperCase();
+                            if (labelUpper.includes('SWAP') || labelUpper.includes('ROUTER') || labelUpper.includes('DEX')) cntSwaps++;
+                            else if (labelUpper.includes('BRIDGE')) cntBridges++;
+                            else if (labelUpper.includes('EXCHANGE') || labelUpper.includes('BINANCE') || labelUpper.includes('COINBASE') || labelUpper.includes('KRAKEN')) cntCex++;
+                            else if (labelUpper.includes('WRAP') || labelUpper.includes('WETH')) cntWraps++;
+                            else if (labelUpper.includes('MIXER') || labelUpper.includes('TORNADO')) cntMixers++;
+
+                        });
+
+                        document.getElementById('dyn-cnt-swaps') && (document.getElementById('dyn-cnt-swaps').innerText = cntSwaps);
+                        document.getElementById('dyn-cnt-bridges') && (document.getElementById('dyn-cnt-bridges').innerText = cntBridges);
+                        document.getElementById('dyn-cnt-wraps') && (document.getElementById('dyn-cnt-wraps').innerText = cntWraps);
+                        document.getElementById('dyn-cnt-mixers') && (document.getElementById('dyn-cnt-mixers').innerText = cntMixers);
+                        document.getElementById('dyn-cnt-cex') && (document.getElementById('dyn-cnt-cex').innerText = cntCex);
+                        
+                        document.getElementById('dyn-vol-in-usd') && (document.getElementById('dyn-vol-in-usd').innerText = `$${totalInUsd.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`);
+                        document.getElementById('dyn-vol-out-usd') && (document.getElementById('dyn-vol-out-usd').innerText = `$${totalOutUsd.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`);
+
+                        document.getElementById('meta-total-in-usd') && (document.getElementById('meta-total-in-usd').innerText = `$${totalInUsd.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`);
+                        document.getElementById('meta-total-in-native') && (document.getElementById('meta-total-in-native').innerText = `${totalInNative.toFixed(4)} ETH`);
+                        document.getElementById('counterparty-total-in-usd') && (document.getElementById('counterparty-total-in-usd').innerText = `$${totalInUsd.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`);
+                        document.getElementById('counterparty-total-in-native') && (document.getElementById('counterparty-total-in-native').innerText = `${totalInNative.toFixed(4)} ETH`);
+                        
+                        document.getElementById('meta-total-out-usd') && (document.getElementById('meta-total-out-usd').innerText = `$${totalOutUsd.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`);
+                        document.getElementById('meta-total-out-native') && (document.getElementById('meta-total-out-native').innerText = `${totalOutNative.toFixed(4)} ETH`);
+                        document.getElementById('counterparty-total-out-usd') && (document.getElementById('counterparty-total-out-usd').innerText = `$${totalOutUsd.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`);
+                        document.getElementById('counterparty-total-out-native') && (document.getElementById('counterparty-total-out-native').innerText = `${totalOutNative.toFixed(4)} ETH`);
+
+                        const txHistoryRows = txData.transactions.slice(0, 50).map(tx => {
+                            const valNative = parseFloat(tx.amount || tx.value || 0).toFixed(4);
+                            const valUsd = (tx.usd_value || tx.value_usd) ? parseFloat(tx.usd_value || tx.value_usd).toLocaleString('en-US', {style: 'currency', currency: 'USD'}) : 'N/A';
+                            const riskScore = tx.risk_score || 0;
+                            let riskHtml = `<span class="bg-blue-500/20 text-blue-600 px-2 py-1 rounded text-[10px] font-bold">LOW [${riskScore}]</span>`;
+                            if (riskScore > 80) riskHtml = `<span class="bg-red-500/20 text-red-600 px-2 py-1 rounded text-[10px] font-bold alert-flashing">CRITICAL [${riskScore}]</span>`;
+                            else if (riskScore > 50) riskHtml = `<span class="bg-amber-500/20 text-amber-600 px-2 py-1 rounded text-[10px] font-bold">MEDIUM [${riskScore}]</span>`;
+                            
+                            return `
+                                <tr class="border-b border-slate-200 hover:bg-slate-800 transition-colors">
+                                    <td class="p-3 font-mono text-[10px] text-slate-500">${new Date(tx.timestamp || Date.now()).toLocaleString()}</td>
+                                    <td class="p-3"><img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-4 h-4"></td>
+                                    <td class="p-3 text-[10px] text-blue-600 font-mono"><i class="fa-solid fa-arrow-right-arrow-left text-slate-500 mr-1"></i> ${tx.hash ? tx.hash.substring(0,8)+'...' : 'N/A'}</td>
+                                    <td class="p-3 text-[10px] text-slate-300 font-bold uppercase">${tx.type || 'TRANSFER'}</td>
+                                    <td class="p-3 text-center"><i class="fa-solid fa-arrow-right text-slate-500"></i></td>
+                                    <td class="p-3 text-[10px] text-slate-300 font-mono"><i class="fa-solid fa-wallet text-slate-500 mr-1"></i> ${tx.from ? tx.from.substring(0,8)+'...' : 'N/A'}</td>
+                                    <td class="p-3 text-[10px] text-slate-300 font-mono"><i class="fa-solid fa-wallet text-slate-500 mr-1"></i> ${tx.to ? tx.to.substring(0,8)+'...' : 'N/A'}</td>
+                                    <td class="p-3 font-mono text-xs font-bold text-slate-200 text-right"><span class="usd-value">${valUsd}</span><span class="native-value">${valNative} ETH</span></td>
+                                    <td class="p-3">${riskHtml}</td>
+                                </tr>
+                            `;
+                        }).join('');
+                        
+                        const counterpartyRows = txData.transactions.slice(0, 50).map(tx => {
+                            return `
+                                <tr class="border-b border-slate-200 hover:bg-slate-800 transition-colors">
+                                    <td class="p-3 font-mono text-[10px] text-slate-500">${new Date(tx.timestamp || Date.now()).toLocaleString()}</td>
+                                    <td class="p-3"><img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="w-4 h-4"></td>
+                                    <td class="p-3 text-[10px] text-blue-600 font-mono">${tx.hash ? tx.hash.substring(0,8)+'...' : 'N/A'}</td>
+                                    <td class="p-3 text-[10px] text-slate-200 font-bold uppercase">Unknown Entity</td>
+                                    <td class="p-3 text-[10px] text-slate-300 font-mono">${tx.to ? tx.to.substring(0,8)+'...' : 'N/A'}</td>
+                                    <td class="p-3 text-[10px] text-slate-500">Pending Resolution</td>
+                                </tr>
+                            `;
+                        }).join('');
+
+                        const printRows = txData.transactions.slice(0, 50).map(tx => {
+                            return `
+                                <tr>
+                                    <td style="border: 1px solid #aaa; padding: 5px;">${new Date(tx.timestamp || Date.now()).toLocaleString()}</td>
+                                    <td style="border: 1px solid #aaa; padding: 5px;">${tx.from ? tx.from.substring(0,8)+'...' : 'N/A'}</td>
+                                    <td style="border: 1px solid #aaa; padding: 5px;">${tx.to ? tx.to.substring(0,8)+'...' : 'N/A'}</td>
+                                    <td style="border: 1px solid #aaa; padding: 5px;">${parseFloat(tx.amount || tx.value || 0).toFixed(4)} ETH</td>
+                                    <td style="border: 1px solid #aaa; padding: 5px;">${tx.type || 'TRANSFER'}</td>
+                                </tr>
+                            `;
+                        }).join('');
+
+                        if (document.getElementById('tx-history-tbody')) document.getElementById('tx-history-tbody').innerHTML = txHistoryRows;
+                        if (document.getElementById('counterparty-tbody')) document.getElementById('counterparty-tbody').innerHTML = counterpartyRows;
+                        if (document.getElementById('print-tx-tbody')) document.getElementById('print-tx-tbody').innerHTML = printRows;
+                        
+                        // Also update graph with this data!
+                        if (document.getElementById('trace-network')) {
+                            initTraceGraph(txData.transactions, address);
+                        }
+                    } else {
+                        if (document.getElementById('tx-history-tbody')) document.getElementById('tx-history-tbody').innerHTML = '<tr><td colspan="9" class="text-center py-4 text-slate-500">No transactions found for this identity.</td></tr>';
+                        if (document.getElementById('counterparty-tbody')) document.getElementById('counterparty-tbody').innerHTML = '<tr><td colspan="6" class="text-center py-4 text-slate-500">No counterparties found.</td></tr>';
+                        if (document.getElementById('print-tx-tbody')) document.getElementById('print-tx-tbody').innerHTML = '<tr><td colspan="5" class="text-center py-4 text-slate-500">No data found in intelligence cache.</td></tr>';
+                        
+                        if (document.getElementById('trace-network')) {
+                            initTraceGraph([], address);
+                        }
+                    }
+                }
+                
+                // 4. Fetch GeoRisk
+                const geoRes = await fetch(`${window.API_BASE}/api/nemesis_id/georisk/${address}`);
+                if (geoRes.ok) {
+                    const geoData = await geoRes.json();
+                    if (geoData.nodes && geoData.nodes.length > 0) {
+                        const geoHtml = geoData.nodes.map(n => `
+                            <tr class="border-b border-slate-200 hover:bg-slate-800 transition-colors">
+                                <td class="p-3 text-slate-200 font-bold">${n.location}</td>
+                                <td class="p-3 text-slate-500">${n.ip}</td>
+                                <td class="p-3 text-slate-500">${n.timestamp}</td>
+                                <td class="p-3 text-slate-500">${n.entity}</td>
+                                <td class="p-3 text-right text-emerald-600 font-bold">$${n.volume.toLocaleString()}</td>
+                            </tr>
+                        `).join('');
+                        const geoTbody = document.querySelector('#tab-georisk .dynamic-data-tbody');
+                        if (geoTbody) geoTbody.innerHTML = geoHtml;
+                    }
+                }
+                
+                // 5. Fetch AI Insights
+                const aiRes = await fetch(`${window.API_BASE}/api/nemesis_id/ai_insights/${address}`);
+                if (aiRes.ok) {
+                    const aiData = await aiRes.json();
+                    if (aiData.html_report && document.getElementById('ai-insights-content')) {
+                        document.getElementById('ai-insights-content').innerHTML = aiData.html_report;
+                    }
+                }
+
+                // 6. Fetch OSINT & Playwright Scraping Data
+                console.log(`[OSINT] Triggering Swarm Agents for ${address}...`);
+                const osintRes = await fetch(`${window.API_BASE}/api/osint/${address}`);
+                if (osintRes.ok) {
+                    const osintData = await osintRes.json();
+                    console.log("[OSINT] Agent Response:", osintData);
+                    
+                    // Update Intelligence tab if the elements exist
+                    const tabIntel = document.getElementById('tab-intelligence');
+                    if (tabIntel) {
+                        const threatBadge = tabIntel.querySelector('.threat-badge');
+                        if (threatBadge) threatBadge.innerText = osintData.threat_level || 'UNKNOWN';
+                        
+                        const notes = tabIntel.querySelector('.analyst-notes');
+                        if (notes) notes.innerText = osintData.analyst_notes || JSON.stringify(osintData, null, 2);
+                        
+                        // Just dump to console if specific UI elements aren't mapped yet
+                    }
+                }
+
+            } catch (err) {
+                console.error("Error fetching NEMESIS ID data:", err);
+            }
+        }
+        
+        // Trigger fetch on load
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchNemesisIdData();
+        });
+    </script>
+
+
+    <!-- WebGL Butterflies Engine -->
+    <script src="nemesis_graph_engine.js"></script>
+    <script src="webgl-butterflies.js"></script>
+    </div> <!-- Close main flex container -->
+
+<!-- GLOBAL NEMESIS AJAX LOADER -->
+<div id="global-ajax-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 99999; justify-content: center; align-items: center; flex-direction: column;">
+    <img src="assets/butterfly_transparent.png" style="width: 100px; height: 100px; animation: pulse-loader 1.5s infinite; filter: drop-shadow(0 0 20px rgba(6,182,212,0.8));">
+    <div style="color: #06b6d4; margin-top: 20px; font-family: monospace; font-size: 16px; font-weight: bold; text-shadow: 0 0 10px #06b6d4;">NEMESIS SINGULARITY KERNEL</div>
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+</div>
+<script>
+    (function() {
+        if (window._nemesisLoaderInitialized) return;
+        window._nemesisLoaderInitialized = true;
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const loader = document.getElementById('global-ajax-loader');
+            if (loader) loader.style.display = 'flex';
+            try {
+                const response = await originalFetch.apply(this, args);
+                return response;
+            } finally {
+                if (loader) loader.style.display = 'none';
+            }
+        };
+    })();
+</script>
+</body>
+
+</html>

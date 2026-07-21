@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEMESIS | Lionsgate Intelligence Network</title>
+    <link href="/static/css/output.css" rel="stylesheet">
+    <link href="/static/css/home.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- Three.js for WebGL Cinematic Content -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+</head>
+<body>
+
+    <!-- Header Toggle Button (Appears when minimized) -->
+    <button id="header-toggle" onclick="toggleHeader()" title="Open Menu">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+
+    <!-- Global Animated Menu Header -->
+    <header id="global-header" class="py-5 px-8 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded bg-gradient-to-br from-sky-400 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-[0_0_15px_rgba(14,165,233,0.5)]">
+                N
+            </div>
+            <span class="font-bold tracking-widest text-lg">NEMESIS</span>
+        </div>
+        
+        <nav class="hidden md:flex items-center gap-8">
+            <a href="/" class="nav-link">HOME</a>
+            <a href="/tracer.html" class="nav-link">NEMESIS TRACER</a>
+            <a href="/nemesis_id.html" class="nav-link">NEMESIS ID</a>
+            <a href="/recovery_framework.html" class="nav-link">RECOVERY FRAMEWORK</a>
+            <a href="/project_nemesis.html" class="nav-link">ABOUT</a>
+            <a href="/api_docs.html" class="nav-link">API DOCUMENTATIONS</a>
+        </nav>
+
+        <div class="flex items-center gap-4">
+            <button onclick="toggleHeader()" class="text-slate-400 hover:text-white transition" title="Minimize Menu">
+                <i class="fa-solid fa-chevron-up"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex flex-col items-center justify-center pt-40 px-6 relative z-10 w-full max-w-6xl mx-auto">
+        
+        <!-- Hero Section -->
+        <div class="text-center mb-16 relative">
+            <h1 class="hero-title">NEMESIS</h1>
+            <h2 class="hero-subtitle">BY LIONSGATE INTELLIGENCE NETWORK</h2>
+            <p class="text-slate-400 max-w-2xl mx-auto leading-relaxed text-lg">
+                Enterprise-grade autonomous threat intelligence, asset tracing, and entity resolution powered by AI. Navigate the omni-chain ecosystem with surgical precision.
+            </p>
+        </div>
+
+        <!-- Cinematic Portals -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl relative z-20">
+            <!-- TRACER PORTAL -->
+            <div class="cinematic-card card-tracer" onclick="window.location.href='/tracer.html'">
+                <i class="fa-solid fa-network-wired card-icon"></i>
+                <h3 class="text-2xl font-bold text-white mb-2 tracking-wide">NEMESIS TRACER</h3>
+                <p class="text-slate-400 text-sm text-center">Multi-hop autonomous blockchain tracing across 14+ chains simultaneously.</p>
+                <div class="mt-6 text-xs uppercase tracking-widest border border-sky-500/30 text-sky-400 px-4 py-2 rounded-full shadow-[0_0_10px_rgba(14,165,233,0.2)]">
+                    INITIALIZE LINK <i class="fa-solid fa-arrow-right ml-2"></i>
+                </div>
+            </div>
+
+            <!-- ID PORTAL -->
+            <div class="cinematic-card card-id" onclick="window.location.href='/nemesis_id.html'">
+                <i class="fa-regular fa-id-badge card-icon"></i>
+                <h3 class="text-2xl font-bold text-white mb-2 tracking-wide">NEMESIS ID</h3>
+                <p class="text-slate-400 text-sm text-center">Complete entity resolution. De-anonymize wallets to discover real-world identities.</p>
+                <div class="mt-6 text-xs uppercase tracking-widest border border-indigo-500/30 text-indigo-400 px-4 py-2 rounded-full shadow-[0_0_10px_rgba(139,92,246,0.2)]">
+                    INITIALIZE LINK <i class="fa-solid fa-arrow-right ml-2"></i>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Cinematic WebGL Section -->
+    <div id="webgl-container">
+        <div id="webgl-overlay">
+            <h4 class="mono text-white/50 tracking-[0.5em] text-sm mb-2">OMNI-CHAIN GRAPH ENGINE</h4>
+            <div class="w-24 h-1 bg-gradient-to-r from-transparent via-sky-500 to-transparent mx-auto opacity-50"></div>
+        </div>
+        <canvas id="nemesis-canvas"></canvas>
+    </div>
+
+    <!-- Extracted Frontend WebGL Logic -->
+    <script src="/static/js/home_webgl.js"></script>
+</body>
+</html>

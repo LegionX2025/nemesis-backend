@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports | NEMESIS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script src="global_nav.js"></script>
+    <link rel="stylesheet" href="nemesis-enterprise.css">
+
+    <link rel="stylesheet" href="/light-theme.css">
+
+    <script>
+        const IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        window.BACKEND_URL = IS_LOCAL ? 'http://127.0.0.1:8088' : 'https://nemesis-api-v3.legionxgaming2021.workers.dev';
+        window.API_BASE = window.BACKEND_URL;
+    </script>
+        \n</head>
+<body class="w-screen h-screen flex items-center justify-center p-4 relative">
+    <div id="particles-js" class="absolute inset-0 w-full h-full z-0 pointer-events-none opacity-40"></div>
+    <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+        <div class="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] bg-cyan-200 opacity-40 rounded-full blur-[120px]"></div>
+        <div class="absolute -bottom-[20%] -right-[10%] w-[60%] h-[60%] bg-blue-200 opacity-50 rounded-full blur-[150px]"></div>
+    </div>
+
+    <div class="w-full w-full h-full max-w-none max-h-none relative z-10">
+        <main class="absolute inset-0 glass-container flex overflow-hidden border border-white/60 shadow-2xl shadow-slate-300">
+                                                <!-- Left Column: Menu -->
+            <div class="nemesis-sidebar sidebar-expanded flex-shrink-0 border-r border-slate-700/50 flex flex-col justify-start p-6 bg-slate-900/30 h-full overflow-y-auto custom-scrollbar relative z-50">
+                
+                <button class="sidebar-toggle absolute top-6 right-[-12px] w-6 h-6 bg-slate-50 border border-slate-200 rounded-full flex items-center justify-center shadow-md text-slate-500 hover:text-cyan-600 hover:border-cyan-300 transition-all z-50">
+                    <i class="fa-solid fa-chevron-left text-[10px] transition-transform duration-300"></i>
+                </button>
+
+                <div class="logo-container flex items-center gap-4 mb-8 pb-6 border-b border-slate-200 transition-all">
+                    <div id="logo-destination" class="w-10 h-10 flex-shrink-0 relative">
+                        <img src="assets/butterfly_transparent.png" class="w-10 h-10 filter drop-shadow-[0_0_10px_rgba(6,182,212,0.6)]" alt="NEMESIS Logo">
+                    </div>
+                    <span class="nemesis-logo-text font-display font-black text-2xl tracking-[0.15em] text-slate-200 uppercase">NEMESIS</span>
+                </div>
+
+                <nav class="w-full flex flex-col">
+                    
+                    <button class="accordion-toggle w-full flex items-center justify-between text-[10px] font-mono tracking-widest text-slate-500 mb-2 uppercase font-bold px-2 py-1 hover:text-cyan-600 transition outline-none">
+                        <span class="nav-header">CORE MODULES</span>
+                        <i class="fa-solid fa-chevron-down text-[8px] transition-transform duration-300 transform rotate-180"></i>
+                    </button>
+                    
+                    <div class="accordion-content overflow-hidden transition-all duration-300 space-y-2 mb-4">
+                        <a href="dashboard.html" class="nav-item  font-mono text-sm flex items-center gap-3 no-underline text-slate-500 hover:text-cyan-700 transition group p-2 rounded-lg hover:bg-cyan-50 border border-transparent hover:border-cyan-100">
+                            <div class="w-8 h-8 flex-shrink-0 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center shadow-sm group-hover:border-cyan-300">
+                                <i class="fa-solid fa-server text-cyan-500"></i>
+                            </div> 
+                            <span class="nav-text whitespace-nowrap">Platform Hub</span>
+                        </a>
+                        
+                        <a href="nemesis_tracer_landing.html" class="nav-item active font-mono text-sm flex items-center gap-3 no-underline text-fuchsia-700 font-bold transition group p-2 rounded-lg bg-fuchsia-50/50 border border-fuchsia-100">
+                            <div class="w-8 h-8 flex-shrink-0 rounded-full bg-fuchsia-100 border border-fuchsia-200 flex items-center justify-center shadow-sm ">
+                                <i class="fa-solid fa-network-wired text-fuchsia-600"></i>
+                            </div> 
+                            <span class="nav-text whitespace-nowrap">Tracer Engine</span>
+                        </a>
+                        
+                        <a href="nemesis_id_landing.html" class="nav-item  font-mono text-sm flex items-center gap-3 no-underline text-slate-500 hover:text-yellow-600 transition group p-2 rounded-lg hover:bg-yellow-50 border border-transparent hover:border-yellow-100">
+                            <div class="w-8 h-8 flex-shrink-0 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center shadow-sm group-hover:border-yellow-300">
+                                <img src="assets/butterfly_transparent.png" class="w-4 h-4 filter drop-shadow-[0_0_5px_rgba(234,179,8,0.8)]">
+                            </div> 
+                            <span class="nav-text whitespace-nowrap">NEMESIS ID</span>
+                        </a>
+                        
+                        <a href="nemesis_intelligence.html" class="nav-item  font-mono text-sm flex items-center gap-3 no-underline text-slate-500 hover:text-blue-700 transition group p-2 rounded-lg hover:bg-blue-50 border border-transparent hover:border-blue-100">
+                            <div class="w-8 h-8 flex-shrink-0 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center shadow-sm group-hover:border-blue-300">
+                                <i class="fa-solid fa-brain text-blue-500"></i>
+                            </div> 
+                            <span class="nav-text whitespace-nowrap">Intelligence</span>
+                        </a>
+                        
+                        <a href="recovery_framework.html" class="nav-item  font-mono text-sm flex items-center gap-3 no-underline text-slate-500 hover:text-teal-700 transition group p-2 rounded-lg hover:bg-teal-50 border border-transparent hover:border-teal-100">
+                            <div class="w-8 h-8 flex-shrink-0 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center shadow-sm group-hover:border-teal-300">
+                                <i class="fa-solid fa-shield-halved text-teal-500"></i>
+                            </div> 
+                            <span class="nav-text whitespace-nowrap">Recovery</span>
+                        </a>
+                    </div>
+                    
+                    <button class="accordion-toggle w-full flex items-center justify-between text-[10px] font-mono tracking-widest text-slate-500 mt-2 mb-2 uppercase font-bold px-2 py-1 hover:text-cyan-600 transition outline-none pt-4 border-t border-slate-200">
+                        <span class="nav-header">DOCUMENTATION</span>
+                        <i class="fa-solid fa-chevron-down text-[8px] transition-transform duration-300 transform rotate-180"></i>
+                    </button>
+                    
+                    <div class="accordion-content overflow-hidden transition-all duration-300 space-y-2">
+                        <a href="report_template.html" class="nav-item  font-mono text-sm flex items-center gap-3 no-underline text-slate-500 hover:text-emerald-700 transition group p-2 rounded-lg hover:bg-emerald-50 border border-transparent hover:border-emerald-100">
+                            <div class="w-8 h-8 flex-shrink-0 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center shadow-sm group-hover:border-emerald-300">
+                                <i class="fa-solid fa-file-contract text-emerald-500"></i>
+                            </div> 
+                            <span class="nav-text whitespace-nowrap">Reports</span>
+                        </a>
+                        
+                        <a href="api_docs.html" class="nav-item  font-mono text-sm flex items-center gap-3 no-underline text-slate-500 hover:text-indigo-700 transition group p-2 rounded-lg hover:bg-indigo-50 border border-transparent hover:border-indigo-100">
+                            <div class="w-8 h-8 flex-shrink-0 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center shadow-sm group-hover:border-indigo-300">
+                                <i class="fa-solid fa-code text-indigo-500"></i>
+                            </div> 
+                            <span class="nav-text whitespace-nowrap">API Docs</span>
+                        </a>
+
+                        <a href="about.html" class="nav-item  font-mono text-sm flex items-center gap-3 no-underline text-slate-500 hover:text-orange-700 transition group p-2 rounded-lg hover:bg-orange-50 border border-transparent hover:border-orange-100">
+                            <div class="w-8 h-8 flex-shrink-0 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center shadow-sm group-hover:border-orange-300">
+                                <i class="fa-solid fa-circle-info text-orange-500"></i>
+                            </div> 
+                            <span class="nav-text whitespace-nowrap">About Platform</span>
+                        </a>
+                    </div>
+                </nav>
+            </div>
+            
+            <div class="flex-1 border-r-0 border-slate-700/50 relative flex flex-col pt-10 overflow-y-auto px-10 custom-scrollbar bg-slate-800/50">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 text-2xl shadow-sm border border-emerald-200"><i class="fa-solid fa-file-contract"></i></div>
+                    <div>
+                        <h1 class="text-3xl font-black text-slate-200 tracking-wide uppercase font-display">Forensic Reports</h1>
+                        <p class="text-sm text-slate-500 font-medium">Auto-generated case dossiers for law enforcement.</p>
+                    </div>
+                    <div class="ml-auto flex gap-3">
+                        <button class="bg-slate-50 border border-slate-200 text-slate-500 px-4 py-2 rounded-lg font-bold text-xs uppercase hover:text-cyan-600 transition shadow-sm hover:shadow flex items-center gap-2">
+                            <i class="fa-solid fa-plus"></i> New Report
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-6 mb-8">
+                    <!-- Stat Card -->
+                    <div class="bg-slate-50 border border-slate-200 shadow-sm rounded-xl p-6 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center text-xl"><i class="fa-solid fa-folder-open"></i></div>
+                        <div>
+                            <p class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Active Cases</p>
+                            <p class="text-2xl font-black text-slate-200 font-display">14</p>
+                        </div>
+                    </div>
+                    <!-- Stat Card -->
+                    <div class="bg-slate-50 border border-slate-200 shadow-sm rounded-xl p-6 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center text-xl"><i class="fa-solid fa-file-export"></i></div>
+                        <div>
+                            <p class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Reports Generated</p>
+                            <p class="text-2xl font-black text-slate-200 font-display">2,184</p>
+                        </div>
+                    </div>
+                    <!-- Stat Card -->
+                    <div class="bg-slate-50 border border-slate-200 shadow-sm rounded-xl p-6 flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-full bg-fuchsia-50 text-fuchsia-500 flex items-center justify-center text-xl"><i class="fa-solid fa-building-columns"></i></div>
+                        <div>
+                            <p class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">VASP Submissions</p>
+                            <p class="text-2xl font-black text-slate-200 font-display">48</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Recent Dossiers</h2>
+                <div class="grid grid-cols-1 gap-4 mb-8">
+                    <!-- Report Item 1 -->
+                    <div class="bg-slate-50 border border-slate-200 shadow-sm rounded-xl p-5 flex items-center justify-between hover:border-emerald-300 hover:shadow-md transition cursor-pointer group">
+                        <div class="flex items-center gap-5">
+                            <div class="w-12 h-12 bg-red-50 text-red-500 rounded-lg flex items-center justify-center text-xl group-hover:bg-red-500 group-hover:text-white transition">
+                                <i class="fa-solid fa-file-pdf"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-slate-200 font-bold text-sm mb-1 uppercase tracking-wider">Case #10942 - Lazarus Group Trace</h3>
+                                <div class="flex items-center gap-4 text-[10px] text-slate-500 font-mono">
+                                    <span><i class="fa-regular fa-calendar mr-1"></i> Oct 24, 2024</span>
+                                    <span><i class="fa-solid fa-fingerprint mr-1"></i> SHA-256: e3b0c44298fc1c14...</span>
+                                    <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded border border-emerald-200">FINALIZED</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="w-8 h-8 rounded-full glass-panel text-slate-500 hover:text-cyan-600 hover:bg-cyan-50 flex items-center justify-center transition"><i class="fa-solid fa-eye"></i></button>
+                            <button class="w-8 h-8 rounded-full glass-panel text-slate-500 hover:text-blue-600 hover:bg-blue-50 flex items-center justify-center transition"><i class="fa-solid fa-download"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Report Item 2 -->
+                    <div class="bg-slate-50 border border-slate-200 shadow-sm rounded-xl p-5 flex items-center justify-between hover:border-emerald-300 hover:shadow-md transition cursor-pointer group">
+                        <div class="flex items-center gap-5">
+                            <div class="w-12 h-12 bg-red-50 text-red-500 rounded-lg flex items-center justify-center text-xl group-hover:bg-red-500 group-hover:text-white transition">
+                                <i class="fa-solid fa-file-pdf"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-slate-200 font-bold text-sm mb-1 uppercase tracking-wider">Case #10941 - Pink Drainer Phishing Ring</h3>
+                                <div class="flex items-center gap-4 text-[10px] text-slate-500 font-mono">
+                                    <span><i class="fa-regular fa-calendar mr-1"></i> Oct 20, 2024</span>
+                                    <span><i class="fa-solid fa-fingerprint mr-1"></i> SHA-256: 8d969eef6ecad3c2...</span>
+                                    <span class="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded border border-yellow-200">DRAFT</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="w-8 h-8 rounded-full glass-panel text-slate-500 hover:text-cyan-600 hover:bg-cyan-50 flex items-center justify-center transition"><i class="fa-solid fa-eye"></i></button>
+                            <button class="w-8 h-8 rounded-full glass-panel text-slate-500 hover:text-blue-600 hover:bg-blue-50 flex items-center justify-center transition"><i class="fa-solid fa-download"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-emerald-600 to-teal-500 rounded-xl p-8 text-slate-900 relative overflow-hidden shadow-lg mt-auto mb-8">
+                    <div class="relative z-10 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-xl font-bold font-display tracking-wide mb-2">Automated LEA Reporting</h2>
+                            <p class="text-sm text-emerald-50 max-w-lg">One-click generation of court-ready PDF dossiers including visual counterparty graphs, timestamped chain-of-custody hashes, and VASP intersection tables.</p>
+                        </div>
+                        <i class="fa-solid fa-file-shield text-6xl opacity-20 transform rotate-12"></i>
+                    </div>
+                    <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-slate-900/10 rounded-full blur-2xl"></div>
+                </div>
+            </div>
+            
+            
+        </main>
+    </div>
+    <script>
+        if(typeof particlesJS !== 'undefined') {
+            particlesJS('particles-js', {
+              "particles": { "number": { "value": 60 }, "color": { "value": "#0891b2" }, "shape": { "type": "circle" }, "opacity": { "value": 0.5 }, "size": { "value": 3, "random": true }, "line_linked": { "enable": true, "distance": 150, "color": "#0891b2", "opacity": 0.4, "width": 1 }, "move": { "enable": true, "speed": 2 } },
+              "interactivity": { "detect_on": "window", "events": { "onhover": { "enable": true, "mode": "grab" }, "onclick": { "enable": true, "mode": "push" } }, "modes": { "grab": { "distance": 140, "line_linked": { "opacity": 1 } } } },
+              "retina_detect": true
+            });
+        }
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebars = document.querySelectorAll('.nemesis-sidebar');
+            const toggleBtns = document.querySelectorAll('.sidebar-toggle');
+            
+            const applyState = (state) => {
+                sidebars.forEach(sb => {
+                    if(state === 'collapsed') {
+                        sb.classList.remove('sidebar-expanded');
+                        sb.classList.add('sidebar-collapsed');
+                    } else {
+                        sb.classList.remove('sidebar-collapsed');
+                        sb.classList.add('sidebar-expanded');
+                    }
+                });
+                toggleBtns.forEach(btn => {
+                    const icon = btn.querySelector('i');
+                    if(icon) {
+                        icon.className = state === 'collapsed' ? 'fa-solid fa-bars text-[10px] transition-transform duration-300' : 'fa-solid fa-chevron-left text-[10px] transition-transform duration-300';
+                    }
+                    btn.style.transform = 'rotate(0deg)';
+                });
+            };
+
+            // Load state
+            if(localStorage.getItem('nemesis_sidebar_state') === 'collapsed') {
+                applyState('collapsed');
+            }
+            
+            toggleBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const currentState = localStorage.getItem('nemesis_sidebar_state');
+                    const newState = currentState === 'collapsed' ? 'expanded' : 'collapsed';
+                    localStorage.setItem('nemesis_sidebar_state', newState);
+                    applyState(newState);
+                });
+            });
+
+            // Accordion Logic
+            const accordions = document.querySelectorAll('.accordion-toggle');
+            accordions.forEach(acc => {
+                acc.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    const icon = this.querySelector('.fa-chevron-down');
+                    const content = this.nextElementSibling;
+                    if (content.style.maxHeight) {
+                        content.style.maxHeight = null;
+                        if(icon) icon.style.transform = 'rotate(180deg)';
+                    } else {
+                        content.style.maxHeight = content.scrollHeight + "px";
+                        if(icon) icon.style.transform = 'rotate(0deg)';
+                    }
+                });
+                
+                // Initialize expanded
+                const content = acc.nextElementSibling;
+                if(content && !content.style.maxHeight) {
+                    content.style.maxHeight = "500px"; // Arbitrary large enough height
+                }
+            });
+
+        });
+    </script>
+
+<!-- GLOBAL NEMESIS AJAX LOADER -->
+<div id="global-ajax-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 99999; justify-content: center; align-items: center; flex-direction: column;">
+    <img src="assets/butterfly_transparent.png" style="width: 100px; height: 100px; animation: pulse-loader 1.5s infinite; filter: drop-shadow(0 0 20px rgba(6,182,212,0.8));">
+    <div style="color: #06b6d4; margin-top: 20px; font-family: monospace; font-size: 16px; font-weight: bold; text-shadow: 0 0 10px #06b6d4;">NEMESIS SINGULARITY KERNEL</div>
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+</div>
+<script>
+    (function() {
+        if (window._nemesisLoaderInitialized) return;
+        window._nemesisLoaderInitialized = true;
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const loader = document.getElementById('global-ajax-loader');
+            if (loader) loader.style.display = 'flex';
+            try {
+                const response = await originalFetch.apply(this, args);
+                return response;
+            } finally {
+                if (loader) loader.style.display = 'none';
+            }
+        };
+    })();
+</script>
+</body>
+
+</html>

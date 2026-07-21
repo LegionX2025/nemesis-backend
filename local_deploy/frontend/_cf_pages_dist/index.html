@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEMESIS | Enterprise Autonomous Intelligence</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#151e2e',
+                            900: '#0f172a',
+                            950: '#020617',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        body { 
+            background-color: #020617; 
+            color: #f8fafc; 
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Ambient Glow Background */
+        .ambient-bg {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: -1;
+            background: radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
+        }
+
+        /* Glassmorphism Cards */
+        .module-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 50%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.03), transparent);
+            transform: skewX(-20deg);
+            transition: all 0.7s ease;
+        }
+
+        .module-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(59, 130, 246, 0.5);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.1);
+        }
+
+        .module-card:hover::before {
+            left: 200%;
+        }
+
+        .module-card.tracer:hover {
+            border-color: rgba(139, 92, 246, 0.5);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5), 0 0 20px rgba(139, 92, 246, 0.1);
+        }
+
+        .icon-wrapper {
+            transition: all 0.3s ease;
+        }
+        
+        .module-card:hover .icon-wrapper {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        /* Scanline Overlay */
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
+            background-size: 100% 4px;
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0.15;
+        }
+
+        /* Grid Background */
+        .grid-bg {
+            position: fixed;
+            inset: 0;
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px);
+            mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+            -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+            z-index: -2;
+        }
+    </style>
+
+    <!-- Light Theme & WebGL Overrides -->
+    <link rel="stylesheet" href="/light-theme.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-blue-500/30">
+
+    <div class="grid-bg"></div>
+    <div class="ambient-bg"></div>
+    <div class="scanlines"></div>
+
+    <!-- Header -->
+    <header class="w-full p-6 flex justify-between items-center relative z-10 border-b border-slate-800/50 bg-slate-950/50 backdrop-blur-md">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-blue-600/10 border border-blue-500/30 rounded-lg flex items-center justify-center">
+                <i class="fa-solid fa-layer-group text-blue-500"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-black tracking-tight text-slate-800">NEMESIS<span class="text-blue-500">.</span></h1>
+                <p class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-mono">Omni-Channel Intelligence</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <div class="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono flex items-center gap-2">
+                <div class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></div>
+                SYSTEM ONLINE
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col items-center justify-center p-6 relative z-10 w-full max-w-6xl mx-auto mt-8 md:mt-0">
+        
+        <div class="text-center mb-16">
+            <h2 class="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-slate-400 tracking-tight mb-4 drop-shadow-lg">
+                Select Operational Vector
+            </h2>
+            <p class="text-slate-400 font-mono text-sm max-w-2xl mx-auto leading-relaxed">
+                Choose the designated intelligence module to initiate deployment. All actions are logged and subject to continuous Multi-Agent Swarm oversight.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full px-4">
+            
+            <!-- NEMESIS ID CARD -->
+            <a href="/nemesis" class="block group">
+                <div class="module-card rounded-2xl p-8 h-full flex flex-col cursor-pointer">
+                    <div class="flex justify-between items-start mb-8">
+                        <div class="icon-wrapper w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-600/5 border border-blue-500/30 flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.2)]">
+                            <i class="fa-solid fa-fingerprint text-blue-400 text-2xl"></i>
+                        </div>
+                        <span class="font-mono text-xs text-blue-400/70 border border-blue-500/20 px-2 py-1 rounded bg-blue-500/5 uppercase tracking-wider">Module 01</span>
+                    </div>
+                    
+                    <h3 class="text-2xl font-bold text-slate-800 mb-3 group-hover:text-blue-400 transition-colors">NEMESIS ID</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-8 flex-1">
+                        Multi-domain identity reconstruction. Fuses on-chain heuristics, darknet cross-references, and OSINT telemetry to deanonymize target subjects and generate comprehensive intelligence dossiers.
+                    </p>
+                    
+                    <div class="flex items-center text-blue-400 text-sm font-bold uppercase tracking-wider group-hover:translate-x-2 transition-transform duration-300">
+                        Initiate Reconstruction <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
+                    </div>
+                </div>
+            </a>
+
+            <!-- NEMESIS TRACER CARD -->
+            <a href="/tracer" class="block group">
+                <div class="module-card tracer rounded-2xl p-8 h-full flex flex-col cursor-pointer">
+                    <div class="flex justify-between items-start mb-8">
+                        <div class="icon-wrapper w-16 h-16 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-600/5 border border-purple-500/30 flex items-center justify-center shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+                            <i class="fa-solid fa-diagram-project text-purple-400 text-2xl"></i>
+                        </div>
+                        <span class="font-mono text-xs text-purple-400/70 border border-purple-500/20 px-2 py-1 rounded bg-purple-500/5 uppercase tracking-wider">Module 02</span>
+                    </div>
+                    
+                    <h3 class="text-2xl font-bold text-slate-800 mb-3 group-hover:text-purple-400 transition-colors">NEMESIS TRACER</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-8 flex-1">
+                        Real-time OmniChain flow analysis and graph visualization. Executes deep-tier traversal, tracks multi-hop fund movements across EVM/Non-EVM networks, and exposes laundering topologies.
+                    </p>
+                    
+                    <div class="flex items-center text-purple-400 text-sm font-bold uppercase tracking-wider group-hover:translate-x-2 transition-transform duration-300">
+                        Launch Graph Engine <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
+                    </div>
+                </div>
+            </a>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full p-6 text-center z-10 relative mt-auto">
+        <p class="text-slate-600 font-mono text-[10px] uppercase tracking-[0.3em]">
+            &copy; 2026 Lionsgate Network &middot; Restricted Access &middot; Level 5 Clearance Required
+        </p>
+    </footer>
+
+
+    <!-- WebGL Butterflies Engine -->
+    <script src="/webgl-butterflies.js"></script>
+
+<!-- GLOBAL NEMESIS AJAX LOADER -->
+<div id="global-ajax-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 99999; justify-content: center; align-items: center; flex-direction: column;">
+    <img src="assets/butterfly_transparent.png" style="width: 100px; height: 100px; animation: pulse-loader 1.5s infinite; filter: drop-shadow(0 0 20px rgba(6,182,212,0.8));">
+    <div style="color: #06b6d4; margin-top: 20px; font-family: monospace; font-size: 16px; font-weight: bold; text-shadow: 0 0 10px #06b6d4;">NEMESIS SINGULARITY KERNEL</div>
+    <style>
+        @keyframes pulse-loader {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; filter: drop-shadow(0 0 30px rgba(6,182,212,1)); }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+    </style>
+</div>
+<script>
+    (function() {
+        if (window._nemesisLoaderInitialized) return;
+        window._nemesisLoaderInitialized = true;
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const loader = document.getElementById('global-ajax-loader');
+            if (loader) loader.style.display = 'flex';
+            try {
+                const response = await originalFetch.apply(this, args);
+                return response;
+            } finally {
+                if (loader) loader.style.display = 'none';
+            }
+        };
+    })();
+</script>
+</body>
+
+</html>

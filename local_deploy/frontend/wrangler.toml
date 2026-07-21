@@ -1,0 +1,12 @@
+name = "nemesis-id-frontend"
+compatibility_date = "2024-02-08"
+pages_build_output_dir = "."
+
+# ============================================================================
+# ENVIRONMENT VARIABLES
+# ============================================================================
+[vars]
+PYTHON_BACKEND_URL = "https://nemesis-backend.legionxgaming2021.workers.dev"
+NODE_ENV = "production"
+APP_NAME = "nemesis-platform"
+APP_MODE = "production"

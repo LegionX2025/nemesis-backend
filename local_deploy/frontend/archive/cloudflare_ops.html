@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEMESIS - Cloudflare Operations</title>
+    <!-- Tailwind CSS (CDN for rapid prototyping) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+
+    <!-- Light Theme & WebGL Overrides -->
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="global_nav.js"></script>
+    <link rel="stylesheet" href="nemesis-enterprise.css">
+
+    <link rel="stylesheet" href="/light-theme.css">
+
+    <script>
+        const IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        window.BACKEND_URL = IS_LOCAL ? 'http://127.0.0.1:8088' : 'https://nemesis-api-v3.legionxgaming2021.workers.dev';
+        window.API_BASE = window.BACKEND_URL;
+    </script>
+        \n</head>
+<body class="p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="flex justify-between items-center mb-10">
+            <div>
+                <h1 class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 tracking-wider">OMNI-ARCHITECTURE</h1>
+                <p class="text-cyan-500 mt-2">Cloudflare Global Edge Operations Center</p>
+            </div>
+            <div class="glass-panel px-6 py-3 flex items-center gap-4">
+                <span class="text-sm uppercase tracking-widest text-slate-500">WebSocket Link</span>
+                <div class="flex items-center gap-2">
+                    <span id="ws-status-dot" class="status-dot status-dead"></span>
+                    <span id="ws-status-text" class="font-orbitron font-bold text-red-500">OFFLINE</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left Column: Stats & Controls -->
+            <div class="space-y-8">
+                <!-- System Status -->
+                <div class="glass-panel p-6 cyber-border">
+                    <h2 class="text-xl text-cyan-400 mb-6 border-b border-cyan-900 pb-2">Global Infrastructure</h2>
+                    
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-500">Edge Worker</span>
+                            <span class="text-green-400 font-bold">ACTIVE</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-500">D1 Database</span>
+                            <span class="text-green-400 font-bold">CONNECTED</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-500">R2 Storage</span>
+                            <span class="text-green-400 font-bold">READY</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-500">Workers KV</span>
+                            <span class="text-green-400 font-bold">WARM</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-500">Workflows Queue</span>
+                            <span class="text-blue-400 font-bold" id="queue-count">0 PENDING</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Test Workflow -->
+                <div class="glass-panel p-6">
+                    <h2 class="text-xl text-cyan-400 mb-4 border-b border-cyan-900 pb-2">Inject Trace</h2>
+                    <p class="text-sm text-slate-500 mb-4">Trigger a global Workflow trace directly from the Edge.</p>
+                    <input type="text" id="target-address" placeholder="0xWalletAddress..." class="w-full bg-black border border-cyan-900 rounded p-3 text-cyan-300 mb-4 focus:outline-none focus:border-cyan-400">
+                    <button id="btn-trigger" class="w-full bg-cyan-900 hover:bg-cyan-700 text-slate-200 font-bold py-3 px-4 rounded transition-all font-orbitron tracking-widest border border-cyan-500 hover:shadow-[0_0_15px_rgba(0,255,255,0.5)]">
+                        INITIALIZE WORKFLOW
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Column: Live Telemetry -->
+            <div class="lg:col-span-2">
+                <div class="glass-panel p-6 h-full flex flex-col">
+                    <div class="flex justify-between items-center border-b border-cyan-900 pb-2 mb-4">
+                        <h2 class="text-xl text-cyan-400">Real-Time Workflow Telemetry (Durable Objects)</h2>
+                        <button id="btn-clear" class="text-xs text-gray-500 hover:text-white transition-colors">CLEAR</button>
+                    </div>
+                    
+                    <div id="log-container" class="log-container flex-grow bg-black/40 rounded p-4 border border-blue-900/30">
+                        <div class="text-gray-600 text-sm italic">Waiting for telemetry from Edge...</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const wsStatusDot = document.getElementById('ws-status-dot');
+        const wsStatusText = document.getElementById('ws-status-text');
+        const logContainer = document.getElementById('log-container');
+        const btnTrigger = document.getElementById('btn-trigger');
+        const targetAddress = document.getElementById('target-address');
+        const queueCount = document.getElementById('queue-count');
+
+        let ws = null;
+        let pendingCount = 0;
+
+        function appendLog(message, type = 'info') {
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: "numeric", minute: "numeric", second: "numeric", fractionalSecondDigits: 3 });
+            const colors = {
+                info: 'text-cyan-300',
+                success: 'text-green-400',
+                error: 'text-red-400',
+                system: 'text-slate-500'
+            };
+            const color = colors[type] || colors.info;
+            
+            // Remove placeholder if it exists
+            if (logContainer.innerHTML.includes('Waiting for telemetry')) {
+                logContainer.innerHTML = '';
+            }
+
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${color} text-sm flex gap-4`;
+            logEntry.innerHTML = `<span class="text-gray-500">[${time}]</span> <span>${message}</span>`;
+            
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function connectWebSocket() {
+            appendLog("Attempting to connect to Global Durable Object...", 'system');
+            
+            // Auto-detect protocol based on current origin
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            // In production, this would be the actual Cloudflare Pages domain or backend
+            const wsUrl = `${protocol}//${window.location.host}/ws/operations`;
+            
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                wsStatusDot.className = 'status-dot status-live';
+                wsStatusText.textContent = 'CONNECTED';
+                wsStatusText.className = 'font-orbitron font-bold text-green-500';
+                appendLog("WebSocket connection established with Cloudflare Edge.", 'success');
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'ops_update') {
+                        let logType = 'info';
+                        if (data.message.includes('Complete')) logType = 'success';
+                        if (data.message.includes('Failed')) logType = 'error';
+                        appendLog(`[${data.traceId.substring(0,6)}] ${data.message}`, logType);
+                        
+                        if (data.message.includes('Complete')) {
+                            pendingCount = Math.max(0, pendingCount - 1);
+                            queueCount.textContent = `${pendingCount} PENDING`;
+                        }
+                    } else {
+                        appendLog(event.data, 'info');
+                    }
+                } catch (e) {
+                    appendLog(event.data, 'info');
+                }
+            };
+
+            ws.onclose = () => {
+                wsStatusDot.className = 'status-dot status-dead';
+                wsStatusText.textContent = 'OFFLINE';
+                wsStatusText.className = 'font-orbitron font-bold text-red-500';
+                appendLog("WebSocket disconnected. Retrying in 5 seconds...", 'error');
+                setTimeout(connectWebSocket, 5000);
+            };
+
+            ws.onerror = (err) => {
+                console.error("WebSocket Error:", err);
+            };
+        }
+
+        document.getElementById('btn-clear').addEventListener('click', () => {
+            logContainer.innerHTML = '';
+        });
+
+        btnTrigger.addEventListener('click', async () => {
+            const address = targetAddress.value.trim() || '0x' + Array.from({length: 40}, () => Math.floor(Math.random()*16).toString(16)).join('');
+            const traceId = crypto.randomUUID();
+            
+            appendLog(`Dispatching trace workflow for ${address}...`, 'system');
+            pendingCount++;
+            queueCount.textContent = `${pendingCount} PENDING`;
+
+            try {
+                const res = await fetch('/api/workflow/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ trace_id: traceId, address: address })
+                });
+                
+                const data = await res.json();
+                appendLog(`Workflow accepted by Edge Gateway. ID: ${data.workflow_id}`, 'success');
+            } catch (err) {
+                appendLog(`Failed to trigger workflow: ${err.message}`, 'error');
+                pendingCount = Math.max(0, pendingCount - 1);
+                queueCount.textContent = `${pendingCount} PENDING`;
+            }
+        });
+
+        // Initialize
+        connectWebSocket();
+    </script>
+
+    <!-- WebGL Butterflies Engine -->
+    <script src="webgl-butterflies.js"></script>
+
+<!-- GLOBAL NEMESIS AJAX LOADER -->
+<div id="global-ajax-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 99999; justify-content: center; align-items: center; flex-direction: column;">
+    <img src="assets/butterfly_transparent.png" style="width: 100px; height: 100px; animation: pulse-loader 1.5s infinite; filter: drop-shadow(0 0 20px rgba(6,182,212,0.8));">
+    <div style="color: #06b6d4; margin-top: 20px; font-family: monospace; font-size: 16px; font-weight: bold; text-shadow: 0 0 10px #06b6d4;">NEMESIS SINGULARITY KERNEL</div>
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+</div>
+<script>
+    (function() {
+        if (window._nemesisLoaderInitialized) return;
+        window._nemesisLoaderInitialized = true;
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const loader = document.getElementById('global-ajax-loader');
+            if (loader) loader.style.display = 'flex';
+            try {
+                const response = await originalFetch.apply(this, args);
+                return response;
+            } finally {
+                if (loader) loader.style.display = 'none';
+            }
+        };
+    })();
+</script>
+</body>
+
+</html>

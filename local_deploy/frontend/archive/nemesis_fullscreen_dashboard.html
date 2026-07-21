@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEMESIS | Fullscreen Trace Engine</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Force Graph 2D & Chart.js -->
+    <script src="https://unpkg.com/force-graph@1.43.3/dist/force-graph.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        slate: { 50: '#020617', 100: '#0f172a', 200: '#e2e8f0', 300: '#cbd5e1', 400: '#94a3b8', 500: '#64748b', 600: '#475569', 700: '#334155', 800: '#1e293b', 900: '#0f172a' },
+                        indigo: { 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' }
+                    }
+                }
+            }
+        }
+    </script>
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+    <script src="global_nav.js"></script>
+    <link rel="stylesheet" href="nemesis-enterprise.css">
+
+    <link rel="stylesheet" href="/light-theme.css">
+
+    <script>
+        const IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        window.BACKEND_URL = IS_LOCAL ? 'http://127.0.0.1:8088' : 'https://nemesis-api-v3.legionxgaming2021.workers.dev';
+        window.API_BASE = window.BACKEND_URL;
+    </script>
+        \n</head>
+<body class="text-slate-200 antialiased relative w-full h-screen">
+
+    <!-- THE GRAPH (BACKGROUND FULLSCREEN) -->
+    <div id="graph-container" class="absolute inset-0 z-0 cursor-grab active:cursor-grabbing w-full h-full"></div>
+    
+    <!-- Legend (Floating Bottom Center) -->
+    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex justify-center pointer-events-none">
+        <div class="bg-slate-900/90 backdrop-blur border border-slate-200 rounded-full px-5 py-2.5 flex gap-5 text-xs font-semibold text-slate-500 shadow-lg pointer-events-auto transition-colors">
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#8b5cf6]"></span> Exchange</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#22c55e]"></span> DeFi</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#ef4444]"></span> High Risk</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#f97316]"></span> Mixer</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#3b82f6]"></span> Bridge</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#64748b]"></span> Contract</span>
+        </div>
+    </div>
+
+    <!-- UI LAYER (Z-10) -->
+    <div class="absolute inset-0 z-10 pointer-events-none p-4 flex flex-col justify-between">
+        
+        <!-- TOP BAR (Floating) -->
+        <header class="bg-slate-900/80 border border-slate-200 rounded-xl shadow-md p-3 flex items-center justify-between pointer-events-auto backdrop-blur-md">
+            <div class="flex items-center gap-4 px-2">
+                <i class="fa-solid fa-lion text-indigo-600 text-xl"></i>
+                <div class="font-black text-base tracking-tight leading-none text-slate-200">NEMESIS <span class="text-[9px] text-slate-500 font-semibold tracking-widest uppercase ml-2">Lionsgate Network</span></div>
+            </div>
+            
+            <!-- Global Search -->
+            <div class="flex-1 max-w-xl mx-8">
+                <div class="relative">
+                    <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+                    <input type="text" class="w-full bg-slate-900/70 border border-slate-600 rounded-full py-1.5 pl-9 pr-4 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 focus:bg-slate-900 transition-colors shadow-inner" placeholder="Search by address, tx, block...">
+                </div>
+            </div>
+
+            <div class="flex items-center gap-5 text-slate-500 px-2">
+                <button class="hover:text-indigo-600 transition-colors" onclick="toggleWidget('metrics-modal')"><i class="fa-solid fa-chart-line text-lg"></i></button>
+                <button class="hover:text-indigo-600 transition-colors" onclick="toggleWidget('analytics-modal')"><i class="fa-solid fa-chart-pie text-lg"></i></button>
+                <div class="h-6 w-px bg-slate-300 mx-1"></div>
+                <div class="flex items-center gap-2 cursor-pointer hover:opacity-80">
+                    <div class="w-8 h-8 rounded-full bg-slate-700 overflow-hidden border border-slate-600 shadow-sm">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Analyst&backgroundColor=e2e8f0" alt="User">
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- MIDDLE FLOATING WIDGETS (Left/Right Sidebars) -->
+        <div class="flex-1 flex justify-between mt-4 items-start gap-4 h-full pointer-events-none relative">
+            
+            <!-- LEFT WIDGET: Trace Controls -->
+            <div id="widget-controls" class="widget-panel w-72 bg-slate-900/90 border border-slate-200 rounded-xl shadow-xl flex flex-col pointer-events-auto h-auto">
+                <div class="p-3 border-b border-slate-200 flex justify-between items-center cursor-pointer bg-slate-800/50 rounded-t-xl" onclick="toggleMinimize('widget-controls')">
+                    <h2 class="text-[11px] font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-sliders text-indigo-600"></i> Trace Engine</h2>
+                    <i class="fa-solid fa-chevron-up text-slate-500 text-xs transition-transform duration-300 toggle-icon"></i>
+                </div>
+                <div class="p-4 flex flex-col gap-4 overflow-y-auto custom-scrollbar widget-content">
+                    <div>
+                        <label class="text-[10px] font-semibold text-slate-500 mb-1 block uppercase">Seed Input</label>
+                        <select class="input-field mb-2 glass-panel text-xs py-1.5">
+                            <option>Wallet Address</option>
+                            <option>Transaction Hash</option>
+                        </select>
+                        <div class="flex gap-2">
+                            <input type="text" id="seedInput" class="input-field text-xs font-mono py-1.5" value="0x8f3a...7c2e4b">
+                            <button onclick="runTrace()" class="bg-indigo-600 hover:bg-indigo-700 text-slate-900 px-3 rounded-lg text-xs font-bold transition-colors shadow-md">Go</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-[10px] font-semibold text-slate-500 uppercase">Depth</label>
+                            <span class="text-xs font-mono text-slate-200 font-medium">4</span>
+                        </div>
+                        <input type="range" min="1" max="15" value="4" class="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-[10px] font-semibold text-slate-500 uppercase">Max Hops</label>
+                            <span class="text-xs font-mono text-slate-200 font-medium">5</span>
+                        </div>
+                        <input type="range" min="1" max="20" value="5" class="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-600">
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100">
+                        <label class="text-[10px] font-semibold text-slate-500 mb-2 block uppercase">Show Nodes</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="flex items-center gap-2 cursor-pointer hover:bg-slate-800 p-1 rounded">
+                                <input type="checkbox" checked class="w-3 h-3 text-indigo-600 rounded border-slate-600">
+                                <span class="text-[11px] text-slate-300">Transactions</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer hover:bg-slate-800 p-1 rounded">
+                                <input type="checkbox" checked class="w-3 h-3 text-indigo-600 rounded border-slate-600">
+                                <span class="text-[11px] text-slate-300">Contracts</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer hover:bg-slate-800 p-1 rounded">
+                                <input type="checkbox" checked class="w-3 h-3 text-indigo-600 rounded border-slate-600">
+                                <span class="text-[11px] text-slate-300">Addresses</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer hover:bg-slate-800 p-1 rounded">
+                                <input type="checkbox" checked class="w-3 h-3 text-indigo-600 rounded border-slate-600">
+                                <span class="text-[11px] text-slate-300">Tokens</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button onclick="runTrace()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-slate-900 font-semibold py-2 rounded-lg text-xs transition-colors flex items-center justify-center gap-2 mt-2 shadow-md">
+                        Execute Trace <i class="fa-solid fa-play text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Graph Overlay Tools (Zoom/Pan) -->
+            <div class="absolute left-[300px] top-4 pointer-events-auto flex flex-col gap-2">
+                <button class="w-8 h-8 bg-slate-900/90 border border-slate-200 rounded-lg shadow-md flex items-center justify-center text-slate-500 hover:text-indigo-600 transition-colors backdrop-blur"><i class="fa-solid fa-expand text-xs"></i></button>
+                <button class="w-8 h-8 bg-slate-900/90 border border-slate-200 rounded-lg shadow-md flex items-center justify-center text-slate-500 hover:text-indigo-600 transition-colors backdrop-blur"><i class="fa-solid fa-plus text-xs"></i></button>
+                <button class="w-8 h-8 bg-slate-900/90 border border-slate-200 rounded-lg shadow-md flex items-center justify-center text-slate-500 hover:text-indigo-600 transition-colors backdrop-blur"><i class="fa-solid fa-minus text-xs"></i></button>
+            </div>
+
+            <!-- RIGHT WIDGET: Entity Details -->
+            <div id="widget-entity" class="widget-panel w-[320px] bg-slate-900/90 border border-slate-200 rounded-xl shadow-xl flex flex-col pointer-events-auto h-auto">
+                <div class="p-3 border-b border-slate-200 flex justify-between items-center cursor-pointer bg-slate-800/50 rounded-t-xl" onclick="toggleMinimize('widget-entity')">
+                    <h2 class="text-[11px] font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-fingerprint text-indigo-600"></i> Entity Intel</h2>
+                    <i class="fa-solid fa-chevron-up text-slate-500 text-xs transition-transform duration-300 toggle-icon"></i>
+                </div>
+                
+                <div class="p-4 overflow-y-auto custom-scrollbar flex-1 space-y-5 widget-content">
+                    
+                    <!-- Header Profile -->
+                    <div>
+                        <div class="flex items-center gap-3 mb-3 glass-panel p-2.5 rounded-lg border border-slate-100 shadow-inner">
+                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0 border border-blue-200 shadow-sm">
+                                <i class="fa-solid fa-wallet text-sm"></i>
+                            </div>
+                            <div class="overflow-hidden">
+                                <div class="text-sm font-bold text-slate-200 truncate font-mono">0x8f3a...7c2e4b</div>
+                                <div class="flex gap-1 mt-1">
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-100 text-indigo-700 border border-indigo-200">EOA</span>
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">Active</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <table class="w-full text-xs">
+                            <tbody>
+                                <tr class="border-b border-slate-50"><td class="py-1.5 text-slate-500 font-medium">Label</td><td class="py-1.5 text-right font-bold text-slate-200">Target Alpha</td></tr>
+                                <tr class="border-b border-slate-50"><td class="py-1.5 text-slate-500 font-medium">Cluster</td><td class="py-1.5 text-right font-bold text-indigo-600">C-12345</td></tr>
+                                <tr><td class="py-1.5 text-slate-500 font-medium">Risk Score</td><td class="py-1.5 text-right"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-600 border border-red-200">85 HIGH</span></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Activity -->
+                    <div class="pt-4 border-t border-slate-100">
+                        <table class="w-full text-xs">
+                            <tbody>
+                                <tr class="border-b border-slate-50"><td class="py-1.5 text-slate-500 font-medium">First Seen</td><td class="py-1.5 text-right font-medium text-slate-200 font-mono text-[10px]">21-03-12 08:21</td></tr>
+                                <tr class="border-b border-slate-50"><td class="py-1.5 text-slate-500 font-medium">Last Seen</td><td class="py-1.5 text-right font-medium text-slate-200 font-mono text-[10px]">24-05-20 14:32</td></tr>
+                                <tr class="border-b border-slate-50"><td class="py-1.5 text-slate-500 font-medium">Total Received</td><td class="py-1.5 text-right font-bold text-emerald-600">$1,432,000</td></tr>
+                                <tr class="border-b border-slate-50"><td class="py-1.5 text-slate-500 font-medium">Total Sent</td><td class="py-1.5 text-right font-bold text-red-600">$1,431,800</td></tr>
+                                <tr><td class="py-1.5 text-slate-500 font-medium">TX Count</td><td class="py-1.5 text-right font-bold text-slate-200">3,721</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Risk Indicators -->
+                    <div class="pt-4 border-t border-slate-100">
+                        <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Threat Vector</h3>
+                        <div class="space-y-1.5 text-[11px]">
+                            <div class="flex justify-between items-center p-1.5 bg-red-50 rounded border border-red-100"><span class="text-slate-300 font-medium">Mixer Interaction</span><div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_5px_red]"></span><span class="font-bold text-red-600">Detected</span></div></div>
+                            <div class="flex justify-between items-center p-1.5 hover:bg-slate-800 rounded"><span class="text-slate-500">Sanctioned Entity</span><div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span class="font-medium text-slate-200">Clear</span></div></div>
+                            <div class="flex justify-between items-center p-1.5 bg-yellow-50 rounded border border-yellow-100"><span class="text-slate-300 font-medium">High Risk Geo</span><div class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-yellow-500 shadow-[0_0_5px_orange]"></span><span class="font-bold text-yellow-600">Flagged</span></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MODALS / BOTTOM DRAWERS (Z-20) -->
+    
+    <!-- Metrics Drawer (Hidden by default, absolute positioned) -->
+    <div id="metrics-modal" class="absolute left-1/2 -translate-x-1/2 bottom-[100px] z-20 pointer-events-auto bg-slate-900/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl p-4 w-[90%] max-w-5xl transition-all duration-300 transform translate-y-8 opacity-0 pointer-events-none hidden">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xs font-bold text-slate-200 uppercase tracking-wider"><i class="fa-solid fa-chart-line text-indigo-600 mr-2"></i> Global Metrics</h3>
+            <button onclick="toggleWidget('metrics-modal')" class="text-slate-500 hover:text-red-500"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div class="glass-panel rounded-xl border border-slate-100 p-3 shadow-inner">
+                <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Addresses</div>
+                <div class="text-lg font-black text-slate-200">1.2B</div>
+                <div class="text-[10px] text-emerald-600 font-bold mt-1"><i class="fa-solid fa-arrow-up mr-1"></i>12.4%</div>
+            </div>
+            <div class="glass-panel rounded-xl border border-slate-100 p-3 shadow-inner">
+                <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Transactions</div>
+                <div class="text-lg font-black text-slate-200">3.5B</div>
+                <div class="text-[10px] text-emerald-600 font-bold mt-1"><i class="fa-solid fa-arrow-up mr-1"></i>8.3%</div>
+            </div>
+            <div class="glass-panel rounded-xl border border-slate-100 p-3 shadow-inner">
+                <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Volume Traced</div>
+                <div class="text-lg font-black text-slate-200">$7.29B</div>
+                <div class="text-[10px] text-emerald-600 font-bold mt-1"><i class="fa-solid fa-arrow-up mr-1"></i>15.7%</div>
+            </div>
+            <div class="glass-panel rounded-xl border border-slate-100 p-3 shadow-inner">
+                <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">High Risk Entities</div>
+                <div class="text-lg font-black text-slate-200">18,392</div>
+                <div class="text-[10px] text-red-500 font-bold mt-1"><i class="fa-solid fa-arrow-up mr-1"></i>3.2%</div>
+            </div>
+            <div class="glass-panel rounded-xl border border-slate-100 p-3 shadow-inner">
+                <div class="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Active Chains</div>
+                <div class="text-lg font-black text-slate-200">156</div>
+                <div class="text-[10px] text-indigo-600 font-bold mt-1">Live Omni-Sync</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics & TX Drawer -->
+    <div id="analytics-modal" class="absolute left-1/2 -translate-x-1/2 bottom-[100px] z-20 pointer-events-auto bg-slate-900/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl p-4 w-[95%] max-w-7xl transition-all duration-300 transform translate-y-8 opacity-0 pointer-events-none hidden">
+        <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
+            <h3 class="text-xs font-bold text-slate-200 uppercase tracking-wider"><i class="fa-solid fa-chart-pie text-indigo-600 mr-2"></i> Analytics & Flow</h3>
+            <button onclick="toggleWidget('analytics-modal')" class="text-slate-500 hover:text-red-500"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 h-64">
+            <!-- Chart 1 -->
+            <div class="flex flex-col h-full glass-panel rounded-xl border border-slate-100 p-3 shadow-inner">
+                <h4 class="text-[10px] font-bold text-slate-500 uppercase mb-2">Volume Over Time</h4>
+                <div class="flex-1 relative w-full"><canvas id="volumeChart"></canvas></div>
+            </div>
+            <!-- Chart 2 -->
+            <div class="flex flex-col h-full glass-panel rounded-xl border border-slate-100 p-3 shadow-inner">
+                <h4 class="text-[10px] font-bold text-slate-500 uppercase mb-2">Asset Distribution</h4>
+                <div class="flex-1 relative w-full flex items-center justify-center">
+                    <div class="w-1/2 h-full relative"><canvas id="assetChart"></canvas></div>
+                    <div class="w-1/2 flex flex-col justify-center gap-1.5 text-[9px] font-medium text-slate-500 ml-2">
+                        <div class="flex justify-between"><span><i class="fa-solid fa-circle text-indigo-500 mr-1 text-[7px]"></i>ETH</span><span class="font-bold">45.2%</span></div>
+                        <div class="flex justify-between"><span><i class="fa-solid fa-circle text-emerald-500 mr-1 text-[7px]"></i>USDT</span><span class="font-bold">20.1%</span></div>
+                        <div class="flex justify-between"><span><i class="fa-solid fa-circle text-blue-500 mr-1 text-[7px]"></i>USDC</span><span class="font-bold">15.3%</span></div>
+                    </div>
+                </div>
+            </div>
+            <!-- TX Table -->
+            <div class="flex flex-col h-full glass-panel rounded-xl border border-slate-100 shadow-inner overflow-hidden">
+                <div class="p-3 border-b border-slate-200 bg-slate-50"><h4 class="text-[10px] font-bold text-slate-500 uppercase">Transaction Flow</h4></div>
+                <div class="overflow-y-auto custom-scrollbar flex-1">
+                    <table class="w-full text-left text-[10px] whitespace-nowrap">
+                        <thead class="glass-panel text-slate-500 uppercase font-bold sticky top-0">
+                            <tr><th class="px-3 py-1.5">TX Hash</th><th class="px-3 py-1.5">Method</th><th class="px-3 py-1.5 text-right">Value</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-slate-300 font-medium">
+                            <tr class="hover:bg-slate-900"><td class="px-3 py-2 text-indigo-600 font-mono">0x7d3f...a1b2</td><td class="px-3 py-2">Transfer</td><td class="px-3 py-2 text-right">12.50 ETH</td></tr>
+                            <tr class="hover:bg-slate-900"><td class="px-3 py-2 text-indigo-600 font-mono">0x9c8b...d4e5</td><td class="px-3 py-2">Transfer</td><td class="px-3 py-2 text-right">5,200 USDC</td></tr>
+                            <tr class="hover:bg-slate-900"><td class="px-3 py-2 text-indigo-600 font-mono">0x2b3c...f6a7</td><td class="px-3 py-2">Swap</td><td class="px-3 py-2 text-right">3.25 ETH</td></tr>
+                            <tr class="hover:bg-slate-900"><td class="px-3 py-2 text-indigo-600 font-mono">0x8e7d...c9b1</td><td class="px-3 py-2">Approve</td><td class="px-3 py-2 text-right">-</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loader -->
+    <div id="loader-overlay">
+        <div class="spinner mb-4"></div>
+        <div class="text-sm font-bold text-slate-200 tracking-widest uppercase bg-slate-900/80 px-4 py-1 rounded-full shadow-lg">Tracing Pathways...</div>
+    </div>
+
+    <script>
+        // === WIDGET TOGGLE LOGIC ===
+        function toggleMinimize(id) {
+            const el = document.getElementById(id);
+            const icon = el.querySelector('.toggle-icon');
+            if (el.classList.contains('minimized')) {
+                el.classList.remove('minimized');
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                el.classList.add('minimized');
+                icon.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        function toggleWidget(id) {
+            const el = document.getElementById(id);
+            if (el.classList.contains('hidden')) {
+                // hide others
+                document.querySelectorAll('.absolute.z-20').forEach(e => {
+                    e.classList.add('opacity-0', 'translate-y-8', 'pointer-events-none');
+                    setTimeout(() => e.classList.add('hidden'), 300);
+                });
+                
+                el.classList.remove('hidden');
+                // trigger reflow
+                void el.offsetWidth;
+                el.classList.remove('opacity-0', 'translate-y-8', 'pointer-events-none');
+            } else {
+                el.classList.add('opacity-0', 'translate-y-8', 'pointer-events-none');
+                setTimeout(() => el.classList.add('hidden'), 300);
+            }
+        }
+
+        // === CHART.JS INITIALIZATIONS ===
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctxVol = document.getElementById('volumeChart').getContext('2d');
+            const gradient = ctxVol.createLinearGradient(0, 0, 0, 150);
+            gradient.addColorStop(0, 'rgba(79, 70, 229, 0.4)');
+            gradient.addColorStop(1, 'rgba(79, 70, 229, 0.0)');
+
+            new Chart(ctxVol, {
+                type: 'line',
+                data: {
+                    labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                    datasets: [{
+                        data: [0.2, 0.8, 0.4, 1.2, 0.9, 1.8],
+                        borderColor: '#4f46e5', borderWidth: 2, backgroundColor: gradient, fill: true, tension: 0.4,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { ticks: { font: { size: 8 }, color: '#94a3b8' }, grid: { color: '#0f172a', drawBorder: false } },
+                        x: { display: false }
+                    }
+                }
+            });
+
+            const ctxAsset = document.getElementById('assetChart').getContext('2d');
+            new Chart(ctxAsset, {
+                type: 'doughnut',
+                data: {
+                    labels: ['ETH', 'USDT', 'USDC'],
+                    datasets: [{
+                        data: [45.2, 20.1, 15.3],
+                        backgroundColor: ['#6366f1', '#10b981', '#3b82f6'],
+                        borderWidth: 0, hoverOffset: 4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false } } }
+            });
+        });
+
+        // === GRAPH SIMULATION LOGIC ===
+        let Graph = null;
+        
+        const COLOR_MAP = {
+            'CEX': '#8b5cf6', 'DeFi': '#22c55e', 'HighRisk': '#ef4444', 
+            'Mixer': '#f97316', 'Bridge': '#3b82f6', 'Contract': '#64748b', 
+            'Seed': '#3b82f6', 'Unknown': '#cbd5e1'
+        };
+
+        const generateMockData = () => {
+            const nodes = [
+                { id: '0x8f3a...7c2e4b', group: 'Seed', label: 'Primary Target', val: 30, fx: 0, fy: 0 },
+                { id: 'Binance Hot 1', group: 'CEX', label: 'Binance', val: 20 },
+                { id: 'Binance Dep 1', group: 'CEX', label: 'Deposit', val: 10 },
+                { id: 'Drainer Contract', group: 'HighRisk', label: 'Exploiter', val: 25 },
+                { id: 'Scam Wallet 1', group: 'HighRisk', label: 'Phishing', val: 15 },
+                { id: 'Tornado Router', group: 'Mixer', label: 'Tornado Cash', val: 22 },
+                { id: 'TC Node 1', group: 'Mixer', label: '10 ETH Pool', val: 12 },
+                { id: 'Stargate Router', group: 'Bridge', label: 'Stargate', val: 18 },
+                { id: '0x1a2b...9f8e7d', group: 'Contract', label: 'Proxy', val: 15 },
+                { id: 'Uniswap V3 Router', group: 'DeFi', label: 'Uniswap V3', val: 20 },
+                { id: 'USDC/ETH Pool', group: 'DeFi', label: 'LP Pair', val: 12 },
+            ];
+
+            const links = [
+                { source: '0x8f3a...7c2e4b', target: 'Binance Hot 1' },
+                { source: '0x8f3a...7c2e4b', target: 'Drainer Contract' },
+                { source: '0x8f3a...7c2e4b', target: 'Tornado Router' },
+                { source: '0x8f3a...7c2e4b', target: 'Stargate Router' },
+                { source: '0x8f3a...7c2e4b', target: 'Uniswap V3 Router' },
+                { source: '0x8f3a...7c2e4b', target: '0x1a2b...9f8e7d' },
+                { source: 'Binance Hot 1', target: 'Binance Dep 1' },
+                { source: 'Drainer Contract', target: 'Scam Wallet 1' },
+                { source: 'Tornado Router', target: 'TC Node 1' },
+                { source: 'Uniswap V3 Router', target: 'USDC/ETH Pool' }
+            ];
+            return { nodes, links };
+        };
+
+        function runTrace() {
+            document.getElementById('loader-overlay').style.display = 'flex';
+            
+            setTimeout(() => {
+                document.getElementById('loader-overlay').style.display = 'none';
+                
+                const gData = generateMockData();
+                const container = document.getElementById('graph-container');
+                container.innerHTML = '';
+                
+                Graph = ForceGraph()(container)
+                    .width(window.innerWidth)
+                    .height(window.innerHeight)
+                    .graphData(gData)
+                    .nodeRelSize(4)
+                    .nodeVal(node => node.val)
+                    .nodeColor(node => COLOR_MAP[node.group] || COLOR_MAP['Unknown'])
+                    .nodeLabel(node => `<div class="graph-tooltip"><strong>${node.label}</strong><br><span style="color:#94a3b8">${node.group}</span></div>`)
+                    .linkColor(() => 'rgba(148, 163, 184, 0.3)')
+                    .linkWidth(2)
+                    .linkDirectionalParticles(2)
+                    .linkDirectionalParticleSpeed(d => 0.01)
+                    .linkDirectionalParticleWidth(3)
+                    .linkDirectionalParticleColor(() => '#94a3b8')
+                    .d3Force('charge', d3.forceManyBody().strength(-300))
+                    .d3Force('link', d3.forceLink().distance(80))
+                    .onNodeDragEnd(node => { node.fx = node.x; node.fy = node.y; });
+
+                window.addEventListener('resize', () => {
+                    Graph.width(window.innerWidth).height(window.innerHeight);
+                });
+                
+            }, 800);
+        }
+
+        setTimeout(runTrace, 500);
+    </script>
+
+<!-- GLOBAL NEMESIS AJAX LOADER -->
+<div id="global-ajax-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 99999; justify-content: center; align-items: center; flex-direction: column;">
+    <img src="assets/butterfly_transparent.png" style="width: 100px; height: 100px; animation: pulse-loader 1.5s infinite; filter: drop-shadow(0 0 20px rgba(6,182,212,0.8));">
+    <div style="color: #06b6d4; margin-top: 20px; font-family: monospace; font-size: 16px; font-weight: bold; text-shadow: 0 0 10px #06b6d4;">NEMESIS SINGULARITY KERNEL</div>
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+</div>
+<script>
+    (function() {
+        if (window._nemesisLoaderInitialized) return;
+        window._nemesisLoaderInitialized = true;
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const loader = document.getElementById('global-ajax-loader');
+            if (loader) loader.style.display = 'flex';
+            try {
+                const response = await originalFetch.apply(this, args);
+                return response;
+            } finally {
+                if (loader) loader.style.display = 'none';
+            }
+        };
+    })();
+</script>
+</body>
+
+</html>

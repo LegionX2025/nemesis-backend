@@ -1,0 +1,45 @@
+name: Omni-Deploy to Cloudflare
+
+on:
+  push:
+    branches:
+      - main # Triggers deployment when you push to the 'main' branch
+  workflow_dispatch: # Allows you to trigger the deployment manually from the GitHub UI
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy Fullstack to Cloudflare Edge
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # ---------------------------------------------------
+      # 1. DEPLOY PYTHON BACKEND (Cloudflare Workers)
+      # ---------------------------------------------------
+      - name: Install uv (Python Package Manager)
+        uses: astral-sh/setup-uv@v5
+        
+      - name: Install Cloudflare Python Toolchain
+        run: uv tool install workers-py
+        
+      - name: Deploy Edge API Backend
+        run: uv run pywrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      # ---------------------------------------------------
+      # 2. DEPLOY FRONTEND UI (Cloudflare Pages)
+      # ---------------------------------------------------
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Deploy Frontend UI to Pages
+        run: npx wrangler pages deploy frontend/ --project-name nemesis-ui
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

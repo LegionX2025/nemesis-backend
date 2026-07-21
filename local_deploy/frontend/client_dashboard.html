@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEMESIS Client Portal - Case Tracking</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+
+    <!-- Light Theme & WebGL Overrides -->
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="global_nav.js"></script>
+    <link rel="stylesheet" href="nemesis-enterprise.css">
+
+    <link rel="stylesheet" href="/light-theme.css">
+
+    <script>
+        const IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        window.BACKEND_URL = IS_LOCAL ? 'http://127.0.0.1:8088' : 'https://nemesis-api-v3.legionxgaming2021.workers.dev';
+        window.API_BASE = window.BACKEND_URL;
+    </script>
+        \n</head>
+<body class="min-h-screen flex flex-col bg-slate-950 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(30,58,138,0.3),rgba(255,255,255,0))]">
+    
+    <!-- Top Nav -->
+    <nav class="w-full bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded bg-blue-600 flex items-center justify-center text-slate-200 shadow-[0_0_15px_rgba(37,99,235,0.5)]">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <span class="font-bold text-slate-200 tracking-widest text-lg">NEMESIS<span class="text-blue-500">CLIENT</span></span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="text-xs font-mono text-slate-500 glass-panel px-2 py-1 rounded border border-slate-600">CASE: #NEM-2026-X89F</span>
+                <button class="w-8 h-8 rounded-full glass-panel hover:bg-slate-700 flex items-center justify-center text-slate-300 transition">
+                    <i class="fa-solid fa-bell"></i>
+                </button>
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-slate-200 text-xs font-bold border border-slate-600 shadow-lg cursor-pointer">
+                    CL
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl mx-auto w-full px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left Column: Case Overview & Intelligence -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Header Card -->
+            <div class="cyber-card rounded-xl p-6 relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10">
+                    <i class="fa-solid fa-file-shield text-8xl"></i>
+                </div>
+                <div class="relative z-10 flex justify-between items-start">
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-200 mb-1">Asset Recovery Investigation</h1>
+                        <p class="text-slate-500 text-sm mb-4">Tracking unauthorized outflow of USDT on Ethereum Mainnet.</p>
+                        
+                        <div class="flex gap-4">
+                            <div class="bg-slate-900/50 rounded-lg p-3 border border-slate-800 min-w-[140px]">
+                                <div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Total Loss</div>
+                                <div class="text-xl font-mono text-red-400 font-bold">$1,500,000.00</div>
+                            </div>
+                            <div class="bg-slate-900/50 rounded-lg p-3 border border-slate-800 min-w-[140px]">
+                                <div class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Funds Frozen</div>
+                                <div class="text-xl font-mono text-blue-400 font-bold">$245,500.00</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-bold uppercase tracking-wider">
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span> Active Investigation
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trace Map Snapshot -->
+            <div class="cyber-card rounded-xl overflow-hidden border border-slate-700/50">
+                <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+                    <h2 class="text-sm font-bold text-slate-200 uppercase tracking-wider">OmniChain Topology Map</h2>
+                    <a href="/nemesis_tracer_landing.html" class="text-xs text-blue-400 hover:text-blue-300 flex items-center font-bold">Open Full Tracer <i class="fa-solid fa-arrow-up-right-from-square ml-1"></i></a>
+                </div>
+                <div class="h-[300px] w-full bg-slate-950 relative flex items-center justify-center overflow-hidden">
+                    <!-- Fake Map Background for Dashboard -->
+                    <div class="absolute inset-0 opacity-30" style="background-image: radial-gradient(circle at center, #1e293b 1px, transparent 1px); background-size: 20px 20px;"></div>
+                    <div class="relative z-10 text-center">
+                        <div class="w-16 h-16 rounded-full bg-blue-500/20 border border-blue-500/50 flex items-center justify-center mx-auto mb-3">
+                            <i class="fa-solid fa-network-wired text-blue-400 text-2xl"></i>
+                        </div>
+                        <p class="text-slate-500 text-sm">34 Nodes | 89 Transactions | 3 Exchanges Identified</p>
+                        <p class="text-xs text-slate-500 mt-2 font-mono">Lionsgate Graph Engine Active</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Intelligence Report Infographic -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="cyber-card rounded-xl p-5 border border-slate-700/50">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4"><i class="fa-solid fa-building-columns mr-2"></i>Identified Touchpoints</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-2 rounded bg-slate-800/50">
+                            <div class="flex items-center gap-2"><img src="https://cryptologos.cc/logos/binance-coin-bnb-logo.png" class="w-5 h-5 opacity-70"> <span class="text-sm font-bold text-slate-200">Binance</span></div>
+                            <span class="text-xs text-slate-500 font-mono">$1.1M Inflow</span>
+                        </div>
+                        <div class="flex items-center justify-between p-2 rounded bg-slate-800/50">
+                            <div class="flex items-center gap-2"><div class="w-5 h-5 rounded bg-purple-500/20 flex items-center justify-center text-[10px] text-purple-400"><i class="fa-solid fa-bolt"></i></div> <span class="text-sm font-bold text-slate-200">Tornado Cash</span></div>
+                            <span class="text-xs text-slate-500 font-mono">$300K Inflow</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cyber-card rounded-xl p-5 border border-slate-700/50">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4"><i class="fa-solid fa-file-pdf mr-2"></i>Official Documents</h3>
+                    <div class="space-y-2">
+                        <button class="w-full flex items-center justify-between p-3 rounded bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/30 text-blue-400 transition text-left">
+                            <span class="text-sm font-bold"><i class="fa-solid fa-download mr-2"></i> Preliminary Forensic Report</span>
+                            <span class="text-[10px] font-mono bg-blue-500/20 px-1.5 py-0.5 rounded">PDF</span>
+                        </button>
+                        <button class="w-full flex items-center justify-between p-3 rounded bg-slate-800/50 hover:bg-slate-700 border border-slate-600 text-slate-300 transition text-left">
+                            <span class="text-sm font-bold"><i class="fa-solid fa-download mr-2"></i> Source Address List</span>
+                            <span class="text-[10px] font-mono bg-slate-700 px-1.5 py-0.5 rounded">CSV</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Timeline & Swarm Status -->
+        <div class="space-y-6">
+            
+            <!-- Agent Swarm Status -->
+            <div class="cyber-card rounded-xl p-5 border border-slate-700/50">
+                <h2 class="text-sm font-bold text-slate-200 uppercase tracking-wider mb-4 flex justify-between items-center">
+                    Multi-Agent Swarm <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                </h2>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-mono text-slate-500">OSINT Agent</span>
+                        <span class="text-[10px] font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded">IDLE</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-mono text-slate-500">Graph Tracer</span>
+                        <span class="text-[10px] font-bold text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded"><i class="fa-solid fa-spinner fa-spin mr-1"></i> SCANNING</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-mono text-slate-500">Risk Scorer</span>
+                        <span class="text-[10px] font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded">READY</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Case Timeline -->
+            <div class="cyber-card rounded-xl p-5 border border-slate-700/50 flex-1 h-[500px] overflow-y-auto cyber-scrollbar relative">
+                <h2 class="text-sm font-bold text-slate-200 uppercase tracking-wider mb-6 sticky top-0 bg-[#1e293bc0] backdrop-blur-md pb-2 z-10 border-b border-slate-700/50">Case Timeline</h2>
+                
+                <div class="relative timeline-line space-y-6 ml-2">
+                    
+                    <!-- Timeline Item -->
+                    <div class="relative pl-8">
+                        <div class="absolute left-0 top-1 w-6 h-6 rounded-full bg-blue-500 border-4 border-[#1e293b] flex items-center justify-center z-10">
+                            <i class="fa-solid fa-magnifying-glass text-[8px] text-slate-200"></i>
+                        </div>
+                        <div class="text-xs font-bold text-blue-400 mb-0.5">Today, 14:30</div>
+                        <h4 class="text-sm font-bold text-slate-200 mb-1">New Exchange Deposit Found</h4>
+                        <p class="text-xs text-slate-500 leading-relaxed font-mono">Swarm detected $50,000 USDT moved to Binance hot wallet (0x28C...f3).</p>
+                    </div>
+
+                    <div class="relative pl-8">
+                        <div class="absolute left-0 top-1 w-6 h-6 rounded-full bg-purple-500 border-4 border-[#1e293b] flex items-center justify-center z-10">
+                            <i class="fa-solid fa-file-contract text-[8px] text-slate-200"></i>
+                        </div>
+                        <div class="text-xs font-bold text-purple-400 mb-0.5">Yesterday, 09:15</div>
+                        <h4 class="text-sm font-bold text-slate-200 mb-1">Legal Hold Request Generated</h4>
+                        <p class="text-xs text-slate-500 leading-relaxed font-mono">Automated legal hold drafted for 3 central exchanges.</p>
+                    </div>
+
+                    <div class="relative pl-8">
+                        <div class="absolute left-0 top-1 w-6 h-6 rounded-full bg-slate-600 border-4 border-[#1e293b] flex items-center justify-center z-10">
+                            <i class="fa-solid fa-check text-[8px] text-slate-200"></i>
+                        </div>
+                        <div class="text-xs font-bold text-slate-500 mb-0.5">Oct 24, 2026</div>
+                        <h4 class="text-sm font-bold text-slate-200 mb-1">Intake Processed</h4>
+                        <p class="text-xs text-slate-500 leading-relaxed font-mono">Initial seed wallet scanned and verified.</p>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Chat Widget Inclusion -->
+    <script src="assets/js/nemesis-ai.js"></script>
+
+    <!-- WebGL Butterflies Engine -->
+    <script src="webgl-butterflies.js"></script>
+
+<!-- GLOBAL NEMESIS AJAX LOADER -->
+<div id="global-ajax-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 99999; justify-content: center; align-items: center; flex-direction: column;">
+    <img src="assets/butterfly_transparent.png" style="width: 100px; height: 100px; animation: pulse-loader 1.5s infinite; filter: drop-shadow(0 0 20px rgba(6,182,212,0.8));">
+    <div style="color: #06b6d4; margin-top: 20px; font-family: monospace; font-size: 16px; font-weight: bold; text-shadow: 0 0 10px #06b6d4;">NEMESIS SINGULARITY KERNEL</div>
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+</div>
+<script>
+    (function() {
+        if (window._nemesisLoaderInitialized) return;
+        window._nemesisLoaderInitialized = true;
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const loader = document.getElementById('global-ajax-loader');
+            if (loader) loader.style.display = 'flex';
+            try {
+                const response = await originalFetch.apply(this, args);
+                return response;
+            } finally {
+                if (loader) loader.style.display = 'none';
+            }
+        };
+    })();
+</script>
+</body>
+
+</html>

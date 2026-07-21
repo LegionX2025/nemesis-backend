@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEMESIS ID | Enterprise Identity Reconstruction</title>
+    
+    <script>
+        // Suppress Tailwind CDN production warning
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) return;
+            originalWarn.apply(console, args);
+        };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/nemesis-enterprise.css">
+    
+    <!-- WebGL Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="webgl-butterflies.js"></script>
+    <script src="global_nav.js"></script>
+
+    <link rel="stylesheet" href="/light-theme.css">
+
+    <script>
+        const IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        window.BACKEND_URL = IS_LOCAL ? 'http://127.0.0.1:8088' : 'https://nemesis-api-v3.legionxgaming2021.workers.dev';
+        window.API_BASE = window.BACKEND_URL;
+    </script>
+        \n</head>
+<body class="h-screen flex flex-col relative overflow-hidden glass-panel">
+
+    <!-- Active Loader Overlay -->
+    <div id="global-loader" class="fixed inset-0 bg-slate-900/95 backdrop-blur-xl z-[9999] flex flex-col items-center justify-center transition-opacity duration-500" style="display: none;">
+        <div class="relative w-24 h-24 mb-8">
+            <div class="absolute inset-0 border-4 border-slate-100 rounded-full"></div>
+            <div class="absolute inset-0 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+        <h2 class="text-slate-100 font-black text-2xl tracking-widest uppercase">Initializing Omni-Graph</h2>
+        <p class="text-blue-600 font-mono text-sm uppercase tracking-widest mt-3">Fusing Blockchain, OSINT & Identity Vectors...</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col items-center justify-center p-6 relative z-10 w-full h-full">
+        
+        <!-- Enterprise Glass Card -->
+        <div class="glass-panel rounded-2xl w-full max-w-3xl p-10 md:p-14 relative overflow-hidden text-center shadow-2xl">
+            
+            <div class="mb-10">
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-50 text-blue-600 rounded-2xl mb-6 shadow-inner border border-blue-100">
+                    <i class="fa-solid fa-fingerprint text-4xl"></i>
+                </div>
+                <h1 class="text-4xl md:text-5xl font-black text-slate-100 tracking-tight mb-4">NEMESIS <span class="text-blue-600">ID</span></h1>
+                <p class="text-slate-500 font-medium text-lg max-w-xl mx-auto">Enterprise-Grade Entity Resolution & Operational Intelligence Engine.</p>
+            </div>
+
+            <!-- Input Area -->
+            <div class="relative group max-w-2xl mx-auto">
+                <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 to-emerald-500 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+                <div class="relative flex items-center bg-slate-50 border border-slate-200 rounded-xl shadow-sm p-2">
+                    <div class="pl-4 pr-3 text-slate-500">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </div>
+                    <input type="text" id="target-input" class="w-full bg-transparent border-none py-3 text-slate-200 font-mono text-lg focus:outline-none placeholder-slate-400" placeholder="Enter Target Wallet Address (0x...)" autocomplete="off">
+                    <button id="scan-btn" class="bg-blue-600 hover:bg-blue-700 text-slate-900 font-bold py-3 px-8 rounded-lg shadow-md transition-all flex items-center gap-2">
+                        SCAN <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Status Indicator -->
+            <div class="mt-12 inline-flex items-center gap-3 glass-panel border border-slate-200 px-4 py-2 rounded-full shadow-inner">
+                <span class="relative flex h-3 w-3">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Global Graph Synced & Ready</span>
+            </div>
+        </div>
+
+        <div class="absolute bottom-6 text-center text-xs text-slate-500 font-medium tracking-wide">
+            <i class="fa-solid fa-shield-halved mr-1"></i> Lionsgate Intelligence Network | Classified Enterprise Environment
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('target-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') handleSearch();
+        });
+        document.getElementById('scan-btn').addEventListener('click', handleSearch);
+
+        function handleSearch() {
+            const val = document.getElementById('target-input').value.trim();
+            if (!val) return;
+            
+            document.getElementById('global-loader').style.display = 'flex';
+            setTimeout(() => {
+                window.location.href = `/nemesis_id_new.html?address=${encodeURIComponent(val)}`;
+            }, 800);
+        }
+    </script>
+
+<!-- GLOBAL NEMESIS AJAX LOADER -->
+<div id="global-ajax-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 99999; justify-content: center; align-items: center; flex-direction: column;">
+    <img src="assets/butterfly_transparent.png" style="width: 100px; height: 100px; animation: pulse-loader 1.5s infinite; filter: drop-shadow(0 0 20px rgba(6,182,212,0.8));">
+    <div style="color: #06b6d4; margin-top: 20px; font-family: monospace; font-size: 16px; font-weight: bold; text-shadow: 0 0 10px #06b6d4;">NEMESIS SINGULARITY KERNEL</div>
+                <style>
+        body { 
+            background-color: #f8fafc !important; 
+            background-image: 
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.15), transparent 40%),
+                linear-gradient(135deg, #f1f5f9 0%, #ffffff 100%);
+            color: #0f172a !important; 
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Premium Glassmorphism Light */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.05);
+            border-radius: 16px;
+        }
+        
+        .nemesis-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        
+        .nemesis-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .metric-value {
+            color: #0f172a;
+            font-weight: 800;
+            background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+        
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        th {
+            color: #475569;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 16px 12px;
+            color: #1e293b;
+        }
+        tr td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+        tr td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+        
+        /* Override Cytoscape Canvas Background */
+        #nemesis-graph {
+            background: transparent !important;
+            border-radius: 16px;
+        }
+    </style>
+</div>
+<script>
+    (function() {
+        if (window._nemesisLoaderInitialized) return;
+        window._nemesisLoaderInitialized = true;
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const loader = document.getElementById('global-ajax-loader');
+            if (loader) loader.style.display = 'flex';
+            try {
+                const response = await originalFetch.apply(this, args);
+                return response;
+            } finally {
+                if (loader) loader.style.display = 'none';
+            }
+        };
+    })();
+</script>
+</body>
+
+</html>
